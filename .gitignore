@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# pi runtime state
+.pi/
+.pi-subagents/
+.agents/cache/
+
+# AI workflow skills are local tooling, not project source.
+# Track only the domain collection skill and the lock-pinned shadcn skill.
+.agents/skills/*
+!.agents/skills/llm-deals-intelligence-skill/
+!.agents/skills/shadcn/
+
+# Workflow management docs (specs, scope, verify) are not tracked.
+docs/
+
+# Redundant archive (the unpacked skill lives in .agents/skills/)
+llm-deals-intelligence-skill.zip

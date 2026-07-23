@@ -1,0 +1,65 @@
+{
+  "updated_at": "2026-07-24T11:00:00+09:00",
+  "offers": [
+    {
+      "name": "NVIDIA NIM Free Inference",
+      "provider": "NVIDIA",
+      "classification": "A_TRUE_FREE",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://integrate.api.nvidia.com/v1",
+      "model_id": "z-ai/glm-5.2"
+    },
+    {
+      "name": "OpenRouter Free Tier",
+      "provider": "OpenRouter",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "google/gemma-4-31b-it:free"
+    },
+    {
+      "name": "Cerebras Free Tier",
+      "provider": "Cerebras",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://api.cerebras.ai/v1",
+      "model_id": "cerebras/cerebras-3-27b-chat"
+    },
+    {
+      "name": "Google AI Studio Free Tier",
+      "provider": "Google",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://generativelanguage.googleapis.com/v1beta",
+      "model_id": "gemini-2.0-flash"
+    },
+    {
+      "name": "Groq Signup Credits",
+      "provider": "Groq",
+      "classification": "D_TRIAL_CREDIT",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://api.groq.com/openai/v1",
+      "model_id": "meta/llama-3.3-70b-versatile"
+    },
+    {
+      "name": "DeepSeek V4 Flash (Ultra Cheap)",
+      "provider": "DeepSeek",
+      "classification": "E_DISCOUNT",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://api.deepseek.com/v1",
+      "model_id": "deepseek-v4-flash"
+    }
+  ]
+}

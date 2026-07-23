@@ -1,0 +1,73 @@
+version: 1
+
+new_model_terms:
+  en:
+    - latest model
+    - new model
+    - launch
+    - preview
+    - beta
+    - open weight
+    - available now
+    - pricing
+    - promotion
+    - event
+    - changelog
+    - release
+    - model added
+    - deprecation
+  ja:
+    - 最新モデル
+    - 新モデル
+    - 提供開始
+    - プレビュー
+    - ベータ
+    - オープンウェイト
+    - 価格改定
+    - キャンペーン
+    - イベント
+    - リリース
+    - 提供終了
+  zh:
+    - 最新模型
+    - 新模型
+    - 发布
+    - 预览
+    - 测试版
+    - 开源权重
+    - 上线
+    - 定价
+    - 优惠
+    - 活动
+    - 更新日志
+    - 下线
+
+offer_terms:
+  - free API
+  - free tier
+  - free credits
+  - launch credits
+  - promotion
+  - limited time
+  - beta access
+  - sponsored inference
+  - no credit card
+  - coupon
+  - promo code
+  - balance bonus
+  - top-up bonus
+  - 10x usage
+  - 50% off
+  - 70% off
+  - 80% off
+  - 90% off
+  - 95% off
+  - 98% off
+  - off-peak
+  - night-time
+  - $0 per million tokens
+
+recency_windows:
+  - 24h
+  - 72h
+  - 30d

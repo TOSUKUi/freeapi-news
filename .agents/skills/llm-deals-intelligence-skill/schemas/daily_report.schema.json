@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LLM Deals Daily Report",
+  "type": "object",
+  "required": [
+    "generated_at",
+    "timezone",
+    "new_models",
+    "changes",
+    "ranked_offers",
+    "excluded_offers",
+    "sources"
+  ],
+  "properties": {
+    "generated_at": { "type": "string", "format": "date-time" },
+    "timezone": { "type": "string" },
+    "new_models": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/modelDiscovery" }
+    },
+    "changes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/changeRecord" }
+    },
+    "ranked_offers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/offer" }
+    },
+    "conditional_credits": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/offer" }
+    },
+    "caution_offers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/offer" }
+    },
+    "excluded_offers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "reason"],
+        "properties": {
+          "name": { "type": "string" },
+          "reason": { "type": "string" },
+          "last_known_status": { "type": "string" }
+        }
+      }
+    },
+    "new_seed_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "recommend_add"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "recommend_add": { "type": "boolean" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["url", "source_type"],
+        "properties": {
+          "url": { "type": "string", "format": "uri" },
+          "source_type": {
+            "enum": ["official", "provider", "github", "reddit", "news", "community", "other"]
+          },
+          "title": { "type": "string" },
+          "accessed_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "modelDiscovery": {
+      "type": "object",
+      "required": ["canonical_name", "vendor", "status", "official_source"],
+      "properties": {
+        "canonical_name": { "type": "string" },
+        "aliases": { "type": "array", "items": { "type": "string" } },
+        "vendor": { "type": "string" },
+        "status": { "enum": ["announced", "preview", "beta", "ga", "open_weight_planned", "deprecated"] },
+        "release_date": { "type": ["string", "null"], "format": "date" },
+        "official_source": { "type": "string", "format": "uri" },
+        "api_available": { "type": ["boolean", "null"] },
+        "open_weight": { "type": ["boolean", "null"] },
+        "known_providers": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "changeRecord": {
+      "type": "object",
+      "required": ["offer_name", "change_type", "summary"],
+      "properties": {
+        "offer_name": { "type": "string" },
+        "change_type": {
+          "enum": ["new", "price_change", "limit_change", "provider_change", "end_date_change", "ended", "revived", "availability_change"]
+        },
+        "summary": { "type": "string" }
+      }
+    },
+    "offer": {
+      "type": "object",
+      "required": [
+        "name",
+        "classification",
+        "suspicion_score",
+        "information_confidence",
+        "operational_confidence",
+        "ranking_eligible"
+      ],
+      "properties": {
+        "rank": { "type": ["integer", "null"], "minimum": 1 },
+        "name": { "type": "string" },
+        "model_name": { "type": ["string", "null"] },
+        "provider": { "type": ["string", "null"] },
+        "model_vendor": { "type": ["string", "null"] },
+        "delivery_type": { "enum": ["official", "reseller", "router", "product_internal", "unofficial", "unknown"] },
+        "classification": {
+          "enum": ["A_TRUE_FREE", "B_PERMANENT_FREE_TIER", "C_LIMITED_FREE", "D_TRIAL_CREDIT", "E_DISCOUNT", "F_CONDITIONAL", "G_FREE_LIKE"]
+        },
+        "start_at": { "type": ["string", "null"], "format": "date-time" },
+        "end_at": { "type": ["string", "null"], "format": "date-time" },
+        "end_timezone_known": { "type": "boolean" },
+        "regions": { "type": "array", "items": { "type": "string" } },
+        "registration_conditions": { "type": "array", "items": { "type": "string" } },
+        "card_required": { "type": ["boolean", "null"] },
+        "minimum_deposit": { "type": ["number", "null"] },
+        "kyc_required": { "type": ["boolean", "null"] },
+        "auto_renewal": { "type": ["boolean", "null"] },
+        "refund_policy": { "type": ["string", "null"] },
+        "free_limits": { "type": ["string", "null"] },
+        "rate_limits": { "type": ["string", "null"] },
+        "context_tokens": { "type": ["integer", "null"] },
+        "max_output_tokens": { "type": ["integer", "null"] },
+        "tool_calling": { "type": ["boolean", "null"] },
+        "structured_output": { "type": ["boolean", "null"] },
+        "image_input": { "type": ["boolean", "null"] },
+        "base_url": { "type": ["string", "null"] },
+        "model_id": { "type": ["string", "null"] },
+        "provider_count": { "type": ["integer", "null"] },
+        "recent_activity": { "type": ["string", "null"] },
+        "normal_price_per_million": {
+          "type": "object",
+          "properties": {
+            "input": { "type": ["number", "null"] },
+            "output": { "type": ["number", "null"] },
+            "cache_read": { "type": ["number", "null"] },
+            "cache_write": { "type": ["number", "null"] }
+          }
+        },
+        "effective_price_per_million": {
+          "type": "object",
+          "properties": {
+            "input": { "type": ["number", "null"] },
+            "output": { "type": ["number", "null"] },
+            "cache_read": { "type": ["number", "null"] },
+            "cache_write": { "type": ["number", "null"] }
+          }
+        },
+        "effective_discount_percent": { "type": ["number", "null"] },
+        "data_retention": { "type": ["string", "null"] },
+        "training_use": { "type": ["string", "null"] },
+        "suspicion_score": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "suspicion_reasons": { "type": "array", "items": { "type": "string" } },
+        "information_confidence": { "enum": ["HIGH", "MEDIUM", "LOW"] },
+        "operational_confidence": { "enum": ["HIGH", "MEDIUM", "LOW"] },
+        "ranking_eligible": { "type": "boolean" },
+        "exclusion_reason": { "type": ["string", "null"] },
+        "last_verified": { "type": ["string", "null"], "format": "date-time" },
+        "free_model_names": { "type": "array", "items": { "type": "string" } },
+        "sources": { "type": "array", "items": { "type": "string", "format": "uri" } }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "ranking_eligible": { "const": true } },
+            "required": ["ranking_eligible"]
+          },
+          "then": {
+            "required": ["last_verified"],
+            "properties": { "last_verified": { "type": "string", "format": "date-time" } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "delivery_type": { "const": "router" } },
+            "required": ["delivery_type"]
+          },
+          "then": {
+            "required": ["free_model_names"],
+            "properties": {
+              "free_model_names": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
