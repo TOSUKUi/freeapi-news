@@ -241,24 +241,31 @@ body {
 .train-no { color: hsl(var(--success)); font-weight: 600; }
 .train-yes { color: hsl(var(--warning)); font-weight: 600; }
 
-/* OpenRouter free model names. */
-.models-block { margin-top: 1.1rem; }
-.models-count {
+/* Expandable benchmark details. */
+.bench-details { margin-top: 1.15rem; border-top: 1px solid hsl(var(--border)); padding-top: 0.9rem; }
+.bench-summary {
+  display: flex; align-items: center; gap: 0.7rem; cursor: pointer;
+  list-style: none; user-select: none;
+  padding: 0.45rem 0.6rem; margin: 0 -0.6rem; border-radius: calc(var(--radius) - 2px);
+  transition: background-color .15s ease;
+}
+.bench-summary::-webkit-details-marker { display: none; }
+.bench-summary:hover { background: hsl(var(--accent)); }
+.bench-summary-label { font-weight: 700; font-size: 0.9rem; }
+.bench-summary-count {
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 1.4rem; height: 1.4rem; padding: 0 0.3rem;
+  min-width: 1.4rem; height: 1.4rem; padding: 0 0.35rem;
   border-radius: 999px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
-  font-family: "Space Grotesk", sans-serif; font-size: 0.7rem; font-weight: 700;
+  font-family: "Space Grotesk", sans-serif; font-size: 0.68rem; font-weight: 700;
 }
-.models-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
-.model-chip {
-  font-family: "JetBrains Mono", monospace; font-size: 0.7rem;
-  background: hsl(var(--accent)); color: hsl(var(--accent-foreground));
-  border: 1px solid hsl(var(--border));
-  padding: 0.18rem 0.5rem; border-radius: calc(var(--radius) - 4px);
-  transition: background-color .15s ease, border-color .15s ease;
+.bench-list { padding: 0.9rem 0.2rem 0.2rem; display: grid; gap: 0.35rem; }
+.bench-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.45rem 0.7rem; border-radius: calc(var(--radius) - 4px);
+  background: hsl(var(--muted) / 0.5); font-size: 0.8rem;
 }
-.model-chip:hover { background: hsl(var(--accent) / 0.6); border-color: hsl(var(--ring) / 0.4); }
-.models-missing { color: hsl(var(--warning)); font-weight: 600; font-size: 0.85rem; margin-top: 0.4rem; }
+.bench-name { color: hsl(var(--muted-foreground)); font-weight: 500; }
+.bench-val { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 0.85rem; color: hsl(var(--foreground)); }
 
 /* Connection accordion (details/summary styled after shadcn/ui Accordion). */
 .acc { margin-top: 1.15rem; border-top: 1px solid hsl(var(--border)); padding-top: 0.9rem; }
@@ -327,16 +334,6 @@ details.acc[open] .chev { transform: rotate(180deg); }
 .snap-label { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
 
 /* Examples. */
-.example { border: 1px solid hsl(var(--border)); border-radius: var(--radius); background: hsl(var(--card)); padding: 1.1rem 1.25rem; }
-.example-title { display: flex; align-items: center; gap: 0.6rem; font-size: 1rem; font-weight: 700; margin-bottom: 0.7rem; }
-.example-code {
-  background: hsl(var(--muted)); border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) - 2px); padding: 0.9rem;
-  font-family: "JetBrains Mono", monospace; font-size: 0.74rem; line-height: 1.6;
-  overflow-x: auto; white-space: pre;
-}
-.empty-note { color: hsl(var(--muted-foreground)); font-size: 0.9rem; }
-
 /* Scroll reveal: visible by default (no-JS safe); the .js class, added by the
    early script, opts into the hidden-then-reveal animation as an enhancement. */
 .reveal { opacity: 1; transform: none; }
@@ -379,563 +376,37 @@ details.acc[open] .chev { transform: rotate(180deg); }
 
     <div class="mb-5 text-sm text-muted-foreground flex items-center gap-2">
       <span>最終更新</span>
-      <time datetime="2026-07-24T03:58:00+09:00" class="font-medium text-foreground">2026年7月24日</time>
+      <time datetime="2026-07-23T19:24:52.721Z" class="font-medium text-foreground">2026年7月24日</time>
       <span aria-hidden="true">·</span>
       <span>Asia/Tokyo</span>
     </div>
 
     <div class="snapshot reveal" role="group" aria-label="今回のサマリー">
     <div class="snap-cell">
-      <span class="snap-num">4</span>
+      <span class="snap-num">0</span>
       <span class="snap-label">掲載オファー</span>
     </div>
     <div class="snap-cell">
-      <span class="snap-num snap-num-s">3</span>
+      <span class="snap-num snap-num-s">0</span>
       <span class="snap-label">Sティア</span>
     </div>
     <div class="snap-cell">
-      <span class="snap-num snap-num-free">3</span>
+      <span class="snap-num snap-num-free">0</span>
       <span class="snap-label">完全無料</span>
     </div>
     <div class="snap-cell">
-      <span class="snap-num">7</span>
-      <span class="snap-label">無料モデル (ルーター)</span>
+      <span class="snap-num">0</span>
+      <span class="snap-label">期限付き</span>
     </div>
   </div>
 
     <section id="ranked" class="mt-10 mb-14" aria-labelledby="ranked-h">
       <div class="flex items-end justify-between gap-4 mb-1">
         <h2 id="ranked-h" class="font-display text-2xl sm:text-3xl font-bold">無料・激安APIランキング</h2>
-        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">4 件</span>
+        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">0 件</span>
       </div>
       <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">性能ティアとスコア</strong>で並び、同率内は情報の鮮度順。</p>
-      <div class="space-y-4"><article class="offer-card reveal" aria-labelledby="offer-0">
-    <div class="offer-inner">
-      <div class="offer-pos" aria-hidden="true">
-        <span class="pos-num">01</span>
-        <span class="pos-label">位</span>
-      </div>
-      <div class="offer-main">
-        <div class="offer-badges">
-          <span class="badge badge-b">B. 恒久無料枠</span>
-          <span class="tier tier-s" title="性能ティア"><span class="tier-letter">S</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
-        </div>
-        <h3 id="offer-0" class="offer-name">OpenRouter Free Tier</h3>
-        <p class="offer-meta">by <strong>OpenRouter</strong> ・ poolside/laguna-m.1:free</p>
-
-        <div class="offer-stats">
-          <div class="stat">
-      <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-s">S</span><span class="bench-score">72.5%</span></div>
-      <div class="stat-sub">SWE-bench Verified</div>
-    </div>
-          <div class="stat">
-            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price price-free">$0</span></div>
-            <div class="stat-sub">入力 / 出力</div>
-          </div>
-          <div class="stat">
-      <div class="stat-label">運用信頼度</div>
-      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">active</div>
-    </div>
-        </div>
-
-        <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">poolside/laguna-m.1:free</code></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">高品質無料モデル7種 (一部期限付き)</span></div>
-          
-          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">20 req/min</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-yes">Poolsideモデルは学習に使用される可能性あり</span></div>
-        </div>
-
-        <div class="models-block">
-      <div class="stat-label">無料モデル一覧 <span class="models-count">7</span></div>
-      <div class="models-list"><span class="model-chip">poolside/laguna-m.1:free</span><span class="model-chip">poolside/laguna-s-2.1:free</span><span class="model-chip">poolside/laguna-xs-2.1:free</span><span class="model-chip">nvidia/nemotron-3-ultra-550b-a55b:free</span><span class="model-chip">nvidia/nemotron-3-super-120b-a12b:free</span><span class="model-chip">cohere/north-mini-code:free</span><span class="model-chip">google/gemma-4-26b-a4b-it:free</span></div>
-    </div>
-        <details class="acc">
-      <summary class="acc-summary" aria-label="接続方法を表示">
-        <span class="acc-title">
-          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
-          接続方法
-        </span>
-        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="acc-body">
-        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
-        <div class="agent-grid"><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># 環境変数
-export OPENROUTER_API_KEY=sk-xxxxxxxxxxxxxxxx
-
-# pi 起動 (OpenAI 互換エンドポイント)
-pi --provider openai-compatible \
-   --base-url https://openrouter.ai/api/v1 \
-   --model poolside/laguna-m.1:free \
-   --api-key-env OPENROUTER_API_KEY</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.claude.json にカスタムプロバイダを追加
-{
-  &quot;customApiProviders&quot;: [
-    {
-      &quot;name&quot;: &quot;OpenRouter&quot;,
-      &quot;baseURL&quot;: &quot;https://openrouter.ai/api/v1&quot;,
-      &quot;apiKeyEnvVar&quot;: &quot;OPENROUTER_API_KEY&quot;
-    }
-  ]
-}
-
-# 起動
-claude --model openrouter/poolside/laguna-m.1:free</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// opencode.json
-{
-  &quot;provider&quot;: {
-    &quot;openrouter&quot;: {
-      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
-      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://openrouter.ai/api/v1&quot; },
-      &quot;models&quot;: { &quot;poolside/laguna-m.1:free&quot;: {} }
-    }
-  }
-}</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.codex/config.toml
-[model_providers.openrouter]
-name = &quot;OpenRouter&quot;
-base_url = &quot;https://openrouter.ai/api/v1&quot;
-env_key = &quot;OPENROUTER_API_KEY&quot;
-wire_api = &quot;chat&quot;
-
-[profiles.openrouter]
-provider = &quot;openrouter&quot;
-model = &quot;poolside/laguna-m.1:free&quot;
-
-# 起動
-codex --profile openrouter</code></pre>
-      </div></div>
-      </div>
-    </details>
-
-        <div class="offer-links">
-          <a class="btn btn-primary" href="https://openrouter.ai/models?q=free" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-    </div>
-  </article>
-<article class="offer-card reveal" aria-labelledby="offer-1">
-    <div class="offer-inner">
-      <div class="offer-pos" aria-hidden="true">
-        <span class="pos-num">02</span>
-        <span class="pos-label">位</span>
-      </div>
-      <div class="offer-main">
-        <div class="offer-badges">
-          <span class="badge badge-a">A. 完全無料</span>
-          <span class="tier tier-s" title="性能ティア"><span class="tier-letter">S</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
-        </div>
-        <h3 id="offer-1" class="offer-name">NVIDIA NIM</h3>
-        <p class="offer-meta">by <strong>NVIDIA</strong> ・ nvidia/nemotron-3-ultra-550b-a55b</p>
-
-        <div class="offer-stats">
-          <div class="stat">
-      <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-s">S</span><span class="bench-score">55%</span></div>
-      <div class="stat-sub">Humanity&#39;s Last Exam</div>
-    </div>
-          <div class="stat">
-            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price price-free">$0</span></div>
-            <div class="stat-sub">入力 / 出力</div>
-          </div>
-          <div class="stat">
-      <div class="stat-label">運用信頼度</div>
-      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">active</div>
-    </div>
-        </div>
-
-        <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://integrate.api.nvidia.com/v1</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">nvidia/nemotron-3-ultra-550b-a55b</code></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">80+モデル完全無料 (DGX Cloud加速)</span></div>
-          
-          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">40 req/min (無料枠)</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">学習なし</span></div>
-        </div>
-
-        
-        <details class="acc">
-      <summary class="acc-summary" aria-label="接続方法を表示">
-        <span class="acc-title">
-          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
-          接続方法
-        </span>
-        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="acc-body">
-        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
-        <div class="agent-grid"><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># 環境変数
-export NVIDIA_API_KEY=sk-xxxxxxxxxxxxxxxx
-
-# pi 起動 (OpenAI 互換エンドポイント)
-pi --provider openai-compatible \
-   --base-url https://integrate.api.nvidia.com/v1 \
-   --model nvidia/nemotron-3-ultra-550b-a55b \
-   --api-key-env NVIDIA_API_KEY</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.claude.json にカスタムプロバイダを追加
-{
-  &quot;customApiProviders&quot;: [
-    {
-      &quot;name&quot;: &quot;NVIDIA NIM&quot;,
-      &quot;baseURL&quot;: &quot;https://integrate.api.nvidia.com/v1&quot;,
-      &quot;apiKeyEnvVar&quot;: &quot;NVIDIA_API_KEY&quot;
-    }
-  ]
-}
-
-# 起動
-claude --model nvidia/nvidia/nemotron-3-ultra-550b-a55b</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// opencode.json
-{
-  &quot;provider&quot;: {
-    &quot;nvidia&quot;: {
-      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
-      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://integrate.api.nvidia.com/v1&quot; },
-      &quot;models&quot;: { &quot;nvidia/nemotron-3-ultra-550b-a55b&quot;: {} }
-    }
-  }
-}</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.codex/config.toml
-[model_providers.nvidia]
-name = &quot;NVIDIA NIM&quot;
-base_url = &quot;https://integrate.api.nvidia.com/v1&quot;
-env_key = &quot;NVIDIA_API_KEY&quot;
-wire_api = &quot;chat&quot;
-
-[profiles.nvidia]
-provider = &quot;nvidia&quot;
-model = &quot;nvidia/nemotron-3-ultra-550b-a55b&quot;
-
-# 起動
-codex --profile nvidia</code></pre>
-      </div></div>
-      </div>
-    </details>
-
-        <div class="offer-links">
-          <a class="btn btn-primary" href="https://build.nvidia.com" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-    </div>
-  </article>
-<article class="offer-card reveal" aria-labelledby="offer-2">
-    <div class="offer-inner">
-      <div class="offer-pos" aria-hidden="true">
-        <span class="pos-num">03</span>
-        <span class="pos-label">位</span>
-      </div>
-      <div class="offer-main">
-        <div class="offer-badges">
-          <span class="badge badge-b">B. 恒久無料枠</span>
-          <span class="tier tier-s" title="性能ティア"><span class="tier-letter">S</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
-        </div>
-        <h3 id="offer-2" class="offer-name">Google AI Studio Free Tier</h3>
-        <p class="offer-meta">by <strong>Google</strong> ・ gemini-3.6-flash</p>
-
-        <div class="offer-stats">
-          <div class="stat">
-      <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-s">S</span><span class="bench-score">52%</span></div>
-      <div class="stat-sub">Humanity&#39;s Last Exam</div>
-    </div>
-          <div class="stat">
-            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price price-free">$0</span></div>
-            <div class="stat-sub">入力 / 出力</div>
-          </div>
-          <div class="stat">
-      <div class="stat-label">運用信頼度</div>
-      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">active</div>
-    </div>
-        </div>
-
-        <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://generativelanguage.googleapis.com/v1beta</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">gemini-3.6-flash</code></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">無料枠利用可能 (カード不要、レート制限あり)</span></div>
-          
-          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">1000 req/min</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-yes">無料枠データは学習に使用される可能性あり</span></div>
-        </div>
-
-        
-        <details class="acc">
-      <summary class="acc-summary" aria-label="接続方法を表示">
-        <span class="acc-title">
-          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
-          接続方法
-        </span>
-        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="acc-body">
-        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
-        <div class="agent-grid"><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># 環境変数
-export GEMINI_API_KEY=xxxxxxxxxxxxxxxx
-
-# pi 起動
-pi --provider google --model gemini-3.6-flash</code></pre>
-      </div><div class="agent-block">
-          <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-unverified">未検証</span></div>
-          <p class="agent-unsupported">このエージェントでは未検証</p>
-        </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// opencode.json
-{
-  &quot;provider&quot;: {
-    &quot;google&quot;: {
-      &quot;npm&quot;: &quot;@ai-sdk/google&quot;,
-      &quot;models&quot;: { &quot;gemini-3.6-flash&quot;: {} }
-    }
-  }
-}</code></pre>
-      </div><div class="agent-block">
-          <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-unverified">未検証</span></div>
-          <p class="agent-unsupported">このエージェントでは未検証</p>
-        </div></div>
-      </div>
-    </details>
-
-        <div class="offer-links">
-          <a class="btn btn-primary" href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-    </div>
-  </article>
-<article class="offer-card reveal" aria-labelledby="offer-3">
-    <div class="offer-inner">
-      <div class="offer-pos" aria-hidden="true">
-        <span class="pos-num">04</span>
-        <span class="pos-label">位</span>
-      </div>
-      <div class="offer-main">
-        <div class="offer-badges">
-          <span class="badge badge-e">E. 割引</span>
-          <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
-        </div>
-        <h3 id="offer-3" class="offer-name">DeepSeek V4 Flash</h3>
-        <p class="offer-meta">by <strong>DeepSeek</strong> ・ deepseek-v4-flash</p>
-
-        <div class="offer-stats">
-          <div class="stat">
-      <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-a">A</span><span class="bench-score">51.6%</span></div>
-      <div class="stat-sub">Humanity&#39;s Last Exam</div>
-    </div>
-          <div class="stat">
-            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price ">$0.14 / $0.28</span></div>
-            <div class="stat-sub">入力 / 出力</div>
-          </div>
-          <div class="stat">
-      <div class="stat-label">運用信頼度</div>
-      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">active</div>
-    </div>
-        </div>
-
-        <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://api.deepseek.com/v1</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">deepseek-v4-flash</code></div>
-          
-          
-          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">60 req/min</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-yes">学習可能性あり</span></div>
-        </div>
-
-        
-        <details class="acc">
-      <summary class="acc-summary" aria-label="接続方法を表示">
-        <span class="acc-title">
-          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
-          接続方法
-        </span>
-        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="acc-body">
-        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
-        <div class="agent-grid"><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># 環境変数
-export DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxx
-
-# pi 起動 (OpenAI 互換エンドポイント)
-pi --provider openai-compatible \
-   --base-url https://api.deepseek.com/v1 \
-   --model deepseek-v4-flash \
-   --api-key-env DEEPSEEK_API_KEY</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.claude.json にカスタムプロバイダを追加
-{
-  &quot;customApiProviders&quot;: [
-    {
-      &quot;name&quot;: &quot;DeepSeek&quot;,
-      &quot;baseURL&quot;: &quot;https://api.deepseek.com/v1&quot;,
-      &quot;apiKeyEnvVar&quot;: &quot;DEEPSEEK_API_KEY&quot;
-    }
-  ]
-}
-
-# 起動
-claude --model deepseek/deepseek-v4-flash</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// opencode.json
-{
-  &quot;provider&quot;: {
-    &quot;deepseek&quot;: {
-      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
-      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://api.deepseek.com/v1&quot; },
-      &quot;models&quot;: { &quot;deepseek-v4-flash&quot;: {} }
-    }
-  }
-}</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.codex/config.toml
-[model_providers.deepseek]
-name = &quot;DeepSeek&quot;
-base_url = &quot;https://api.deepseek.com/v1&quot;
-env_key = &quot;DEEPSEEK_API_KEY&quot;
-wire_api = &quot;chat&quot;
-
-[profiles.deepseek]
-provider = &quot;deepseek&quot;
-model = &quot;deepseek-v4-flash&quot;
-
-# 起動
-codex --profile deepseek</code></pre>
-      </div></div>
-      </div>
-    </details>
-
-        <div class="offer-links">
-          <a class="btn btn-primary" href="https://www.deepseek.com" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-    </div>
-  </article></div>
-    </section>
-
-    <section id="register" class="mb-14" aria-labelledby="register-h">
-      <h2 id="register-h" class="font-display text-2xl sm:text-3xl font-bold mb-1">登録手順</h2>
-      <p class="text-sm text-muted-foreground mb-6">5分で完了。カード不要のオファーも多いので、各カードの「公式サイト」から条件を確認してください。</p>
-      <ol class="space-y-4">
-        <li class="offer-card reveal"><div class="offer-inner">
-          <div class="offer-pos" aria-hidden="true"><span class="pos-num">01</span></div>
-          <div class="offer-main">
-            <h3 class="font-bold mb-1">アカウント作成</h3>
-            <p class="text-sm text-muted-foreground">各プロバイダの公式サイトからアカウントを作成。メール認証のみで完了するものが大半です。</p>
-          </div>
-        </div></li>
-        <li class="offer-card reveal"><div class="offer-inner">
-          <div class="offer-pos" aria-hidden="true"><span class="pos-num">02</span></div>
-          <div class="offer-main">
-            <h3 class="font-bold mb-1">APIキー取得</h3>
-            <p class="text-sm text-muted-foreground">ダッシュボード → APIキー → 新規作成。キーは一度しか表示されないので、コピーして安全な場所に保管してください。</p>
-          </div>
-        </div></li>
-        <li class="offer-card reveal"><div class="offer-inner">
-          <div class="offer-pos" aria-hidden="true"><span class="pos-num">03</span></div>
-          <div class="offer-main">
-            <h3 class="font-bold mb-1">環境変数に設定</h3>
-            <pre class="agent-code mt-2"><code>export DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxx
-export OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxx</code></pre>
-          </div>
-        </div></li>
-        <li class="offer-card reveal"><div class="offer-inner">
-          <div class="offer-pos" aria-hidden="true"><span class="pos-num">04</span></div>
-          <div class="offer-main">
-            <h3 class="font-bold mb-1">テスト呼び出し</h3>
-            <pre class="agent-code mt-2"><code>curl https://api.deepseek.com/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
-  -d '{"model": "deepseek-chat", "messages": [{"role": "user", "content": "こんにちは！"}]}'</code></pre>
-            <p class="text-sm text-muted-foreground mt-2">レスポンスが返れば成功です。</p>
-          </div>
-        </div></li>
-      </ol>
-      <div class="mt-6 p-4 border rounded-lg bg-card" style="border-color:hsl(var(--warning) / 0.5)">
-        <h3 class="font-bold mb-2 flex items-center gap-2" style="color:hsl(var(--warning))">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-          安全な利用の注意点
-        </h3>
-        <ul class="text-sm text-muted-foreground space-y-1.5 list-disc list-inside">
-          <li>APIキーを絶対に公開しないでください (GitHub にコミットしない)。</li>
-          <li>機密情報 ・ パスワード ・ APIキー自体を送信しないでください。</li>
-          <li>無料枠の利用上限に注意。想定外の請求につながらないか確認してください。</li>
-          <li>データ利用ポリシーを確認 (学習に利用される可能性があります)。</li>
-        </ul>
-      </div>
-    </section>
-
-    <section id="examples" class="mb-14" aria-labelledby="examples-h">
-      <h2 id="examples-h" class="font-display text-2xl sm:text-3xl font-bold mb-1">最小利用例</h2>
-      <p class="text-sm text-muted-foreground mb-6">コピーしてすぐに実行できます。</p>
-      <div class="space-y-4"><div class="example reveal">
-      <h3 class="example-title"><span class="badge badge-b">B. 恒久無料枠</span>OpenRouter Free Tier</h3>
-      <pre class="example-code"><code>curl https://openrouter.ai/api/v1/chat/completions \
-  -H &quot;Content-Type: application/json&quot; \
-  -H &quot;Authorization: Bearer $OPENROUTER_API_KEY&quot; \
-  -d &#39;{
-    &quot;model&quot;: &quot;poolside/laguna-m.1:free&quot;,
-    &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;こんにちは！&quot;}]
-  }&#39;</code></pre>
-    </div><div class="example reveal">
-      <h3 class="example-title"><span class="badge badge-a">A. 完全無料</span>NVIDIA NIM</h3>
-      <pre class="example-code"><code>curl https://integrate.api.nvidia.com/v1/chat/completions \
-  -H &quot;Content-Type: application/json&quot; \
-  -H &quot;Authorization: Bearer $NVIDIA_API_KEY&quot; \
-  -d &#39;{
-    &quot;model&quot;: &quot;nvidia/nemotron-3-ultra-550b-a55b&quot;,
-    &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;こんにちは！&quot;}]
-  }&#39;</code></pre>
-    </div><div class="example reveal">
-      <h3 class="example-title"><span class="badge badge-b">B. 恒久無料枠</span>Google AI Studio Free Tier</h3>
-      <pre class="example-code"><code># Google は OpenAI 互換ではないため、各カードの接続方法を参照してください。</code></pre>
-    </div><div class="example reveal">
-      <h3 class="example-title"><span class="badge badge-e">E. 割引</span>DeepSeek V4 Flash</h3>
-      <pre class="example-code"><code>curl https://api.deepseek.com/v1/chat/completions \
-  -H &quot;Content-Type: application/json&quot; \
-  -H &quot;Authorization: Bearer $DEEPSEEK_API_KEY&quot; \
-  -d &#39;{
-    &quot;model&quot;: &quot;deepseek-v4-flash&quot;,
-    &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;こんにちは！&quot;}]
-  }&#39;</code></pre>
-    </div></div>
+      <div class="space-y-4"></div>
     </section>
 
     <footer class="border-t pt-8 pb-4 text-center text-sm text-muted-foreground">

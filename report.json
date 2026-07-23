@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-24T03:58:00+09:00",
+  "generated_at": "2026-07-24T04:30:00+09:00",
   "timezone": "Asia/Tokyo",
   "new_models": [
     {
@@ -183,6 +183,164 @@
   "ranked_offers": [
     {
       "rank": 1,
+      "name": "Poolside Laguna M.1",
+      "model_name": "poolside/laguna-m.1:free",
+      "provider": "OpenRouter",
+      "model_vendor": "Poolside",
+      "delivery_type": "router",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "start_at": "2024-03-01T00:00:00+09:00",
+      "end_at": "2026-07-28T00:00:00+00:00",
+      "end_timezone_known": false,
+      "regions": [
+        "global"
+      ],
+      "registration_conditions": [],
+      "card_required": false,
+      "minimum_deposit": null,
+      "kyc_required": false,
+      "auto_renewal": false,
+      "refund_policy": "N/A (free)",
+      "free_limits": "$0 (7/28まで・カード不要)",
+      "rate_limits": "50 req/day (無料)",
+      "context_tokens": 262144,
+      "max_output_tokens": 32768,
+      "tool_calling": true,
+      "structured_output": true,
+      "image_input": false,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "poolside/laguna-m.1:free",
+      "provider_count": 1,
+      "recent_activity": "active",
+      "normal_price_per_million": {
+        "input": 0,
+        "output": 0,
+        "cache_read": null,
+        "cache_write": null
+      },
+      "effective_price_per_million": {
+        "input": 0,
+        "output": 0,
+        "cache_read": null,
+        "cache_write": null
+      },
+      "effective_discount_percent": 100,
+      "data_retention": "provider-dependent",
+      "training_use": "無料利用時、入出力がモデル学習に使用される可能性あり",
+      "benchmark": {
+        "score": 72.5,
+        "benchmark_name": "SWE-bench Verified",
+        "tier": "S"
+      },
+      "benchmarks": [
+        {
+          "name": "SWE-bench Verified",
+          "score": 72.5
+        },
+        {
+          "name": "SWE-bench Multilingual",
+          "score": 67.3
+        },
+        {
+          "name": "Terminal-Bench 2.0",
+          "score": 40.7
+        }
+      ],
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "exclusion_reason": null,
+      "sources": [
+        "https://openrouter.ai/poolside/laguna-m.1:free"
+      ],
+      "last_verified": "2026-07-24T04:30:00+09:00",
+      "free_model_names": [
+        "poolside/laguna-m.1:free"
+      ]
+    },
+    {
+      "rank": 2,
+      "name": "Nemotron 3 Ultra",
+      "model_name": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "provider": "OpenRouter",
+      "model_vendor": "NVIDIA",
+      "delivery_type": "router",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "start_at": "2024-03-01T00:00:00+09:00",
+      "end_at": null,
+      "end_timezone_known": true,
+      "regions": [
+        "global"
+      ],
+      "registration_conditions": [],
+      "card_required": false,
+      "minimum_deposit": null,
+      "kyc_required": false,
+      "auto_renewal": false,
+      "refund_policy": "N/A (free)",
+      "free_limits": "$0 (カード不要)",
+      "rate_limits": "50 req/day (無料)",
+      "context_tokens": 1000000,
+      "max_output_tokens": 16384,
+      "tool_calling": true,
+      "structured_output": true,
+      "image_input": false,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "provider_count": 1,
+      "recent_activity": "active",
+      "normal_price_per_million": {
+        "input": 0,
+        "output": 0,
+        "cache_read": null,
+        "cache_write": null
+      },
+      "effective_price_per_million": {
+        "input": 0,
+        "output": 0,
+        "cache_read": null,
+        "cache_write": null
+      },
+      "effective_discount_percent": 100,
+      "data_retention": "provider-dependent",
+      "training_use": "学習なし",
+      "benchmark": {
+        "score": 55.0,
+        "benchmark_name": "Humanity's Last Exam",
+        "tier": "S"
+      },
+      "benchmarks": [
+        {
+          "name": "Humanity's Last Exam",
+          "score": 55.0
+        },
+        {
+          "name": "AIME 2025",
+          "score": 86.0
+        },
+        {
+          "name": "SWE-bench Verified",
+          "score": 52.8
+        }
+      ],
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "exclusion_reason": null,
+      "sources": [
+        "https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b:free"
+      ],
+      "last_verified": "2026-07-24T04:30:00+09:00",
+      "free_model_names": [
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ]
+    },
+    {
+      "rank": 3,
       "name": "NVIDIA NIM",
       "model_name": "nvidia/nemotron-3-ultra-550b-a55b",
       "provider": "NVIDIA",
@@ -228,10 +386,24 @@
       "data_retention": "not stored",
       "training_use": "学習なし",
       "benchmark": {
-        "score": 55,
+        "score": 55.0,
         "benchmark_name": "Humanity's Last Exam",
         "tier": "S"
       },
+      "benchmarks": [
+        {
+          "name": "Humanity's Last Exam",
+          "score": 55.0
+        },
+        {
+          "name": "AIME 2025",
+          "score": 86.0
+        },
+        {
+          "name": "SWE-bench Verified",
+          "score": 52.8
+        }
+      ],
       "suspicion_score": 0,
       "suspicion_reasons": [],
       "information_confidence": "HIGH",
@@ -239,86 +411,13 @@
       "ranking_eligible": true,
       "exclusion_reason": null,
       "sources": [
-        "https://build.nvidia.com",
-        "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b"
+        "https://build.nvidia.com"
       ],
-      "last_verified": "2026-07-24T03:58:00+09:00"
+      "last_verified": "2026-07-24T04:30:00+09:00"
     },
     {
-      "rank": 2,
-      "name": "OpenRouter Free Tier",
-      "model_name": "poolside/laguna-m.1:free",
-      "provider": "OpenRouter",
-      "model_vendor": "Poolside",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "start_at": "2024-03-01T00:00:00+09:00",
-      "end_at": null,
-      "end_timezone_known": true,
-      "regions": [
-        "global"
-      ],
-      "registration_conditions": [],
-      "card_required": false,
-      "minimum_deposit": null,
-      "kyc_required": false,
-      "auto_renewal": false,
-      "refund_policy": "N/A (free)",
-      "free_limits": "高品質無料モデル7種 (一部期限付き)",
-      "rate_limits": "20 req/min",
-      "context_tokens": 262144,
-      "max_output_tokens": 32768,
-      "tool_calling": true,
-      "structured_output": true,
-      "image_input": false,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "poolside/laguna-m.1:free",
-      "provider_count": 40,
-      "recent_activity": "active",
-      "normal_price_per_million": {
-        "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
-      },
-      "effective_price_per_million": {
-        "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
-      },
-      "effective_discount_percent": 100,
-      "data_retention": "provider-dependent",
-      "training_use": "Poolsideモデルは学習に使用される可能性あり",
-      "benchmark": {
-        "score": 72.5,
-        "benchmark_name": "SWE-bench Verified",
-        "tier": "S"
-      },
-      "suspicion_score": 0,
-      "suspicion_reasons": [],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "sources": [
-        "https://openrouter.ai/models?q=free",
-        "https://costgoat.com/pricing/openrouter-free-models"
-      ],
-      "last_verified": "2026-07-24T03:58:00+09:00",
-      "free_model_names": [
-        "poolside/laguna-m.1:free",
-        "poolside/laguna-s-2.1:free",
-        "poolside/laguna-xs-2.1:free",
-        "nvidia/nemotron-3-ultra-550b-a55b:free",
-        "nvidia/nemotron-3-super-120b-a12b:free",
-        "cohere/north-mini-code:free",
-        "google/gemma-4-26b-a4b-it:free"
-      ]
-    },
-    {
-      "rank": 3,
-      "name": "Google AI Studio Free Tier",
+      "rank": 4,
+      "name": "Google AI Studio",
       "model_name": "gemini-3.6-flash",
       "provider": "Google",
       "model_vendor": "Google",
@@ -336,7 +435,7 @@
       "kyc_required": false,
       "auto_renewal": false,
       "refund_policy": "N/A (free tier)",
-      "free_limits": "無料枠利用可能 (カード不要、レート制限あり)",
+      "free_limits": "無料枠 (カード不要・レート制限あり)",
       "rate_limits": "1000 req/min",
       "context_tokens": 1000000,
       "max_output_tokens": 8192,
@@ -363,10 +462,24 @@
       "data_retention": "18 months",
       "training_use": "無料枠データは学習に使用される可能性あり",
       "benchmark": {
-        "score": 52,
+        "score": 52.0,
         "benchmark_name": "Humanity's Last Exam",
         "tier": "S"
       },
+      "benchmarks": [
+        {
+          "name": "Humanity's Last Exam",
+          "score": 52.0
+        },
+        {
+          "name": "MMLU",
+          "score": 89.2
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 74.1
+        }
+      ],
       "suspicion_score": 0,
       "suspicion_reasons": [],
       "information_confidence": "HIGH",
@@ -374,13 +487,87 @@
       "ranking_eligible": true,
       "exclusion_reason": null,
       "sources": [
-        "https://ai.google.dev/gemini-api/docs/pricing",
-        "https://ai.google.dev/gemini-api/docs/changelog"
+        "https://ai.google.dev/gemini-api/docs/pricing"
       ],
-      "last_verified": "2026-07-24T03:58:00+09:00"
+      "last_verified": "2026-07-24T04:30:00+09:00"
     },
     {
-      "rank": 4,
+      "rank": 5,
+      "name": "Poolside Laguna S 2.1",
+      "model_name": "poolside/laguna-s-2.1:free",
+      "provider": "OpenRouter",
+      "model_vendor": "Poolside",
+      "delivery_type": "router",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "start_at": "2024-03-01T00:00:00+09:00",
+      "end_at": null,
+      "end_timezone_known": true,
+      "regions": [
+        "global"
+      ],
+      "registration_conditions": [],
+      "card_required": false,
+      "minimum_deposit": null,
+      "kyc_required": false,
+      "auto_renewal": false,
+      "refund_policy": "N/A (free)",
+      "free_limits": "$0 (カード不要)",
+      "rate_limits": "50 req/day (無料)",
+      "context_tokens": 262144,
+      "max_output_tokens": 32768,
+      "tool_calling": true,
+      "structured_output": true,
+      "image_input": false,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "poolside/laguna-s-2.1:free",
+      "provider_count": 1,
+      "recent_activity": "active",
+      "normal_price_per_million": {
+        "input": 0,
+        "output": 0,
+        "cache_read": null,
+        "cache_write": null
+      },
+      "effective_price_per_million": {
+        "input": 0,
+        "output": 0,
+        "cache_read": null,
+        "cache_write": null
+      },
+      "effective_discount_percent": 100,
+      "data_retention": "provider-dependent",
+      "training_use": "無料利用時、入出力がモデル学習に使用される可能性あり",
+      "benchmark": {
+        "score": 70.2,
+        "benchmark_name": "Terminal-Bench 2.1",
+        "tier": "A"
+      },
+      "benchmarks": [
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 70.2
+        },
+        {
+          "name": "DeepSWE",
+          "score": 40.4
+        }
+      ],
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "exclusion_reason": null,
+      "sources": [
+        "https://openrouter.ai/poolside/laguna-s-2.1:free"
+      ],
+      "last_verified": "2026-07-24T04:30:00+09:00",
+      "free_model_names": [
+        "poolside/laguna-s-2.1:free"
+      ]
+    },
+    {
+      "rank": 6,
       "name": "DeepSeek V4 Flash",
       "model_name": "deepseek-v4-flash",
       "provider": "DeepSeek",
@@ -430,6 +617,20 @@
         "benchmark_name": "Humanity's Last Exam",
         "tier": "A"
       },
+      "benchmarks": [
+        {
+          "name": "Humanity's Last Exam",
+          "score": 51.6
+        },
+        {
+          "name": "SWE-bench Verified",
+          "score": 58.4
+        },
+        {
+          "name": "AIME 2025",
+          "score": 82.0
+        }
+      ],
       "suspicion_score": 0,
       "suspicion_reasons": [],
       "information_confidence": "HIGH",
@@ -437,11 +638,9 @@
       "ranking_eligible": true,
       "exclusion_reason": null,
       "sources": [
-        "https://www.deepseek.com",
-        "https://pricepertoken.com/pricing-page/model/deepseek-deepseek-v4-flash",
-        "https://explainx.ai/blog/deepseek-v4-official-release-peak-pricing-mid-july-2026"
+        "https://www.deepseek.com"
       ],
-      "last_verified": "2026-07-24T03:58:00+09:00"
+      "last_verified": "2026-07-24T04:30:00+09:00"
     }
   ],
   "excluded_offers": [

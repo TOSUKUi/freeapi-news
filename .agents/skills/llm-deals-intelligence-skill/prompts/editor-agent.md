@@ -32,9 +32,16 @@ Concretely, do NOT rank:
 
 When a provider's free tier has multiple models, judge the tier by its best model. If the best model passes the quality gate, rank the offer; list only quality-gate-passing models in `free_model_names`.
 
-## Representative model for router offers
+## Individual model cards (routers included)
 
-For router offers (OpenRouter etc.), set `model_name`, `model_id`, and `benchmark` to the single strongest free model on that router — the one a reader should try first. Prefer the model with the highest coding/reasoning benchmark. In `free_model_names`, list only models that pass the quality gate; omit small, outdated, or single-purpose models.
+Emit each noteworthy free model as its own offer card — including models accessed through routers like OpenRouter. Do not aggregate a router's free models into a single card. For each router-hosted model card:
+
+- Set `delivery_type: "router"`, `provider` to the router name, `base_url` to the router endpoint.
+- Set `model_id`, `model_name`, `benchmark`, and `benchmarks` to that specific model.
+- Set `free_model_names` to `[model_id]` (schema requires it for router offers).
+- If the model's free access has an end date, set `end_at` and `end_timezone_known`.
+
+Only create cards for models that pass the quality gate. A router's small or outdated free models get no card at all.
 
 ## End dates
 
@@ -45,6 +52,6 @@ If an offer has a known end date, always set `end_at` and `end_timezone_known`. 
 Every offer you emit must carry two fields the page depends on. Set them at collection time; the builder never invents them.
 
 - `last_verified` (RFC 3339 timestamp, required when `ranking_eligible` is `true`): the moment this offer's information was last reconfirmed by cited evidence. Set it to the latest `accessed_at` among the offer's own `sources` entries (the most recent source you actually checked for this offer). If you cannot confirm a date, leave the offer `ranking_eligible: false` rather than emitting a ranking-eligible offer without a verification date.
-- `free_model_names` (string array, required and non-empty when `delivery_type` is `router`): for router offers (OpenRouter), every free model ID currently available, pulled from OpenRouter's authoritative model catalog (models whose effective input and output price are zero and that are available). Deduplicate by exact model ID and sort lexicographically. Emit the full list with no cap and no truncation. If the catalog could not be fetched, do not emit the router offer as ranking eligible; the schema rejects a router offer with an empty list.
+- `free_model_names` (string array, required and non-empty when `delivery_type` is `router`): for an individual router-hosted model card, set this to `[model_id]` — the single model that card represents. The schema requires a non-empty array for router offers.
 
 Connection instructions are NOT a report field. Do not write setup text into the report; the builder derives per-agent snippets from its own versioned templates using `base_url`, `model_id`, and the provider.

@@ -271,9 +271,9 @@ A free API is only valuable if the model itself is worth using. Do not rank offe
 - When a provider's free tier has multiple models, judge the tier by its best model, not its average.
 - Ask: "Would a knowledgeable developer choose this over the best free alternative?" If no, exclude or demote.
 
-### Representative model for router offers
+### Individual model cards (routers included)
 
-For router offers (OpenRouter etc.), set `model_name`, `model_id`, and `benchmark` to the single strongest free model available on that router — the one a reader should actually try first. In `free_model_names`, list only models that meet the quality gate above; omit small, outdated, or single-purpose models.
+Emit each noteworthy free model as its own offer card, including models accessed through routers like OpenRouter. Do not aggregate a router's free models into one card. For each router-hosted card set `delivery_type: "router"`, the router as `provider`, the router endpoint as `base_url`, the specific model's `model_id`/`benchmark`/`benchmarks`, and `free_model_names: [model_id]`. Only create cards for models that pass the quality gate.
 
 ### End dates
 

@@ -1,6 +1,26 @@
 {
-  "updated_at": "2026-07-24T03:58:00+09:00",
+  "updated_at": "2026-07-24T04:30:00+09:00",
   "offers": [
+    {
+      "name": "Poolside Laguna M.1",
+      "provider": "OpenRouter",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": "2026-07-28T00:00:00+00:00",
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "poolside/laguna-m.1:free"
+    },
+    {
+      "name": "Nemotron 3 Ultra",
+      "provider": "OpenRouter",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free"
+    },
     {
       "name": "NVIDIA NIM",
       "provider": "NVIDIA",
@@ -12,17 +32,7 @@
       "model_id": "nvidia/nemotron-3-ultra-550b-a55b"
     },
     {
-      "name": "OpenRouter Free Tier",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "HIGH",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "poolside/laguna-m.1:free"
-    },
-    {
-      "name": "Google AI Studio Free Tier",
+      "name": "Google AI Studio",
       "provider": "Google",
       "classification": "B_PERMANENT_FREE_TIER",
       "end_at": null,
@@ -30,6 +40,16 @@
       "suspicion_score": 0,
       "base_url": "https://generativelanguage.googleapis.com/v1beta",
       "model_id": "gemini-3.6-flash"
+    },
+    {
+      "name": "Poolside Laguna S 2.1",
+      "provider": "OpenRouter",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "poolside/laguna-s-2.1:free"
     },
     {
       "name": "DeepSeek V4 Flash",

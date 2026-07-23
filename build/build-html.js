@@ -82,16 +82,55 @@ const AGENTS = [
 ];
 
 const AGENT_SNIPPETS = {
-  pi: (o, cap) => cap.openai
-    ? `# 環境変数\nexport ${cap.env}=sk-xxxxxxxxxxxxxxxx\n\n# pi 起動 (OpenAI 互換エンドポイント)\npi --provider openai-compatible \\\n   --base-url ${o.base_url} \\\n   --model ${o.model_id} \\\n   --api-key-env ${cap.env}`
-    : `# 環境変数\nexport ${cap.env}=xxxxxxxxxxxxxxxx\n\n# pi 起動\npi --provider ${cap.key} --model ${o.model_id}`,
+  pi: (o, cap) => `// .pi/settings.json
+{
+  "defaultProvider": "${cap.key}",
+  "defaultModel": "${o.model_id}"
+}
+
+# 環境変数 (または pi 内で /login ${cap.key})
+export ${cap.env}=xxxxxxxxxxxxxxxx`,
   claude_code: (o, cap) =>
-    `# ~/.claude.json にカスタムプロバイダを追加\n{\n  "customApiProviders": [\n    {\n      "name": "${cap.label}",\n      "baseURL": "${o.base_url}",\n      "apiKeyEnvVar": "${cap.env}"\n    }\n  ]\n}\n\n# 起動\nclaude --model ${cap.key}/${o.model_id}`,
-  opencode: (o, cap) => cap.openai
-    ? `// opencode.json\n{\n  "provider": {\n    "${cap.key}": {\n      "npm": "@ai-sdk/openai-compatible",\n      "options": { "baseURL": "${o.base_url}" },\n      "models": { "${o.model_id}": {} }\n    }\n  }\n}`
-    : `// opencode.json\n{\n  "provider": {\n    "${cap.key}": {\n      "npm": "@ai-sdk/google",\n      "models": { "${o.model_id}": {} }\n    }\n  }\n}`,
+    `# ~/.claude.json にカスタムプロバイダを追加
+{
+  "customApiProviders": [
+    {
+      "name": "${cap.label}",
+      "baseURL": "${o.base_url}",
+      "apiKeyEnvVar": "${cap.env}"
+    }
+  ]
+}
+
+# 起動
+claude --model ${cap.key}/${o.model_id}`,
+  opencode: (o, cap) => `// opencode.json
+{
+  "provider": {
+    "${cap.key}": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": { "baseURL": "${o.base_url}" },
+      "models": { "${o.model_id}": {} }
+    }
+  }
+}
+
+# APIキー登録 (無料キーで可)
+# opencode 起動後 → /connect ${cap.key} → キーを貼付`,
   codex: (o, cap) =>
-    `# ~/.codex/config.toml\n[model_providers.${cap.key}]\nname = "${cap.label}"\nbase_url = "${o.base_url}"\nenv_key = "${cap.env}"\nwire_api = "chat"\n\n[profiles.${cap.key}]\nprovider = "${cap.key}"\nmodel = "${o.model_id}"\n\n# 起動\ncodex --profile ${cap.key}`,
+    `# ~/.codex/config.toml
+[model_providers.${cap.key}]
+name = "${cap.label}"
+base_url = "${o.base_url}"
+env_key = "${cap.env}"
+wire_api = "chat"
+
+[profiles.${cap.key}]
+provider = "${cap.key}"
+model = "${o.model_id}"
+
+# 起動
+codex --profile ${cap.key}`,
 };
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -226,21 +265,22 @@ function confidenceBlock(o) {
     </div>`;
 }
 
-// OpenRouter (router type) free model names, full list, no truncation (AC-5).
-function freeModelNamesBlock(o) {
-  if (o.delivery_type !== 'router') return '';
-  const names = Array.isArray(o.free_model_names) ? o.free_model_names : [];
-  if (names.length === 0) {
-    return `<div class="models-block">
-        <div class="stat-label">無料モデル一覧</div>
-        <p class="models-missing">モデル一覧未取得</p>
-      </div>`;
-  }
-  const badges = names.map(n => `<span class="model-chip">${esc(n)}</span>`).join('');
-  return `<div class="models-block">
-      <div class="stat-label">無料モデル一覧 <span class="models-count">${names.length}</span></div>
-      <div class="models-list">${badges}</div>
-    </div>`;
+// Expandable benchmark details: representative score shown on the card,
+// full benchmark list revealed on demand.
+function benchmarkDetailsBlock(o) {
+  const list = Array.isArray(o.benchmarks) ? o.benchmarks : [];
+  if (list.length === 0) return '';
+  const rows = list.map(b =>
+    `<div class="bench-row"><span class="bench-name">${esc(b.name)}</span><span class="bench-val">${esc(b.score)}%</span></div>`
+  ).join('');
+  return `<details class="bench-details">
+      <summary class="bench-summary">
+        <span class="bench-summary-label">ベンチマーク詳細</span>
+        <span class="bench-summary-count">${list.length}件</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="bench-list">${rows}</div>
+    </details>`;
 }
 
 // Per model connection accordion (AC-6): one details/summary per card with
@@ -314,7 +354,7 @@ function offerCard(o, index, generatedAt, tz) {
           ${o.training_use ? `<div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain ${/なし|no/i.test(o.training_use) ? 'train-no' : 'train-yes'}">${esc(o.training_use)}</span></div>` : ''}
         </div>
 
-        ${freeModelNamesBlock(o)}
+        ${benchmarkDetailsBlock(o)}
         ${connectionAccordion(o)}
 
         <div class="offer-links">
@@ -332,7 +372,7 @@ function snapshotStrip(report, offers) {
     const p = o.effective_price_per_million || {};
     return p.input === 0 && p.output === 0;
   }).length;
-  const routerModels = offers.reduce((n, o) => n + (Array.isArray(o.free_model_names) ? o.free_model_names.length : 0), 0);
+  const limitedCount = offers.filter(o => o.end_at).length;
   return `<div class="snapshot reveal" role="group" aria-label="今回のサマリー">
     <div class="snap-cell">
       <span class="snap-num">${total}</span>
@@ -347,29 +387,10 @@ function snapshotStrip(report, offers) {
       <span class="snap-label">完全無料</span>
     </div>
     <div class="snap-cell">
-      <span class="snap-num">${routerModels}</span>
-      <span class="snap-label">無料モデル (ルーター)</span>
+      <span class="snap-num">${limitedCount}</span>
+      <span class="snap-label">期限付き</span>
     </div>
   </div>`;
-}
-
-function buildExamples(offers) {
-  if (!offers || offers.length === 0) {
-    return '<p class="empty-note">利用例はありません。</p>';
-  }
-  return offers.slice(0, 5).map(o => {
-    const b = CLASS_BADGE[o.classification] || { label: o.classification, cls: 'badge-g' };
-    const cap = getCapability(o);
-    const baseUrl = o.base_url || 'https://api.example.com/v1';
-    const modelId = o.model_id || 'model-name';
-    const curl = cap.openai
-      ? `curl ${baseUrl}/chat/completions \\\n  -H "Content-Type: application/json" \\\n  -H "Authorization: Bearer \$${cap.env}" \\\n  -d '{\n    "model": "${modelId}",\n    "messages": [{"role": "user", "content": "こんにちは！"}]\n  }'`
-      : `# ${cap.label} は OpenAI 互換ではないため、各カードの接続方法を参照してください。`;
-    return `<div class="example reveal">
-      <h3 class="example-title"><span class="badge ${b.cls}">${esc(b.label)}</span>${esc(o.name)}</h3>
-      <pre class="example-code"><code>${esc(curl)}</code></pre>
-    </div>`;
-  }).join('');
 }
 
 // ── Theme tokens (spec 0002 AC-1, AC-2) ───────────────────────────
@@ -555,24 +576,31 @@ body {
 .train-no { color: hsl(var(--success)); font-weight: 600; }
 .train-yes { color: hsl(var(--warning)); font-weight: 600; }
 
-/* OpenRouter free model names. */
-.models-block { margin-top: 1.1rem; }
-.models-count {
+/* Expandable benchmark details. */
+.bench-details { margin-top: 1.15rem; border-top: 1px solid hsl(var(--border)); padding-top: 0.9rem; }
+.bench-summary {
+  display: flex; align-items: center; gap: 0.7rem; cursor: pointer;
+  list-style: none; user-select: none;
+  padding: 0.45rem 0.6rem; margin: 0 -0.6rem; border-radius: calc(var(--radius) - 2px);
+  transition: background-color .15s ease;
+}
+.bench-summary::-webkit-details-marker { display: none; }
+.bench-summary:hover { background: hsl(var(--accent)); }
+.bench-summary-label { font-weight: 700; font-size: 0.9rem; }
+.bench-summary-count {
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 1.4rem; height: 1.4rem; padding: 0 0.3rem;
+  min-width: 1.4rem; height: 1.4rem; padding: 0 0.35rem;
   border-radius: 999px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
-  font-family: "Space Grotesk", sans-serif; font-size: 0.7rem; font-weight: 700;
+  font-family: "Space Grotesk", sans-serif; font-size: 0.68rem; font-weight: 700;
 }
-.models-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
-.model-chip {
-  font-family: "JetBrains Mono", monospace; font-size: 0.7rem;
-  background: hsl(var(--accent)); color: hsl(var(--accent-foreground));
-  border: 1px solid hsl(var(--border));
-  padding: 0.18rem 0.5rem; border-radius: calc(var(--radius) - 4px);
-  transition: background-color .15s ease, border-color .15s ease;
+.bench-list { padding: 0.9rem 0.2rem 0.2rem; display: grid; gap: 0.35rem; }
+.bench-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.45rem 0.7rem; border-radius: calc(var(--radius) - 4px);
+  background: hsl(var(--muted) / 0.5); font-size: 0.8rem;
 }
-.model-chip:hover { background: hsl(var(--accent) / 0.6); border-color: hsl(var(--ring) / 0.4); }
-.models-missing { color: hsl(var(--warning)); font-weight: 600; font-size: 0.85rem; margin-top: 0.4rem; }
+.bench-name { color: hsl(var(--muted-foreground)); font-weight: 500; }
+.bench-val { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 0.85rem; color: hsl(var(--foreground)); }
 
 /* Connection accordion (details/summary styled after shadcn/ui Accordion). */
 .acc { margin-top: 1.15rem; border-top: 1px solid hsl(var(--border)); padding-top: 0.9rem; }
@@ -641,16 +669,6 @@ details.acc[open] .chev { transform: rotate(180deg); }
 .snap-label { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
 
 /* Examples. */
-.example { border: 1px solid hsl(var(--border)); border-radius: var(--radius); background: hsl(var(--card)); padding: 1.1rem 1.25rem; }
-.example-title { display: flex; align-items: center; gap: 0.6rem; font-size: 1rem; font-weight: 700; margin-bottom: 0.7rem; }
-.example-code {
-  background: hsl(var(--muted)); border: 1px solid hsl(var(--border));
-  border-radius: calc(var(--radius) - 2px); padding: 0.9rem;
-  font-family: "JetBrains Mono", monospace; font-size: 0.74rem; line-height: 1.6;
-  overflow-x: auto; white-space: pre;
-}
-.empty-note { color: hsl(var(--muted-foreground)); font-size: 0.9rem; }
-
 /* Scroll reveal: visible by default (no-JS safe); the .js class, added by the
    early script, opts into the hidden-then-reveal animation as an enhancement. */
 .reveal { opacity: 1; transform: none; }
@@ -676,7 +694,6 @@ function generateHTML(report) {
   const offers = selectRankedOffers(report);
   const cards = offers.map((o, i) => offerCard(o, i, generatedAt, tz)).join('\n');
   const snapshot = snapshotStrip(report, offers);
-  const examples = buildExamples(offers);
 
   return `<!DOCTYPE html>
 <html lang="ja">
@@ -786,64 +803,6 @@ function generateHTML(report) {
       </div>
       <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">性能ティアとスコア</strong>で並び、同率内は情報の鮮度順。</p>
       <div class="space-y-4">${cards}</div>
-    </section>
-
-    <section id="register" class="mb-14" aria-labelledby="register-h">
-      <h2 id="register-h" class="font-display text-2xl sm:text-3xl font-bold mb-1">登録手順</h2>
-      <p class="text-sm text-muted-foreground mb-6">5分で完了。カード不要のオファーも多いので、各カードの「公式サイト」から条件を確認してください。</p>
-      <ol class="space-y-4">
-        <li class="offer-card reveal"><div class="offer-inner">
-          <div class="offer-pos" aria-hidden="true"><span class="pos-num">01</span></div>
-          <div class="offer-main">
-            <h3 class="font-bold mb-1">アカウント作成</h3>
-            <p class="text-sm text-muted-foreground">各プロバイダの公式サイトからアカウントを作成。メール認証のみで完了するものが大半です。</p>
-          </div>
-        </div></li>
-        <li class="offer-card reveal"><div class="offer-inner">
-          <div class="offer-pos" aria-hidden="true"><span class="pos-num">02</span></div>
-          <div class="offer-main">
-            <h3 class="font-bold mb-1">APIキー取得</h3>
-            <p class="text-sm text-muted-foreground">ダッシュボード → APIキー → 新規作成。キーは一度しか表示されないので、コピーして安全な場所に保管してください。</p>
-          </div>
-        </div></li>
-        <li class="offer-card reveal"><div class="offer-inner">
-          <div class="offer-pos" aria-hidden="true"><span class="pos-num">03</span></div>
-          <div class="offer-main">
-            <h3 class="font-bold mb-1">環境変数に設定</h3>
-            <pre class="agent-code mt-2"><code>export DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxx
-export OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxx</code></pre>
-          </div>
-        </div></li>
-        <li class="offer-card reveal"><div class="offer-inner">
-          <div class="offer-pos" aria-hidden="true"><span class="pos-num">04</span></div>
-          <div class="offer-main">
-            <h3 class="font-bold mb-1">テスト呼び出し</h3>
-            <pre class="agent-code mt-2"><code>curl https://api.deepseek.com/v1/chat/completions \\
-  -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer $DEEPSEEK_API_KEY" \\
-  -d '{"model": "deepseek-chat", "messages": [{"role": "user", "content": "こんにちは！"}]}'</code></pre>
-            <p class="text-sm text-muted-foreground mt-2">レスポンスが返れば成功です。</p>
-          </div>
-        </div></li>
-      </ol>
-      <div class="mt-6 p-4 border rounded-lg bg-card" style="border-color:hsl(var(--warning) / 0.5)">
-        <h3 class="font-bold mb-2 flex items-center gap-2" style="color:hsl(var(--warning))">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-          安全な利用の注意点
-        </h3>
-        <ul class="text-sm text-muted-foreground space-y-1.5 list-disc list-inside">
-          <li>APIキーを絶対に公開しないでください (GitHub にコミットしない)。</li>
-          <li>機密情報 ・ パスワード ・ APIキー自体を送信しないでください。</li>
-          <li>無料枠の利用上限に注意。想定外の請求につながらないか確認してください。</li>
-          <li>データ利用ポリシーを確認 (学習に利用される可能性があります)。</li>
-        </ul>
-      </div>
-    </section>
-
-    <section id="examples" class="mb-14" aria-labelledby="examples-h">
-      <h2 id="examples-h" class="font-display text-2xl sm:text-3xl font-bold mb-1">最小利用例</h2>
-      <p class="text-sm text-muted-foreground mb-6">コピーしてすぐに実行できます。</p>
-      <div class="space-y-4">${examples}</div>
     </section>
 
     <footer class="border-t pt-8 pb-4 text-center text-sm text-muted-foreground">
