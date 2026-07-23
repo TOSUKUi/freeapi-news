@@ -261,6 +261,32 @@ If no meaningful new information is found, say so. Never pad the report with sta
 
 Rank only candidates with `operational_confidence` of `HIGH` or `MEDIUM`.
 
+### Quality gate — do not rank models that are not worth using
+
+A free API is only valuable if the model itself is worth using. Do not rank offers whose best available model is clearly outdated or outperformed by freely available alternatives. Concretely:
+
+- If a frontier-class or near-frontier model is available for free elsewhere, do not rank a free tier whose best model is a generation or more behind (e.g. Llama 3.3 70B when Nemotron 3 Ultra 550B is free).
+- Small models (roughly under 30B dense or under 10B active parameters) are local-run territory; they are not worth featuring as API offers unless they are the best available option for a specific use case (e.g. a specialized coding model).
+- Embedding, reranking, and single-purpose models do not belong in the main ranking.
+- When a provider's free tier has multiple models, judge the tier by its best model, not its average.
+- Ask: "Would a knowledgeable developer choose this over the best free alternative?" If no, exclude or demote.
+
+### Representative model for router offers
+
+For router offers (OpenRouter etc.), set `model_name`, `model_id`, and `benchmark` to the single strongest free model available on that router — the one a reader should actually try first. In `free_model_names`, list only models that meet the quality gate above; omit small, outdated, or single-purpose models.
+
+### End dates
+
+If an offer has a known end date, always set `end_at` and `end_timezone_known`. The page displays the deadline prominently. If the end date lacks a timezone, set `end_timezone_known: false`.
+
+### Sort order
+
+Primary: performance tier (S > A > B), then benchmark score descending.
+Secondary: freshness (`last_verified` descending).
+Tertiary: name ascending.
+
+Performance is the primary axis. A high-score model verified yesterday outranks a low-score model verified today.
+
 Recommended ranking formula:
 
 ```text

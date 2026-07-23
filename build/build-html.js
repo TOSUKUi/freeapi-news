@@ -161,7 +161,8 @@ function priceDisplay(o) {
 // Admission gate: ranked_offers only, ranking_eligible === true, a valid
 // benchmark (non null tier and score), tier in S/A/B. Conditional credits
 // and offers without a benchmark never appear. No fixed card cap.
-// Ordering: last_verified DESC, then tier rank (S, A, B), then name ASC.
+// Ordering: tier (S>A>B) → benchmark score DESC → freshness DESC → name.
+// Performance is the primary axis; freshness breaks ties within a tier.
 function selectRankedOffers(report) {
   const eligible = (report.ranked_offers || []).filter(o =>
     o.ranking_eligible === true &&
@@ -171,12 +172,15 @@ function selectRankedOffers(report) {
     ADMITTED_TIERS.includes(o.benchmark.tier)
   );
   return eligible.sort((a, b) => {
-    const av = validTimestamp(a.last_verified) ? Date.parse(a.last_verified) : Number.NEGATIVE_INFINITY;
-    const bv = validTimestamp(b.last_verified) ? Date.parse(b.last_verified) : Number.NEGATIVE_INFINITY;
-    if (bv !== av) return bv - av; // freshness DESC, missing sorts last
     const at = TIER_RANK[a.benchmark.tier];
     const bt = TIER_RANK[b.benchmark.tier];
     if (at !== bt) return at - bt; // S before A before B
+    const as = a.benchmark.score ?? 0;
+    const bs = b.benchmark.score ?? 0;
+    if (bs !== as) return bs - as; // higher score first
+    const av = validTimestamp(a.last_verified) ? Date.parse(a.last_verified) : Number.NEGATIVE_INFINITY;
+    const bv = validTimestamp(b.last_verified) ? Date.parse(b.last_verified) : Number.NEGATIVE_INFINITY;
+    if (bv !== av) return bv - av; // freshness DESC, missing sorts last
     return String(a.name || '').localeCompare(String(b.name || ''));
   });
 }
@@ -305,6 +309,7 @@ function offerCard(o, index, generatedAt, tz) {
           ${o.base_url ? `<div class="id-row"><span class="id-key">Base URL</span><code class="id-val">${esc(o.base_url)}</code></div>` : ''}
           ${o.model_id ? `<div class="id-row"><span class="id-key">Model ID</span><code class="id-val">${esc(o.model_id)}</code></div>` : ''}
           ${o.free_limits ? `<div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">${esc(o.free_limits)}</span></div>` : ''}
+          ${o.end_at ? `<div class="id-row"><span class="id-key">期限</span><span class="id-val-plain train-yes">⏳ ${fmtDate(o.end_at, tz)}まで${o.end_timezone_known ? '' : ' (タイムゾーン不明)'}</span></div>` : ''}
           ${o.rate_limits ? `<div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">${esc(o.rate_limits)}</span></div>` : ''}
           ${o.training_use ? `<div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain ${/なし|no/i.test(o.training_use) ? 'train-no' : 'train-yes'}">${esc(o.training_use)}</span></div>` : ''}
         </div>
@@ -779,7 +784,7 @@ function generateHTML(report) {
         <h2 id="ranked-h" class="font-display text-2xl sm:text-3xl font-bold">無料・激安APIランキング</h2>
         <span class="font-display text-sm text-muted-foreground whitespace-nowrap">${offers.length} 件</span>
       </div>
-      <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。性能を入門ゲートにし、<strong class="text-foreground">情報の鮮度</strong>で並び替えています。</p>
+      <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">性能ティアとスコア</strong>で並び、同率内は情報の鮮度順。</p>
       <div class="space-y-4">${cards}</div>
     </section>
 
