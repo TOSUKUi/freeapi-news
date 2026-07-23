@@ -1,15 +1,15 @@
 {
-  "updated_at": "2026-07-24T11:00:00+09:00",
+  "updated_at": "2026-07-24T03:58:00+09:00",
   "offers": [
     {
-      "name": "NVIDIA NIM Free Inference",
+      "name": "NVIDIA NIM",
       "provider": "NVIDIA",
       "classification": "A_TRUE_FREE",
       "end_at": null,
       "operational_confidence": "HIGH",
       "suspicion_score": 0,
       "base_url": "https://integrate.api.nvidia.com/v1",
-      "model_id": "z-ai/glm-5.2"
+      "model_id": "nvidia/nemotron-3-ultra-550b-a55b"
     },
     {
       "name": "OpenRouter Free Tier",
@@ -19,7 +19,27 @@
       "operational_confidence": "HIGH",
       "suspicion_score": 0,
       "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "google/gemma-4-31b-it:free"
+      "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free"
+    },
+    {
+      "name": "Google AI Studio Free Tier",
+      "provider": "Google",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://generativelanguage.googleapis.com/v1beta",
+      "model_id": "gemini-3.6-flash"
+    },
+    {
+      "name": "DeepSeek V4 Flash",
+      "provider": "DeepSeek",
+      "classification": "E_DISCOUNT",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://api.deepseek.com/v1",
+      "model_id": "deepseek-v4-flash"
     },
     {
       "name": "Cerebras Free Tier",
@@ -32,34 +52,54 @@
       "model_id": "cerebras/cerebras-3-27b-chat"
     },
     {
-      "name": "Google AI Studio Free Tier",
-      "provider": "Google",
+      "name": "Groq Free Tier",
+      "provider": "Groq",
       "classification": "B_PERMANENT_FREE_TIER",
       "end_at": null,
       "operational_confidence": "HIGH",
       "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta",
-      "model_id": "gemini-2.0-flash"
+      "base_url": "https://api.groq.com/openai/v1",
+      "model_id": "meta-llama-3.3-70b-versatile"
     },
     {
-      "name": "Groq Signup Credits",
-      "provider": "Groq",
+      "name": "Together.ai Free Credits",
+      "provider": "Together.ai",
       "classification": "D_TRIAL_CREDIT",
       "end_at": null,
       "operational_confidence": "HIGH",
       "suspicion_score": 0,
-      "base_url": "https://api.groq.com/openai/v1",
-      "model_id": "meta/llama-3.3-70b-versatile"
+      "base_url": "https://api.together.ai/v1",
+      "model_id": "meta-llama-3.3-70b-chat"
     },
     {
-      "name": "DeepSeek V4 Flash (Ultra Cheap)",
-      "provider": "DeepSeek",
-      "classification": "E_DISCOUNT",
+      "name": "Hugging Face Inference Free",
+      "provider": "Hugging Face",
+      "classification": "B_PERMANENT_FREE_TIER",
       "end_at": null,
       "operational_confidence": "HIGH",
       "suspicion_score": 0,
-      "base_url": "https://api.deepseek.com/v1",
-      "model_id": "deepseek-v4-flash"
+      "base_url": "https://api-inference.huggingface.co/v1",
+      "model_id": "meta-llama-3.3-70b-chat"
+    },
+    {
+      "name": "Replicate Free Tier",
+      "provider": "Replicate",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://api.replicate.com/v1",
+      "model_id": "meta/meta-llama-3.3-70b"
+    },
+    {
+      "name": "Anyscale Endpoints",
+      "provider": "Anyscale",
+      "classification": "D_TRIAL_CREDIT",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://api.endpoints.anyscale.com/v1",
+      "model_id": "meta-llama-3.3-70b-chat"
     }
   ]
 }

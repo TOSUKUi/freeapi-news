@@ -379,7 +379,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
 
     <div class="mb-5 text-sm text-muted-foreground flex items-center gap-2">
       <span>最終更新</span>
-      <time datetime="2026-07-24T11:00:00+09:00" class="font-medium text-foreground">2026年7月24日</time>
+      <time datetime="2026-07-24T03:58:00+09:00" class="font-medium text-foreground">2026年7月24日</time>
       <span aria-hidden="true">·</span>
       <span>Asia/Tokyo</span>
     </div>
@@ -390,7 +390,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
       <span class="snap-label">掲載オファー</span>
     </div>
     <div class="snap-cell">
-      <span class="snap-num snap-num-s">1</span>
+      <span class="snap-num snap-num-s">3</span>
       <span class="snap-label">Sティア</span>
     </div>
     <div class="snap-cell">
@@ -398,7 +398,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
       <span class="snap-label">完全無料</span>
     </div>
     <div class="snap-cell">
-      <span class="snap-num">20</span>
+      <span class="snap-num">13</span>
       <span class="snap-label">無料モデル (ルーター)</span>
     </div>
   </div>
@@ -418,16 +418,218 @@ details.acc[open] .chev { transform: rotate(180deg); }
       <div class="offer-main">
         <div class="offer-badges">
           <span class="badge badge-b">B. 恒久無料枠</span>
-          <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
+          <span class="tier tier-s" title="性能ティア"><span class="tier-letter">S</span></span>
           <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
-        <h3 id="offer-0" class="offer-name">OpenRouter Free Tier</h3>
-        <p class="offer-meta">by <strong>OpenRouter</strong> ・ deepseek/deepseek-v4:free</p>
+        <h3 id="offer-0" class="offer-name">Google AI Studio Free Tier</h3>
+        <p class="offer-meta">by <strong>Google</strong> ・ gemini-3.6-flash</p>
 
         <div class="offer-stats">
           <div class="stat">
       <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-a">A</span><span class="bench-score">48.2%</span></div>
+      <div class="stat-value"><span class="bench-tier tier-s">S</span><span class="bench-score">52%</span></div>
+      <div class="stat-sub">Humanity&#39;s Last Exam</div>
+    </div>
+          <div class="stat">
+            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
+            <div class="stat-value"><span class="price price-free">$0</span></div>
+            <div class="stat-sub">入力 / 出力</div>
+          </div>
+          <div class="stat">
+      <div class="stat-label">運用信頼度</div>
+      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
+      <div class="stat-sub">active</div>
+    </div>
+        </div>
+
+        <div class="offer-ids">
+          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://generativelanguage.googleapis.com/v1beta</code></div>
+          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">gemini-3.6-flash</code></div>
+          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">無料枠利用可能 (カード不要、レート制限あり)</span></div>
+          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">1000 req/min</span></div>
+          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-yes">無料枠データは学習に使用される可能性あり</span></div>
+        </div>
+
+        
+        <details class="acc">
+      <summary class="acc-summary" aria-label="接続方法を表示">
+        <span class="acc-title">
+          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
+          接続方法
+        </span>
+        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="acc-body">
+        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
+        <div class="agent-grid"><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># 環境変数
+export GEMINI_API_KEY=xxxxxxxxxxxxxxxx
+
+# pi 起動
+pi --provider google --model gemini-3.6-flash</code></pre>
+      </div><div class="agent-block">
+          <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-unverified">未検証</span></div>
+          <p class="agent-unsupported">このエージェントでは未検証</p>
+        </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code>// opencode.json
+{
+  &quot;provider&quot;: {
+    &quot;google&quot;: {
+      &quot;npm&quot;: &quot;@ai-sdk/google&quot;,
+      &quot;models&quot;: { &quot;gemini-3.6-flash&quot;: {} }
+    }
+  }
+}</code></pre>
+      </div><div class="agent-block">
+          <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-unverified">未検証</span></div>
+          <p class="agent-unsupported">このエージェントでは未検証</p>
+        </div></div>
+      </div>
+    </details>
+
+        <div class="offer-links">
+          <a class="btn btn-primary" href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </article>
+<article class="offer-card reveal" aria-labelledby="offer-1">
+    <div class="offer-inner">
+      <div class="offer-pos" aria-hidden="true">
+        <span class="pos-num">02</span>
+        <span class="pos-label">位</span>
+      </div>
+      <div class="offer-main">
+        <div class="offer-badges">
+          <span class="badge badge-a">A. 完全無料</span>
+          <span class="tier tier-s" title="性能ティア"><span class="tier-letter">S</span></span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
+        </div>
+        <h3 id="offer-1" class="offer-name">NVIDIA NIM</h3>
+        <p class="offer-meta">by <strong>NVIDIA</strong> ・ nvidia/nemotron-3-ultra-550b-a55b</p>
+
+        <div class="offer-stats">
+          <div class="stat">
+      <div class="stat-label">ベンチマーク</div>
+      <div class="stat-value"><span class="bench-tier tier-s">S</span><span class="bench-score">55%</span></div>
+      <div class="stat-sub">Humanity&#39;s Last Exam</div>
+    </div>
+          <div class="stat">
+            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
+            <div class="stat-value"><span class="price price-free">$0</span></div>
+            <div class="stat-sub">入力 / 出力</div>
+          </div>
+          <div class="stat">
+      <div class="stat-label">運用信頼度</div>
+      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
+      <div class="stat-sub">active</div>
+    </div>
+        </div>
+
+        <div class="offer-ids">
+          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://integrate.api.nvidia.com/v1</code></div>
+          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">nvidia/nemotron-3-ultra-550b-a55b</code></div>
+          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">80+モデル完全無料 (DGX Cloud加速)</span></div>
+          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">40 req/min (無料枠)</span></div>
+          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">学習なし</span></div>
+        </div>
+
+        
+        <details class="acc">
+      <summary class="acc-summary" aria-label="接続方法を表示">
+        <span class="acc-title">
+          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
+          接続方法
+        </span>
+        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="acc-body">
+        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
+        <div class="agent-grid"><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># 環境変数
+export NVIDIA_API_KEY=sk-xxxxxxxxxxxxxxxx
+
+# pi 起動 (OpenAI 互換エンドポイント)
+pi --provider openai-compatible \
+   --base-url https://integrate.api.nvidia.com/v1 \
+   --model nvidia/nemotron-3-ultra-550b-a55b \
+   --api-key-env NVIDIA_API_KEY</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># ~/.claude.json にカスタムプロバイダを追加
+{
+  &quot;customApiProviders&quot;: [
+    {
+      &quot;name&quot;: &quot;NVIDIA NIM&quot;,
+      &quot;baseURL&quot;: &quot;https://integrate.api.nvidia.com/v1&quot;,
+      &quot;apiKeyEnvVar&quot;: &quot;NVIDIA_API_KEY&quot;
+    }
+  ]
+}
+
+# 起動
+claude --model nvidia/nvidia/nemotron-3-ultra-550b-a55b</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code>// opencode.json
+{
+  &quot;provider&quot;: {
+    &quot;nvidia&quot;: {
+      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
+      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://integrate.api.nvidia.com/v1&quot; },
+      &quot;models&quot;: { &quot;nvidia/nemotron-3-ultra-550b-a55b&quot;: {} }
+    }
+  }
+}</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># ~/.codex/config.toml
+[model_providers.nvidia]
+name = &quot;NVIDIA NIM&quot;
+base_url = &quot;https://integrate.api.nvidia.com/v1&quot;
+env_key = &quot;NVIDIA_API_KEY&quot;
+wire_api = &quot;chat&quot;
+
+[profiles.nvidia]
+provider = &quot;nvidia&quot;
+model = &quot;nvidia/nemotron-3-ultra-550b-a55b&quot;
+
+# 起動
+codex --profile nvidia</code></pre>
+      </div></div>
+      </div>
+    </details>
+
+        <div class="offer-links">
+          <a class="btn btn-primary" href="https://build.nvidia.com" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </article>
+<article class="offer-card reveal" aria-labelledby="offer-2">
+    <div class="offer-inner">
+      <div class="offer-pos" aria-hidden="true">
+        <span class="pos-num">03</span>
+        <span class="pos-label">位</span>
+      </div>
+      <div class="offer-main">
+        <div class="offer-badges">
+          <span class="badge badge-b">B. 恒久無料枠</span>
+          <span class="tier tier-s" title="性能ティア"><span class="tier-letter">S</span></span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
+        </div>
+        <h3 id="offer-2" class="offer-name">OpenRouter Free Tier</h3>
+        <p class="offer-meta">by <strong>OpenRouter</strong> ・ nvidia/nemotron-3-ultra-550b-a55b:free</p>
+
+        <div class="offer-stats">
+          <div class="stat">
+      <div class="stat-label">ベンチマーク</div>
+      <div class="stat-value"><span class="bench-tier tier-s">S</span><span class="bench-score">55%</span></div>
       <div class="stat-sub">Humanity&#39;s Last Exam</div>
     </div>
           <div class="stat">
@@ -444,15 +646,15 @@ details.acc[open] .chev { transform: rotate(180deg); }
 
         <div class="offer-ids">
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">deepseek/deepseek-v4:free</code></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">20+無料モデル, 50リクエスト/日</span></div>
+          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">nvidia/nemotron-3-ultra-550b-a55b:free</code></div>
+          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">16無料テキストモデル + 2埋め込み/リランクモデル</span></div>
           <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">20 req/min</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">学習なし</span></div>
+          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-yes">Poolsideモデルは学習に使用される可能性あり</span></div>
         </div>
 
         <div class="models-block">
-      <div class="stat-label">無料モデル一覧 <span class="models-count">20</span></div>
-      <div class="models-list"><span class="model-chip">deepseek/deepseek-chat:free</span><span class="model-chip">deepseek/deepseek-r1:free</span><span class="model-chip">deepseek/deepseek-v4:free</span><span class="model-chip">google/gemini-2.0-flash-exp:free</span><span class="model-chip">google/gemma-2-9b-it:free</span><span class="model-chip">gryphe/mythomax-l2-13b:free</span><span class="model-chip">huggingfaceh4/zephyr-7b-beta:free</span><span class="model-chip">liquid/lfm-3b:free</span><span class="model-chip">meta-llama/llama-3.1-8b-instruct:free</span><span class="model-chip">meta-llama/llama-3.3-70b-instruct:free</span><span class="model-chip">mistralai/mistral-small-3.1-24b-instruct:free</span><span class="model-chip">mistralai/mixtral-8x7b-instruct:free</span><span class="model-chip">nousresearch/deephermes-3-llama-3-8b-preview:free</span><span class="model-chip">nousresearch/hermes-3-llama-3.1-405b:free</span><span class="model-chip">openchat/openchat-7b:free</span><span class="model-chip">qwen/qwen-2-7b-instruct:free</span><span class="model-chip">qwen/qwen-2.5-72b-instruct:free</span><span class="model-chip">sao10k/l3-70b-euryale-v2.1:free</span><span class="model-chip">sophosympatheia/midnight-rose-70b:free</span><span class="model-chip">undi95/remm-slerp-l2-13b:free</span></div>
+      <div class="stat-label">無料モデル一覧 <span class="models-count">13</span></div>
+      <div class="models-list"><span class="model-chip">nvidia/nemotron-3-ultra-550b-a55b:free</span><span class="model-chip">poolside/laguna-m.1:free</span><span class="model-chip">nvidia/nemotron-3-super-120b-a12b:free</span><span class="model-chip">cohere/north-mini-code:free</span><span class="model-chip">poolside/laguna-xs-2.1:free</span><span class="model-chip">poolside/laguna-s-2.1:free</span><span class="model-chip">nvidia/nemotron-3-nano-30b-a3b:free</span><span class="model-chip">nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free</span><span class="model-chip">nvidia/nemotron-nano-9b-v2:free</span><span class="model-chip">openai/gpt-oss-20b:free</span><span class="model-chip">nvidia/nemotron-nano-12b-v2-vl:free</span><span class="model-chip">google/gemma-4-26b-a4b-it:free</span><span class="model-chip">google/gemma-4-31b-it:free</span></div>
     </div>
         <details class="acc">
       <summary class="acc-summary" aria-label="接続方法を表示">
@@ -473,7 +675,7 @@ export OPENROUTER_API_KEY=sk-xxxxxxxxxxxxxxxx
 # pi 起動 (OpenAI 互換エンドポイント)
 pi --provider openai-compatible \
    --base-url https://openrouter.ai/api/v1 \
-   --model deepseek/deepseek-v4:free \
+   --model nvidia/nemotron-3-ultra-550b-a55b:free \
    --api-key-env OPENROUTER_API_KEY</code></pre>
       </div><div class="agent-block">
         <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
@@ -489,7 +691,7 @@ pi --provider openai-compatible \
 }
 
 # 起動
-claude --model openrouter/deepseek/deepseek-v4:free</code></pre>
+claude --model openrouter/nvidia/nemotron-3-ultra-550b-a55b:free</code></pre>
       </div><div class="agent-block">
         <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
         <pre class="agent-code"><code>// opencode.json
@@ -498,7 +700,7 @@ claude --model openrouter/deepseek/deepseek-v4:free</code></pre>
     &quot;openrouter&quot;: {
       &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
       &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://openrouter.ai/api/v1&quot; },
-      &quot;models&quot;: { &quot;deepseek/deepseek-v4:free&quot;: {} }
+      &quot;models&quot;: { &quot;nvidia/nemotron-3-ultra-550b-a55b:free&quot;: {} }
     }
   }
 }</code></pre>
@@ -513,7 +715,7 @@ wire_api = &quot;chat&quot;
 
 [profiles.openrouter]
 provider = &quot;openrouter&quot;
-model = &quot;deepseek/deepseek-v4:free&quot;
+model = &quot;nvidia/nemotron-3-ultra-550b-a55b:free&quot;
 
 # 起動
 codex --profile openrouter</code></pre>
@@ -522,139 +724,24 @@ codex --profile openrouter</code></pre>
     </details>
 
         <div class="offer-links">
-          <a class="btn btn-primary" href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
+          <a class="btn btn-primary" href="https://openrouter.ai/models?q=free" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
         </div>
       </div>
     </div>
   </article>
-<article class="offer-card reveal" aria-labelledby="offer-1">
+<article class="offer-card reveal" aria-labelledby="offer-3">
     <div class="offer-inner">
       <div class="offer-pos" aria-hidden="true">
-        <span class="pos-num">02</span>
-        <span class="pos-label">位</span>
-      </div>
-      <div class="offer-main">
-        <div class="offer-badges">
-          <span class="badge badge-b">B. 恒久無料枠</span>
-          <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
-        </div>
-        <h3 id="offer-1" class="offer-name">Cerebras Free Tier</h3>
-        <p class="offer-meta">by <strong>Cerebras</strong> ・ cerebras/cerebras-3-27b-chat</p>
-
-        <div class="offer-stats">
-          <div class="stat">
-      <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-b">B</span><span class="bench-score">42%</span></div>
-      <div class="stat-sub">MMLU</div>
-    </div>
-          <div class="stat">
-            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price price-free">$0</span></div>
-            <div class="stat-sub">入力 / 出力</div>
-          </div>
-          <div class="stat">
-      <div class="stat-label">運用信頼度</div>
-      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">active</div>
-    </div>
-        </div>
-
-        <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://api.cerebras.ai/v1</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">cerebras/cerebras-3-27b-chat</code></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">1M tokens/day</span></div>
-          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">5 req/min</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">学習なし</span></div>
-        </div>
-
-        
-        <details class="acc">
-      <summary class="acc-summary" aria-label="接続方法を表示">
-        <span class="acc-title">
-          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
-          接続方法
-        </span>
-        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="acc-body">
-        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
-        <div class="agent-grid"><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># 環境変数
-export CEREBRAS_API_KEY=sk-xxxxxxxxxxxxxxxx
-
-# pi 起動 (OpenAI 互換エンドポイント)
-pi --provider openai-compatible \
-   --base-url https://api.cerebras.ai/v1 \
-   --model cerebras/cerebras-3-27b-chat \
-   --api-key-env CEREBRAS_API_KEY</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.claude.json にカスタムプロバイダを追加
-{
-  &quot;customApiProviders&quot;: [
-    {
-      &quot;name&quot;: &quot;Cerebras&quot;,
-      &quot;baseURL&quot;: &quot;https://api.cerebras.ai/v1&quot;,
-      &quot;apiKeyEnvVar&quot;: &quot;CEREBRAS_API_KEY&quot;
-    }
-  ]
-}
-
-# 起動
-claude --model cerebras/cerebras/cerebras-3-27b-chat</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// opencode.json
-{
-  &quot;provider&quot;: {
-    &quot;cerebras&quot;: {
-      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
-      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://api.cerebras.ai/v1&quot; },
-      &quot;models&quot;: { &quot;cerebras/cerebras-3-27b-chat&quot;: {} }
-    }
-  }
-}</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.codex/config.toml
-[model_providers.cerebras]
-name = &quot;Cerebras&quot;
-base_url = &quot;https://api.cerebras.ai/v1&quot;
-env_key = &quot;CEREBRAS_API_KEY&quot;
-wire_api = &quot;chat&quot;
-
-[profiles.cerebras]
-provider = &quot;cerebras&quot;
-model = &quot;cerebras/cerebras-3-27b-chat&quot;
-
-# 起動
-codex --profile cerebras</code></pre>
-      </div></div>
-      </div>
-    </details>
-
-        <div class="offer-links">
-          <a class="btn btn-primary" href="https://www.cerebras.ai/cloud" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-    </div>
-  </article>
-<article class="offer-card reveal" aria-labelledby="offer-2">
-    <div class="offer-inner">
-      <div class="offer-pos" aria-hidden="true">
-        <span class="pos-num">03</span>
+        <span class="pos-num">04</span>
         <span class="pos-label">位</span>
       </div>
       <div class="offer-main">
         <div class="offer-badges">
           <span class="badge badge-e">E. 割引</span>
           <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>昨日 確認</span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
-        <h3 id="offer-2" class="offer-name">DeepSeek V4 Flash</h3>
+        <h3 id="offer-3" class="offer-name">DeepSeek V4 Flash</h3>
         <p class="offer-meta">by <strong>DeepSeek</strong> ・ deepseek-v4-flash</p>
 
         <div class="offer-stats">
@@ -665,7 +752,7 @@ codex --profile cerebras</code></pre>
     </div>
           <div class="stat">
             <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price ">$0.43 / $0.87</span></div>
+            <div class="stat-value"><span class="price ">$0.14 / $0.28</span></div>
             <div class="stat-sub">入力 / 出力</div>
           </div>
           <div class="stat">
@@ -757,121 +844,6 @@ codex --profile deepseek</code></pre>
       </div>
     </div>
   </article>
-<article class="offer-card reveal" aria-labelledby="offer-3">
-    <div class="offer-inner">
-      <div class="offer-pos" aria-hidden="true">
-        <span class="pos-num">04</span>
-        <span class="pos-label">位</span>
-      </div>
-      <div class="offer-main">
-        <div class="offer-badges">
-          <span class="badge badge-b">B. 恒久無料枠</span>
-          <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>昨日 確認</span>
-        </div>
-        <h3 id="offer-3" class="offer-name">Hugging Face Inference Free</h3>
-        <p class="offer-meta">by <strong>Hugging Face</strong> ・ meta-llama-3.3-70b-chat</p>
-
-        <div class="offer-stats">
-          <div class="stat">
-      <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-b">B</span><span class="bench-score">42%</span></div>
-      <div class="stat-sub">MMLU</div>
-    </div>
-          <div class="stat">
-            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price price-free">$0</span></div>
-            <div class="stat-sub">入力 / 出力</div>
-          </div>
-          <div class="stat">
-      <div class="stat-label">運用信頼度</div>
-      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">active</div>
-    </div>
-        </div>
-
-        <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://api-inference.huggingface.co/v1</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">meta-llama-3.3-70b-chat</code></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">無料枠利用可能 (カード不要)</span></div>
-          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">30 req/min</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-yes">学習可能性あり</span></div>
-        </div>
-
-        
-        <details class="acc">
-      <summary class="acc-summary" aria-label="接続方法を表示">
-        <span class="acc-title">
-          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
-          接続方法
-        </span>
-        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="acc-body">
-        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
-        <div class="agent-grid"><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># 環境変数
-export HF_API_TOKEN=sk-xxxxxxxxxxxxxxxx
-
-# pi 起動 (OpenAI 互換エンドポイント)
-pi --provider openai-compatible \
-   --base-url https://api-inference.huggingface.co/v1 \
-   --model meta-llama-3.3-70b-chat \
-   --api-key-env HF_API_TOKEN</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.claude.json にカスタムプロバイダを追加
-{
-  &quot;customApiProviders&quot;: [
-    {
-      &quot;name&quot;: &quot;Hugging Face&quot;,
-      &quot;baseURL&quot;: &quot;https://api-inference.huggingface.co/v1&quot;,
-      &quot;apiKeyEnvVar&quot;: &quot;HF_API_TOKEN&quot;
-    }
-  ]
-}
-
-# 起動
-claude --model huggingface/meta-llama-3.3-70b-chat</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// opencode.json
-{
-  &quot;provider&quot;: {
-    &quot;huggingface&quot;: {
-      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
-      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://api-inference.huggingface.co/v1&quot; },
-      &quot;models&quot;: { &quot;meta-llama-3.3-70b-chat&quot;: {} }
-    }
-  }
-}</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.codex/config.toml
-[model_providers.huggingface]
-name = &quot;Hugging Face&quot;
-base_url = &quot;https://api-inference.huggingface.co/v1&quot;
-env_key = &quot;HF_API_TOKEN&quot;
-wire_api = &quot;chat&quot;
-
-[profiles.huggingface]
-provider = &quot;huggingface&quot;
-model = &quot;meta-llama-3.3-70b-chat&quot;
-
-# 起動
-codex --profile huggingface</code></pre>
-      </div></div>
-      </div>
-    </details>
-
-        <div class="offer-links">
-          <a class="btn btn-primary" href="https://huggingface.co/inference-api" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-    </div>
-  </article>
 <article class="offer-card reveal" aria-labelledby="offer-4">
     <div class="offer-inner">
       <div class="offer-pos" aria-hidden="true">
@@ -880,328 +852,11 @@ codex --profile huggingface</code></pre>
       </div>
       <div class="offer-main">
         <div class="offer-badges">
-          <span class="badge badge-b">B. 恒久無料枠</span>
-          <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>2日前 確認</span>
-        </div>
-        <h3 id="offer-4" class="offer-name">Google AI Studio Free Tier</h3>
-        <p class="offer-meta">by <strong>Google</strong> ・ gemini-2.0-flash</p>
-
-        <div class="offer-stats">
-          <div class="stat">
-      <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-b">B</span><span class="bench-score">45%</span></div>
-      <div class="stat-sub">MMLU</div>
-    </div>
-          <div class="stat">
-            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price price-free">$0</span></div>
-            <div class="stat-sub">入力 / 出力</div>
-          </div>
-          <div class="stat">
-      <div class="stat-label">運用信頼度</div>
-      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">active</div>
-    </div>
-        </div>
-
-        <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://generativelanguage.googleapis.com/v1beta</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">gemini-2.0-flash</code></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">無料枠利用可能 (カード不要)</span></div>
-          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">1000 req/min</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-yes">学習可能性あり</span></div>
-        </div>
-
-        
-        <details class="acc">
-      <summary class="acc-summary" aria-label="接続方法を表示">
-        <span class="acc-title">
-          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
-          接続方法
-        </span>
-        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="acc-body">
-        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
-        <div class="agent-grid"><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># 環境変数
-export GEMINI_API_KEY=xxxxxxxxxxxxxxxx
-
-# pi 起動
-pi --provider google --model gemini-2.0-flash</code></pre>
-      </div><div class="agent-block">
-          <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-unverified">未検証</span></div>
-          <p class="agent-unsupported">このエージェントでは未検証</p>
-        </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// opencode.json
-{
-  &quot;provider&quot;: {
-    &quot;google&quot;: {
-      &quot;npm&quot;: &quot;@ai-sdk/google&quot;,
-      &quot;models&quot;: { &quot;gemini-2.0-flash&quot;: {} }
-    }
-  }
-}</code></pre>
-      </div><div class="agent-block">
-          <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-unverified">未検証</span></div>
-          <p class="agent-unsupported">このエージェントでは未検証</p>
-        </div></div>
-      </div>
-    </details>
-
-        <div class="offer-links">
-          <a class="btn btn-primary" href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-    </div>
-  </article>
-<article class="offer-card reveal" aria-labelledby="offer-5">
-    <div class="offer-inner">
-      <div class="offer-pos" aria-hidden="true">
-        <span class="pos-num">06</span>
-        <span class="pos-label">位</span>
-      </div>
-      <div class="offer-main">
-        <div class="offer-badges">
           <span class="badge badge-d">D. 試用クレジット</span>
           <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>3日前 確認</span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
-        <h3 id="offer-5" class="offer-name">Together.ai Free Credits</h3>
-        <p class="offer-meta">by <strong>Together.ai</strong> ・ meta-llama-3.3-70b-chat</p>
-
-        <div class="offer-stats">
-          <div class="stat">
-      <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-b">B</span><span class="bench-score">42%</span></div>
-      <div class="stat-sub">MMLU</div>
-    </div>
-          <div class="stat">
-            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price price-free">$0</span></div>
-            <div class="stat-sub">入力 / 出力</div>
-          </div>
-          <div class="stat">
-      <div class="stat-label">運用信頼度</div>
-      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">active</div>
-    </div>
-        </div>
-
-        <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://api.together.ai/v1</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">meta-llama-3.3-70b-chat</code></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">$25無料クレジット (サインアップ時)</span></div>
-          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">30 req/min</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-yes">学習可能性あり</span></div>
-        </div>
-
-        
-        <details class="acc">
-      <summary class="acc-summary" aria-label="接続方法を表示">
-        <span class="acc-title">
-          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
-          接続方法
-        </span>
-        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="acc-body">
-        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
-        <div class="agent-grid"><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># 環境変数
-export TOGETHER_API_KEY=sk-xxxxxxxxxxxxxxxx
-
-# pi 起動 (OpenAI 互換エンドポイント)
-pi --provider openai-compatible \
-   --base-url https://api.together.ai/v1 \
-   --model meta-llama-3.3-70b-chat \
-   --api-key-env TOGETHER_API_KEY</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.claude.json にカスタムプロバイダを追加
-{
-  &quot;customApiProviders&quot;: [
-    {
-      &quot;name&quot;: &quot;Together.ai&quot;,
-      &quot;baseURL&quot;: &quot;https://api.together.ai/v1&quot;,
-      &quot;apiKeyEnvVar&quot;: &quot;TOGETHER_API_KEY&quot;
-    }
-  ]
-}
-
-# 起動
-claude --model together/meta-llama-3.3-70b-chat</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// opencode.json
-{
-  &quot;provider&quot;: {
-    &quot;together&quot;: {
-      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
-      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://api.together.ai/v1&quot; },
-      &quot;models&quot;: { &quot;meta-llama-3.3-70b-chat&quot;: {} }
-    }
-  }
-}</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.codex/config.toml
-[model_providers.together]
-name = &quot;Together.ai&quot;
-base_url = &quot;https://api.together.ai/v1&quot;
-env_key = &quot;TOGETHER_API_KEY&quot;
-wire_api = &quot;chat&quot;
-
-[profiles.together]
-provider = &quot;together&quot;
-model = &quot;meta-llama-3.3-70b-chat&quot;
-
-# 起動
-codex --profile together</code></pre>
-      </div></div>
-      </div>
-    </details>
-
-        <div class="offer-links">
-          <a class="btn btn-primary" href="https://together.ai" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-    </div>
-  </article>
-<article class="offer-card reveal" aria-labelledby="offer-6">
-    <div class="offer-inner">
-      <div class="offer-pos" aria-hidden="true">
-        <span class="pos-num">07</span>
-        <span class="pos-label">位</span>
-      </div>
-      <div class="offer-main">
-        <div class="offer-badges">
-          <span class="badge badge-a">A. 完全無料</span>
-          <span class="tier tier-s" title="性能ティア"><span class="tier-letter">S</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>4日前 確認</span>
-        </div>
-        <h3 id="offer-6" class="offer-name">NVIDIA NIM</h3>
-        <p class="offer-meta">by <strong>NVIDIA</strong> ・ z-ai/glm-5.2</p>
-
-        <div class="offer-stats">
-          <div class="stat">
-      <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-s">S</span><span class="bench-score">54.7%</span></div>
-      <div class="stat-sub">Humanity&#39;s Last Exam</div>
-    </div>
-          <div class="stat">
-            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price price-free">$0</span></div>
-            <div class="stat-sub">入力 / 出力</div>
-          </div>
-          <div class="stat">
-      <div class="stat-label">運用信頼度</div>
-      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">active</div>
-    </div>
-        </div>
-
-        <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://integrate.api.nvidia.com/v1</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">z-ai/glm-5.2</code></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">80+モデル完全無料</span></div>
-          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">5 req/min (無料枠)</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">学習なし</span></div>
-        </div>
-
-        
-        <details class="acc">
-      <summary class="acc-summary" aria-label="接続方法を表示">
-        <span class="acc-title">
-          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
-          接続方法
-        </span>
-        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="acc-body">
-        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
-        <div class="agent-grid"><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># 環境変数
-export NVIDIA_API_KEY=sk-xxxxxxxxxxxxxxxx
-
-# pi 起動 (OpenAI 互換エンドポイント)
-pi --provider openai-compatible \
-   --base-url https://integrate.api.nvidia.com/v1 \
-   --model z-ai/glm-5.2 \
-   --api-key-env NVIDIA_API_KEY</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.claude.json にカスタムプロバイダを追加
-{
-  &quot;customApiProviders&quot;: [
-    {
-      &quot;name&quot;: &quot;NVIDIA NIM&quot;,
-      &quot;baseURL&quot;: &quot;https://integrate.api.nvidia.com/v1&quot;,
-      &quot;apiKeyEnvVar&quot;: &quot;NVIDIA_API_KEY&quot;
-    }
-  ]
-}
-
-# 起動
-claude --model nvidia/z-ai/glm-5.2</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// opencode.json
-{
-  &quot;provider&quot;: {
-    &quot;nvidia&quot;: {
-      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
-      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://integrate.api.nvidia.com/v1&quot; },
-      &quot;models&quot;: { &quot;z-ai/glm-5.2&quot;: {} }
-    }
-  }
-}</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.codex/config.toml
-[model_providers.nvidia]
-name = &quot;NVIDIA NIM&quot;
-base_url = &quot;https://integrate.api.nvidia.com/v1&quot;
-env_key = &quot;NVIDIA_API_KEY&quot;
-wire_api = &quot;chat&quot;
-
-[profiles.nvidia]
-provider = &quot;nvidia&quot;
-model = &quot;z-ai/glm-5.2&quot;
-
-# 起動
-codex --profile nvidia</code></pre>
-      </div></div>
-      </div>
-    </details>
-
-        <div class="offer-links">
-          <a class="btn btn-primary" href="https://build.nvidia.com" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-    </div>
-  </article>
-<article class="offer-card reveal" aria-labelledby="offer-7">
-    <div class="offer-inner">
-      <div class="offer-pos" aria-hidden="true">
-        <span class="pos-num">08</span>
-        <span class="pos-label">位</span>
-      </div>
-      <div class="offer-main">
-        <div class="offer-badges">
-          <span class="badge badge-d">D. 試用クレジット</span>
-          <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>5日前 確認</span>
-        </div>
-        <h3 id="offer-7" class="offer-name">Anyscale Endpoints</h3>
+        <h3 id="offer-4" class="offer-name">Anyscale Endpoints</h3>
         <p class="offer-meta">by <strong>Anyscale</strong> ・ meta-llama-3.3-70b-chat</p>
 
         <div class="offer-stats">
@@ -1304,6 +959,351 @@ codex --profile anyscale</code></pre>
       </div>
     </div>
   </article>
+<article class="offer-card reveal" aria-labelledby="offer-5">
+    <div class="offer-inner">
+      <div class="offer-pos" aria-hidden="true">
+        <span class="pos-num">06</span>
+        <span class="pos-label">位</span>
+      </div>
+      <div class="offer-main">
+        <div class="offer-badges">
+          <span class="badge badge-b">B. 恒久無料枠</span>
+          <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
+        </div>
+        <h3 id="offer-5" class="offer-name">Cerebras Free Tier</h3>
+        <p class="offer-meta">by <strong>Cerebras</strong> ・ cerebras/cerebras-3-27b-chat</p>
+
+        <div class="offer-stats">
+          <div class="stat">
+      <div class="stat-label">ベンチマーク</div>
+      <div class="stat-value"><span class="bench-tier tier-b">B</span><span class="bench-score">42%</span></div>
+      <div class="stat-sub">MMLU</div>
+    </div>
+          <div class="stat">
+            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
+            <div class="stat-value"><span class="price price-free">$0</span></div>
+            <div class="stat-sub">入力 / 出力</div>
+          </div>
+          <div class="stat">
+      <div class="stat-label">運用信頼度</div>
+      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
+      <div class="stat-sub">active</div>
+    </div>
+        </div>
+
+        <div class="offer-ids">
+          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://api.cerebras.ai/v1</code></div>
+          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">cerebras/cerebras-3-27b-chat</code></div>
+          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">1M tokens/day</span></div>
+          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">5 req/min</span></div>
+          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">学習なし</span></div>
+        </div>
+
+        
+        <details class="acc">
+      <summary class="acc-summary" aria-label="接続方法を表示">
+        <span class="acc-title">
+          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
+          接続方法
+        </span>
+        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="acc-body">
+        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
+        <div class="agent-grid"><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># 環境変数
+export CEREBRAS_API_KEY=sk-xxxxxxxxxxxxxxxx
+
+# pi 起動 (OpenAI 互換エンドポイント)
+pi --provider openai-compatible \
+   --base-url https://api.cerebras.ai/v1 \
+   --model cerebras/cerebras-3-27b-chat \
+   --api-key-env CEREBRAS_API_KEY</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># ~/.claude.json にカスタムプロバイダを追加
+{
+  &quot;customApiProviders&quot;: [
+    {
+      &quot;name&quot;: &quot;Cerebras&quot;,
+      &quot;baseURL&quot;: &quot;https://api.cerebras.ai/v1&quot;,
+      &quot;apiKeyEnvVar&quot;: &quot;CEREBRAS_API_KEY&quot;
+    }
+  ]
+}
+
+# 起動
+claude --model cerebras/cerebras/cerebras-3-27b-chat</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code>// opencode.json
+{
+  &quot;provider&quot;: {
+    &quot;cerebras&quot;: {
+      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
+      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://api.cerebras.ai/v1&quot; },
+      &quot;models&quot;: { &quot;cerebras/cerebras-3-27b-chat&quot;: {} }
+    }
+  }
+}</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># ~/.codex/config.toml
+[model_providers.cerebras]
+name = &quot;Cerebras&quot;
+base_url = &quot;https://api.cerebras.ai/v1&quot;
+env_key = &quot;CEREBRAS_API_KEY&quot;
+wire_api = &quot;chat&quot;
+
+[profiles.cerebras]
+provider = &quot;cerebras&quot;
+model = &quot;cerebras/cerebras-3-27b-chat&quot;
+
+# 起動
+codex --profile cerebras</code></pre>
+      </div></div>
+      </div>
+    </details>
+
+        <div class="offer-links">
+          <a class="btn btn-primary" href="https://www.cerebras.ai/cloud" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </article>
+<article class="offer-card reveal" aria-labelledby="offer-6">
+    <div class="offer-inner">
+      <div class="offer-pos" aria-hidden="true">
+        <span class="pos-num">07</span>
+        <span class="pos-label">位</span>
+      </div>
+      <div class="offer-main">
+        <div class="offer-badges">
+          <span class="badge badge-b">B. 恒久無料枠</span>
+          <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
+        </div>
+        <h3 id="offer-6" class="offer-name">Groq Free Tier</h3>
+        <p class="offer-meta">by <strong>Groq</strong> ・ meta-llama-3.3-70b-versatile</p>
+
+        <div class="offer-stats">
+          <div class="stat">
+      <div class="stat-label">ベンチマーク</div>
+      <div class="stat-value"><span class="bench-tier tier-b">B</span><span class="bench-score">42%</span></div>
+      <div class="stat-sub">MMLU</div>
+    </div>
+          <div class="stat">
+            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
+            <div class="stat-value"><span class="price price-free">$0</span></div>
+            <div class="stat-sub">入力 / 出力</div>
+          </div>
+          <div class="stat">
+      <div class="stat-label">運用信頼度</div>
+      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
+      <div class="stat-sub">active</div>
+    </div>
+        </div>
+
+        <div class="offer-ids">
+          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://api.groq.com/openai/v1</code></div>
+          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">meta-llama-3.3-70b-versatile</code></div>
+          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">14,400 req/day (最速無料推論)</span></div>
+          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">30 req/min</span></div>
+          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">学習なし</span></div>
+        </div>
+
+        
+        <details class="acc">
+      <summary class="acc-summary" aria-label="接続方法を表示">
+        <span class="acc-title">
+          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
+          接続方法
+        </span>
+        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="acc-body">
+        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
+        <div class="agent-grid"><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># 環境変数
+export GROQ_API_KEY=sk-xxxxxxxxxxxxxxxx
+
+# pi 起動 (OpenAI 互換エンドポイント)
+pi --provider openai-compatible \
+   --base-url https://api.groq.com/openai/v1 \
+   --model meta-llama-3.3-70b-versatile \
+   --api-key-env GROQ_API_KEY</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># ~/.claude.json にカスタムプロバイダを追加
+{
+  &quot;customApiProviders&quot;: [
+    {
+      &quot;name&quot;: &quot;Groq&quot;,
+      &quot;baseURL&quot;: &quot;https://api.groq.com/openai/v1&quot;,
+      &quot;apiKeyEnvVar&quot;: &quot;GROQ_API_KEY&quot;
+    }
+  ]
+}
+
+# 起動
+claude --model groq/meta-llama-3.3-70b-versatile</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code>// opencode.json
+{
+  &quot;provider&quot;: {
+    &quot;groq&quot;: {
+      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
+      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://api.groq.com/openai/v1&quot; },
+      &quot;models&quot;: { &quot;meta-llama-3.3-70b-versatile&quot;: {} }
+    }
+  }
+}</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># ~/.codex/config.toml
+[model_providers.groq]
+name = &quot;Groq&quot;
+base_url = &quot;https://api.groq.com/openai/v1&quot;
+env_key = &quot;GROQ_API_KEY&quot;
+wire_api = &quot;chat&quot;
+
+[profiles.groq]
+provider = &quot;groq&quot;
+model = &quot;meta-llama-3.3-70b-versatile&quot;
+
+# 起動
+codex --profile groq</code></pre>
+      </div></div>
+      </div>
+    </details>
+
+        <div class="offer-links">
+          <a class="btn btn-primary" href="https://console.groq.com" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </article>
+<article class="offer-card reveal" aria-labelledby="offer-7">
+    <div class="offer-inner">
+      <div class="offer-pos" aria-hidden="true">
+        <span class="pos-num">08</span>
+        <span class="pos-label">位</span>
+      </div>
+      <div class="offer-main">
+        <div class="offer-badges">
+          <span class="badge badge-b">B. 恒久無料枠</span>
+          <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
+        </div>
+        <h3 id="offer-7" class="offer-name">Hugging Face Inference Free</h3>
+        <p class="offer-meta">by <strong>Hugging Face</strong> ・ meta-llama-3.3-70b-chat</p>
+
+        <div class="offer-stats">
+          <div class="stat">
+      <div class="stat-label">ベンチマーク</div>
+      <div class="stat-value"><span class="bench-tier tier-b">B</span><span class="bench-score">42%</span></div>
+      <div class="stat-sub">MMLU</div>
+    </div>
+          <div class="stat">
+            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
+            <div class="stat-value"><span class="price price-free">$0</span></div>
+            <div class="stat-sub">入力 / 出力</div>
+          </div>
+          <div class="stat">
+      <div class="stat-label">運用信頼度</div>
+      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
+      <div class="stat-sub">active</div>
+    </div>
+        </div>
+
+        <div class="offer-ids">
+          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://api-inference.huggingface.co/v1</code></div>
+          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">meta-llama-3.3-70b-chat</code></div>
+          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">無料枠利用可能 (カード不要)</span></div>
+          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">30 req/min</span></div>
+          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-yes">学習可能性あり</span></div>
+        </div>
+
+        
+        <details class="acc">
+      <summary class="acc-summary" aria-label="接続方法を表示">
+        <span class="acc-title">
+          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
+          接続方法
+        </span>
+        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="acc-body">
+        <p class="acc-note">テンプレート版本 2026.07.1 ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
+        <div class="agent-grid"><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># 環境変数
+export HF_API_TOKEN=sk-xxxxxxxxxxxxxxxx
+
+# pi 起動 (OpenAI 互換エンドポイント)
+pi --provider openai-compatible \
+   --base-url https://api-inference.huggingface.co/v1 \
+   --model meta-llama-3.3-70b-chat \
+   --api-key-env HF_API_TOKEN</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># ~/.claude.json にカスタムプロバイダを追加
+{
+  &quot;customApiProviders&quot;: [
+    {
+      &quot;name&quot;: &quot;Hugging Face&quot;,
+      &quot;baseURL&quot;: &quot;https://api-inference.huggingface.co/v1&quot;,
+      &quot;apiKeyEnvVar&quot;: &quot;HF_API_TOKEN&quot;
+    }
+  ]
+}
+
+# 起動
+claude --model huggingface/meta-llama-3.3-70b-chat</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code>// opencode.json
+{
+  &quot;provider&quot;: {
+    &quot;huggingface&quot;: {
+      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
+      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://api-inference.huggingface.co/v1&quot; },
+      &quot;models&quot;: { &quot;meta-llama-3.3-70b-chat&quot;: {} }
+    }
+  }
+}</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># ~/.codex/config.toml
+[model_providers.huggingface]
+name = &quot;Hugging Face&quot;
+base_url = &quot;https://api-inference.huggingface.co/v1&quot;
+env_key = &quot;HF_API_TOKEN&quot;
+wire_api = &quot;chat&quot;
+
+[profiles.huggingface]
+provider = &quot;huggingface&quot;
+model = &quot;meta-llama-3.3-70b-chat&quot;
+
+# 起動
+codex --profile huggingface</code></pre>
+      </div></div>
+      </div>
+    </details>
+
+        <div class="offer-links">
+          <a class="btn btn-primary" href="https://huggingface.co/inference-api" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </article>
 <article class="offer-card reveal" aria-labelledby="offer-8">
     <div class="offer-inner">
       <div class="offer-pos" aria-hidden="true">
@@ -1314,7 +1314,7 @@ codex --profile anyscale</code></pre>
         <div class="offer-badges">
           <span class="badge badge-b">B. 恒久無料枠</span>
           <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>6日前 確認</span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
         <h3 id="offer-8" class="offer-name">Replicate Free Tier</h3>
         <p class="offer-meta">by <strong>Replicate</strong> ・ meta-llama-3.3-70b</p>
@@ -1429,10 +1429,10 @@ codex --profile replicate</code></pre>
         <div class="offer-badges">
           <span class="badge badge-d">D. 試用クレジット</span>
           <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>7日前 確認</span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
-        <h3 id="offer-9" class="offer-name">Groq Signup Credits</h3>
-        <p class="offer-meta">by <strong>Groq</strong> ・ meta-llama-3.3-70b-versatile</p>
+        <h3 id="offer-9" class="offer-name">Together.ai Free Credits</h3>
+        <p class="offer-meta">by <strong>Together.ai</strong> ・ meta-llama-3.3-70b-chat</p>
 
         <div class="offer-stats">
           <div class="stat">
@@ -1453,9 +1453,9 @@ codex --profile replicate</code></pre>
         </div>
 
         <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://api.groq.com/openai/v1</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">meta-llama-3.3-70b-versatile</code></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">~1000クレジット (サインアップ時)</span></div>
+          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://api.together.ai/v1</code></div>
+          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">meta-llama-3.3-70b-chat</code></div>
+          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">$25無料クレジット (サインアップ時)</span></div>
           <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">30 req/min</span></div>
           <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-yes">学習可能性あり</span></div>
         </div>
@@ -1475,61 +1475,61 @@ codex --profile replicate</code></pre>
         <div class="agent-grid"><div class="agent-block">
         <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
         <pre class="agent-code"><code># 環境変数
-export GROQ_API_KEY=sk-xxxxxxxxxxxxxxxx
+export TOGETHER_API_KEY=sk-xxxxxxxxxxxxxxxx
 
 # pi 起動 (OpenAI 互換エンドポイント)
 pi --provider openai-compatible \
-   --base-url https://api.groq.com/openai/v1 \
-   --model meta-llama-3.3-70b-versatile \
-   --api-key-env GROQ_API_KEY</code></pre>
+   --base-url https://api.together.ai/v1 \
+   --model meta-llama-3.3-70b-chat \
+   --api-key-env TOGETHER_API_KEY</code></pre>
       </div><div class="agent-block">
         <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
         <pre class="agent-code"><code># ~/.claude.json にカスタムプロバイダを追加
 {
   &quot;customApiProviders&quot;: [
     {
-      &quot;name&quot;: &quot;Groq&quot;,
-      &quot;baseURL&quot;: &quot;https://api.groq.com/openai/v1&quot;,
-      &quot;apiKeyEnvVar&quot;: &quot;GROQ_API_KEY&quot;
+      &quot;name&quot;: &quot;Together.ai&quot;,
+      &quot;baseURL&quot;: &quot;https://api.together.ai/v1&quot;,
+      &quot;apiKeyEnvVar&quot;: &quot;TOGETHER_API_KEY&quot;
     }
   ]
 }
 
 # 起動
-claude --model groq/meta-llama-3.3-70b-versatile</code></pre>
+claude --model together/meta-llama-3.3-70b-chat</code></pre>
       </div><div class="agent-block">
         <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
         <pre class="agent-code"><code>// opencode.json
 {
   &quot;provider&quot;: {
-    &quot;groq&quot;: {
+    &quot;together&quot;: {
       &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
-      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://api.groq.com/openai/v1&quot; },
-      &quot;models&quot;: { &quot;meta-llama-3.3-70b-versatile&quot;: {} }
+      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://api.together.ai/v1&quot; },
+      &quot;models&quot;: { &quot;meta-llama-3.3-70b-chat&quot;: {} }
     }
   }
 }</code></pre>
       </div><div class="agent-block">
         <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
         <pre class="agent-code"><code># ~/.codex/config.toml
-[model_providers.groq]
-name = &quot;Groq&quot;
-base_url = &quot;https://api.groq.com/openai/v1&quot;
-env_key = &quot;GROQ_API_KEY&quot;
+[model_providers.together]
+name = &quot;Together.ai&quot;
+base_url = &quot;https://api.together.ai/v1&quot;
+env_key = &quot;TOGETHER_API_KEY&quot;
 wire_api = &quot;chat&quot;
 
-[profiles.groq]
-provider = &quot;groq&quot;
-model = &quot;meta-llama-3.3-70b-versatile&quot;
+[profiles.together]
+provider = &quot;together&quot;
+model = &quot;meta-llama-3.3-70b-chat&quot;
 
 # 起動
-codex --profile groq</code></pre>
+codex --profile together</code></pre>
       </div></div>
       </div>
     </details>
 
         <div class="offer-links">
-          <a class="btn btn-primary" href="https://console.groq.com" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
+          <a class="btn btn-primary" href="https://together.ai" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
         </div>
       </div>
     </div>
@@ -1592,21 +1592,24 @@ export OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxx</code></pre>
       <h2 id="examples-h" class="font-display text-2xl sm:text-3xl font-bold mb-1">最小利用例</h2>
       <p class="text-sm text-muted-foreground mb-6">コピーしてすぐに実行できます。</p>
       <div class="space-y-4"><div class="example reveal">
+      <h3 class="example-title"><span class="badge badge-b">B. 恒久無料枠</span>Google AI Studio Free Tier</h3>
+      <pre class="example-code"><code># Google は OpenAI 互換ではないため、各カードの接続方法を参照してください。</code></pre>
+    </div><div class="example reveal">
+      <h3 class="example-title"><span class="badge badge-a">A. 完全無料</span>NVIDIA NIM</h3>
+      <pre class="example-code"><code>curl https://integrate.api.nvidia.com/v1/chat/completions \
+  -H &quot;Content-Type: application/json&quot; \
+  -H &quot;Authorization: Bearer $NVIDIA_API_KEY&quot; \
+  -d &#39;{
+    &quot;model&quot;: &quot;nvidia/nemotron-3-ultra-550b-a55b&quot;,
+    &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;こんにちは！&quot;}]
+  }&#39;</code></pre>
+    </div><div class="example reveal">
       <h3 class="example-title"><span class="badge badge-b">B. 恒久無料枠</span>OpenRouter Free Tier</h3>
       <pre class="example-code"><code>curl https://openrouter.ai/api/v1/chat/completions \
   -H &quot;Content-Type: application/json&quot; \
   -H &quot;Authorization: Bearer $OPENROUTER_API_KEY&quot; \
   -d &#39;{
-    &quot;model&quot;: &quot;deepseek/deepseek-v4:free&quot;,
-    &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;こんにちは！&quot;}]
-  }&#39;</code></pre>
-    </div><div class="example reveal">
-      <h3 class="example-title"><span class="badge badge-b">B. 恒久無料枠</span>Cerebras Free Tier</h3>
-      <pre class="example-code"><code>curl https://api.cerebras.ai/v1/chat/completions \
-  -H &quot;Content-Type: application/json&quot; \
-  -H &quot;Authorization: Bearer $CEREBRAS_API_KEY&quot; \
-  -d &#39;{
-    &quot;model&quot;: &quot;cerebras/cerebras-3-27b-chat&quot;,
+    &quot;model&quot;: &quot;nvidia/nemotron-3-ultra-550b-a55b:free&quot;,
     &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;こんにちは！&quot;}]
   }&#39;</code></pre>
     </div><div class="example reveal">
@@ -1619,17 +1622,14 @@ export OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxx</code></pre>
     &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;こんにちは！&quot;}]
   }&#39;</code></pre>
     </div><div class="example reveal">
-      <h3 class="example-title"><span class="badge badge-b">B. 恒久無料枠</span>Hugging Face Inference Free</h3>
-      <pre class="example-code"><code>curl https://api-inference.huggingface.co/v1/chat/completions \
+      <h3 class="example-title"><span class="badge badge-d">D. 試用クレジット</span>Anyscale Endpoints</h3>
+      <pre class="example-code"><code>curl https://api.endpoints.anyscale.com/v1/chat/completions \
   -H &quot;Content-Type: application/json&quot; \
-  -H &quot;Authorization: Bearer $HF_API_TOKEN&quot; \
+  -H &quot;Authorization: Bearer $ANYSCALE_API_KEY&quot; \
   -d &#39;{
     &quot;model&quot;: &quot;meta-llama-3.3-70b-chat&quot;,
     &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;こんにちは！&quot;}]
   }&#39;</code></pre>
-    </div><div class="example reveal">
-      <h3 class="example-title"><span class="badge badge-b">B. 恒久無料枠</span>Google AI Studio Free Tier</h3>
-      <pre class="example-code"><code># Google は OpenAI 互換ではないため、各カードの接続方法を参照してください。</code></pre>
     </div></div>
     </section>
 

@@ -92,10 +92,12 @@ echo "  (deduplicating, scoring, comparing with previous state)"
 
 if command -v pi &>/dev/null; then
   echo "Running skill via pi CLI..."
-  pi run "${SKILL_DIR}" \
+  timeout "${PI_TIMEOUT}" pi \
+    --skill "${SKILL_DIR}" \
     --model "${PI_MODEL}" \
-    --timeout "${PI_TIMEOUT}" \
-    --output "${REPORT_FILE}"
+    --approve \
+    --no-session \
+    -p "Run the llm-deals-intelligence-skill full collection workflow (Phase 0-9). Write the final validated JSON report to ${REPORT_FILE} following the schema at ${SKILL_SCHEMA_FILE}. Read previous state from ${SKILL_STATE_FILE}."
 else
   echo "WARNING: pi CLI not found."
   echo "Falling back to manual collection script..."
