@@ -33,7 +33,7 @@ export SKILL_SCHEMA_FILE="${SKILL_DIR}/schemas/daily_report.schema.json"
 
 # ── pi agent settings ────────────────────────────────────────────
 # pi model used by the local batch (pi must be installed on this machine).
-export PI_MODEL="${PI_MODEL:-litellm/qwen3.8-max-preview}"
+export PI_MODEL="${PI_MODEL:-litellm/local}"
 export PI_TIMEOUT="${PI_TIMEOUT:-1800}"   # seconds; a full 10-phase browser run is slow
 
 echo "[env] PROJECT_ROOT=${PROJECT_ROOT}"
