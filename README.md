@@ -2,7 +2,7 @@
 
 **毎日11:00 JST更新** — 今すぐ使える無料・激安LLM API を GitHub Pages で配信。
 
-[🚀 サイトを見る](https://free-api-news.github.io/free-api-news/)
+[🚀 サイトを見る](https://freeapi-news.tosukui.xyz/)
 
 ## 概要
 
