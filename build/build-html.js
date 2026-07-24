@@ -320,12 +320,11 @@ function connectionAccordion(o) {
 function offerCard(o, index, generatedAt, tz) {
   const price = priceDisplay(o);
   const pos = String(index + 1).padStart(2, '0');
-  return `<article class="offer-card reveal" aria-labelledby="offer-${index}">
+  const tierCls = o.benchmark ? ` tier-accent-${o.benchmark.tier.toLowerCase()}` : '';
+  return `<article class="offer-card reveal${tierCls}" aria-labelledby="offer-${index}">
+    <div class="card-accent" aria-hidden="true"></div>
+    <span class="rank-watermark" aria-hidden="true">${pos}</span>
     <div class="offer-inner">
-      <div class="offer-pos" aria-hidden="true">
-        <span class="pos-num">${pos}</span>
-        <span class="pos-label">位</span>
-      </div>
       <div class="offer-main">
         <div class="offer-badges">
           ${classBadge(o)}
@@ -481,6 +480,26 @@ body {
 }
 .font-display { font-family: "Space Grotesk", "Noto Sans JP", sans-serif; }
 
+/* Header gradient accent: tier colors as a thin underline, tying the
+   chrome to the content's color system. */
+header::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg,
+    hsl(var(--tier-s) / 0.5) 0%, hsl(var(--tier-a) / 0.4) 50%, hsl(var(--tier-b) / 0.5) 100%);
+  pointer-events: none;
+}
+
+/* Live pulse dot: conveys the daily feed is current. */
+.live-dot {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: hsl(var(--success));
+  animation: live-pulse 2.4s ease-in-out infinite;
+}
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 hsl(var(--success) / 0.5); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 4px hsl(var(--success) / 0); }
+}
+
 /* Layered ambient background: a soft top wash over a faint dot grid. */
 .bg-texture {
   position: fixed; inset: 0; z-index: -1; pointer-events: none;
@@ -525,31 +544,64 @@ body {
 .fresh-unverified { background: hsl(var(--warning) / 0.14); color: hsl(var(--warning)); }
 .fresh-icon { width: 0.8rem; height: 0.8rem; }
 
-/* Offer card. */
+/* Offer card: flex column so same row cards stretch to equal height.
+   position: relative anchors the rank watermark and accent bar. */
 .offer-card {
   container: offer-card / inline-size;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
   transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
 }
+/* Tier accent bar: a 3px gradient at the very top of the card.
+   Encodes performance tier structurally, visible in a grid scan. */
+.card-accent {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: hsl(var(--border));
+  transition: height .2s ease;
+}
+.tier-accent-s .card-accent { background: linear-gradient(90deg, hsl(var(--tier-s)), hsl(var(--tier-s) / 0.3)); }
+.tier-accent-a .card-accent { background: linear-gradient(90deg, hsl(var(--tier-a)), hsl(var(--tier-a) / 0.3)); }
+.tier-accent-b .card-accent { background: linear-gradient(90deg, hsl(var(--tier-b)), hsl(var(--tier-b) / 0.3)); }
+.offer-card:hover .card-accent { height: 4px; }
+
+/* Rank watermark: the signature element. A large ghosted numeral
+   positioned in the top right, tier tinted, never competing with content. */
+.rank-watermark {
+  position: absolute; top: -0.3rem; right: 0.6rem;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 5.5rem; font-weight: 700; line-height: 1;
+  color: hsl(var(--foreground) / 0.04);
+  pointer-events: none; user-select: none;
+  transition: color .2s ease;
+}
+.tier-accent-s .rank-watermark { color: hsl(var(--tier-s) / 0.07); }
+.tier-accent-a .rank-watermark { color: hsl(var(--tier-a) / 0.06); }
+.tier-accent-b .rank-watermark { color: hsl(var(--tier-b) / 0.06); }
+.offer-card:hover .rank-watermark { color: hsl(var(--foreground) / 0.07); }
+.tier-accent-s:hover .rank-watermark { color: hsl(var(--tier-s) / 0.12); }
+.tier-accent-a:hover .rank-watermark { color: hsl(var(--tier-a) / 0.10); }
+.tier-accent-b:hover .rank-watermark { color: hsl(var(--tier-b) / 0.10); }
+
 .offer-card:hover {
   border-color: hsl(var(--ring) / 0.45);
-  box-shadow: 0 10px 30px hsl(var(--foreground) / 0.07);
+  box-shadow: 0 8px 24px hsl(var(--foreground) / 0.08);
   transform: translateY(-2px);
 }
-.offer-inner { display: flex; gap: 1.1rem; padding: 1.35rem 1.5rem; }
-.offer-pos { flex-shrink: 0; text-align: center; min-width: 3.2rem; }
-.pos-num {
-  display: block; font-family: "Space Grotesk", sans-serif;
-  font-size: 2.6rem; font-weight: 700; line-height: 1;
-  color: hsl(var(--foreground) / 0.16);
+.offer-card.tier-accent-s:hover { box-shadow: 0 8px 28px hsl(var(--tier-s) / 0.13); }
+.offer-card.tier-accent-a:hover { box-shadow: 0 8px 28px hsl(var(--tier-a) / 0.13); }
+.offer-card.tier-accent-b:hover { box-shadow: 0 8px 28px hsl(var(--tier-b) / 0.13); }
+.offer-inner { flex: 1; display: flex; padding: 1.35rem 1.5rem; padding-top: 1.5rem; }
+.offer-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.offer-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; margin-bottom: 0.5rem; }
+.offer-name {
+  font-family: "Space Grotesk", "Noto Sans JP", sans-serif;
+  font-size: 1.5rem; font-weight: 700; line-height: 1.2;
+  letter-spacing: -0.02em;
 }
-.pos-label { font-size: 0.65rem; letter-spacing: 0.14em; color: hsl(var(--muted-foreground)); }
-.offer-main { flex: 1; min-width: 0; }
-.offer-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; margin-bottom: 0.6rem; }
-.offer-name { font-family: "Space Grotesk", "Noto Sans JP", sans-serif; font-size: 1.35rem; font-weight: 700; line-height: 1.25; }
-.offer-meta { font-size: 0.85rem; color: hsl(var(--muted-foreground)); margin-top: 0.15rem; }
+.offer-meta { font-size: 0.82rem; color: hsl(var(--muted-foreground)); margin-top: 0.2rem; }
 
 .offer-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 0.75rem; margin-top: 1rem; }
 .stat { background: hsl(var(--muted) / 0.55); border-radius: calc(var(--radius) - 2px); padding: 0.65rem 0.8rem; }
@@ -624,6 +676,13 @@ details.acc[open] .chev { transform: rotate(180deg); }
 /* Card is a container: agent snippets sit side by side only when the card
    itself is wide enough, regardless of the page's column count. */
 @container offer-card (min-width: 40rem) { .agent-grid { grid-template-columns: 1fr 1fr; } }
+/* Compact mode: when the card is narrow (2 col layout), tighten spacing
+   and scale down the rank numeral to preserve content density. */
+@container offer-card (max-width: 36rem) {
+  .offer-inner { padding: 1.1rem 1.2rem; padding-top: 1.25rem; }
+  .rank-watermark { font-size: 4rem; top: -0.2rem; right: 0.4rem; }
+  .offer-name { font-size: 1.2rem; }
+}
 .agent-block { min-width: 0; }
 .agent-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
 .agent-name { font-weight: 700; font-size: 0.85rem; }
@@ -642,7 +701,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
   color: hsl(var(--warning)); font-size: 0.8rem; font-weight: 600;
 }
 
-.offer-links { margin-top: 1.1rem; }
+.offer-links { margin-top: auto; padding-top: 1.1rem; }
 .btn {
   display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.5rem 1rem; border-radius: calc(var(--radius) - 2px);
@@ -666,10 +725,15 @@ details.acc[open] .chev { transform: rotate(180deg); }
 .snap-cell:last-child { border-right: 0; }
 @media (max-width: 767px) { .snap-cell:nth-child(2n) { border-right: 0; } }
 @media (min-width: 768px) { .snap-cell { border-bottom: 0; } }
-.snap-num { font-family: "Space Grotesk", sans-serif; font-size: 2rem; font-weight: 700; line-height: 1; }
+.snap-num { font-family: "Space Grotesk", sans-serif; font-size: 2.4rem; font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
 .snap-num-s { color: hsl(var(--tier-s)); }
 .snap-num-free { color: hsl(var(--success)); }
 .snap-label { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: hsl(var(--muted-foreground)); }
+/* Each snapshot cell gets a thin top accent matching its metric semantics. */
+.snap-cell:nth-child(1) { border-top: 2px solid hsl(var(--primary) / 0.5); }
+.snap-cell:nth-child(2) { border-top: 2px solid hsl(var(--tier-s) / 0.6); }
+.snap-cell:nth-child(3) { border-top: 2px solid hsl(var(--success) / 0.6); }
+.snap-cell:nth-child(4) { border-top: 2px solid hsl(var(--warning) / 0.6); }
 
 /* Examples. */
 /* Scroll reveal: visible by default (no-JS safe); the .js class, added by the
@@ -677,6 +741,9 @@ details.acc[open] .chev { transform: rotate(180deg); }
 .reveal { opacity: 1; transform: none; }
 .js .reveal { opacity: 0; transform: translateY(14px); transition: opacity .55s ease, transform .55s ease; }
 .js .reveal.visible { opacity: 1; transform: none; }
+/* Staggered reveal: right column cards enter slightly after left column,
+   creating a subtle cascade across each row. */
+.js .offer-card:nth-child(2n) { transition-delay: 0.07s; }
 
 /* Focus visibility. */
 :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
@@ -684,6 +751,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .js .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .live-dot { animation: none; }
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 `;
@@ -770,7 +838,7 @@ function generateHTML(report) {
   <div class="bg-texture" aria-hidden="true"></div>
   <a href="#main-content" class="sr-only focus:not-sr-only">本文へ移動</a>
 
-  <header class="sticky top-0 z-30 border-b bg-card/85 backdrop-blur">
+  <header class="sticky top-0 z-30 bg-card/85 backdrop-blur">
     <div class="container mx-auto max-w-7xl px-4 py-3.5 flex items-center justify-between gap-4">
       <div class="flex items-center gap-3 min-w-0">
         <div class="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0" aria-hidden="true">
@@ -778,7 +846,7 @@ function generateHTML(report) {
         </div>
         <div class="min-w-0">
           <h1 class="font-display text-lg sm:text-xl font-bold leading-tight truncate">無料LLM API速報</h1>
-          <p class="text-[11px] text-muted-foreground tracking-widest uppercase">Free LLM API Intelligence ・ 毎日11:00 JST</p>
+          <p class="text-[11px] text-muted-foreground tracking-widest uppercase flex items-center gap-1.5"><span class="live-dot" aria-hidden="true"></span>Free LLM API Intelligence ・ 毎日11:00 JST</p>
         </div>
       </div>
       <button id="theme-toggle" type="button" class="p-2.5 rounded-md border bg-card hover:bg-accent transition-colors flex-shrink-0" aria-label="ダークモード切替" aria-pressed="false">
@@ -805,7 +873,7 @@ function generateHTML(report) {
         <span class="font-display text-sm text-muted-foreground whitespace-nowrap">${offers.length} 件</span>
       </div>
       <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">性能ティアとスコア</strong>で並び、同率内は情報の鮮度順。</p>
-      <div class="grid grid-cols-1 gap-4 items-start lg:grid-cols-2">${cards}</div>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">${cards}</div>
     </section>
 
     <footer class="border-t pt-8 pb-4 text-center text-sm text-muted-foreground">
