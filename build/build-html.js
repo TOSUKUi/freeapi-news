@@ -527,6 +527,7 @@ body {
 
 /* Offer card. */
 .offer-card {
+  container: offer-card / inline-size;
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
@@ -620,7 +621,9 @@ details.acc[open] .chev { transform: rotate(180deg); }
 .acc-body { padding: 0.9rem 0.2rem 0.2rem; }
 .acc-note { font-size: 0.75rem; color: hsl(var(--muted-foreground)); margin-bottom: 0.8rem; }
 .agent-grid { display: grid; grid-template-columns: 1fr; gap: 0.9rem; }
-@media (min-width: 768px) { .agent-grid { grid-template-columns: 1fr 1fr; } }
+/* Card is a container: agent snippets sit side by side only when the card
+   itself is wide enough, regardless of the page's column count. */
+@container offer-card (min-width: 40rem) { .agent-grid { grid-template-columns: 1fr 1fr; } }
 .agent-block { min-width: 0; }
 .agent-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
 .agent-name { font-weight: 700; font-size: 0.85rem; }
@@ -768,7 +771,7 @@ function generateHTML(report) {
   <a href="#main-content" class="sr-only focus:not-sr-only">本文へ移動</a>
 
   <header class="sticky top-0 z-30 border-b bg-card/85 backdrop-blur">
-    <div class="container mx-auto max-w-5xl px-4 py-3.5 flex items-center justify-between gap-4">
+    <div class="container mx-auto max-w-7xl px-4 py-3.5 flex items-center justify-between gap-4">
       <div class="flex items-center gap-3 min-w-0">
         <div class="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>
@@ -785,7 +788,7 @@ function generateHTML(report) {
     </div>
   </header>
 
-  <main id="main-content" class="container mx-auto max-w-5xl px-4 py-8">
+  <main id="main-content" class="container mx-auto max-w-7xl px-4 py-8">
 
     <div class="mb-5 text-sm text-muted-foreground flex items-center gap-2">
       <span>最終更新</span>
@@ -802,7 +805,7 @@ function generateHTML(report) {
         <span class="font-display text-sm text-muted-foreground whitespace-nowrap">${offers.length} 件</span>
       </div>
       <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">性能ティアとスコア</strong>で並び、同率内は情報の鮮度順。</p>
-      <div class="space-y-4">${cards}</div>
+      <div class="grid grid-cols-1 gap-4 items-start lg:grid-cols-2">${cards}</div>
     </section>
 
     <footer class="border-t pt-8 pb-4 text-center text-sm text-muted-foreground">
