@@ -4,6 +4,7 @@ node_modules/
 # Logs
 *.log
 npm-debug.log*
+.devops/logs/
 
 # OS / editor
 .DS_Store

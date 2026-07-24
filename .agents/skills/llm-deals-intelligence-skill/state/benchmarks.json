@@ -1,0 +1,332 @@
+{
+  "version": 1,
+  "updated_at": "2026-07-25T01:35:00+09:00",
+  "models": [
+    {
+      "canonical_name": "Ling-3.0-flash",
+      "aliases": ["ling-3.0-flash", "inclusionai/ling-3.0-flash", "inclusionai/ling-3.0-flash:free"],
+      "vendor": "InclusionAI",
+      "model_ids": ["inclusionai/ling-3.0-flash", "inclusionai/ling-3.0-flash:free"],
+      "tier": null,
+      "benchmarks": [
+        {
+          "name": "SWE-Bench Pro",
+          "score": 52.8,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "MCP-Atlas",
+          "score": 67.0,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "SkillsBench",
+          "score": 52.94,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "WebSearch",
+          "score": 72.3,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "BrowseComp",
+          "score": 70.35,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "TFBench",
+          "score": 74.18,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "SysBench",
+          "score": 85.61,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "MRCR-128K",
+          "score": 81.8,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "Multi-IF",
+          "score": 84.25,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        }
+      ],
+      "sources_checked": [
+        {
+          "type": "huggingface_model_card",
+          "url": "https://huggingface.co/inclusionAI/Ling-3.0-flash",
+          "status": "not_found",
+          "accessed_at": "2026-07-24T21:20:00+09:00"
+        },
+        {
+          "type": "vendor_technical_blog",
+          "url": "https://www.inclusion-ai.org/blog/tags/release/",
+          "status": "no_matching_post",
+          "accessed_at": "2026-07-24T21:22:00+09:00"
+        },
+        {
+          "type": "official_x_post",
+          "url": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "status": "found_image",
+          "accessed_at": "2026-07-24T21:25:00+09:00"
+        },
+        {
+          "type": "github_readme",
+          "url": "https://github.com/InclusionAI/Ling",
+          "status": "no_3.0_data",
+          "accessed_at": "2026-07-24T21:23:00+09:00"
+        }
+      ]
+    },
+    {
+      "canonical_name": "Poolside Laguna M.1",
+      "aliases": ["laguna-m.1", "poolside/laguna-m.1"],
+      "vendor": "Poolside",
+      "model_ids": ["poolside/laguna-m.1:free", "poolside/laguna-m.1"],
+      "tier": null,
+      "benchmarks": [
+        {
+          "name": "SWE-bench Verified",
+          "score": 72.5,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "SWE-bench Multilingual",
+          "score": 67.3,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "Terminal-Bench 2.0",
+          "score": 40.7,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        }
+      ],
+      "sources_checked": []
+    },
+    {
+      "canonical_name": "Nemotron 3 Ultra",
+      "aliases": ["nemotron-3-ultra-550b-a55b", "nvidia/nemotron-3-ultra-550b-a55b"],
+      "vendor": "NVIDIA",
+      "model_ids": ["nvidia/nemotron-3-ultra-550b-a55b:free", "nvidia/nemotron-3-ultra-550b-a55b"],
+      "tier": null,
+      "benchmarks": [
+        {
+          "name": "Humanity's Last Exam",
+          "score": 55.0,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "AIME 2025",
+          "score": 86.0,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "SWE-bench Verified",
+          "score": 52.8,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        }
+      ],
+      "sources_checked": []
+    },
+    {
+      "canonical_name": "Gemini 3.6 Flash",
+      "aliases": ["gemini-3.6-flash"],
+      "vendor": "Google",
+      "model_ids": ["gemini-3.6-flash"],
+      "tier": null,
+      "benchmarks": [
+        {
+          "name": "Humanity's Last Exam",
+          "score": 52.0,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "MMLU",
+          "score": 89.2,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 74.1,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        }
+      ],
+      "sources_checked": []
+    },
+    {
+      "canonical_name": "Poolside Laguna S 2.1",
+      "aliases": ["laguna-s-2.1", "poolside/laguna-s-2.1"],
+      "vendor": "Poolside",
+      "model_ids": ["poolside/laguna-s-2.1:free", "poolside/laguna-s-2.1"],
+      "tier": null,
+      "benchmarks": [
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 70.2,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "DeepSWE",
+          "score": 40.4,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        }
+      ],
+      "sources_checked": []
+    },
+    {
+      "canonical_name": "DeepSeek V4 Flash",
+      "aliases": ["deepseek-v4-flash"],
+      "vendor": "DeepSeek",
+      "model_ids": ["deepseek-v4-flash"],
+      "tier": null,
+      "benchmarks": [
+        {
+          "name": "Humanity's Last Exam",
+          "score": 51.6,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "SWE-bench Verified",
+          "score": 58.4,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "AIME 2025",
+          "score": 82.0,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        }
+      ],
+      "sources_checked": []
+    },
+    {
+      "canonical_name": "Nemotron 3 Super",
+      "aliases": ["nemotron-3-super-120b-a12b", "nvidia/nemotron-3-super-120b-a12b"],
+      "vendor": "NVIDIA",
+      "model_ids": ["nvidia/nemotron-3-super-120b-a12b:free", "nvidia/nemotron-3-super-120b-a12b"],
+      "tier": null,
+      "benchmarks": [
+        {
+          "name": "GPQA Diamond",
+          "score": 80.0,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        },
+        {
+          "name": "Humanity's Last Exam",
+          "score": 19.2,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        },
+        {
+          "name": "IFBench",
+          "score": 71.5,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        },
+        {
+          "name": "AA Intelligence Index",
+          "score": 25.4,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        },
+        {
+          "name": "AA Coding Index",
+          "score": 37.7,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        }
+      ],
+      "sources_checked": [
+        {
+          "type": "huggingface_model_card",
+          "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8",
+          "status": "checked_no_benchmark_table",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        },
+        {
+          "type": "third_party_aggregator",
+          "url": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+          "status": "found_scores",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        }
+      ]
+    },
+    {
+      "canonical_name": "Kimi K3",
+      "aliases": ["kimi-k3", "moonshotai/kimi-k3"],
+      "vendor": "Moonshot AI",
+      "model_ids": ["kimi-k3", "moonshotai/kimi-k3"],
+      "tier": null,
+      "benchmarks": [],
+      "sources_checked": [
+        {
+          "type": "vendor_technical_blog",
+          "url": "https://www.kimi.com/blog/kimi-k3",
+          "status": "pending_technical_report",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        },
+        {
+          "type": "huggingface_model_card",
+          "url": "https://huggingface.co/MoonshotAI/Kimi-K3",
+          "status": "not_yet_released",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        }
+      ]
+    }
+  ]
+}

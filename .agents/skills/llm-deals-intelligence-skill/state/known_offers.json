@@ -1,28 +1,8 @@
 {
-  "updated_at": "2026-07-24T04:30:00+09:00",
+  "updated_at": "2026-07-24T16:35:00+00:00",
   "offers": [
     {
-      "name": "Poolside Laguna M.1",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": "2026-07-28T00:00:00+00:00",
-      "operational_confidence": "HIGH",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "poolside/laguna-m.1:free"
-    },
-    {
-      "name": "Nemotron 3 Ultra",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "HIGH",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free"
-    },
-    {
-      "name": "NVIDIA NIM",
+      "name": "NVIDIA NIM - Nemotron 3 Ultra",
       "provider": "NVIDIA",
       "classification": "A_TRUE_FREE",
       "end_at": null,
@@ -32,7 +12,27 @@
       "model_id": "nvidia/nemotron-3-ultra-550b-a55b"
     },
     {
-      "name": "Google AI Studio",
+      "name": "Nemotron 3 Ultra (OpenRouter)",
+      "provider": "OpenRouter",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free"
+    },
+    {
+      "name": "Poolside Laguna M.1 (OpenRouter)",
+      "provider": "OpenRouter",
+      "classification": "C_LIMITED_FREE",
+      "end_at": "2026-07-28T00:00:00+00:00",
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "poolside/laguna-m.1:free"
+    },
+    {
+      "name": "Google AI Studio - Gemini 3.6 Flash",
       "provider": "Google",
       "classification": "B_PERMANENT_FREE_TIER",
       "end_at": null,
@@ -42,7 +42,27 @@
       "model_id": "gemini-3.6-flash"
     },
     {
-      "name": "Poolside Laguna S 2.1",
+      "name": "NVIDIA NIM - Nemotron 3 Super",
+      "provider": "NVIDIA",
+      "classification": "A_TRUE_FREE",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://integrate.api.nvidia.com/v1",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b"
+    },
+    {
+      "name": "Nemotron 3 Super (OpenRouter)",
+      "provider": "OpenRouter",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free"
+    },
+    {
+      "name": "Poolside Laguna S 2.1 (OpenRouter)",
       "provider": "OpenRouter",
       "classification": "B_PERMANENT_FREE_TIER",
       "end_at": null,
@@ -50,6 +70,36 @@
       "suspicion_score": 0,
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "poolside/laguna-s-2.1:free"
+    },
+    {
+      "name": "Ling-3.0-flash (OpenRouter)",
+      "provider": "OpenRouter",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "inclusionai/ling-3.0-flash:free"
+    },
+    {
+      "name": "GLM 5.2 (TokenRouter限定無料)",
+      "provider": "TokenRouter",
+      "classification": "C_LIMITED_FREE",
+      "end_at": "2026-07-25T00:00:00+00:00",
+      "operational_confidence": "MEDIUM",
+      "suspicion_score": 1,
+      "base_url": "https://api.tokenrouter.ai/v1",
+      "model_id": "z-ai/glm-5.2-free"
+    },
+    {
+      "name": "GLM 5.2 (Cloudflare Workers AI無料枠)",
+      "provider": "Cloudflare",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "MEDIUM",
+      "suspicion_score": 0,
+      "base_url": "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/z-ai/glm-5.2",
+      "model_id": "@cf/z-ai/glm-5.2"
     },
     {
       "name": "DeepSeek V4 Flash",

@@ -27,6 +27,9 @@ official_model_vendors:
   - Amazon Bedrock
   - Microsoft Azure AI Foundry
   - GitHub Models
+  - InclusionAI
+  - StepFun
+  - 01.AI
 
 routers_and_marketplaces:
   - OpenRouter
@@ -133,6 +136,18 @@ conditional_credit_programs:
   - vendor student programs
   - vendor research programs
   - vendor accelerator programs
+
+benchmark_sources:
+  huggingface_model_cards: true
+  vendor_technical_blogs: true
+  official_x_posts: true
+  github_readme_and_reports: true
+  third_party_aggregators:
+    - lmmarketcap.com
+    - openrouter.ai
+    - awesomeagents.ai
+    - artificialanalysis.ai
+    - pricepertoken.com
 
 special_watchlists:
   qwen:

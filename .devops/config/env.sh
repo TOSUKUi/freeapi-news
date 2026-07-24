@@ -10,15 +10,19 @@ export REPORT_FILE="${PROJECT_ROOT}/report.json"
 export HTML_FILE="${PROJECT_ROOT}/index.html"
 export BUILD_SCRIPT="${PROJECT_ROOT}/build/build-html.js"
 
-# ── GitHub Pages ─────────────────────────────────────────────────
-export GH_PAGES_BRANCH="gh-pages"
-export GH_PAGES_FOLDER="${PROJECT_ROOT}"
-export GIT_COMMIT_USER="${GIT_COMMIT_USER:-free-api-news-bot}"
-export GIT_COMMIT_EMAIL="${GIT_COMMIT_EMAIL:-bot@free-api-news.workers.dev}"
+# ── Deploy (GitHub Pages) ────────────────────────────────────────
+# The batch runs locally and pushes the generated files to the current
+# branch. GitHub Pages serves directly from that branch — no CI involved.
+# Optional: override the commit identity for the local batch. Leave unset
+# to inherit your normal git config.
+# export GIT_COMMIT_USER="free-api-news-bot"
+# export GIT_COMMIT_EMAIL="bot@free-api-news.workers.dev"
 
-# ── Schedule ─────────────────────────────────────────────────────
-# Skill recommends daily at 11:00 Asia/Tokyo
-export SCHEDULE_CRON="0 2 * * *"   # UTC = 11:00 JST
+# ── Schedule (local scheduler, e.g. cron) ────────────────────────
+# The collection batch runs on THIS machine, not in CI. Register it with
+# your OS scheduler via .devops/batch/install-cron.sh. The expression is in
+# the machine's local time; keep the machine in Asia/Tokyo for 11:00 JST.
+export SCHEDULE_CRON="0 11 * * *"   # daily 11:00 (machine local time)
 export TIMEZONE="Asia/Tokyo"
 
 # ── Skill inputs ─────────────────────────────────────────────────
@@ -28,9 +32,9 @@ export SKILL_STATE_FILE="${SKILL_DIR}/state/known_offers.json"
 export SKILL_SCHEMA_FILE="${SKILL_DIR}/schemas/daily_report.schema.json"
 
 # ── pi agent settings ────────────────────────────────────────────
-# Set PI_API_KEY if running pi in CI
-export PI_MODEL="${PI_MODEL:-claude-sonnet-4}"
-export PI_TIMEOUT="${PI_TIMEOUT:-600}"   # seconds
+# pi model used by the local batch (pi must be installed on this machine).
+export PI_MODEL="${PI_MODEL:-litellm/qwen3.8-max-preview}"
+export PI_TIMEOUT="${PI_TIMEOUT:-1800}"   # seconds; a full 10-phase browser run is slow
 
 echo "[env] PROJECT_ROOT=${PROJECT_ROOT}"
 echo "[env] SKILL_DIR=${SKILL_DIR}"

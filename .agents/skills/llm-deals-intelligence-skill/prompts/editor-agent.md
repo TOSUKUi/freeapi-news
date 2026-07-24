@@ -15,6 +15,19 @@ Write a Japanese daily report in this order:
 
 Do not rank providerless or operationally unverified offers. Do not mix free-like offers into the true-free ranking.
 
+## Benchmark data gate — do not exclude without checking official sources
+
+Before moving a candidate to `excluded_offers` with reason `insufficient_benchmark_data`, confirm that the discovery-agent or verification-agent actually checked these sources for benchmark scores:
+
+1. HuggingFace model card (`huggingface.co/{vendor}/{model}`)
+2. Vendor technical blog (release post)
+3. Official X / social media posts (benchmark images on release day)
+4. GitHub repository README or linked technical report
+
+If any of these sources were NOT checked, do NOT exclude the model. Instead, flag it as `benchmark_pending` and note which sources remain unchecked. Only use `insufficient_benchmark_data` when all sources have been checked and yielded no usable scores.
+
+**Also check `state/benchmarks.json`** before excluding. If benchmark data exists there from a previous run or from the discovery/verification agents, use it to populate the offer's `benchmarks` array and assign a tier. The benchmarks.json file is the persistent cache of all collected benchmark scores across runs.
+
 ## Quality gate — what is worth ranking
 
 A free API is only valuable if the model is worth using. Apply this test to every candidate:

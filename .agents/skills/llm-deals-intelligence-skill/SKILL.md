@@ -49,6 +49,7 @@ Do not require user credentials. Never request session cookies, browser tokens, 
 - `config/sources.yaml`.
 - `config/search_queries.yaml`.
 - Previous state in `state/known_offers.json`, if available.
+- Benchmark cache in `state/benchmarks.json`, if available.
 
 ## Core workflow
 
@@ -81,6 +82,17 @@ For every newly found model or service, create a normalized discovery record:
 - API availability
 - open-weight status
 - known providers
+
+**Benchmark data collection (mandatory):** For every newly discovered model, attempt to collect benchmark scores before proceeding to Phase 1. Check these sources in order:
+
+1. HuggingFace model card (`huggingface.co/{vendor}/{model-name}`) — README often contains a benchmark table.
+2. Vendor technical blog — release posts almost always include benchmark charts or tables.
+3. Official X / social media posts — release-day posts frequently include benchmark comparison images; extract scores from images.
+4. GitHub repository README — may link to a technical report PDF or embed benchmark tables.
+
+If benchmark data is found, include it in the discovery record and **write/update it in `state/benchmarks.json`** (merge by `canonical_name`; append new benchmark entries, never overwrite existing scores from a more authoritative source). If no data is found after checking all four sources, set `benchmark_source_checked: true` so downstream phases know the search was performed.
+
+Before starting benchmark collection, **read `state/benchmarks.json`** first. If the model already has benchmark entries there, use them as a baseline and only add new benchmarks or upgrade scores from a more authoritative source (official page > vendor blog > X post > third-party).
 
 ### Phase 1 — Search each discovered model for offers
 
@@ -156,6 +168,8 @@ For each candidate, verify as many of the following as possible:
 - rate limits
 - end date and timezone
 - billing behavior
+
+**Benchmark data lookup (mandatory before marking insufficient_benchmark_data):** Before concluding that a model has no benchmark data, check these sources in order: (1) HuggingFace model card, (2) vendor technical blog, (3) official X / social media posts (extract scores from benchmark images), (4) GitHub repository README or linked technical report, (5) third-party aggregators (lmmarketcap.com, openrouter.ai, awesomeagents.ai). Only mark `insufficient_benchmark_data` when all five categories have been checked and yielded no usable scores. **Also check `state/benchmarks.json`** — if benchmark data exists there from a previous run, use it instead of marking the model as insufficient.
 
 OpenRouter-specific rule:
 

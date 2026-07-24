@@ -14,7 +14,7 @@
 - ✅ **リンク付き** — すべてのAPIに公式ページへのリンク
 - ✅ **5分で使える** — pi / Claude Code / OpenCode / Codex の設定方法を記載
 - ✅ **登録手順** — アカウント作成からテスト呼び出しまで4ステップ
-- ✅ **毎日自動更新** — GitHub Actions で 11:00 JST に更新
+- ✅ **毎日自動更新** — ローカル cron で 11:00 JST に更新 (CI 不使用)
 - ✅ **ダークモード** — 目に優しいダークモード対応
 - ✅ **レスポンシブ** — モバイル・デスクトップ両対応
 
@@ -32,9 +32,9 @@ free-api-news/
 │   ├── config/env.sh             # 環境設定
 │   ├── batch/run-skill.sh        # スキル実行バッチ
 │   ├── batch/collect-fallback.js # フォールバックコレクタ
+│   ├── batch/install-cron.sh     # ローカル cron 登録
 │   ├── deploy/build-html.sh      # HTML ビルド
 │   ├── deploy/git-push.sh        # Git プッシュ
-│   ├── deploy/github-pages.yml   # GitHub Actions ワークフロー
 │   └── README.md                 # .devops ドキュメント
 ├── .agents/skills/llm-deals-intelligence-skill/  # LLM Deals Intelligence Skill
 │   ├── SKILL.md                  # スキル仕様書
@@ -69,11 +69,33 @@ npm run deploy    # Git プッシュ
 npm run full      # 全工程実行
 ```
 
+## ローカル定期実行 (cron)
+
+収集 → 検証 → ビルド → デプロイは **1 台のマシンで完結**します。pi が `browser` (camofox) と
+`web_search` を必要とするため、CI ではなくこれらが揃ったローカルマシンで実行します。
+
+```bash
+# cron 行を確認
+.devops/batch/install-cron.sh
+
+# crontab に登録 (冪等)
+.devops/batch/install-cron.sh --install
+```
+
+- スケジュールはマシンのローカル時刻です。11:00 JST にしたいならマシンを `Asia/Tokyo` に。
+- cron は PATH が狭いため、`install-cron.sh` はログインシェル (`bash -lc`) 経由で
+  `npm run full` を呼びます (nodenv/nvm 等の PATH を読み込むため)。
+- 収集が失敗すると `npm run full` はデプロイ前に停止します (生成物のプッシュなし)。
+- ログは `.devops/logs/batch.log`。
+
 ## GitHub Pages デプロイ
 
-1. このリポジトリを `free-api-news/free-api-news` としてプッシュ
-2. Settings → Pages → Source: `gh-pages` branch
-3. 毎日 11:00 JST に自動更新
+GitHub Actions は使いません。生成物 (`report.json` + `index.html`) はそのまま
+`master` にコミットされ、Pages は `master` ブランチから配信されます。
+
+1. このリポジトリを GitHub にプッシュ (例: `free-api-news/free-api-news`)
+2. Settings → Pages → Source: **Deploy from a branch** → `master` / `/ (root)`
+3. ローカル cron が毎日 11:00 JST に `npm run full` を実行し `master` へプッシュ → Pages 反映
 
 ## スキル仕様
 

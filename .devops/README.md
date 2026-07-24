@@ -10,11 +10,11 @@ Automation for the **free-api-news** pipeline: collecting free/discounted LLM AP
 │  ├── config/env.sh          ← Environment vars   │
 │  ├── batch/                 ← Collection         │
 │  │   ├── run-skill.sh       ← Runs LLM Deals Skill│
-│  │   └── collect-fallback.js ← Fallback collector │
+│  │   ├── collect-fallback.js ← Fallback collector │
+│  │   └── install-cron.sh    ← Local scheduler     │
 │  ├── deploy/                ← Deployment          │
 │  │   ├── build-html.sh      ← JSON → HTML        │
-│  │   ├── git-push.sh        ← Commit & push       │
-│  │   └── github-pages.yml   ← GitHub Actions      │
+│  │   └── git-push.sh        ← Commit & push       │
 │  └── README.md              ← This file           │
 │                                                    │
 │  build/                                        │
@@ -45,9 +45,9 @@ Automation for the **free-api-news** pipeline: collecting free/discounted LLM AP
    - Uses Tailwind CSS CDN with shadcn/ui styling
    - Includes dark mode toggle
 
-3. **Deploy** (`github-pages.yml`) pushes to GitHub Pages
-   - Daily at 11:00 Asia/Tokyo
-   - Manual trigger via `workflow_dispatch`
+3. **Deploy** (`git-push.sh`) commits the artifacts and pushes the current branch
+   - Runs locally as the last step of `npm run full`
+   - GitHub Pages serves directly from that branch (no CI)
 
 ## Quick Start
 
@@ -69,8 +69,17 @@ python3 -m http.server 8000
 
 1. Push to GitHub
 2. Go to Settings → Pages
-3. Set source to `gh-pages` branch
-4. The workflow runs automatically at 11:00 JST daily
+3. Source: **Deploy from a branch** → `master` / root
+4. The local cron runs `npm run full` daily at 11:00 JST and pushes here
+
+### Local scheduling
+
+The batch runs on this machine (pi + camofox browser + web_search), not in CI.
+
+```bash
+.devops/batch/install-cron.sh            # print the cron line
+.devops/batch/install-cron.sh --install  # add it to crontab (idempotent)
+```
 
 ## Scripts
 
@@ -103,12 +112,17 @@ Commits and pushes the HTML page.
 .devops/deploy/git-push.sh "Custom commit message"
 ```
 
-### `.devops/deploy/github-pages.yml`
+### `.devops/batch/install-cron.sh`
 
-GitHub Actions workflow. Triggers:
-- **Schedule:** Daily at 11:00 Asia/Tokyo (02:00 UTC)
-- **Manual:** `workflow_dispatch` with `dry_run` option
-- **Push:** On changes to `.devops/`, `build/`, `index.html`
+Registers the daily local batch with cron.
+
+```bash
+.devops/batch/install-cron.sh            # print the cron line
+.devops/batch/install-cron.sh --install  # add to crontab (idempotent)
+```
+
+The schedule (`SCHEDULE_CRON`) is in the machine's local time; keep the machine
+in `Asia/Tokyo` for 11:00 JST. Runs through a login shell so nodenv/nvm PATH is loaded.
 
 ## Environment Variables
 
@@ -118,17 +132,16 @@ GitHub Actions workflow. Triggers:
 | `SKILL_DIR` | `$PROJECT_ROOT/.agents/skills/llm-deals-intelligence-skill` | Skill directory |
 | `REPORT_FILE` | `$PROJECT_ROOT/report.json` | Output report path |
 | `HTML_FILE` | `$PROJECT_ROOT/index.html` | Output HTML path |
-| `GH_PAGES_BRANCH` | `gh-pages` | GitHub Pages branch |
-| `GIT_COMMIT_USER` | `free-api-news-bot` | Git commit author |
-| `PI_MODEL` | `claude-sonnet-4` | pi model for skill execution |
-| `PI_TIMEOUT` | `600` | pi timeout in seconds |
+| `SCHEDULE_CRON` | `0 11 * * *` | Local cron schedule (machine local time) |
+| `TIMEZONE` | `Asia/Tokyo` | Intended machine timezone |
+| `GIT_COMMIT_USER` | unset | Optional commit author override |
+| `PI_MODEL` | `litellm/qwen3.8-max-preview` | pi model for the local batch |
+| `PI_TIMEOUT` | `1800` | pi timeout in seconds |
 
 ## Secrets
 
-| Secret | Required | Description |
-|---|---|---|
-| `PI_API_KEY` | No | pi API key (for CI runs) |
-| `GITHUB_TOKEN` | Auto | GitHub token (auto-provided) |
+None. The batch runs locally and pushes with your own git credentials, so there
+are no CI secrets to configure (`PI_API_KEY` / `GITHUB_TOKEN` are not used).
 
 ## Skill Workflow
 
