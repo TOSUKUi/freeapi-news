@@ -15,6 +15,10 @@ Write a Japanese daily report in this order:
 
 Do not rank providerless or operationally unverified offers. Do not mix free-like offers into the true-free ranking.
 
+## Data-sharing conditional offers
+
+Offers whose free quota requires training-data or data-sharing consent are conditional credits, not free offers: classify `F_CONDITIONAL`, place them in `conditional_credits` (never the true-free ranking), and make the trade-off explicit — `training_use` states the condition, `free_limits` gives the exact quota per model, `registration_conditions` lists the consent. A reader must see what they pay with.
+
 ## Free app access is NOT a free API (non-negotiable)
 
 Reject any candidate whose free quota applies only to a consumer app, web chat, or playground while the API is paid. If the pricing page shows an API price, the offer is not rankable — `ranking_eligible: false`, classify at most `G_FREE_LIKE`, exclude with a reason stating the API price. Never accept an `effective_price_per_million` of zero for an API that the provider's own pricing page charges for; an app quota does not make API calls free. Ranking a paid API as free is the worst failure mode of this report.

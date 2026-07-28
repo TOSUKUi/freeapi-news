@@ -66,6 +66,13 @@ offer_terms:
   - off-peak
   - night-time
   - $0 per million tokens
+  # data-sharing / training opt-in conditional free quotas
+  - free tokens data sharing
+  - training data opt-in credits
+  - share data free tokens
+  - allow training free quota
+  - data contribution free tier
+  - free in exchange for data
 
 recency_windows:
   - 24h

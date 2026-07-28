@@ -114,6 +114,7 @@ For every discovered model and every high-priority existing model, search for:
 - 50%, 70%, 80%, 90%, 95%, 98% off
 - off-peak or night-time pricing
 - zero-dollar per-million-token pricing
+- data-sharing or training opt-in quotas: free tokens granted in exchange for allowing prompts/outputs to be used for training or product improvement
 
 Run searches in English, Japanese, and Chinese where relevant.
 
@@ -132,6 +133,8 @@ For routers and marketplaces, inspect:
 - campaign banners
 - terms and privacy policy
 
+Some vendors grant free token quotas conditional on data sharing (training opt-in) rather than money. These are real offers but conditional: check the vendor's pricing, platform settings, and terms pages for opt-in quotas, record the exact quota per model, and treat the data-use consent as the price. See the verification leads below for current rumors to check.
+
 For coding products, distinguish:
 
 - public API access
@@ -139,6 +142,10 @@ For coding products, distinguish:
 - subscription credit multiplier
 - third-party client access
 - terms-of-service restrictions
+
+#### Verification leads (unverified — check before reporting)
+
+- OpenAI may grant free API token quotas in exchange for data-sharing consent (community claim: GPT-5.6 Luna and Terra around 10M free tokens, Sol around 1M). This is an unverified lead, not a fact: verify the exact quotas, models, and conditions on OpenAI's official pricing / platform document pages before reporting anything. If confirmed, report it as an `F_CONDITIONAL` offer in `conditional_credits` with the data-use condition stated explicitly.
 
 ### Phase 3 — Community early-warning scan
 
@@ -226,7 +233,7 @@ Use one primary classification:
 - `C_LIMITED_FREE`: limited-time free campaign
 - `D_TRIAL_CREDIT`: registration or trial credits
 - `E_DISCOUNT`: major discount, off-peak price, or top-up bonus
-- `F_CONDITIONAL`: startup, student, researcher, region, invite, KYC, or accelerator condition
+- `F_CONDITIONAL`: startup, student, researcher, region, invite, KYC, accelerator, or data-sharing / training opt-in condition
 - `G_FREE_LIKE`: minimum deposit, mandatory card, auto-renewal, referral requirement, UI-only access, tiny trial, non-refundable balance, or similar caveat
 
 `G_FREE_LIKE` must never appear in the free ranking. It may appear under discounts or cautions.
@@ -278,7 +285,7 @@ Use this order:
 1. New models, previews, and services from the last 24–72 hours, even if no promotion exists.
 2. Changes since the previous report.
 3. Ranked, operationally verified offers worth using now.
-4. Conditional startup, student, research, or accelerator credits.
+4. Conditional startup, student, research, accelerator, or data-sharing opt-in credits.
 5. Caution-worthy offers with suspicion score and concrete reasons.
 6. Ended, false, free-like, or providerless offers and exclusion reasons.
 7. Newly discovered providers or information sources and whether they should be added to the seed list.
@@ -366,6 +373,8 @@ Do not rank a dead endpoint above an active but slightly weaker model.
 ## Data safety rules
 
 For every free or heavily discounted provider, explicitly check whether prompts or outputs may be logged or used for training.
+
+When a free quota is conditional on data sharing, that trade-off IS the price. Set `training_use` to state it (e.g. `あり — 無料枠の条件 (学習利用への同意)`), put the exact quota per model in `free_limits`, list the consent in `registration_conditions`, classify `F_CONDITIONAL`, and place the offer in `conditional_credits` — never in the true-free ranking. Readers must be able to see what they are paying with.
 
 Warn users not to submit:
 
