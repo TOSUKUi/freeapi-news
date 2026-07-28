@@ -331,75 +331,6 @@
       ]
     },
     {
-      "rank": 3,
-      "name": "GLM 5.2 (OpenRouter)",
-      "model_name": "GLM 5.2",
-      "provider": "OpenRouter",
-      "model_vendor": "Z.ai",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "regions": [
-        "全世界"
-      ],
-      "registration_conditions": [
-        "OpenRouterアカウントとAPIキーが必要（クレジットカード不要）"
-      ],
-      "card_required": false,
-      "free_limits": "20 RPM、200 RPD（モデルごと）。無料枠はOpenRouterが補助。",
-      "rate_limits": "20 requests/minute, 200 requests/day per model",
-      "context_tokens": null,
-      "max_output_tokens": null,
-      "tool_calling": true,
-      "structured_output": false,
-      "image_input": false,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "z-ai/glm-5.2:free",
-      "free_model_names": [
-        "z-ai/glm-5.2:free"
-      ],
-      "recent_activity": "2026-07-29確認：OpenRouter無料モデルリストに存在。ただしCostGoatによるとQualityスコア未設定。",
-      "normal_price_per_million": null,
-      "effective_price_per_million": {
-        "input": 0,
-        "output": 0
-      },
-      "data_retention": "OpenRouterのプライバシーポリシー参照",
-      "training_use": "不明",
-      "suspicion_score": 1,
-      "information_confidence": "MEDIUM",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T14:00:00+09:00",
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "free_allowance_rank": "TIGHT",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "benchmark": {
-        "score": 82.7,
-        "benchmark_name": "Terminal Bench 2.1",
-        "tier": "A"
-      },
-      "benchmarks": [
-        {
-          "name": "GPQA-Diamond",
-          "score": 91.2
-        },
-        {
-          "name": "Terminal Bench 2.1",
-          "score": 82.7
-        },
-        {
-          "name": "DeepSWE",
-          "score": 46.2
-        }
-      ],
-      "sources": [
-        "https://costgoat.com/pricing/openrouter-free-models",
-        "https://openrouter.ai/docs/quickstart"
-      ]
-    },
-    {
       "rank": 4,
       "name": "Ling-3.0-flash (OpenRouter)",
       "model_name": "Ling-3.0-flash",
@@ -938,6 +869,10 @@
       "name": "Gemini 2.0 Flash / 2.0 Flash-Lite",
       "reason": "2026年6月1日にサービス終了。代替としてGemini 2.5シリーズを使用。",
       "last_known_status": "shut down"
+    },
+    {
+      "name": "GLM 5.2 (OpenRouter)",
+      "reason": "OpenRouter :free バリアントにプロバイダーなし (Activity データなし、API models エンドポイントに未登録)。実際にAPI経由で使用不可。"
     }
   ],
   "new_seed_candidates": [

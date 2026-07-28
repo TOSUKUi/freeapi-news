@@ -86,6 +86,7 @@ Each offer in `offers[]`:
 8. **Free app/chat access is NOT a free API.** If the pricing page shows a paid API price, the offer is not rankable. Set classification to G_FREE_LIKE and put it in `excluded[]`.
 9. **Benchmark deltas**: for any new or improved benchmark score, add to `benchmark_deltas[]` with `canonical_name`, `model_ids`, `benchmarks: [{name, score, source}]`, and `tier` if determinable.
 10. **Registry deltas**: for any new provider you researched, add to `registry_deltas[]` with full entry including `added_from` (the exact docs URL you fetched).
+11. **OpenRouter = one API call, not browser scraping.** `GET https://openrouter.ai/api/v1/models` returns all ~370 served models with `pricing`, `context_length`, `created`, and `top_provider` in a single response. Use it to (a) enumerate free models, (b) read prices verbatim, (c) confirm a `:free` model_id is actually served. The web model page is unreliable for `:free` variants (shared FAQ shows the paid base model's provider count; the Activity chart can be empty while the page still renders). A `:free` id missing from the catalog = no provider = exclude. The validator re-checks this (`openrouter-ghost` gate) and will drop any ghost you let through.
 
 ## Refresh tasks (kind: "refresh")
 
@@ -93,7 +94,7 @@ For known offers, you only need to confirm:
 - The endpoint docs page is still live and documents the same base_url.
 - The model is still listed / available.
 - The free quota or pricing has not changed.
-- For OpenRouter: provider count is not zero.
+- For OpenRouter: the `model_id` MUST exist in the live catalog (`GET https://openrouter.ai/api/v1/models`; free = `pricing.prompt === "0"` AND `pricing.completion === "0"`). NEVER read provider counts from the web page — its FAQ component shows the paid base model's count, not the `:free` variant's. If the `:free` model_id is absent from the catalog JSON, the variant is not served by any provider; put it in `excluded[]`.
 
 If nothing changed, copy the known offer data into `offers[]` with updated `last_verified` and `sources`. Do not re-research everything.
 

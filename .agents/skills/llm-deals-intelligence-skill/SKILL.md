@@ -191,7 +191,7 @@ For each candidate, verify as many of the following as possible:
 
 OpenRouter-specific rule:
 
-- If the Providers page has zero providers, classify as unavailable and exclude from the active ranking.
+- **Use the API, not the web page.** `GET https://openrouter.ai/api/v1/models` returns every served model with `pricing`, `context_length`, `created`, and `top_provider` in one call. A `:free` variant is genuinely free and served only when its `id` is present in that catalog AND `pricing.prompt === "0"` and `pricing.completion === "0"`. The model page's "N providers" FAQ text refers to the **paid base model** (a shared component) and is NOT evidence that the `:free` variant is served — the `:free` page can render with an empty Activity chart and no Providers section while the FAQ still shows the base model's count. If the `:free` model_id is absent from the catalog, the variant has no provider and must be excluded. The validator enforces this mechanically via the `openrouter-ghost` gate (it re-fetches the catalog and drops any ranked router offer whose model_id is missing).
 
 If live operation cannot be verified, mark:
 

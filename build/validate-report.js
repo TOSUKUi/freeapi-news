@@ -58,6 +58,7 @@ async function main() {
   // ── 3. Exclude what we can't fix ───────────────────────────────
   excludeBadEndpoints(report, providers, fixLog);
   await excludeBadCitations(report, fixLog);
+  await excludeOpenRouterGhost(report, fixLog);
   excludePaidApis(report, fixLog);
   excludeTooSmall(report, fixLog);
 
@@ -272,6 +273,48 @@ async function excludeBadCitations(report, fixLog) {
 // Exclude: paid API dressed as free
 // ══════════════════════════════════════════════════════════════════
 
+// ── Exclude: OpenRouter model_id not in live catalog ────────────
+// The /api/v1/models catalog is the ground truth for what OpenRouter
+// actually serves. A :free variant that is absent from the catalog is
+// not served by any provider — never trust the web page's shared FAQ
+// component (it can show the paid base model's provider count).
+// Fail-safe: if the catalog fetch/parse fails, exclude NOTHING.
+async function excludeOpenRouterGhost(report, fixLog) {
+  if (process.env.SKIP_CITATION_CHECK === '1') return;
+  const isOpenRouter = o =>
+    /openrouter\.ai/i.test(o.base_url || '') ||
+    (o.delivery_type === 'router' && /openrouter/i.test(o.provider || ''));
+  const targets = (report.ranked_offers || []).filter(o => o.ranking_eligible === true && isOpenRouter(o));
+  if (targets.length === 0) return;
+
+  let raw;
+  try {
+    raw = await fetchJson('https://openrouter.ai/api/v1/models');
+  } catch (e) {
+    console.warn(`  ⚠️  OpenRouter catalog fetch failed (${e.message}); skipping ghost check.`);
+    return;
+  }
+  let ids;
+  try {
+    ids = new Set((JSON.parse(raw).data || []).map(m => m.id));
+  } catch {
+    console.warn('  ⚠️  OpenRouter catalog parse failed; skipping ghost check.');
+    return;
+  }
+
+  const bad = new Set();
+  for (const o of targets) {
+    if (!o.model_id || !ids.has(o.model_id)) {
+      bad.add(o.name);
+      moveToExcluded(report, 'ranked_offers', o,
+        `[openrouter-ghost] model_id "${o.model_id}" is absent from OpenRouter /api/v1/models — not actually served by any provider`, fixLog);
+    }
+  }
+  if (bad.size > 0) {
+    report.ranked_offers = report.ranked_offers.filter(o => !bad.has(o.name));
+  }
+}
+
 function excludePaidApis(report, fixLog) {
   const paidApi = /\bapi is paid\b|\bpaid api\b|\bapi access is paid\b|\bapi costs \$[1-9]/i;
   const remaining = [];
@@ -348,6 +391,16 @@ function matchBenchmarkEntry(o, models) {
     }
   }
   return null;
+}
+
+async function fetchJson(url) {
+  const res = await fetch(url, {
+    redirect: 'follow',
+    signal: AbortSignal.timeout(20000),
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; freeapi-news-validator/1.0)', 'Accept': 'application/json,*/*' },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.text();
 }
 
 async function fetchText(url) {
