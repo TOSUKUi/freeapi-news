@@ -1,58 +1,187 @@
 {
-  "generated_at": "2026-07-29T02:32:00+09:00",
+  "generated_at": "2026-07-29T14:00:00+09:00",
   "timezone": "Asia/Tokyo",
   "new_models": [
     {
-      "canonical_name": "Qwen3.7 Flash",
+      "canonical_name": "Gemini 3.1 Pro",
       "aliases": [
-        "qwen3.7-flash",
-        "qwen/qwen3.7-flash"
+        "gemini-3.1-pro-preview"
       ],
-      "vendor": "Alibaba (Qwen)",
-      "status": "ga",
-      "release_date": "2026-07-27",
-      "official_source": "https://openrouter.ai/qwen/qwen3.7-flash",
+      "vendor": "Google",
+      "status": "preview",
+      "release_date": "2026-07-21",
+      "official_source": "https://ai.google.dev/gemini-api/docs/pricing",
       "api_available": true,
-      "open_weight": null,
+      "open_weight": false,
+      "known_providers": [
+        "Google AI Studio",
+        "Gemini API"
+      ]
+    },
+    {
+      "canonical_name": "Gemini 3.1 Flash Live Preview",
+      "aliases": [
+        "gemini-3.1-flash-live-preview"
+      ],
+      "vendor": "Google",
+      "status": "preview",
+      "release_date": "2026-07-21",
+      "official_source": "https://ai.google.dev/gemini-api/docs/pricing",
+      "api_available": true,
+      "open_weight": false,
+      "known_providers": [
+        "Google AI Studio",
+        "Gemini API"
+      ]
+    },
+    {
+      "canonical_name": "Gemini 3.1 Flash Image (Nano Banana 2)",
+      "aliases": [
+        "gemini-3.1-flash-image"
+      ],
+      "vendor": "Google",
+      "status": "preview",
+      "release_date": "2026-07-21",
+      "official_source": "https://ai.google.dev/gemini-api/docs/pricing",
+      "api_available": true,
+      "open_weight": false,
+      "known_providers": [
+        "Google AI Studio",
+        "Gemini API"
+      ]
+    },
+    {
+      "canonical_name": "Gemini 3 Flash Preview",
+      "aliases": [
+        "gemini-3-flash-preview"
+      ],
+      "vendor": "Google",
+      "status": "preview",
+      "release_date": "2026-07-21",
+      "official_source": "https://ai.google.dev/gemini-api/docs/pricing",
+      "api_available": true,
+      "open_weight": false,
+      "known_providers": [
+        "Google AI Studio",
+        "Gemini API"
+      ]
+    },
+    {
+      "canonical_name": "Gemini 3 Pro Image (Nano Banana Pro)",
+      "aliases": [
+        "gemini-3-pro-image"
+      ],
+      "vendor": "Google",
+      "status": "preview",
+      "release_date": "2026-07-21",
+      "official_source": "https://ai.google.dev/gemini-api/docs/pricing",
+      "api_available": true,
+      "open_weight": false,
+      "known_providers": [
+        "Google AI Studio",
+        "Gemini API"
+      ]
+    },
+    {
+      "canonical_name": "Cohere North Mini Code",
+      "aliases": [
+        "north-mini-code",
+        "cohere/north-mini-code"
+      ],
+      "vendor": "Cohere",
+      "status": "ga",
+      "release_date": null,
+      "official_source": "https://costgoat.com/pricing/openrouter-free-models",
+      "api_available": true,
+      "open_weight": false,
       "known_providers": [
         "OpenRouter"
       ]
     },
     {
-      "canonical_name": "Kimi K3",
+      "canonical_name": "Poolside Laguna XS 2.1",
       "aliases": [
-        "kimi-k3",
-        "moonshotai/kimi-k3"
+        "laguna-xs-2.1",
+        "poolside/laguna-xs-2.1"
       ],
-      "vendor": "Moonshot AI",
+      "vendor": "Poolside",
       "status": "ga",
-      "release_date": "2026-07-27",
-      "official_source": "https://www.kimi.com/blog/kimi-k3",
+      "release_date": null,
+      "official_source": "https://costgoat.com/pricing/openrouter-free-models",
+      "api_available": true,
+      "open_weight": false,
+      "known_providers": [
+        "OpenRouter"
+      ]
+    },
+    {
+      "canonical_name": "Nemotron 3 Nano Omni 30B A3B Reasoning",
+      "aliases": [
+        "nemotron-3-nano-omni-30b-a3b-reasoning"
+      ],
+      "vendor": "NVIDIA",
+      "status": "ga",
+      "release_date": null,
+      "official_source": "https://costgoat.com/pricing/openrouter-free-models",
       "api_available": true,
       "open_weight": true,
       "known_providers": [
-        "Moonshot AI",
         "OpenRouter",
-        "Together AI",
-        "Modal"
+        "NVIDIA NIM"
+      ]
+    },
+    {
+      "canonical_name": "Step 3.7 Flash",
+      "aliases": [
+        "step-3.7-flash",
+        "stepfun-ai/step-3.7-flash"
+      ],
+      "vendor": "StepFun",
+      "status": "ga",
+      "release_date": null,
+      "official_source": "https://docs.api.nvidia.com/nim/reference/stepfun-ai-step-3-7-flash",
+      "api_available": true,
+      "open_weight": false,
+      "known_providers": [
+        "NVIDIA NIM"
       ]
     }
   ],
   "changes": [
     {
-      "offer_name": "Gemini 3.6 Flash (Google AI Studio無料枠)",
-      "change_type": "new",
-      "summary": "Google が Gemini 3.6 Flash の無料枠を提供開始。API キー取得で利用可能（レート制限あり）。"
+      "offer_name": "GLM 5.2 (Cloudflare Workers AI無料枠)",
+      "change_type": "availability_change",
+      "summary": "Cloudflare Workers AIのGLM-5.2は$1.40/1M入力、$4.40/1M出力で有料API。1日10,000 neurons無料枠では約78トークンのみ使用可能であり実質利用不可。前回のB_PERMANENT_FREE_TIER分類を修正し除外。"
     },
     {
-      "offer_name": "Kimi K3",
+      "offer_name": "Google Gemini - 新モデル追加",
       "change_type": "new",
-      "summary": "Moonshot AI が Kimi K3 のオープンウェイトを 7月27日に公開。2.8Tパラメータのマルチモーダル推論モデル。公式APIは有料（$3/$15 per M）だが、Together AI や Modal でホスティング可能。"
+      "summary": "Gemini 3.1 Pro、Gemini 3.1 Flash Live Preview、Gemini 3.1 Flash Image、Gemini 3 Flash Preview、Gemini 3 Pro Imageがプレビュー提供開始。すべて無料枠対応。"
     },
     {
-      "offer_name": "Qwen3.7 Flash",
+      "offer_name": "OpenRouter - Cohere North Mini Code 追加",
       "change_type": "new",
-      "summary": "Alibaba の Qwen3.7 Flash が OpenRouter に登場。ビジョン・ランゲージ推論モデル。有料（$0.03/$0.13 per M）だが低価格。"
+      "summary": "Cohere North Mini CodeがOpenRouter無料モデルリストに追加（Qualityスコア最高位）。"
+    },
+    {
+      "offer_name": "OpenRouter - Poolside Laguna XS 2.1 追加",
+      "change_type": "new",
+      "summary": "Poolside Laguna XS 2.1がOpenRouter無料モデルリストに追加。"
+    },
+    {
+      "offer_name": "OpenRouter - Nemotron 3 Nano Omni 追加",
+      "change_type": "new",
+      "summary": "NVIDIA Nemotron 3 Nano Omni 30B A3B ReasoningがOpenRouter無料モデルリストに追加。"
+    },
+    {
+      "offer_name": "NVIDIA NIM - Step 3.7 Flash 追加",
+      "change_type": "new",
+      "summary": "StepFun Step 3.7 FlashがNVIDIA NIMに追加。"
+    },
+    {
+      "offer_name": "Gemini 2.0 Flash / 2.0 Flash-Lite",
+      "change_type": "ended",
+      "summary": "2026年6月1日にサービス終了済み。前回のknown_offersには含まれていなかったため変更なし。"
     }
   ],
   "ranked_offers": [
@@ -64,65 +193,44 @@
       "model_vendor": "Google",
       "delivery_type": "official",
       "classification": "B_PERMANENT_FREE_TIER",
-      "start_at": null,
       "end_at": null,
-      "end_timezone_known": false,
       "regions": [
-        "global"
+        "全世界"
       ],
       "registration_conditions": [
-        "Google アカウントが必要",
-        "API キー発行が必要"
+        "Googleアカウントが必要",
+        "APIキー取得が必要（クレジットカード不要）"
       ],
       "card_required": false,
-      "minimum_deposit": null,
-      "kyc_required": false,
-      "auto_renewal": false,
-      "refund_policy": null,
-      "free_limits": "無料枠あり。API キーごとにレート制限（RPM/日次リクエスト数制限）。詳細は Google AI Studio ダッシュボード参照。",
-      "rate_limits": "API キーごとに可変。標準キーでは数十 RPM 程度。",
+      "free_limits": "無料枠あり（RPM/TPM制限あり、詳細はAI Studioで確認）。Free usage tier適用。",
+      "rate_limits": "RPM/TPM/RPD制限あり（プロジェクトごとに異なる）。Free tierではスパンベースレート制限なし。",
       "context_tokens": 1048576,
-      "max_output_tokens": null,
+      "max_output_tokens": 65536,
       "tool_calling": true,
       "structured_output": true,
       "image_input": true,
       "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
       "model_id": "gemini-3.6-flash",
-      "provider_count": null,
-      "recent_activity": "稼働確認済み。2026-07-29 現在、公式ドキュメントで OpenAI 互換エンドポイントが有効。",
+      "recent_activity": "2026-07-29確認：公式価格ページで無料枠「Free of charge」表示。稼働中。",
       "normal_price_per_million": {
         "input": 1.5,
-        "output": 7.5,
-        "cache_read": null,
-        "cache_write": null
+        "output": 7.5
       },
       "effective_price_per_million": {
         "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
+        "output": 0
       },
-      "effective_discount_percent": 100,
-      "data_retention": "Google の利用規約に従う。",
-      "training_use": "なし — 有料プランに切り替えると学習利用なしを選択可能",
+      "data_retention": "無料枠ではデータ改善に使用される可能性あり（opt-out可能）",
+      "training_use": "あり — 無料枠ではデータ改善への同意が含まれる",
       "suspicion_score": 0,
-      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-07-29T02:30:00+09:00",
+      "last_verified": "2026-07-29T14:00:00+09:00",
       "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
       "free_allowance_rank": "NORMAL",
       "total_parameters_b": null,
       "active_parameters_b": null,
-      "free_model_names": [
-        "gemini-3.6-flash"
-      ],
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/pricing",
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ],
       "benchmark": {
         "score": 78,
         "benchmark_name": "Terminal Bench 2.1",
@@ -145,6 +253,11 @@
           "name": "Terminal Bench 2.1",
           "score": 78
         }
+      ],
+      "sources": [
+        "https://ai.google.dev/gemini-api/docs/pricing",
+        "https://ai.google.dev/gemini-api/docs/rate-limits",
+        "https://ai.google.dev/gemini-api/docs/openai"
       ]
     },
     {
@@ -155,64 +268,40 @@
       "model_vendor": "NVIDIA",
       "delivery_type": "official",
       "classification": "A_TRUE_FREE",
-      "start_at": null,
       "end_at": null,
-      "end_timezone_known": false,
       "regions": [
-        "global"
+        "全世界"
       ],
       "registration_conditions": [
-        "NVIDIA Developer アカウントが必要"
+        "NVIDIA Developerアカウントが必要（無料）"
       ],
       "card_required": false,
-      "minimum_deposit": null,
-      "kyc_required": false,
-      "auto_renewal": false,
-      "refund_policy": null,
-      "free_limits": "無料APIアクセス。デフォルトレート制限 40 RPM（要申請で増額可能）。",
-      "rate_limits": "40 RPM デフォルト。",
+      "free_limits": "無料APIアクセス（レート制限あり）。build.nvidia.com経由。",
+      "rate_limits": "RPM制限あり（コミュニティフォーラムで議論あり）。",
       "context_tokens": 1048576,
       "max_output_tokens": null,
       "tool_calling": true,
-      "structured_output": true,
+      "structured_output": false,
       "image_input": false,
       "base_url": "https://integrate.api.nvidia.com/v1",
       "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
-      "provider_count": null,
-      "recent_activity": "稼働確認済み。NVIDIA NIM カタログにリストされており、OpenRouter でも NVIDIA プロバイダー経由で稼働中（Uptime 99.34%）。",
-      "normal_price_per_million": {
-        "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
-      },
+      "recent_activity": "2026-07-29確認：公式ドキュメントでエンドポイント記載あり。稼働中。",
+      "normal_price_per_million": null,
       "effective_price_per_million": {
         "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
+        "output": 0
       },
-      "effective_discount_percent": null,
-      "data_retention": "NVIDIA の利用規約に従う。",
-      "training_use": "不明 — NVIDIA NIM のデータポリシーを確認すること",
+      "data_retention": "不明",
+      "training_use": "不明",
       "suspicion_score": 0,
-      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-07-29T02:30:00+09:00",
+      "last_verified": "2026-07-29T14:00:00+09:00",
       "endpoint_source": "https://docs.api.nvidia.com/nim/reference/llm-apis",
       "free_allowance_rank": "NORMAL",
       "total_parameters_b": 550,
       "active_parameters_b": 55,
-      "free_model_names": [
-        "nvidia/nemotron-3-ultra-550b-a55b"
-      ],
-      "sources": [
-        "https://docs.api.nvidia.com/nim/reference/llm-apis",
-        "https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b:free"
-      ],
       "benchmark": {
         "score": 56.4,
         "benchmark_name": "Terminal Bench 2.1",
@@ -235,74 +324,57 @@
           "name": "Terminal Bench 2.1",
           "score": 56.4
         }
+      ],
+      "sources": [
+        "https://docs.api.nvidia.com/nim/reference/llm-apis",
+        "https://build.nvidia.com/models?modal=signin&label=Coding"
       ]
     },
     {
       "rank": 3,
-      "name": "GLM 5.2 (Cloudflare Workers AI無料枠)",
+      "name": "GLM 5.2 (OpenRouter)",
       "model_name": "GLM 5.2",
-      "provider": "Cloudflare",
+      "provider": "OpenRouter",
       "model_vendor": "Z.ai",
-      "delivery_type": "reseller",
+      "delivery_type": "router",
       "classification": "B_PERMANENT_FREE_TIER",
-      "start_at": null,
       "end_at": null,
-      "end_timezone_known": false,
       "regions": [
-        "global"
+        "全世界"
       ],
       "registration_conditions": [
-        "Cloudflare アカウントが必要"
+        "OpenRouterアカウントとAPIキーが必要（クレジットカード不要）"
       ],
       "card_required": false,
-      "minimum_deposit": null,
-      "kyc_required": false,
-      "auto_renewal": false,
-      "refund_policy": null,
-      "free_limits": "毎日 10,000 neurons 無料。約 $0.11/day（約 $3.30/month equivalent; $0.011/1,000 neurons）。",
-      "rate_limits": "Workers AI のデフォルトレート制限に従う。",
+      "free_limits": "20 RPM、200 RPD（モデルごと）。無料枠はOpenRouterが補助。",
+      "rate_limits": "20 requests/minute, 200 requests/day per model",
       "context_tokens": null,
       "max_output_tokens": null,
       "tool_calling": true,
-      "structured_output": true,
+      "structured_output": false,
       "image_input": false,
-      "base_url": "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/v1",
-      "model_id": "@cf/z-ai/glm-5.2",
-      "provider_count": null,
-      "recent_activity": "Cloudflare Workers AI カタログにリストされている。NVIDIA NIM にも z-ai/glm-5.2 として登録。",
-      "normal_price_per_million": {
-        "input": null,
-        "output": null,
-        "cache_read": null,
-        "cache_write": null
-      },
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "z-ai/glm-5.2:free",
+      "free_model_names": [
+        "z-ai/glm-5.2:free"
+      ],
+      "recent_activity": "2026-07-29確認：OpenRouter無料モデルリストに存在。ただしCostGoatによるとQualityスコア未設定。",
+      "normal_price_per_million": null,
       "effective_price_per_million": {
         "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
+        "output": 0
       },
-      "effective_discount_percent": 100,
-      "data_retention": "Cloudflare の利用規約に従う。",
+      "data_retention": "OpenRouterのプライバシーポリシー参照",
       "training_use": "不明",
-      "suspicion_score": 0,
-      "suspicion_reasons": [],
-      "information_confidence": "HIGH",
+      "suspicion_score": 1,
+      "information_confidence": "MEDIUM",
       "operational_confidence": "MEDIUM",
       "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-07-29T02:30:00+09:00",
-      "endpoint_source": "https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/",
-      "free_allowance_rank": "TINY",
+      "last_verified": "2026-07-29T14:00:00+09:00",
+      "endpoint_source": "https://openrouter.ai/docs/quickstart",
+      "free_allowance_rank": "TIGHT",
       "total_parameters_b": null,
       "active_parameters_b": null,
-      "free_model_names": [
-        "@cf/z-ai/glm-5.2"
-      ],
-      "sources": [
-        "https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/",
-        "https://docs.api.nvidia.com/nim/reference/z-ai-glm-5.2"
-      ],
       "benchmark": {
         "score": 82.7,
         "benchmark_name": "Terminal Bench 2.1",
@@ -321,170 +393,57 @@
           "name": "DeepSWE",
           "score": 46.2
         }
+      ],
+      "sources": [
+        "https://costgoat.com/pricing/openrouter-free-models",
+        "https://openrouter.ai/docs/quickstart"
       ]
     },
     {
       "rank": 4,
-      "name": "NVIDIA NIM - Nemotron 3 Super (無料API)",
-      "model_name": "Nemotron 3 Super 120B A12B",
-      "provider": "NVIDIA",
-      "model_vendor": "NVIDIA",
-      "delivery_type": "official",
-      "classification": "A_TRUE_FREE",
-      "start_at": null,
-      "end_at": null,
-      "end_timezone_known": false,
-      "regions": [
-        "global"
-      ],
-      "registration_conditions": [
-        "NVIDIA Developer アカウントが必要"
-      ],
-      "card_required": false,
-      "minimum_deposit": null,
-      "kyc_required": false,
-      "auto_renewal": false,
-      "refund_policy": null,
-      "free_limits": "無料APIアクセス。デフォルトレート制限 40 RPM。",
-      "rate_limits": "40 RPM デフォルト。",
-      "context_tokens": 1048576,
-      "max_output_tokens": null,
-      "tool_calling": true,
-      "structured_output": true,
-      "image_input": false,
-      "base_url": "https://integrate.api.nvidia.com/v1",
-      "model_id": "nvidia/nemotron-3-super-120b-a12b",
-      "provider_count": null,
-      "recent_activity": "稼働確認済み。NVIDIA NIM カタログと OpenRouter の両方で稼働中。",
-      "normal_price_per_million": {
-        "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
-      },
-      "effective_price_per_million": {
-        "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
-      },
-      "effective_discount_percent": null,
-      "data_retention": "NVIDIA の利用規約に従う。",
-      "training_use": "不明 — NVIDIA NIM のデータポリシーを確認すること",
-      "suspicion_score": 0,
-      "suspicion_reasons": [],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-07-29T02:30:00+09:00",
-      "endpoint_source": "https://docs.api.nvidia.com/nim/reference/llm-apis",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 120,
-      "active_parameters_b": 12,
-      "free_model_names": [
-        "nvidia/nemotron-3-super-120b-a12b"
-      ],
-      "sources": [
-        "https://docs.api.nvidia.com/nim/reference/llm-apis",
-        "https://openrouter.ai/nvidia/nemotron-3-super-120b-a12b:free"
-      ],
-      "benchmark": {
-        "score": 80,
-        "benchmark_name": "GPQA Diamond",
-        "tier": "B"
-      },
-      "benchmarks": [
-        {
-          "name": "GPQA Diamond",
-          "score": 80
-        },
-        {
-          "name": "Humanity's Last Exam",
-          "score": 19.2
-        },
-        {
-          "name": "IFBench",
-          "score": 71.5
-        },
-        {
-          "name": "AA Intelligence Index",
-          "score": 25.4
-        },
-        {
-          "name": "AA Coding Index",
-          "score": 37.7
-        }
-      ]
-    },
-    {
-      "rank": 5,
       "name": "Ling-3.0-flash (OpenRouter)",
       "model_name": "Ling-3.0-flash",
       "provider": "OpenRouter",
       "model_vendor": "InclusionAI",
       "delivery_type": "router",
       "classification": "B_PERMANENT_FREE_TIER",
-      "start_at": null,
       "end_at": null,
-      "end_timezone_known": false,
       "regions": [
-        "global"
+        "全世界"
       ],
       "registration_conditions": [
-        "OpenRouter アカウントと API キーが必要"
+        "OpenRouterアカウントとAPIキーが必要（クレジットカード不要）"
       ],
       "card_required": false,
-      "minimum_deposit": null,
-      "kyc_required": false,
-      "auto_renewal": false,
-      "refund_policy": null,
-      "free_limits": "無料枠あり。OpenRouter 上の :free サフィックスモデル。775B tokens 処理実績（過去7日間）。",
-      "rate_limits": "OpenRouter の無料モデル共通制限に従う。",
+      "free_limits": "20 RPM、200 RPD（モデルごと）。",
+      "rate_limits": "20 requests/minute, 200 requests/day per model",
       "context_tokens": 262144,
       "max_output_tokens": null,
       "tool_calling": true,
-      "structured_output": true,
+      "structured_output": false,
       "image_input": false,
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "inclusionai/ling-3.0-flash:free",
-      "provider_count": null,
-      "recent_activity": "稼働確認済み。過去7日間で 775B tokens 処理。プログラミングカテゴリ #10。",
-      "normal_price_per_million": {
-        "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
-      },
-      "effective_price_per_million": {
-        "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
-      },
-      "effective_discount_percent": 100,
-      "data_retention": "OpenRouter の利用規約に従う。",
-      "training_use": "あり — 無料利用時の入出力がモデル改善に使用される可能性あり",
-      "suspicion_score": 1,
-      "suspicion_reasons": [
-        "新興ベンダー (InclusionAI)。トレーニングデータ利用の透明性が完全ではない"
-      ],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-07-29T02:30:00+09:00",
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 124,
-      "active_parameters_b": 5.1,
       "free_model_names": [
         "inclusionai/ling-3.0-flash:free"
       ],
-      "sources": [
-        "https://openrouter.ai/inclusionai/ling-3.0-flash:free",
-        "https://openrouter.ai/docs/quickstart"
-      ],
+      "recent_activity": "2026-07-29確認：OpenRouter無料モデルリストに存在。稼働中。",
+      "normal_price_per_million": null,
+      "effective_price_per_million": {
+        "input": 0,
+        "output": 0
+      },
+      "data_retention": "OpenRouterのプライバシーポリシー参照",
+      "training_use": "不明",
+      "suspicion_score": 1,
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "last_verified": "2026-07-29T14:00:00+09:00",
+      "endpoint_source": "https://openrouter.ai/docs/quickstart",
+      "free_allowance_rank": "TIGHT",
+      "total_parameters_b": null,
+      "active_parameters_b": null,
       "benchmark": {
         "score": 57,
         "benchmark_name": "Terminal Bench 2.1",
@@ -502,6 +461,10 @@
         {
           "name": "SkillsBench",
           "score": 44.83
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 57
         },
         {
           "name": "WebSearch",
@@ -532,10 +495,6 @@
           "score": 72.44
         },
         {
-          "name": "Terminal Bench 2.1",
-          "score": 57
-        },
-        {
           "name": "Tau3-banking-AA",
           "score": 28
         },
@@ -547,79 +506,61 @@
           "name": "IFBench",
           "score": 74.49
         }
+      ],
+      "sources": [
+        "https://costgoat.com/pricing/openrouter-free-models",
+        "https://x.com/AntLingAGI/status/2080351022028095681",
+        "https://openrouter.ai/docs/quickstart"
       ]
     },
     {
-      "rank": 6,
+      "rank": 5,
       "name": "Poolside Laguna S 2.1 (OpenRouter)",
-      "model_name": "Laguna S 2.1",
+      "model_name": "Poolside Laguna S 2.1",
       "provider": "OpenRouter",
       "model_vendor": "Poolside",
       "delivery_type": "router",
       "classification": "B_PERMANENT_FREE_TIER",
-      "start_at": null,
       "end_at": null,
-      "end_timezone_known": false,
       "regions": [
-        "global"
+        "全世界"
       ],
       "registration_conditions": [
-        "OpenRouter アカウントと API キーが必要"
+        "OpenRouterアカウントとAPIキーが必要（クレジットカード不要）"
       ],
       "card_required": false,
-      "minimum_deposit": null,
-      "kyc_required": false,
-      "auto_renewal": false,
-      "refund_policy": null,
-      "free_limits": "無料枠あり。OpenRouter 上の :free サフィックスモデル。256B tokens 処理実績（過去7日間）。",
-      "rate_limits": "OpenRouter の無料モデル共通制限に従う。",
+      "free_limits": "20 RPM、200 RPD（モデルごと）。",
+      "rate_limits": "20 requests/minute, 200 requests/day per model",
       "context_tokens": 262144,
       "max_output_tokens": null,
       "tool_calling": true,
-      "structured_output": true,
+      "structured_output": false,
       "image_input": false,
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "poolside/laguna-s-2.1:free",
-      "provider_count": null,
-      "recent_activity": "稼働確認済み。過去7日間で 256B tokens 処理。プログラミングカテゴリ #43。",
-      "normal_price_per_million": {
-        "input": 0.1,
-        "output": 0.2,
-        "cache_read": null,
-        "cache_write": null
-      },
-      "effective_price_per_million": {
-        "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
-      },
-      "effective_discount_percent": 100,
-      "data_retention": "OpenRouter および Poolside の利用規約に従う。",
-      "training_use": "あり — 無料利用時の入出力がモデル改善に使用される可能性あり",
-      "suspicion_score": 1,
-      "suspicion_reasons": [
-        "新興ベンダー (Poolside)。トレーニングデータ利用の透明性が完全ではない"
-      ],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-07-29T02:30:00+09:00",
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 118,
-      "active_parameters_b": 8,
       "free_model_names": [
         "poolside/laguna-s-2.1:free"
       ],
-      "sources": [
-        "https://openrouter.ai/poolside/laguna-s-2.1:free",
-        "https://openrouter.ai/docs/quickstart"
-      ],
+      "recent_activity": "2026-07-29確認：OpenRouter無料モデルリストに存在。稼働中。",
+      "normal_price_per_million": null,
+      "effective_price_per_million": {
+        "input": 0,
+        "output": 0
+      },
+      "data_retention": "OpenRouterのプライバシーポリシー参照",
+      "training_use": "不明",
+      "suspicion_score": 1,
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "last_verified": "2026-07-29T14:00:00+09:00",
+      "endpoint_source": "https://openrouter.ai/docs/quickstart",
+      "free_allowance_rank": "TIGHT",
+      "total_parameters_b": null,
+      "active_parameters_b": null,
       "benchmark": {
         "score": 70.2,
-        "benchmark_name": "Terminal Bench 2.1",
+        "benchmark_name": "Terminal-Bench 2.1",
         "tier": "A"
       },
       "benchmarks": [
@@ -631,6 +572,84 @@
           "name": "DeepSWE",
           "score": 40.4
         }
+      ],
+      "sources": [
+        "https://costgoat.com/pricing/openrouter-free-models",
+        "https://openrouter.ai/docs/quickstart"
+      ]
+    },
+    {
+      "rank": 6,
+      "name": "NVIDIA NIM - Nemotron 3 Super (無料API)",
+      "model_name": "Nemotron 3 Super 120B A12B",
+      "provider": "NVIDIA",
+      "model_vendor": "NVIDIA",
+      "delivery_type": "official",
+      "classification": "A_TRUE_FREE",
+      "end_at": null,
+      "regions": [
+        "全世界"
+      ],
+      "registration_conditions": [
+        "NVIDIA Developerアカウントが必要（無料）"
+      ],
+      "card_required": false,
+      "free_limits": "無料APIアクセス（レート制限あり）。",
+      "rate_limits": "RPM制限あり。",
+      "context_tokens": 262144,
+      "max_output_tokens": null,
+      "tool_calling": true,
+      "structured_output": false,
+      "image_input": false,
+      "base_url": "https://integrate.api.nvidia.com/v1",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b",
+      "recent_activity": "2026-07-29確認：公式ドキュメントでエンドポイント記載あり。稼働中。OpenRouterでも無料モデルとして利用可能（Quality 60）。",
+      "normal_price_per_million": null,
+      "effective_price_per_million": {
+        "input": 0,
+        "output": 0
+      },
+      "data_retention": "不明",
+      "training_use": "不明",
+      "suspicion_score": 0,
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "last_verified": "2026-07-29T14:00:00+09:00",
+      "endpoint_source": "https://docs.api.nvidia.com/nim/reference/llm-apis",
+      "free_allowance_rank": "NORMAL",
+      "total_parameters_b": 120,
+      "active_parameters_b": 12,
+      "benchmark": {
+        "score": 80,
+        "benchmark_name": "GPQA Diamond",
+        "tier": "B"
+      },
+      "benchmarks": [
+        {
+          "name": "GPQA Diamond",
+          "score": 80
+        },
+        {
+          "name": "Humanity's Last Exam",
+          "score": 19.2
+        },
+        {
+          "name": "IFBench",
+          "score": 71.5
+        },
+        {
+          "name": "AA Intelligence Index",
+          "score": 25.4
+        },
+        {
+          "name": "AA Coding Index",
+          "score": 37.7
+        }
+      ],
+      "sources": [
+        "https://docs.api.nvidia.com/nim/reference/llm-apis",
+        "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b"
       ]
     },
     {
@@ -641,65 +660,44 @@
       "model_vendor": "Google",
       "delivery_type": "official",
       "classification": "B_PERMANENT_FREE_TIER",
-      "start_at": null,
       "end_at": null,
-      "end_timezone_known": false,
       "regions": [
-        "global"
+        "全世界"
       ],
       "registration_conditions": [
-        "Google アカウントが必要",
-        "API キー発行が必要"
+        "Googleアカウントが必要",
+        "APIキー取得が必要（クレジットカード不要）"
       ],
       "card_required": false,
-      "minimum_deposit": null,
-      "kyc_required": false,
-      "auto_renewal": false,
-      "refund_policy": null,
-      "free_limits": "無料枠あり。API キーごとにレート制限。有料プランでは $1.25/$10 per M（200k以下）。",
-      "rate_limits": "API キーごとに可変。",
-      "context_tokens": 1048576,
+      "free_limits": "無料枠あり（RPM/TPM制限あり）。Free usage tier適用。",
+      "rate_limits": "RPM/TPM/RPD制限あり（プロジェクトごとに異なる）。",
+      "context_tokens": 2097152,
       "max_output_tokens": null,
       "tool_calling": true,
       "structured_output": true,
       "image_input": true,
       "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
       "model_id": "gemini-2.5-pro",
-      "provider_count": null,
-      "recent_activity": "稼働確認済み。公式ドキュメントで OpenAI 互換エンドポイントが有効。",
+      "recent_activity": "2026-07-29確認：公式価格ページで無料枠「Free of charge」表示。稼働中。",
       "normal_price_per_million": {
         "input": 1.25,
-        "output": 10,
-        "cache_read": null,
-        "cache_write": null
+        "output": 10
       },
       "effective_price_per_million": {
         "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
+        "output": 0
       },
-      "effective_discount_percent": 100,
-      "data_retention": "Google の利用規約に従う。",
-      "training_use": "なし — 有料プランに切り替えると学習利用なしを選択可能",
+      "data_retention": "無料枠ではデータ改善に使用される可能性あり",
+      "training_use": "あり — 無料枠ではデータ改善への同意が含まれる",
       "suspicion_score": 0,
-      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-07-29T02:30:00+09:00",
+      "last_verified": "2026-07-29T14:00:00+09:00",
       "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
       "free_allowance_rank": "NORMAL",
       "total_parameters_b": null,
       "active_parameters_b": null,
-      "free_model_names": [
-        "gemini-2.5-pro"
-      ],
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/pricing",
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ],
       "benchmark": {
         "score": 96,
         "benchmark_name": "SWE-bench Verified",
@@ -710,74 +708,58 @@
           "name": "SWE-bench Verified",
           "score": 96
         }
+      ],
+      "sources": [
+        "https://ai.google.dev/gemini-api/docs/pricing",
+        "https://ai.google.dev/gemini-api/docs/rate-limits",
+        "https://ai.google.dev/gemini-api/docs/openai"
       ]
     },
     {
       "rank": 8,
       "name": "Gemma 4 31B IT (OpenRouter)",
-      "model_name": "Gemma 4 31B Instruct",
+      "model_name": "Gemma 4 31B IT",
       "provider": "OpenRouter",
       "model_vendor": "Google",
       "delivery_type": "router",
       "classification": "B_PERMANENT_FREE_TIER",
-      "start_at": null,
       "end_at": null,
-      "end_timezone_known": false,
       "regions": [
-        "global"
+        "全世界"
       ],
       "registration_conditions": [
-        "OpenRouter アカウントと API キーが必要"
+        "OpenRouterアカウントとAPIキーが必要（クレジットカード不要）"
       ],
       "card_required": false,
-      "minimum_deposit": null,
-      "kyc_required": false,
-      "auto_renewal": false,
-      "refund_policy": null,
-      "free_limits": "無料枠あり。OpenRouter 上の :free サフィックスモデル。",
-      "rate_limits": "OpenRouter の無料モデル共通制限に従う。",
+      "free_limits": "20 RPM、200 RPD（モデルごと）。",
+      "rate_limits": "20 requests/minute, 200 requests/day per model",
       "context_tokens": 262144,
       "max_output_tokens": null,
       "tool_calling": true,
-      "structured_output": true,
+      "structured_output": false,
       "image_input": true,
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "google/gemma-4-31b-it:free",
-      "provider_count": null,
-      "recent_activity": "稼働確認済み。OpenRouter に google/gemma-4-31b-it:free としてリスト。",
-      "normal_price_per_million": {
-        "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
-      },
-      "effective_price_per_million": {
-        "input": 0,
-        "output": 0,
-        "cache_read": null,
-        "cache_write": null
-      },
-      "effective_discount_percent": 100,
-      "data_retention": "OpenRouter の利用規約に従う。",
-      "training_use": "不明",
-      "suspicion_score": 0,
-      "suspicion_reasons": [],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-07-29T02:30:00+09:00",
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 30.7,
-      "active_parameters_b": null,
       "free_model_names": [
         "google/gemma-4-31b-it:free"
       ],
-      "sources": [
-        "https://openrouter.ai/google/gemma-4-31b-it:free",
-        "https://openrouter.ai/docs/quickstart"
-      ],
+      "recent_activity": "2026-07-29確認：OpenRouter無料モデルリストに存在（Quality 65）。稼働中。",
+      "normal_price_per_million": null,
+      "effective_price_per_million": {
+        "input": 0,
+        "output": 0
+      },
+      "data_retention": "OpenRouterのプライバシーポリシー参照",
+      "training_use": "不明",
+      "suspicion_score": 0,
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "last_verified": "2026-07-29T14:00:00+09:00",
+      "endpoint_source": "https://openrouter.ai/docs/quickstart",
+      "free_allowance_rank": "TIGHT",
+      "total_parameters_b": 31,
+      "active_parameters_b": null,
       "benchmark": {
         "score": 89.2,
         "benchmark_name": "AIME 2026 no tools",
@@ -808,33 +790,33 @@
           "name": "MMMU Pro",
           "score": 76.9
         }
+      ],
+      "sources": [
+        "https://costgoat.com/pricing/openrouter-free-models",
+        "https://ai.google.dev/gemma/docs/core/model_card_4",
+        "https://openrouter.ai/docs/quickstart"
       ]
     },
     {
-      "rank": 10,
+      "rank": 9,
       "name": "DeepSeek V4 Flash (低価格API)",
       "model_name": "DeepSeek V4 Flash",
       "provider": "DeepSeek",
       "model_vendor": "DeepSeek",
       "delivery_type": "official",
       "classification": "E_DISCOUNT",
-      "start_at": null,
       "end_at": null,
-      "end_timezone_known": false,
       "regions": [
-        "global"
+        "全世界"
       ],
       "registration_conditions": [
-        "DeepSeek アカウントと API キーが必要",
-        "チャージイン必要"
+        "DeepSeekプラットフォームでのAPIキー取得が必要",
+        "プリペイドチャージ必要"
       ],
-      "card_required": true,
+      "card_required": false,
       "minimum_deposit": null,
-      "kyc_required": false,
-      "auto_renewal": false,
-      "refund_policy": null,
       "free_limits": null,
-      "rate_limits": "同時実行数 2500 上限。",
+      "rate_limits": "同時接続数2,500制限。",
       "context_tokens": 1048576,
       "max_output_tokens": 393216,
       "tool_calling": true,
@@ -842,39 +824,29 @@
       "image_input": false,
       "base_url": "https://api.deepseek.com/v1",
       "model_id": "deepseek-v4-flash",
-      "provider_count": null,
-      "recent_activity": "稼働確認済み。2026-07-24 GA 移行完了。公式ドキュメントで base_url https://api.deepseek.com 確認。",
+      "recent_activity": "2026-07-29確認：公式ドキュメントで価格・エンドポイント記載あり。稼働中。",
       "normal_price_per_million": {
         "input": 0.14,
         "output": 0.28,
-        "cache_read": 0.0028,
-        "cache_write": null
+        "cache_read": 0.0028
       },
       "effective_price_per_million": {
         "input": 0.14,
         "output": 0.28,
-        "cache_read": 0.0028,
-        "cache_write": null
+        "cache_read": 0.0028
       },
-      "effective_discount_percent": null,
-      "data_retention": "DeepSeek の利用規約に従う。",
+      "effective_discount_percent": 95,
+      "data_retention": "不明",
       "training_use": "不明",
       "suspicion_score": 0,
-      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-07-29T02:30:00+09:00",
+      "last_verified": "2026-07-29T14:00:00+09:00",
       "endpoint_source": "https://api-docs.deepseek.com/",
       "free_allowance_rank": "NORMAL",
       "total_parameters_b": null,
       "active_parameters_b": null,
-      "free_model_names": [],
-      "sources": [
-        "https://api-docs.deepseek.com/",
-        "https://api-docs.deepseek.com/quick_start/pricing"
-      ],
       "benchmark": {
         "score": 49.1,
         "benchmark_name": "Terminal Bench 2.1",
@@ -897,6 +869,10 @@
           "name": "Terminal Bench 2.1",
           "score": 49.1
         }
+      ],
+      "sources": [
+        "https://api-docs.deepseek.com/quick_start/pricing",
+        "https://api-docs.deepseek.com/"
       ]
     }
   ],
@@ -904,121 +880,158 @@
   "caution_offers": [],
   "excluded_offers": [
     {
-      "name": "Kimi K3 (公式API)",
-      "reason": "Moonshot AI 公式 API は有料（$3/M input, $15/M output）。無料枠なし。OpenRouter 上も有料モデルとしてリスト。",
-      "last_known_status": "有料APIのみ"
+      "name": "GLM 5.2 (Cloudflare Workers AI無料枠)",
+      "reason": "Cloudflare Workers AIのGLM-5.2は$1.40/1M入力、$4.40/1M出力の有料API。1日10,000 neurons無料枠では1M入力で127,273 neurons消費するため、無料枠で約78トークンのみ使用可能。実質利用不可。API自体は有料。",
+      "last_known_status": "有料API、無料枠実質利用不可"
     },
     {
-      "name": "Qwen3.7 Flash",
-      "reason": "OpenRouter 上有料モデル（$0.03/M input, $0.13/M output）。無料枠なし。",
-      "last_known_status": "有料APIのみ"
+      "name": "Google Lyria 3 Pro / Clip (OpenRouter)",
+      "reason": "音楽生成モデル（Lyria 3 Pro Preview、Lyria 3 Clip Preview）。テキスト言語モデルではないためメインランキング対象外。",
+      "last_known_status": "OpenRouter無料モデルリスト存在、音楽生成専用"
     },
     {
-      "name": "Nemotron 3 Nano 30B A3B",
-      "reason": "総パラメータ 30B でローカル実行領域。品質スコア 40 程度の低性能。ランキング対象外。",
-      "last_known_status": "OpenRouter 上に :free バリアントありだが品質ゲート未達"
+      "name": "NVIDIA Nemotron 3.5 Content Safety (OpenRouter)",
+      "reason": "コンテンツ安全判定用単一目的モデル。メインランキング対象外。",
+      "last_known_status": "OpenRouter無料モデルリスト存在"
     },
     {
-      "name": "gpt-oss-20b",
-      "reason": "総パラメータ 20B でローカル実行領域。Terminal Bench スコア未確認。ランキング対象外。",
-      "last_known_status": "OpenRouter 上に :free バリアントありだが品質ゲート未達"
+      "name": "OpenRouter/free (メタモデル)",
+      "reason": "OpenRouterが自動的にモデルを選択するメタモデル。特定のモデルを指定できないためランキング対象外。",
+      "last_known_status": "OpenRouter無料モデルリスト存在"
     },
     {
-      "name": "Gemma 4 26B A4B IT (OpenRouter)",
-      "reason": "[size] 25.2B total is local-run territory and tier B doesn't show competitiveness"
+      "name": "gpt-oss-20b (OpenRouter)",
+      "reason": "総パラメータ20Bで30B未満のローカル実行領域。ベンチマークデータ不足かつTerminal Bench 2.1スコア未確認。",
+      "last_known_status": "OpenRouter無料モデルリスト存在（Quality 41）"
+    },
+    {
+      "name": "Nemotron 3 Nano 30B A3B (OpenRouter)",
+      "reason": "総パラメータ30BだがMoE構造（active 3B）。ベンチマークデータ不足、Terminal Bench 2.1スコア未確認。Qualityスコア40のみ。",
+      "last_known_status": "OpenRouter無料モデルリスト存在（Quality 40）"
+    },
+    {
+      "name": "Nemotron Nano 12B v2 VL / 9B v2 (OpenRouter)",
+      "reason": "総パラメータ12B/9Bで30B未満のローカル実行領域。小型モデル。",
+      "last_known_status": "OpenRouter無料モデルリスト存在（Quality 25/24）"
+    },
+    {
+      "name": "Poolside Laguna M.1 (OpenRouter)",
+      "reason": "Terminal Bench 2.0スコア40.7のみ、Terminal Bench 2.1スコア未確認。Tier Bまで。ただし既存のフリーモデルと比較して明確な優位性なし。",
+      "last_known_status": "OpenRouter無料モデルリスト存在"
+    },
+    {
+      "name": "Poolside Laguna XS 2.1 (OpenRouter)",
+      "reason": "新規追加モデルだがベンチマークデータなし。XSサイズは推定小型モデル。",
+      "last_known_status": "OpenRouter無料モデルリスト存在"
+    },
+    {
+      "name": "Cohere North Mini Code (OpenRouter)",
+      "reason": "コーディング特化モデルだが「Mini」という名称から小型モデルの可能性。ベンチマークデータ不足。CostGoatではQualityスコア未設定。",
+      "last_known_status": "OpenRouter無料モデルリスト存在"
+    },
+    {
+      "name": "Nemotron 3 Nano Omni 30B A3B Reasoning (OpenRouter)",
+      "reason": "総パラメータ30B（MoE active 3B）。ベンチマークデータ不足、Terminal Bench 2.1スコア未確認。Qualityスコア36。",
+      "last_known_status": "OpenRouter無料モデルリスト存在（Quality 36）"
+    },
+    {
+      "name": "Gemini 2.0 Flash / 2.0 Flash-Lite",
+      "reason": "2026年6月1日にサービス終了。代替としてGemini 2.5シリーズを使用。",
+      "last_known_status": "shut down"
     }
   ],
-  "new_seed_candidates": [],
+  "new_seed_candidates": [
+    {
+      "name": "StepFun (Step 3.7 Flash)",
+      "type": "inference_host",
+      "recommend_add": false,
+      "reason": "NVIDIA NIM経由で利用可能。直接APIのエンドpunkt未確認。"
+    },
+    {
+      "name": "Cohere (North Mini Code)",
+      "type": "official_model_vendor",
+      "recommend_add": false,
+      "reason": "OpenRouter経由でのみ無料アクセス確認。直接APIの有無未確認。"
+    }
+  ],
   "sources": [
     {
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "source_type": "official",
       "title": "Gemini API Pricing",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
+      "accessed_at": "2026-07-29T13:30:00+09:00"
+    },
+    {
+      "url": "https://ai.google.dev/gemini-api/docs/rate-limits",
+      "source_type": "official",
+      "title": "Gemini API Rate Limits",
+      "accessed_at": "2026-07-29T13:35:00+09:00"
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/openai",
       "source_type": "official",
-      "title": "OpenAI Compatibility - Gemini API",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
+      "title": "Gemini API OpenAI Compatibility",
+      "accessed_at": "2026-07-29T13:30:00+09:00"
     },
     {
       "url": "https://docs.api.nvidia.com/nim/reference/llm-apis",
       "source_type": "official",
       "title": "NVIDIA NIM LLM APIs Reference",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
+      "accessed_at": "2026-07-29T13:20:00+09:00"
     },
     {
       "url": "https://openrouter.ai/docs/quickstart",
       "source_type": "provider",
       "title": "OpenRouter Quickstart",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
+      "accessed_at": "2026-07-29T13:15:00+09:00"
     },
     {
-      "url": "https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/",
+      "url": "https://costgoat.com/pricing/openrouter-free-models",
+      "source_type": "other",
+      "title": "OpenRouter Free Models List",
+      "accessed_at": "2026-07-29T13:10:00+09:00"
+    },
+    {
+      "url": "https://api-docs.deepseek.com/quick_start/pricing",
       "source_type": "official",
-      "title": "Cloudflare Workers AI OpenAI Compatibility",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
+      "title": "DeepSeek API Pricing",
+      "accessed_at": "2026-07-29T13:40:00+09:00"
     },
     {
       "url": "https://api-docs.deepseek.com/",
       "source_type": "official",
       "title": "DeepSeek API Docs",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
+      "accessed_at": "2026-07-29T13:40:00+09:00"
     },
     {
-      "url": "https://api-docs.deepseek.com/quick_start/pricing",
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
       "source_type": "official",
-      "title": "DeepSeek Models & Pricing",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
+      "title": "Cloudflare Workers AI Pricing",
+      "accessed_at": "2026-07-29T13:45:00+09:00"
     },
     {
-      "url": "https://openrouter.ai/inclusionai/ling-3.0-flash:free",
-      "source_type": "provider",
-      "title": "Ling-3.0-flash (free) on OpenRouter",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
+      "url": "https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/",
+      "source_type": "official",
+      "title": "Cloudflare Workers AI OpenAI Compatibility",
+      "accessed_at": "2026-07-29T13:45:00+09:00"
     },
     {
-      "url": "https://openrouter.ai/poolside/laguna-s-2.1:free",
-      "source_type": "provider",
-      "title": "Laguna S 2.1 (free) on OpenRouter",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
-    },
-    {
-      "url": "https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b:free",
-      "source_type": "provider",
-      "title": "Nemotron 3 Ultra (free) on OpenRouter",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
-    },
-    {
-      "url": "https://openrouter.ai/nvidia/nemotron-3-super-120b-a12b:free",
-      "source_type": "provider",
-      "title": "Nemotron 3 Super (free) on OpenRouter",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
-    },
-    {
-      "url": "https://openrouter.ai/google/gemma-4-31b-it:free",
-      "source_type": "provider",
-      "title": "Gemma 4 31B (free) on OpenRouter",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
-    },
-    {
-      "url": "https://openrouter.ai/google/gemma-4-26b-a4b-it:free",
-      "source_type": "provider",
-      "title": "Gemma 4 26B A4B (free) on OpenRouter",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
-    },
-    {
-      "url": "https://openrouter.ai/models?free=true",
-      "source_type": "provider",
-      "title": "OpenRouter Free Models List",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
+      "url": "https://developers.cloudflare.com/workers-ai/models/",
+      "source_type": "official",
+      "title": "Cloudflare Workers AI Models",
+      "accessed_at": "2026-07-29T13:45:00+09:00"
     },
     {
       "url": "https://www.kimi.com/blog/kimi-k3",
       "source_type": "official",
       "title": "Kimi K3 Blog Post",
-      "accessed_at": "2026-07-29T02:30:00+09:00"
+      "accessed_at": "2026-07-28T22:00:00+09:00"
+    },
+    {
+      "url": "https://x.com/AntLingAGI/status/2080351022028095681",
+      "source_type": "community",
+      "title": "Ling-3.0-flash Benchmark Results",
+      "accessed_at": "2026-07-24T21:25:00+09:00"
     }
   ]
 }

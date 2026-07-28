@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-29T14:00:00+00:00",
+  "updated_at": "2026-07-29T14:00:00+09:00",
   "offers": [
     {
       "name": "Google AI Studio - Gemini 3.6 Flash (無料枠)",
@@ -12,17 +12,7 @@
       "model_id": "gemini-3.6-flash"
     },
     {
-      "name": "Google AI Studio - Gemini 2.5 Pro (無料枠)",
-      "provider": "Google",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "HIGH",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-2.5-pro"
-    },
-    {
-      "name": "NVIDIA NIM - Nemotron 3 Ultra",
+      "name": "NVIDIA NIM - Nemotron 3 Ultra (無料API)",
       "provider": "NVIDIA",
       "classification": "A_TRUE_FREE",
       "end_at": null,
@@ -32,17 +22,17 @@
       "model_id": "nvidia/nemotron-3-ultra-550b-a55b"
     },
     {
-      "name": "Nemotron 3 Ultra (OpenRouter)",
+      "name": "GLM 5.2 (OpenRouter)",
       "provider": "OpenRouter",
       "classification": "B_PERMANENT_FREE_TIER",
       "end_at": null,
-      "operational_confidence": "HIGH",
-      "suspicion_score": 0,
+      "operational_confidence": "MEDIUM",
+      "suspicion_score": 1,
       "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free"
+      "model_id": "z-ai/glm-5.2:free"
     },
     {
-      "name": "NVIDIA NIM - Nemotron 3 Super",
+      "name": "NVIDIA NIM - Nemotron 3 Super (無料API)",
       "provider": "NVIDIA",
       "classification": "A_TRUE_FREE",
       "end_at": null,
@@ -50,26 +40,6 @@
       "suspicion_score": 0,
       "base_url": "https://integrate.api.nvidia.com/v1",
       "model_id": "nvidia/nemotron-3-super-120b-a12b"
-    },
-    {
-      "name": "Nemotron 3 Super (OpenRouter)",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "HIGH",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "name": "GLM 5.2 (Cloudflare Workers AI無料枠)",
-      "provider": "Cloudflare",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/v1",
-      "model_id": "@cf/z-ai/glm-5.2"
     },
     {
       "name": "Ling-3.0-flash (OpenRouter)",
@@ -92,6 +62,16 @@
       "model_id": "poolside/laguna-s-2.1:free"
     },
     {
+      "name": "Google AI Studio - Gemini 2.5 Pro (無料枠)",
+      "provider": "Google",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "model_id": "gemini-2.5-pro"
+    },
+    {
       "name": "Gemma 4 31B IT (OpenRouter)",
       "provider": "OpenRouter",
       "classification": "B_PERMANENT_FREE_TIER",
@@ -100,16 +80,6 @@
       "suspicion_score": 0,
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "google/gemma-4-31b-it:free"
-    },
-    {
-      "name": "Gemma 4 26B A4B IT (OpenRouter)",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "HIGH",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "google/gemma-4-26b-a4b-it:free"
     },
     {
       "name": "DeepSeek V4 Flash (低価格API)",

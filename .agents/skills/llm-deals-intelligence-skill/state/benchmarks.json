@@ -237,6 +237,17 @@
         {"name": "SWE-bench Verified", "score": 96, "source": "https://benchlm.ai/benchmarks/sweVerified", "extraction_method": "third_party_aggregator", "accessed_at": "2026-07-28T22:00:00+09:00"}
       ],
       "sources_checked": []
+    },
+    {
+      "canonical_name": "Qwen3.7 Flash",
+      "aliases": ["qwen3.7-flash", "qwen/qwen3.7-flash"],
+      "vendor": "Alibaba (Qwen)",
+      "model_ids": ["qwen/qwen3.7-flash"],
+      "tier": null,
+      "benchmarks": [],
+      "sources_checked": [
+        {"type": "openrouter_model_page", "url": "https://openrouter.ai/qwen/qwen3.7-flash", "status": "no_benchmark_table", "accessed_at": "2026-07-29T02:30:00+09:00"}
+      ]
     }
   ]
 }
