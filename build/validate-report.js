@@ -2,230 +2,377 @@
 /**
  * validate-report.js
  *
- * Validates a report.json against the daily_report.schema.json schema,
- * then enforces the provider endpoint gate against provider-registry.json:
+ * Validates report.json against the schema, then runs mechanical gates.
  *
- *   - A ranked offer whose base_url contradicts the official endpoint of a
- *     listed provider HARD-FAILS (this is how fabricated URLs are caught).
- *   - A ranked offer from a provider missing from the registry HARD-FAILS:
- *     the skill must research the connection method from official docs and
- *     add the provider to the registry before the offer can be ranked.
- *   - Ranked offers must carry base_url and endpoint_source.
- *   - Citation re-check (online): the validator itself fetches every
- *     endpoint_source page and requires the claimed base_url to appear in
- *     it. The model cannot approve its own fabrication because it cannot
- *     forge third-party documentation. Fetch succeeds + URL not found =
- *     hard error; fetch fails = warning (offline dev: SKIP_CITATION_CHECK=1).
- *   - Benchmark state gate: regeneration must not lose verified data. A
- *     ranked offer whose model has scores in state/benchmarks.json but a
- *     null benchmark.score HARD-FAILS (regression), and a ranked offer with
- *     a score that is NOT persisted in state/benchmarks.json HARD-FAILS
- *     (next run would lose it).
+ * Two modes:
+ *   (default)  Schema + gate check. Gate violations = hard fail.
+ *   --fix      Schema check (hard fail if broken). Gate violations =
+ *              auto-downgrade the offending offer to excluded_offers with
+ *              a structured exclusion_reason, rewrite report.json, and
+ *              emit a JSON fix-report on stderr so the LLM can correct
+ *              the data in one pass next run.
+ *
+ * Gates (each produces a structured fix entry):
+ *   endpoint   — base_url contradicts registry or provider not registered
+ *   citation   — endpoint_source page does not document the claimed base_url
+ *   state      — benchmark regression (state has scores, report says null)
+ *                or score not persisted to state
+ *   free_claim — paid API dressed up as free
+ *   size       — sub-30B total-parameter model (unless tier S/A)
+ *   tier       — tier S/A without Terminal-Bench 2.1 >= 50%
+ *   allowance  — missing free_allowance_rank
  *
  * Usage:
- *   node build/validate-report.js <report.json> <schema.json>
+ *   node build/validate-report.js <report.json> <schema.json> [--fix]
  */
 
 const fs = require('fs');
 const path = require('path');
 const { loadRegistry, matchProvider } = require('./provider-registry');
 
+const FIX_MODE = process.argv.includes('--fix');
+
 async function main() {
-  const reportPath = process.argv[2];
-  const schemaPath = process.argv[3];
+  const args = process.argv.slice(2).filter(a => a !== '--fix');
+  const reportPath = args[0];
+  const schemaPath = args[1];
 
   if (!reportPath || !schemaPath) {
-    console.error('Usage: node validate-report.js <report.json> <schema.json>');
+    console.error('Usage: node validate-report.js <report.json> <schema.json> [--fix]');
     process.exit(1);
   }
-
-  if (!fs.existsSync(reportPath)) {
-    console.error(`Report file not found: ${reportPath}`);
-    process.exit(1);
-  }
-
-  if (!fs.existsSync(schemaPath)) {
-    console.error(`Schema file not found: ${schemaPath}`);
-    process.exit(1);
-  }
+  if (!fs.existsSync(reportPath)) { console.error(`Report not found: ${reportPath}`); process.exit(1); }
+  if (!fs.existsSync(schemaPath)) { console.error(`Schema not found: ${schemaPath}`); process.exit(1); }
 
   const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
   const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
 
-  // Try to use ajv for validation
-  let valid = true;
-  let errors = [];
-
+  // ── Schema validation (structural — always hard fail) ──────────
+  let schemaValid = true;
+  let schemaErrors = [];
   try {
     const { Ajv2020 } = require('ajv/dist/2020');
     const addFormats = require('ajv-formats');
     const ajv = new Ajv2020({ allErrors: true });
     addFormats(ajv);
     const validate = ajv.compile(schema);
-    valid = validate(report);
-    if (!valid) {
-      errors = validate.errors || [];
-    }
+    schemaValid = validate(report);
+    if (!schemaValid) schemaErrors = validate.errors || [];
   } catch (e) {
-    // ajv not installed or failed, do basic validation
-    console.warn('ajv validation unavailable, doing basic validation...');
-    valid = basicValidate(report, schema);
+    console.warn('ajv unavailable, basic validation...');
+    schemaValid = basicValidate(report, schema);
   }
 
-  // Endpoint gate: runs regardless of ajv availability. Fabricated or
-  // stale base_url values fail here even when the schema passes.
-  const endpointResult = validateEndpoints(report);
-
-  // Citation gate: the validator verifies the evidence itself by fetching
-  // the cited docs pages. This is what makes "go look it up every time"
-  // mechanically enforceable for unattended local-model runs.
-  const citationResult = await validateCitations(report);
-
-  // State gate: daily regeneration must never lose verified benchmark data.
-  const stateResult = validateBenchmarkState(report);
-
-  // Free-claim gate: a paid API dressed up as free (e.g. free app quota
-  // misreported as a free API) must not reach the ranking.
-  const freeClaimResult = validateFreeClaim(report);
-
-  // Size gate: sub-30B total-parameter models are local-run territory and
-  // do not belong in a free-API ranking.
-  const sizeResult = validateModelSize(report);
-
-  // Tier gate: tier S/A requires Terminal-Bench 2.1 >= 50%.
-  const tierResult = validateTierCriteria(report);
-
-  const gateErrors = [...endpointResult.errors, ...citationResult.errors, ...stateResult.errors, ...freeClaimResult.errors, ...sizeResult.errors, ...tierResult.errors];
-  const gateWarnings = [...endpointResult.warnings, ...citationResult.warnings, ...stateResult.warnings, ...freeClaimResult.warnings, ...sizeResult.warnings, ...tierResult.warnings];
-
-  if (valid && gateErrors.length === 0) {
-    console.log('✅ Report is valid against the schema.');
-    console.log(`   Report: ${reportPath}`);
-    console.log(`   Schema: ${schemaPath}`);
-    console.log(`   Generated at: ${report.generated_at || 'unknown'}`);
-    console.log(`   New models: ${report.new_models?.length || 0}`);
-    console.log(`   Changes: ${report.changes?.length || 0}`);
-    console.log(`   Ranked offers: ${report.ranked_offers?.length || 0}`);
-    console.log(`   Excluded: ${report.excluded_offers?.length || 0}`);
-    const fieldReport = reportNewFields(report);
-    console.log(`   Ranking eligible with last_verified: ${fieldReport.verified}/${fieldReport.eligible}`);
-    console.log(`   Router offers with free_model_names: ${fieldReport.routersWithModels}/${fieldReport.routers}`);
-    console.log(`   Endpoint gate: ${endpointResult.checked} checked. Citation gate: ${citationResult.checked} verified online.`);
-    for (const w of gateWarnings) console.warn(`   ⚠️  ${w}`);
-    process.exit(0);
-  } else {
-    console.error('❌ Report validation failed!');
-    console.error(`   Report: ${reportPath}`);
-    console.error(`   Schema: ${schemaPath}`);
-    if (errors.length > 0) {
-      console.error('   Errors:');
-      errors.forEach(err => {
-        console.error(`     - ${err.instancePath || 'root'}: ${err.message}`);
-      });
-    }
-    for (const e of gateErrors) console.error(`     - ${e}`);
-    for (const w of gateWarnings) console.warn(`   ⚠️  ${w}`);
+  if (!schemaValid) {
+    console.error('❌ Schema validation failed (structural — cannot auto-fix):');
+    for (const err of schemaErrors) console.error(`   - ${err.instancePath || 'root'}: ${err.message}`);
     process.exit(1);
   }
+
+  // ── Mechanical gates ───────────────────────────────────────────
+  const fixReport = []; // structured fix entries for the LLM
+  const providers = loadRegistry();
+
+  runEndpointGate(report, providers, fixReport);
+  await runCitationGate(report, fixReport);
+  runStateGate(report, fixReport);
+  runFreeClaimGate(report, fixReport);
+  runSizeGate(report, fixReport);
+  runTierGate(report, fixReport);
+  runAllowanceGate(report, fixReport);
+
+  // ── Apply auto-downgrades in --fix mode ────────────────────────
+  if (FIX_MODE && fixReport.length > 0) {
+    applyDowngrades(report, fixReport);
+    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
+    console.log(`🔧 --fix: ${fixReport.length} offer(s) auto-downgraded to excluded_offers.`);
+    console.log(`   Report rewritten: ${reportPath}`);
+  }
+
+  // ── Emit structured fix report ─────────────────────────────────
+  if (fixReport.length > 0) {
+    const json = JSON.stringify(fixReport, null, 2);
+    if (FIX_MODE) {
+      console.warn('\n📋 Fix report (for next collection run):\n' + json);
+    } else {
+      console.error('\n❌ Gate violations found:\n' + json);
+      process.exit(1);
+    }
+  }
+
+  // ── Summary ────────────────────────────────────────────────────
+  const ranked = (report.ranked_offers || []).filter(o => o.ranking_eligible === true);
+  const fieldReport = reportNewFields(report);
+  console.log('✅ Report is valid.');
+  console.log(`   Generated at: ${report.generated_at || 'unknown'}`);
+  console.log(`   Ranked offers: ${ranked.length}`);
+  console.log(`   Excluded: ${(report.excluded_offers || []).length}`);
+  console.log(`   Ranking eligible with last_verified: ${fieldReport.verified}/${fieldReport.eligible}`);
+  console.log(`   Router offers with free_model_names: ${fieldReport.routersWithModels}/${fieldReport.routers}`);
+  if (fixReport.length > 0) console.log(`   Auto-downgraded: ${fixReport.length}`);
+  process.exit(0);
 }
 
-// ── Endpoint gate ─────────────────────────────────────────────────
-// Every ranked offer is matched against build/provider-registry.json.
-// Known provider + non-matching base_url = hard error: the URL was either
-// fabricated from memory or the provider changed and the registry/report
-// must be updated from official docs. Unknown provider = hard error until
-// the skill researches it and adds a registry entry (dynamic growth, but
-// only together with a verified citation).
-function validateEndpoints(report) {
-  const providers = loadRegistry();
-  const offers = report.ranked_offers || [];
-  const errors = [];
-  const warnings = [];
-  let checked = 0;
+// ══════════════════════════════════════════════════════════════════
+// Gate implementations — each pushes structured fix entries
+// ══════════════════════════════════════════════════════════════════
 
-  for (const o of offers) {
+function runEndpointGate(report, providers, fixReport) {
+  for (const o of report.ranked_offers || []) {
     if (o.ranking_eligible !== true) continue;
-    checked++;
-    const label = o.name || o.provider || 'unnamed offer';
+    const label = o.name || o.provider || '?';
 
     if (!o.base_url || typeof o.base_url !== 'string') {
-      errors.push(`"${label}": ranked offer is missing base_url. Verify the endpoint on the provider's official docs and set it.`);
+      fixReport.push({
+        offer: label, gate: 'endpoint',
+        field: 'base_url', current: null,
+        action: 'fetch the provider\'s official API docs and set base_url to the documented value',
+        source_hint: 'provider official docs (search "<provider> API quickstart")',
+        downgrade: true,
+      });
       continue;
     }
     if (!o.endpoint_source || typeof o.endpoint_source !== 'string' || !/^https?:\/\//.test(o.endpoint_source)) {
-      errors.push(`"${label}": ranked offer is missing endpoint_source (the official docs URL where base_url was verified this run). Fabrication from memory is not allowed.`);
+      fixReport.push({
+        offer: label, gate: 'endpoint',
+        field: 'endpoint_source', current: o.endpoint_source || null,
+        action: 'set endpoint_source to the exact official docs URL where base_url was verified this run',
+        source_hint: 'the docs page you fetched to confirm the base_url',
+        downgrade: true,
+      });
     }
 
     const hit = matchProvider(o, providers);
     if (!hit) {
-      errors.push(
-        `"${label}": provider "${o.provider || '?'}" is not in build/provider-registry.json. ` +
-        `Research the connection method on the provider's official docs, add the provider to the registry ` +
-        `(key, label, match, base_url, base_url_pattern, env, docs_url, added_at, added_from), cite the docs URL ` +
-        `as endpoint_source, and only then rank the offer.`
-      );
+      fixReport.push({
+        offer: label, gate: 'endpoint',
+        field: 'provider', current: o.provider,
+        action: `provider "${o.provider}" not in registry. Fetch official docs, add entry to build/provider-registry.json (key, label, match, base_url, base_url_pattern, env, docs_url, added_at, added_from), then set endpoint_source to the docs URL`,
+        source_hint: `search "${o.provider} API documentation" on the vendor's official domain`,
+        downgrade: true,
+      });
       continue;
     }
-    const { entry, byUrl } = hit;
-    if (!byUrl) {
-      errors.push(
-        `"${label}": base_url "${o.base_url}" does NOT match the official ${entry.label} endpoint ` +
-        `(expected pattern ${entry.base_url_pattern}, canonical ${entry.base_url}). ` +
-        `Re-verify on ${entry.docs_url} and fix report.json — or update the registry if the official docs really changed.`
-      );
+    if (!hit.byUrl) {
+      fixReport.push({
+        offer: label, gate: 'endpoint',
+        field: 'base_url', current: o.base_url,
+        action: `base_url does not match official ${hit.entry.label} endpoint. Re-fetch ${hit.entry.docs_url} and set base_url to the documented value (canonical: ${hit.entry.base_url})`,
+        source_hint: hit.entry.docs_url,
+        downgrade: true,
+      });
     }
   }
-
-  return { errors, warnings, checked };
 }
 
-// ── Citation gate (online re-verification) ────────────────────────
-// For every ranked offer, fetch the endpoint_source page and require the
-// claimed base_url to appear in it (full URL, scheme-less, or host form).
-// The batch machine talks to the real web; the LLM does not get a say in
-// whether its citation supports its claim.
-async function validateCitations(report) {
-  const errors = [];
-  const warnings = [];
+async function runCitationGate(report, fixReport) {
   const skip = process.env.SKIP_CITATION_CHECK === '1';
   const offers = (report.ranked_offers || []).filter(
     o => o.ranking_eligible === true && typeof o.endpoint_source === 'string' && /^https?:\/\//.test(o.endpoint_source)
   );
-  if (skip || offers.length === 0) {
-    if (skip) warnings.push('Citation re-check skipped (SKIP_CITATION_CHECK=1).');
-    return { errors, warnings, checked: 0 };
-  }
+  if (skip || offers.length === 0) return;
 
-  // Deduplicate by citation URL (router cards share one docs page).
   const byUrl = new Map();
   for (const o of offers) {
     if (!byUrl.has(o.endpoint_source)) byUrl.set(o.endpoint_source, []);
     byUrl.get(o.endpoint_source).push(o);
   }
 
-  let checked = 0;
   for (const [url, group] of byUrl) {
     let html = null;
-    try {
-      html = await fetchText(url);
-    } catch (e) {
+    try { html = await fetchText(url); } catch (e) {
       for (const o of group) {
-        warnings.push(`"${o.name}": could not fetch citation ${url} (${String(e.message || e)}). Verify manually.`);
+        fixReport.push({
+          offer: o.name || '?', gate: 'citation',
+          field: 'endpoint_source', current: url,
+          action: `could not fetch citation (${String(e.message || e)}). Re-verify manually and update endpoint_source if the page moved`,
+          source_hint: url,
+          downgrade: false, // network issue — warn only, don't downgrade
+        });
       }
       continue;
     }
     for (const o of group) {
-      checked++;
       if (!citationSupports(html, o.base_url)) {
-        errors.push(
-          `"${o.name}": citation ${url} does not document base_url "${o.base_url}". ` +
-          `The cited page must actually state the endpoint — re-fetch the official docs and copy the documented URL verbatim.`
-        );
+        fixReport.push({
+          offer: o.name || '?', gate: 'citation',
+          field: 'base_url', current: o.base_url,
+          action: `citation ${url} does not document base_url "${o.base_url}". Re-fetch official docs and copy the documented URL verbatim`,
+          source_hint: url,
+          downgrade: true,
+        });
       }
     }
   }
+}
 
-  return { errors, warnings, checked };
+function runStateGate(report, fixReport) {
+  let models = [];
+  try {
+    models = JSON.parse(fs.readFileSync(BENCHMARK_STATE_PATH, 'utf8')).models || [];
+  } catch { return; }
+
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) continue;
+    const label = o.name || '?';
+    const entry = matchBenchmarkEntry(o, models);
+    const stateScores = entry ? (entry.benchmarks || []).filter(b => b && b.score != null) : [];
+    const offerScore = o.benchmark && o.benchmark.score != null ? o.benchmark.score : null;
+
+    if (stateScores.length > 0 && offerScore == null) {
+      fixReport.push({
+        offer: label, gate: 'state',
+        field: 'benchmark.score', current: null,
+        action: `regression — state has scores for ${entry.canonical_name} (${stateScores.map(b => `${b.name}=${b.score}`).join(', ')}). Merge from state/benchmarks.json into the offer's benchmark and benchmarks array`,
+        source_hint: '.agents/skills/llm-deals-intelligence-skill/state/benchmarks.json',
+        downgrade: true,
+      });
+    } else if (offerScore != null && stateScores.length === 0) {
+      fixReport.push({
+        offer: label, gate: 'state',
+        field: 'state/benchmarks.json', current: 'missing entry',
+        action: `score ${offerScore} not persisted. Write it to state/benchmarks.json (merge by canonical_name, include model_id "${o.model_id}" in model_ids)`,
+        source_hint: '.agents/skills/llm-deals-intelligence-skill/state/benchmarks.json',
+        downgrade: true,
+      });
+    }
+  }
+}
+
+function runFreeClaimGate(report, fixReport) {
+  const paidApi = /\bapi is paid\b|\bpaid api\b|\bapi access is paid\b|\bapi costs \$[1-9]/i;
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) continue;
+    const limits = `${o.free_limits || ''} ${o.rate_limits || ''}`;
+    if (paidApi.test(limits)) {
+      fixReport.push({
+        offer: o.name || '?', gate: 'free_claim',
+        field: 'free_limits', current: (o.free_limits || '').slice(0, 100),
+        action: 'free_limits says the API is paid. Set ranking_eligible: false, classification: G_FREE_LIKE, move to excluded_offers with the real API price',
+        source_hint: 'provider pricing page',
+        downgrade: true,
+      });
+    }
+  }
+}
+
+function runSizeGate(report, fixReport) {
+  const MAX = 30;
+  const COMPETITIVE = ['S', 'A'];
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) continue;
+    const total = o.total_parameters_b;
+    const tier = o.benchmark && o.benchmark.tier;
+    if (typeof total === 'number' && total < MAX && !COMPETITIVE.includes(tier)) {
+      fixReport.push({
+        offer: o.name || '?', gate: 'size',
+        field: 'total_parameters_b', current: total,
+        action: `${total}B total is local-run territory and tier ${tier} doesn't show competitiveness (needs S/A). Move to excluded_offers`,
+        source_hint: 'model card (huggingface.co/{vendor}/{model})',
+        downgrade: true,
+      });
+    }
+  }
+}
+
+function runTierGate(report, fixReport) {
+  const TB_PAT = /terminal[\s-]*bench[\s-]*v?2(\.1)?/i;
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) continue;
+    const tier = o.benchmark && o.benchmark.tier;
+    if (tier !== 'S' && tier !== 'A') continue;
+    const tb = (o.benchmarks || []).find(b => b && TB_PAT.test(b.name || ''));
+    if (!tb || tb.score == null) {
+      fixReport.push({
+        offer: o.name || '?', gate: 'tier',
+        field: 'benchmarks[].Terminal-Bench 2.1', current: null,
+        action: `tier ${tier} requires Terminal-Bench 2.1 >= 50%. Check state/benchmarks.json first, then llm-stats.com/benchmarks/terminal-bench-2.1, benchlm.ai, snorkel.ai. If truly unpublished, cap tier at B`,
+        source_hint: 'state/benchmarks.json → llm-stats → benchlm → snorkel → model card',
+        downgrade: true,
+      });
+    } else if (tb.score < 50) {
+      fixReport.push({
+        offer: o.name || '?', gate: 'tier',
+        field: 'benchmarks[].Terminal-Bench 2.1', current: tb.score,
+        action: `Terminal-Bench 2.1 = ${tb.score} < 50%. Cap tier at B`,
+        source_hint: 'llm-stats.com/benchmarks/terminal-bench-2.1',
+        downgrade: true,
+      });
+    }
+  }
+}
+
+function runAllowanceGate(report, fixReport) {
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) continue;
+    if (!o.free_allowance_rank || !['AMPLE', 'NORMAL', 'TIGHT', 'TINY'].includes(o.free_allowance_rank)) {
+      fixReport.push({
+        offer: o.name || '?', gate: 'allowance',
+        field: 'free_allowance_rank', current: o.free_allowance_rank || null,
+        action: 'set free_allowance_rank from documented limits: AMPLE (hundreds req/day), NORMAL (~20-100), TIGHT (few/day), TINY (prototype-only)',
+        source_hint: 'provider pricing/limits page',
+        downgrade: true,
+      });
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Auto-downgrade: move violating offers from ranked to excluded
+// ══════════════════════════════════════════════════════════════════
+
+function applyDowngrades(report, fixReport) {
+  const downgradeOffers = new Set();
+  for (const f of fixReport) {
+    if (f.downgrade) downgradeOffers.add(f.offer);
+  }
+  if (downgradeOffers.size === 0) return;
+
+  const reasons = new Map();
+  for (const f of fixReport) {
+    if (!f.downgrade) continue;
+    if (!reasons.has(f.offer)) reasons.set(f.offer, []);
+    reasons.get(f.offer).push(`[${f.gate}] ${f.action}`);
+  }
+
+  report.excluded_offers = report.excluded_offers || [];
+  const remaining = [];
+  for (const o of report.ranked_offers || []) {
+    const label = o.name || o.provider || '?';
+    if (downgradeOffers.has(label)) {
+      o.ranking_eligible = false;
+      o.exclusion_reason = reasons.get(label).join(' | ');
+      report.excluded_offers.push({ name: label, reason: o.exclusion_reason });
+    } else {
+      remaining.push(o);
+    }
+  }
+  report.ranked_offers = remaining;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Helpers
+// ══════════════════════════════════════════════════════════════════
+
+const BENCHMARK_STATE_PATH = path.join(
+  __dirname, '..', '.agents', 'skills', 'llm-deals-intelligence-skill', 'state', 'benchmarks.json'
+);
+
+function matchBenchmarkEntry(o, models) {
+  const mid = String(o.model_id || '').toLowerCase();
+  if (mid) {
+    for (const m of models) {
+      if ((m.model_ids || []).some(id => String(id).toLowerCase() === mid)) return m;
+    }
+  }
+  const name = String(o.model_name || o.name || '').toLowerCase();
+  if (name) {
+    for (const m of models) {
+      const cn = String(m.canonical_name || '').toLowerCase();
+      if (cn && (name.includes(cn) || cn.includes(name))) return m;
+    }
+  }
+  return null;
 }
 
 async function fetchText(url) {
@@ -247,172 +394,9 @@ function citationSupports(html, baseUrl) {
   try {
     const host = new URL(baseUrl).host;
     return host.length > 0 && html.includes(host);
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
 
-// ── Tier criteria gate ────────────────────────────────────────────
-// Tier S/A certifies agentic coding competence: Terminal-Bench 2.1
-// must be on record and >= 50%. A missing score is a research failure
-// (check model card / llm-stats / benchlm / snorkel leaderboards); an
-// unpublished score caps the model at tier B.
-const TB21_PATTERN = /terminal[\s-]*bench[\s-]*v?2(\.1)?/i;
-const TB21_MIN = 50;
-
-function validateTierCriteria(report) {
-  const errors = [];
-  const warnings = [];
-  for (const o of report.ranked_offers || []) {
-    if (o.ranking_eligible !== true) continue;
-    const tier = o.benchmark && o.benchmark.tier;
-    if (tier !== 'S' && tier !== 'A') continue;
-    const label = o.name || o.provider || 'unnamed offer';
-    const tb = (o.benchmarks || []).find(b => b && TB21_PATTERN.test(b.name || ''));
-    if (!tb || tb.score == null) {
-      errors.push(
-        `"${label}": tier ${tier} requires a Terminal-Bench 2.1 score (>= ${TB21_MIN}%). ` +
-        `Collect it from the model card or a leaderboard (llm-stats, benchlm, snorkel); if it is truly unpublished, cap the tier at B.`
-      );
-      continue;
-    }
-    if (tb.score < TB21_MIN) {
-      errors.push(
-        `"${label}": Terminal-Bench 2.1 score ${tb.score} is below the ${TB21_MIN}% bar for tier ${tier}. Cap the tier at B.`
-      );
-    }
-  }
-  return { errors, warnings };
-}
-
-// ── Model size gate ───────────────────────────────────────────────
-// A free API of a model anyone can run at home is not news. Total
-// parameters decide (MoE must load every expert locally; active params
-// only bound compute). Under 30B total = hard fail UNLESS the benchmarks
-// prove the model is genuinely competitive (tier S/A): a small model that
-// performs like a much larger one is still worth featuring. Unknown
-// size = warning.
-const LOCAL_TOTAL_MAX_B = 30;
-const COMPETITIVE_TIERS = ['S', 'A'];
-
-function validateModelSize(report) {
-  const errors = [];
-  const warnings = [];
-  for (const o of report.ranked_offers || []) {
-    if (o.ranking_eligible !== true) continue;
-    const label = o.name || o.provider || 'unnamed offer';
-    const total = o.total_parameters_b;
-    const tier = o.benchmark && o.benchmark.tier;
-    if (typeof total === 'number' && total < LOCAL_TOTAL_MAX_B) {
-      if (COMPETITIVE_TIERS.includes(tier)) {
-        warnings.push(`"${label}": sub-${LOCAL_TOTAL_MAX_B}B model kept because tier ${tier} shows it is competitive.`);
-      } else {
-        errors.push(
-          `"${label}": ${total}B total parameters is local-run territory (under ${LOCAL_TOTAL_MAX_B}B) and tier ${tier || '?'} ` +
-          `does not show exceptional competitiveness (needs S/A). Exclude it.`
-        );
-      }
-      continue;
-    }
-    if (total == null) {
-      warnings.push(`"${label}": total_parameters_b unknown — confirm on the model card that this is not a sub-${LOCAL_TOTAL_MAX_B}B model.`);
-    }
-  }
-  return { errors, warnings };
-}
-
-// ── Free-claim gate ───────────────────────────────────────────────
-// The site ranks free/discounted API access. A free consumer app does not
-// make the API free. Hard-fail ranked offers whose own free_limits text
-// admits the API is paid; warn when the free quota is app-scoped so a
-// human (or the next run) checks the pricing page.
-function validateFreeClaim(report) {
-  const errors = [];
-  const warnings = [];
-  const paidApi = /\bapi is paid\b|\bpaid api\b|\bapi access is paid\b|\bapi costs \$[1-9]/i;
-  const appScoped = /\bfree\b[\s\S]{0,60}\bapp\b|\bapp\b[\s\S]{0,60}\bfree\b/i;
-  for (const o of report.ranked_offers || []) {
-    if (o.ranking_eligible !== true) continue;
-    const label = o.name || o.provider || 'unnamed offer';
-    const limits = `${o.free_limits || ''} ${o.rate_limits || ''}`;
-    if (paidApi.test(limits)) {
-      errors.push(
-        `"${label}": free_limits says the API is paid ("${(o.free_limits || '').slice(0, 100)}"). ` +
-        `A free app/web quota is NOT a free API. Exclude this offer (ranking_eligible: false) with the real API price.`
-      );
-      continue;
-    }
-    if (appScoped.test(limits)) {
-      warnings.push(`"${label}": free quota mentions an app — confirm on the pricing page that the API itself is free, not just the app.`);
-    }
-  }
-  return { errors, warnings };
-}
-
-// ── Benchmark state gate ──────────────────────────────────────────
-// state/benchmarks.json is the persistent cache of verified scores across
-// runs. Two failures are enforced:
-//   1. Regression: state has scores for the model, report says null.
-//   2. Non-persistence: report has a score, state does not (the skill must
-//      write new scores to state, or the next regeneration loses them).
-const BENCHMARK_STATE_PATH = path.join(
-  __dirname, '..', '.agents', 'skills', 'llm-deals-intelligence-skill', 'state', 'benchmarks.json'
-);
-
-function validateBenchmarkState(report) {
-  const errors = [];
-  const warnings = [];
-  let models = [];
-  try {
-    models = JSON.parse(fs.readFileSync(BENCHMARK_STATE_PATH, 'utf8')).models || [];
-  } catch {
-    warnings.push(`Could not read ${BENCHMARK_STATE_PATH}; benchmark state gate skipped.`);
-    return { errors, warnings };
-  }
-
-  for (const o of report.ranked_offers || []) {
-    if (o.ranking_eligible !== true) continue;
-    const label = o.name || o.provider || 'unnamed offer';
-    const entry = matchBenchmarkEntry(o, models);
-    const stateScores = entry ? (entry.benchmarks || []).filter(b => b && b.score != null) : [];
-    const offerScore = o.benchmark && o.benchmark.score != null ? o.benchmark.score : null;
-
-    if (stateScores.length > 0 && offerScore == null) {
-      errors.push(
-        `"${label}": benchmark regression — state/benchmarks.json has scores for ${entry.canonical_name} ` +
-        `(${stateScores.map(b => `${b.name}=${b.score}`).join(', ')}), but the report's benchmark.score is null. ` +
-        `Regeneration must not lose verified data: merge from state/benchmarks.json.`
-      );
-      continue;
-    }
-    if (offerScore != null && stateScores.length === 0) {
-      errors.push(
-        `"${label}": benchmark score ${offerScore} is not persisted in state/benchmarks.json ` +
-        `(no scored entry for model_id "${o.model_id || '?'}"). Write it to state so the next run cannot lose it.`
-      );
-    }
-  }
-  return { errors, warnings };
-}
-
-function matchBenchmarkEntry(o, models) {
-  const mid = String(o.model_id || '').toLowerCase();
-  if (mid) {
-    for (const m of models) {
-      if ((m.model_ids || []).some(id => String(id).toLowerCase() === mid)) return m;
-    }
-  }
-  const name = String(o.model_name || o.name || '').toLowerCase();
-  if (name) {
-    for (const m of models) {
-      const cn = String(m.canonical_name || '').toLowerCase();
-      if (cn && (name.includes(cn) || cn.includes(name))) return m;
-    }
-  }
-  return null;
-}
-
-// Summarise the two fields added by spec 0002 (last_verified, free_model_names).
 function reportNewFields(report) {
   const offers = report.ranked_offers || [];
   const eligible = offers.filter(o => o.ranking_eligible === true);
@@ -423,59 +407,26 @@ function reportNewFields(report) {
 }
 
 function basicValidate(report, schema) {
-  // Check required fields
   for (const req of schema.required || []) {
-    if (!(req in report)) {
-      console.error(`Missing required field: ${req}`);
-      return false;
-    }
+    if (!(req in report)) { console.error(`Missing required: ${req}`); return false; }
   }
-  // Spec 0002 invariants (mirrors the schema allOf, for the no-ajv fallback path).
   for (const o of report.ranked_offers || []) {
     if (o.ranking_eligible === true && !(typeof o.last_verified === 'string' && o.last_verified.length > 0)) {
-      console.error(`Ranking eligible offer missing last_verified: ${o.name}`);
-      return false;
+      console.error(`Missing last_verified: ${o.name}`); return false;
     }
-    if (o.ranking_eligible === true && !(typeof o.endpoint_source === 'string' && /^https?:\/\//.test(o.endpoint_source))) {
-      console.error(`Ranking eligible offer missing endpoint_source citation: ${o.name}`);
-      return false;
-    }
+    // endpoint_source and free_allowance_rank are enforced by the gate
+    // functions (runEndpointGate, runAllowanceGate), not by basicValidate.
+    // This allows --fix to auto-downgrade offers missing these fields.
     if (o.delivery_type === 'router' && !(Array.isArray(o.free_model_names) && o.free_model_names.length > 0)) {
-      console.error(`Router offer missing non-empty free_model_names: ${o.name}`);
-      return false;
+      console.error(`Router missing free_model_names: ${o.name}`); return false;
     }
   }
-  // Check types
-  if (typeof report.generated_at !== 'string') {
-    console.error('generated_at must be a string');
-    return false;
-  }
-  if (typeof report.timezone !== 'string') {
-    console.error('timezone must be a string');
-    return false;
-  }
-  if (!Array.isArray(report.new_models)) {
-    console.error('new_models must be an array');
-    return false;
-  }
-  if (!Array.isArray(report.changes)) {
-    console.error('changes must be an array');
-    return false;
-  }
-  if (!Array.isArray(report.ranked_offers)) {
-    console.error('ranked_offers must be an array');
-    return false;
-  }
-  if (!Array.isArray(report.excluded_offers)) {
-    console.error('excluded_offers must be an array');
-    return false;
-  }
-  if (!Array.isArray(report.sources)) {
-    console.error('sources must be an array');
-    return false;
+  if (typeof report.generated_at !== 'string') return false;
+  if (typeof report.timezone !== 'string') return false;
+  for (const k of ['new_models', 'changes', 'ranked_offers', 'excluded_offers', 'sources']) {
+    if (!Array.isArray(report[k])) return false;
   }
   return true;
 }
-
 
 main();

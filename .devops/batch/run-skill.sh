@@ -114,13 +114,14 @@ else
   node "${SCRIPT_DIR}/collect-fallback.js" "${REPORT_FILE}"
 fi
 
-# ── Step 3: Validate the report ──────────────────────────────────
-# Schema + endpoint gate (registry consistency) + citation gate (the
-# validator re-fetches every endpoint_source page itself). On failure the
-# batch aborts here: state is NOT updated and nothing is deployed.
+# ── Step 3: Validate + auto-fix the report ────────────────────────
+# Schema check (hard fail if structurally broken). Gate violations =
+# auto-downgrade offending offers to excluded_offers, rewrite report.json,
+# and emit a structured fix-report on stderr for the next run. The batch
+# continues with the cleaned report — no good offer is blocked by a bad one.
 echo ""
-echo "Validating report (schema + provider registry + live citation re-check)..."
-node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}"
+echo "Validating + auto-fixing report (schema + gates + live citation re-check)..."
+node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" --fix
 
 # ── Step 4: Update state ─────────────────────────────────────────
 echo ""
