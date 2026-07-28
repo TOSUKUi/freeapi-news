@@ -1,12 +1,19 @@
 {
   "version": 1,
-  "updated_at": "2026-07-25T01:35:00+09:00",
+  "updated_at": "2026-07-28T23:30:00+09:00",
   "models": [
     {
       "canonical_name": "Ling-3.0-flash",
-      "aliases": ["ling-3.0-flash", "inclusionai/ling-3.0-flash", "inclusionai/ling-3.0-flash:free"],
+      "aliases": [
+        "ling-3.0-flash",
+        "inclusionai/ling-3.0-flash",
+        "inclusionai/ling-3.0-flash:free"
+      ],
       "vendor": "InclusionAI",
-      "model_ids": ["inclusionai/ling-3.0-flash", "inclusionai/ling-3.0-flash:free"],
+      "model_ids": [
+        "inclusionai/ling-3.0-flash",
+        "inclusionai/ling-3.0-flash:free"
+      ],
       "tier": null,
       "benchmarks": [
         {
@@ -18,7 +25,7 @@
         },
         {
           "name": "MCP-Atlas",
-          "score": 67.0,
+          "score": 67,
           "source": "https://x.com/AntLingAGI/status/2080351022028095681",
           "extraction_method": "visual_approximate",
           "accessed_at": "2026-07-24T21:30:00+09:00"
@@ -102,9 +109,15 @@
     },
     {
       "canonical_name": "Poolside Laguna M.1",
-      "aliases": ["laguna-m.1", "poolside/laguna-m.1"],
+      "aliases": [
+        "laguna-m.1",
+        "poolside/laguna-m.1"
+      ],
       "vendor": "Poolside",
-      "model_ids": ["poolside/laguna-m.1:free", "poolside/laguna-m.1"],
+      "model_ids": [
+        "poolside/laguna-m.1:free",
+        "poolside/laguna-m.1"
+      ],
       "tier": null,
       "benchmarks": [
         {
@@ -133,21 +146,27 @@
     },
     {
       "canonical_name": "Nemotron 3 Ultra",
-      "aliases": ["nemotron-3-ultra-550b-a55b", "nvidia/nemotron-3-ultra-550b-a55b"],
+      "aliases": [
+        "nemotron-3-ultra-550b-a55b",
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
       "vendor": "NVIDIA",
-      "model_ids": ["nvidia/nemotron-3-ultra-550b-a55b:free", "nvidia/nemotron-3-ultra-550b-a55b"],
+      "model_ids": [
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
       "tier": null,
       "benchmarks": [
         {
           "name": "Humanity's Last Exam",
-          "score": 55.0,
+          "score": 55,
           "source": "report.json",
           "extraction_method": "official_page",
           "accessed_at": "2026-07-24T21:07:00+09:00"
         },
         {
           "name": "AIME 2025",
-          "score": 86.0,
+          "score": 86,
           "source": "report.json",
           "extraction_method": "official_page",
           "accessed_at": "2026-07-24T21:07:00+09:00"
@@ -164,14 +183,18 @@
     },
     {
       "canonical_name": "Gemini 3.6 Flash",
-      "aliases": ["gemini-3.6-flash"],
+      "aliases": [
+        "gemini-3.6-flash"
+      ],
       "vendor": "Google",
-      "model_ids": ["gemini-3.6-flash"],
+      "model_ids": [
+        "gemini-3.6-flash"
+      ],
       "tier": null,
       "benchmarks": [
         {
           "name": "Humanity's Last Exam",
-          "score": 52.0,
+          "score": 52,
           "source": "report.json",
           "extraction_method": "official_page",
           "accessed_at": "2026-07-24T21:07:00+09:00"
@@ -195,9 +218,15 @@
     },
     {
       "canonical_name": "Poolside Laguna S 2.1",
-      "aliases": ["laguna-s-2.1", "poolside/laguna-s-2.1"],
+      "aliases": [
+        "laguna-s-2.1",
+        "poolside/laguna-s-2.1"
+      ],
       "vendor": "Poolside",
-      "model_ids": ["poolside/laguna-s-2.1:free", "poolside/laguna-s-2.1"],
+      "model_ids": [
+        "poolside/laguna-s-2.1:free",
+        "poolside/laguna-s-2.1"
+      ],
       "tier": null,
       "benchmarks": [
         {
@@ -219,9 +248,13 @@
     },
     {
       "canonical_name": "DeepSeek V4 Flash",
-      "aliases": ["deepseek-v4-flash"],
+      "aliases": [
+        "deepseek-v4-flash"
+      ],
       "vendor": "DeepSeek",
-      "model_ids": ["deepseek-v4-flash"],
+      "model_ids": [
+        "deepseek-v4-flash"
+      ],
       "tier": null,
       "benchmarks": [
         {
@@ -240,7 +273,7 @@
         },
         {
           "name": "AIME 2025",
-          "score": 82.0,
+          "score": 82,
           "source": "report.json",
           "extraction_method": "official_page",
           "accessed_at": "2026-07-24T21:07:00+09:00"
@@ -250,14 +283,20 @@
     },
     {
       "canonical_name": "Nemotron 3 Super",
-      "aliases": ["nemotron-3-super-120b-a12b", "nvidia/nemotron-3-super-120b-a12b"],
+      "aliases": [
+        "nemotron-3-super-120b-a12b",
+        "nvidia/nemotron-3-super-120b-a12b"
+      ],
       "vendor": "NVIDIA",
-      "model_ids": ["nvidia/nemotron-3-super-120b-a12b:free", "nvidia/nemotron-3-super-120b-a12b"],
+      "model_ids": [
+        "nvidia/nemotron-3-super-120b-a12b:free",
+        "nvidia/nemotron-3-super-120b-a12b"
+      ],
       "tier": null,
       "benchmarks": [
         {
           "name": "GPQA Diamond",
-          "score": 80.0,
+          "score": 80,
           "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
           "extraction_method": "third_party_aggregator",
           "accessed_at": "2026-07-25T01:30:00+09:00"
@@ -308,25 +347,182 @@
     },
     {
       "canonical_name": "Kimi K3",
-      "aliases": ["kimi-k3", "moonshotai/kimi-k3"],
+      "aliases": [
+        "kimi-k3",
+        "moonshotai/kimi-k3"
+      ],
       "vendor": "Moonshot AI",
-      "model_ids": ["kimi-k3", "moonshotai/kimi-k3"],
+      "model_ids": [
+        "kimi-k3",
+        "moonshotai/kimi-k3"
+      ],
       "tier": null,
-      "benchmarks": [],
+      "benchmarks": [
+        {
+          "name": "GPQA-Diamond",
+          "score": 93.5,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "HLE-Full",
+          "score": 43.5,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "HLE-Full w/ tools",
+          "score": 56,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "SWE Marathon",
+          "score": 42,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "DeepSWE",
+          "score": 67.5,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 88.3,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "FrontierSWE",
+          "score": 81.2,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "BrowseComp",
+          "score": 91.2,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "MMMU-Pro",
+          "score": 81.6,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "Program Bench",
+          "score": 77.8,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "MCP Atlas",
+          "score": 84.2,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        }
+      ],
       "sources_checked": [
         {
           "type": "vendor_technical_blog",
           "url": "https://www.kimi.com/blog/kimi-k3",
-          "status": "pending_technical_report",
-          "accessed_at": "2026-07-25T01:30:00+09:00"
+          "status": "found_full_benchmark_table",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
         },
         {
           "type": "huggingface_model_card",
-          "url": "https://huggingface.co/MoonshotAI/Kimi-K3",
-          "status": "not_yet_released",
-          "accessed_at": "2026-07-25T01:30:00+09:00"
+          "url": "https://huggingface.co/moonshotai/Kimi-K3",
+          "status": "released",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
         }
       ]
+    },
+    {
+      "canonical_name": "Claude Opus 5",
+      "aliases": [
+        "claude-opus-5"
+      ],
+      "vendor": "Anthropic",
+      "model_ids": [
+        "claude-opus-5"
+      ],
+      "tier": null,
+      "benchmarks": [
+        {
+          "name": "SWE-bench Verified",
+          "score": 96,
+          "source": "https://benchlm.ai/benchmarks/sweVerified",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "SWE-bench Pro",
+          "score": 79.2,
+          "source": "https://codingfleet.com/blog/swe-bench-pro-leaderboard-2026/",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "Frontier-Bench v0.1",
+          "score": 43.3,
+          "source": "https://www.vellum.ai/blog/claude-opus-5-benchmarks-explained",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        }
+      ],
+      "sources_checked": [
+        {
+          "type": "vendor_technical_blog",
+          "url": "https://www.anthropic.com/news/claude-opus-5",
+          "status": "found_benchmarks",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "type": "third_party_aggregator",
+          "url": "https://goldiebench.com/benchmarks/opus5",
+          "status": "found_scores",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        }
+      ]
+    },
+    {
+      "canonical_name": "GLM 5.2",
+      "vendor": "Z.ai",
+      "model_ids": [
+        "@cf/z-ai/glm-5.2",
+        "z-ai/glm-5.2",
+        "glm-5.2"
+      ],
+      "tier": "A",
+      "benchmarks": [
+        {
+          "name": "GPQA-Diamond",
+          "score": 91.2
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 82.7
+        },
+        {
+          "name": "DeepSWE",
+          "score": 46.2
+        }
+      ],
+      "updated_at": "2026-07-28"
     }
   ]
 }

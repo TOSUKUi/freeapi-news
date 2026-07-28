@@ -4,6 +4,14 @@ Verify every candidate against official pricing, model, provider, status, terms,
 
 A zero-dollar model page is not enough. Confirm provider count, endpoint, model ID, base URL, region, recent activity or uptime, rate limits, billing conditions, end date, and data-use policy when possible.
 
+## Endpoint verification (mandatory, no exceptions)
+
+Never report a `base_url` or `model_id` from memory or training data. Every value must come from a page fetched during this run, and every ranked offer needs an `endpoint_source` citation:
+
+1. Read `build/provider-registry.json` (project root) first. For listed providers, use the registry `base_url` verbatim, fetch its `docs_url` to confirm the endpoint is unchanged, and set `endpoint_source` to that docs URL. If the fetched docs contradict the registry, update the registry entry from the docs and record the new docs URL.
+2. For providers NOT in the registry: fetch the official API docs (vendor domain only), copy the documented base URL and model ID format verbatim, add a new registry entry with `added_from` set to the exact docs URL you fetched, and set `endpoint_source` to the same URL. Only then may the offer be ranked. The validator re-fetches every citation and hard-fails when the page does not document the claimed base_url — an entry written from memory aborts the batch.
+3. Suspect URLs (unofficial domains, native endpoints used as OpenAI-compatible ones, guessed hosts like `api.kimi.ai`) are verification failures, not findings. The validator hard-fails them.
+
 OpenRouter rule: zero providers means unavailable and must be excluded from active ranking.
 
 ## Benchmark data lookup (mandatory before marking insufficient_benchmark_data)

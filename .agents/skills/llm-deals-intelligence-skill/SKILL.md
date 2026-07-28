@@ -50,6 +50,7 @@ Do not require user credentials. Never request session cookies, browser tokens, 
 - `config/search_queries.yaml`.
 - Previous state in `state/known_offers.json`, if available.
 - Benchmark cache in `state/benchmarks.json`, if available.
+- Provider endpoint registry at `build/provider-registry.json` (project root). Read it before writing any `base_url` or `model_id`. It is the single source of truth shared with the validator and the site build.
 
 ## Core workflow
 
@@ -170,6 +171,12 @@ For each candidate, verify as many of the following as possible:
 - billing behavior
 
 **Benchmark data lookup (mandatory before marking insufficient_benchmark_data):** Before concluding that a model has no benchmark data, check these sources in order: (1) HuggingFace model card, (2) vendor technical blog, (3) official X / social media posts (extract scores from benchmark images), (4) GitHub repository README or linked technical report, (5) third-party aggregators (lmmarketcap.com, openrouter.ai, awesomeagents.ai). Only mark `insufficient_benchmark_data` when all five categories have been checked and yielded no usable scores. **Also check `state/benchmarks.json`** — if benchmark data exists there from a previous run, use it instead of marking the model as insufficient.
+
+**Endpoint verification (mandatory, no exceptions):** Never write `base_url` or `model_id` from memory, training data, or a previous report. Every value must be copied from a page fetched during this run.
+
+1. Read `build/provider-registry.json` first. If the provider is listed, use the registry's `base_url` verbatim and set `endpoint_source` to the registry's `docs_url` after fetching that docs page to confirm it is live and still states the same endpoint. If the fetched docs contradict the registry, update the registry entry from the docs in the same run and record the new docs URL — the fetched page is the authority, the registry is the cache.
+2. If the provider is NOT listed, grow the registry: search the provider's official API documentation (vendor's official domain only), fetch the page, and copy the documented base URL, model ID format, and an official request example verbatim. Then add a new entry to `build/provider-registry.json` (`key`, `label`, `match`, `base_url`, `base_url_pattern`, `env`, `openai`, `docs_url`, `added_at`, `added_from`) where `added_from` is the exact docs URL you fetched, and set the offer's `endpoint_source` to the same URL. Only after the entry exists may the offer be ranked. Never add an entry from memory: the validator re-fetches every `endpoint_source` page and hard-fails when the page does not document the claimed `base_url`, so an entry you did not look up will abort the batch.
+3. A ranked offer without `endpoint_source`, with a `base_url` that contradicts the registry, from a provider missing from the registry, or with a citation that does not document its endpoint, fails `npm run validate` and aborts the batch. When in doubt about an endpoint, do not rank the offer.
 
 OpenRouter-specific rule:
 
@@ -293,13 +300,33 @@ Emit each noteworthy free model as its own offer card, including models accessed
 
 If an offer has a known end date, always set `end_at` and `end_timezone_known`. The page displays the deadline prominently. If the end date lacks a timezone, set `end_timezone_known: false`.
 
+### Free allowance rank (mandatory for ranked offers)
+
+A free API with a prototype-only quota is not the same offer as one that is usable at scale. Set `free_allowance_rank` from the documented limits (`free_limits`):
+
+- `AMPLE`: effectively unrestricted, or large quotas (hundreds of requests/day, or millions of tokens/day)
+- `NORMAL`: a usable everyday quota (roughly 20–100 requests/day)
+- `TIGHT`: only a few requests per day
+- `TINY`: prototype-only quotas (e.g. ≤10 requests/day, or small daily credit pools such as Workers AI's 10,000 neurons/day)
+
+The rank must agree with the `free_limits` text — never label a quota AMPLE or NORMAL when the documented limits show it is tiny. The ranking sorts by allowance after tier and score, so tiny quotas sink below equally performant offers that are actually usable.
+
 ### Sort order
 
 Primary: performance tier (S > A > B), then benchmark score descending.
-Secondary: freshness (`last_verified` descending).
-Tertiary: name ascending.
+Secondary: free allowance (`AMPLE` > `NORMAL` > `TIGHT` > `TINY`).
+Tertiary: freshness (`last_verified` descending).
+Quaternary: name ascending.
 
-Performance is the primary axis. A high-score model verified yesterday outranks a low-score model verified today.
+Performance is the primary axis. A high-score model verified yesterday outranks a low-score model verified today. Within equal performance, a generous free tier outranks a tiny one.
+
+### Benchmark persistence (mandatory)
+
+`state/benchmarks.json` is the persistent cache of verified scores across runs. Regeneration must never lose data:
+
+- Before assigning benchmarks, read `state/benchmarks.json`. If the model has scores there, the report's `benchmark.score` must not be null — merge from state (upgrading only from a more authoritative source).
+- Every new or improved score collected during a run must be written to `state/benchmarks.json` in the same run (merge by `canonical_name`, include the model's `model_ids`).
+- The validator hard-fails both a regression (state has scores, report says null) and a score that was not persisted to state.
 
 Recommended ranking formula:
 
@@ -374,4 +401,10 @@ A run is successful only when:
 - risk and confidence were assigned with reasons
 - changes from the previous run were identified
 - top claims include citations
+- every ranked offer's provider exists in `build/provider-registry.json` and its `base_url` matches the registry pattern
+- every ranked offer has an `endpoint_source` URL fetched during this run, and the fetched page documents the claimed `base_url` (the validator re-checks this online)
+- providers missing from the registry were researched from official docs and added to the registry (with `added_from` provenance) before ranking
+- every ranked offer has a `free_allowance_rank` consistent with its documented limits
+- no ranked offer lost a benchmark score that exists in `state/benchmarks.json`, and every new score was persisted there
+- no `base_url` or `model_id` was written from memory
 - the final report is in Japanese

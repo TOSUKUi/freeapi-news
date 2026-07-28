@@ -20,15 +20,17 @@
 
 ## Data flow
 
-`report.json` (入力) → `build/build-html.js` → `index.html` (出力)。接続手順のテキストは report.json に持たず、ビルドが `build-html.js` 内の版付きテンプレート (`AGENT_TEMPLATE_VERSION`) から生成する。
+`report.json` (入力) → `build/build-html.js` → `index.html` (出力)。接続手順のテキストは report.json に持たず、ビルドが `build-html.js` 内の版付きテンプレート (`AGENT_TEMPLATE_VERSION`) から生成する。エンドポイントは `build/provider-registry.json` が唯一の真実源 (公式ドキュメント由来)。バリデータとビルドと収集スキルが共有し、収集スキルは未登録プロバイダーを公式ドキュメントから調査して `added_from` 証跡付きで登録に追加する。
 
 ## Conventions
 
 - 単一 HTML ファイル。メニューやタブは置かない。
 - ダークモードは `localStorage["theme"]` に保存し、描画前のインラインスクリプトが `prefers-color-scheme` をフォールバックに dark クラスを付与する (ちらつき防止)。
-- ランキングは `ranked_offers` の `ranking_eligible === true` かつベンチマークのティアが S/A/B のものだけ入門させる。並びは `last_verified` 降順 (鮮度) → ティア → 名前。生のベンチマークスコアを異なるベンチマーク間で比較しない。
+- ランキングは `ranked_offers` の `ranking_eligible === true` かつベンチマークのティアが S/A/B のものだけ入門させる。並びは ティア (S>A>B) → 無料枠の余裕度 (`free_allowance_rank`: AMPLE>NORMAL>TIGHT>TINY) → ベンチマークスコア降順 → `last_verified` 降順 (鮮度) → 名前。生のベンチマークスコアを異なるベンチマーク間で比較しない。
+- ベンチマークスコアは `state/benchmarks.json` に永続化し、再生成で失わない。バリデータが退行 (state にあるのに null) と未永続化をハードフェイルで防ぐ。
 - report.json のスキーマは `.agents/skills/llm-deals-intelligence-skill/schemas/daily_report.schema.json`。`last_verified` は ranking eligible で必須、`free_model_names` は router で必須かつ非空。
 - 収集スキルは `.agents/skills/llm-deals-intelligence-skill/`。UI 参照スキルは `.agents/skills/shadcn/` (skills-lock.json で固定)。
+- `base_url` と `model_id` は毎回公式ドキュメントを取得して書く (記憶からの記入は禁止)。ランキング対象オファーは `endpoint_source` (確認に使ったドキュメント URL) が必須。`npm run validate` はレジストリ整合性を検査し、引用先ページをバリデータ自身が再取得して内容を確認し、ページが base_url を明記していなければハードフェイルする。
 
 ## Notes for agents
 

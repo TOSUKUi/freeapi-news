@@ -28,6 +28,18 @@ If any of these sources were NOT checked, do NOT exclude the model. Instead, fla
 
 **Also check `state/benchmarks.json`** before excluding. If benchmark data exists there from a previous run or from the discovery/verification agents, use it to populate the offer's `benchmarks` array and assign a tier. The benchmarks.json file is the persistent cache of all collected benchmark scores across runs.
 
+## Benchmark persistence (mandatory)
+
+Regeneration must never lose verified data:
+
+- If `state/benchmarks.json` has scores for a model, the offer's `benchmark.score` must not be null — merge from state.
+- Write every new or improved score to `state/benchmarks.json` in the same run (merge by `canonical_name`, keep `model_ids` complete so future runs can match by `model_id`).
+- The validator hard-fails both regressions (state has scores, report says null) and scores that were not persisted.
+
+## Free allowance rank (mandatory for ranked offers)
+
+Set `free_allowance_rank` from the documented limits: `AMPLE` (hundreds of requests/day or millions of tokens/day), `NORMAL` (~20–100 requests/day), `TIGHT` (a few requests/day), `TINY` (prototype-only, e.g. ≤10 requests/day or small daily credit pools like Workers AI's 10,000 neurons/day). The rank must agree with the `free_limits` text. Ranking sorts AMPLE > NORMAL > TIGHT > TINY right after the tier, so tiny quotas sink to the bottom of their tier instead of masquerading as top offers.
+
 ## Quality gate — what is worth ranking
 
 A free API is only valuable if the model is worth using. Apply this test to every candidate:

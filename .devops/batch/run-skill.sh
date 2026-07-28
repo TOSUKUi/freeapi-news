@@ -70,6 +70,8 @@ echo "  (languages: EN, JA, ZH)"
 
 echo "[3/4] Verification Agent — confirming offers are usable..."
 echo "  (checking: provider count, endpoint, model ID, base URL, rate limits)"
+echo "  (endpoint rule: base_url/model_id always from fetched official docs, never memory)"
+echo "  (provider registry: ${PROVIDER_REGISTRY} — read first, grow from docs if missing)"
 echo "  (OpenRouter rule: zero providers = excluded)"
 
 echo "[4/4] Editor Agent — writing the daily report..."
@@ -97,7 +99,7 @@ if command -v pi &>/dev/null; then
     --model "${PI_MODEL}" \
     --approve \
     --no-session \
-    -p "Run the llm-deals-intelligence-skill full collection workflow (Phase 0-9). Write the final validated JSON report to ${REPORT_FILE} following the schema at ${SKILL_SCHEMA_FILE}. Read previous state from ${SKILL_STATE_FILE}."
+    -p "Run the llm-deals-intelligence-skill full collection workflow (Phase 0-9). MANDATORY endpoint rule: before writing ANY base_url or model_id, read ${PROVIDER_REGISTRY}. Listed provider: use the registry base_url verbatim, re-fetch its docs_url, and cite it as endpoint_source. Unlisted provider: fetch the provider's official API docs, copy the documented base URL verbatim, ADD a registry entry with added_from = the docs URL you fetched, and cite it as endpoint_source. Never write endpoints from memory — validation re-fetches every citation and hard-fails if the page does not document the claimed base_url, and hard-fails base_urls that contradict the registry. Write the final validated JSON report to ${REPORT_FILE} following the schema at ${SKILL_SCHEMA_FILE}. Read previous state from ${SKILL_STATE_FILE}."
 else
   echo "WARNING: pi CLI not found."
   echo "Falling back to manual collection script..."
@@ -113,8 +115,11 @@ else
 fi
 
 # ── Step 3: Validate the report ──────────────────────────────────
+# Schema + endpoint gate (registry consistency) + citation gate (the
+# validator re-fetches every endpoint_source page itself). On failure the
+# batch aborts here: state is NOT updated and nothing is deployed.
 echo ""
-echo "Validating report against schema..."
+echo "Validating report (schema + provider registry + live citation re-check)..."
 node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}"
 
 # ── Step 4: Update state ─────────────────────────────────────────

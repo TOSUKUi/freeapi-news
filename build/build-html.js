@@ -45,35 +45,25 @@ const TIER_RANK = { S: 0, A: 1, B: 2 };
 const ADMITTED_TIERS = ['S', 'A', 'B'];
 
 // ── Provider capability registry ──────────────────────────────────
+// Loaded from build/provider-registry.json — the single source of truth
+// shared with validate-report.js (endpoint gate) and the collection skill.
 // Providers differ in endpoint path, auth scheme, and OpenAI compatibility.
 // `agents` lists the agents with a verified configuration for this provider;
 // anything else renders the "このエージェントでは未検証" fallback (AC-6).
-const PROVIDER_CAPABILITIES = [
-  { match: /nvidia/i,      key: 'nvidia',     label: 'NVIDIA NIM',   openai: true,  env: 'NVIDIA_API_KEY',     agents: ['pi', 'claude_code', 'opencode', 'codex'] },
-  { match: /openrouter/i,  key: 'openrouter', label: 'OpenRouter',   openai: true,  env: 'OPENROUTER_API_KEY', agents: ['pi', 'claude_code', 'opencode', 'codex'] },
-  { match: /deepseek/i,    key: 'deepseek',   label: 'DeepSeek',     openai: true,  env: 'DEEPSEEK_API_KEY',   agents: ['pi', 'claude_code', 'opencode', 'codex'] },
-  { match: /cerebras/i,    key: 'cerebras',   label: 'Cerebras',     openai: true,  env: 'CEREBRAS_API_KEY',   agents: ['pi', 'claude_code', 'opencode', 'codex'] },
-  { match: /googleapis|google/i, key: 'google', label: 'Google',     openai: false, env: 'GEMINI_API_KEY',     agents: ['pi', 'opencode'] },
-  { match: /together/i,    key: 'together',   label: 'Together.ai',  openai: true,  env: 'TOGETHER_API_KEY',   agents: ['pi', 'claude_code', 'opencode', 'codex'] },
-  { match: /anyscale/i,    key: 'anyscale',   label: 'Anyscale',     openai: true,  env: 'ANYSCALE_API_KEY',   agents: ['pi', 'claude_code', 'opencode', 'codex'] },
-  { match: /replicate/i,   key: 'replicate',  label: 'Replicate',    openai: true,  env: 'REPLICATE_API_TOKEN', agents: ['pi', 'claude_code', 'opencode', 'codex'] },
-  { match: /huggingface/i, key: 'huggingface', label: 'Hugging Face', openai: true, env: 'HF_API_TOKEN',       agents: ['pi', 'claude_code', 'opencode', 'codex'] },
-  { match: /groq/i,        key: 'groq',       label: 'Groq',         openai: true,  env: 'GROQ_API_KEY',       agents: ['pi', 'claude_code', 'opencode', 'codex'] },
-];
-const DEFAULT_CAPABILITY = { key: 'custom', label: 'Custom', openai: true, env: 'API_KEY', agents: ['pi', 'claude_code', 'opencode', 'codex'] };
+// Offers that match NO registry entry render a fully unverified accordion —
+// the build never fabricates a generic connection snippet.
+const { loadRegistry, matchProvider } = require('./provider-registry');
+const PROVIDER_CAPABILITIES = loadRegistry();
 
 function getCapability(offer) {
-  const hay = `${offer.base_url || ''} ${offer.provider || ''}`;
-  for (const cap of PROVIDER_CAPABILITIES) {
-    if (cap.match.test(hay)) return cap;
-  }
-  return DEFAULT_CAPABILITY;
+  const hit = matchProvider(offer, PROVIDER_CAPABILITIES);
+  return hit ? hit.entry : null;
 }
 
 // ── Versioned per agent connection templates (AC-6) ───────────────
 // Connection instructions are derived here at build time, never stored in
 // report.json. Bump the version when the template shapes change.
-const AGENT_TEMPLATE_VERSION = '2026.07.1';
+const AGENT_TEMPLATE_VERSION = '2026.07.2';
 const AGENTS = [
   { id: 'pi',          label: 'pi' },
   { id: 'claude_code', label: 'Claude Code' },
@@ -81,30 +71,54 @@ const AGENTS = [
   { id: 'codex',       label: 'Codex' },
 ];
 
+// Base URL used for OpenAI-style clients: providers whose canonical URL is a
+// native endpoint (e.g. Gemini's /v1beta) expose a separate OpenAI-compatible
+// path, recorded as openai_base_url in the registry.
+function openaiBaseUrl(o, cap) {
+  return cap.openai_base_url || o.base_url;
+}
+
 const AGENT_SNIPPETS = {
-  pi: (o, cap) => `// .pi/settings.json
+  // pi: custom providers are registered in ~/.pi/agent/models.json; settings.json
+  // only selects an already-registered provider (pi docs: models.md).
+  pi: (o, cap) => `// ~/.pi/agent/models.json にプロバイダを登録
 {
-  "defaultProvider": "${cap.key}",
-  "defaultModel": "${o.model_id}"
-}
-
-# 環境変数 (または pi 内で /login ${cap.key})
-export ${cap.env}=xxxxxxxxxxxxxxxx`,
-  claude_code: (o, cap) =>
-    `# ~/.claude.json にカスタムプロバイダを追加
-{
-  "customApiProviders": [
-    {
-      "name": "${cap.label}",
-      "baseURL": "${o.base_url}",
-      "apiKeyEnvVar": "${cap.env}"
+  "providers": {
+    "${cap.key}": {
+      "baseUrl": "${o.base_url}",
+      "api": "${cap.api_type}",
+      "apiKey": "$${cap.env}",
+      "models": [
+        { "id": "${o.model_id}", "reasoning": false }
+      ]
     }
-  ]
+  }
 }
 
-# 起動
-claude --model ${cap.key}/${o.model_id}`,
-  opencode: (o, cap) => `// opencode.json
+export ${cap.env}=xxxxxxxxxxxxxxxx
+
+# 起動 (または .pi/settings.json の defaultProvider/defaultModel)
+pi --model ${cap.key}/${o.model_id}`,
+  // Claude Code: no native OpenAI-compatible provider support. The documented
+  // routes are an Anthropic-protocol gateway/proxy, or Vertex AI for Gemini.
+  claude_code: (o, cap) =>
+    cap.openai
+      ? `# Claude Code は OpenAI 互換 API に直接接続できません。
+# Anthropic 規約に変換するプロキシ (LiteLLM, claude-code-router 等) 経由で接続します。
+# プロキシの上流を ${o.base_url} ・ モデル ${o.model_id} に設定してから:
+export ANTHROPIC_BASE_URL=http://localhost:4000
+export ANTHROPIC_AUTH_TOKEN=xxxxxxxxxxxxxxxx
+
+claude --model ${o.model_id}`
+      : `# Claude Code は Gemini を Google Vertex AI 経由で利用できます。
+export CLAUDE_CODE_USE_VERTEX=1
+export CLOUD_ML_REGION=global
+export ANTHROPIC_VERTEX_PROJECT_ID=<GCPプロジェクトID>
+
+claude --model ${o.model_id}`,
+  opencode: (o, cap) =>
+    cap.openai
+      ? `// opencode.json
 {
   "provider": {
     "${cap.key}": {
@@ -116,12 +130,24 @@ claude --model ${cap.key}/${o.model_id}`,
 }
 
 # APIキー登録 (無料キーで可)
-# opencode 起動後 → /connect ${cap.key} → キーを貼付`,
+# opencode 起動後 → /connect ${cap.key} → キーを貼付`
+      : `// opencode.json
+{
+  "provider": {
+    "${cap.key}": {
+      "npm": "@ai-sdk/google",
+      "models": { "${o.model_id}": {} }
+    }
+  }
+}
+
+export ${cap.env}=xxxxxxxxxxxxxxxx
+# または opencode 起動後 → /connect ${cap.key}`,
   codex: (o, cap) =>
     `# ~/.codex/config.toml
 [model_providers.${cap.key}]
 name = "${cap.label}"
-base_url = "${o.base_url}"
+base_url = "${openaiBaseUrl(o, cap)}"
 env_key = "${cap.env}"
 wire_api = "chat"
 
@@ -200,8 +226,13 @@ function priceDisplay(o) {
 // Admission gate: ranked_offers only, ranking_eligible === true, a valid
 // benchmark (non null tier and score), tier in S/A/B. Conditional credits
 // and offers without a benchmark never appear. No fixed card cap.
-// Ordering: tier (S>A>B) → benchmark score DESC → freshness DESC → name.
-// Performance is the primary axis; freshness breaks ties within a tier.
+// Ordering: tier (S>A>B) → free allowance (AMPLE>NORMAL>TIGHT>TINY) →
+// benchmark score DESC → freshness DESC → name. The tier is the primary
+// performance axis; within a tier, a prototype-only quota sinks below
+// offers that are actually usable at scale, then the raw score orders the
+// rest. Never compare raw scores across different benchmarks.
+const ALLOWANCE_RANK = { AMPLE: 0, NORMAL: 1, TIGHT: 2, TINY: 3 };
+
 function selectRankedOffers(report) {
   const eligible = (report.ranked_offers || []).filter(o =>
     o.ranking_eligible === true &&
@@ -214,6 +245,9 @@ function selectRankedOffers(report) {
     const at = TIER_RANK[a.benchmark.tier];
     const bt = TIER_RANK[b.benchmark.tier];
     if (at !== bt) return at - bt; // S before A before B
+    const aa = ALLOWANCE_RANK[a.free_allowance_rank] ?? ALLOWANCE_RANK.NORMAL;
+    const ba = ALLOWANCE_RANK[b.free_allowance_rank] ?? ALLOWANCE_RANK.NORMAL;
+    if (aa !== ba) return aa - ba; // generous allowance first within a tier
     const as = a.benchmark.score ?? 0;
     const bs = b.benchmark.score ?? 0;
     if (bs !== as) return bs - as; // higher score first
@@ -287,6 +321,23 @@ function benchmarkDetailsBlock(o) {
 // four agent subsections from the versioned template registry.
 function connectionAccordion(o) {
   const cap = getCapability(o);
+  if (!cap) {
+    // Unknown provider: never fabricate a snippet. The registry gates
+    // validation; this notice tells the reader the config is unverified.
+    return `<details class="acc">
+      <summary class="acc-summary" aria-label="接続方法を表示">
+        <span class="acc-title">
+          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
+          接続方法
+        </span>
+        <span class="acc-agents">未検証</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="acc-body">
+        <p class="agent-unsupported">このプロバイダーの接続例はまだ検証されていません。カード内の Base URL と Model ID を元に、公式ドキュメントで各エージェントの設定方法を確認してください。</p>
+      </div>
+    </details>`;
+  }
   const blocks = AGENTS.map(agent => {
     const supported = cap.agents.includes(agent.id);
     if (!supported) {
@@ -311,7 +362,7 @@ function connectionAccordion(o) {
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
       </summary>
       <div class="acc-body">
-        <p class="acc-note">テンプレート版本 ${esc(AGENT_TEMPLATE_VERSION)} ・ Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
+        <p class="acc-note">テンプレート版本 ${esc(AGENT_TEMPLATE_VERSION)} ・ エンドポイントは provider-registry.json (公式ドキュメント由来) で検証済み。Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
         <div class="agent-grid">${blocks}</div>
       </div>
     </details>`;
@@ -909,7 +960,7 @@ function generateHTML(report) {
         <h2 id="ranked-h" class="font-display text-2xl sm:text-3xl font-bold">無料・激安APIランキング</h2>
         <span class="font-display text-sm text-muted-foreground whitespace-nowrap">${offers.length} 件</span>
       </div>
-      <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">性能ティアとスコア</strong>で並び、同率内は情報の鮮度順。</p>
+      <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">性能ティア</strong> → 無料枠の余裕度 → スコア → 情報の鮮度順。</p>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">${cards}</div>
     </section>
 
@@ -1016,7 +1067,7 @@ function main() {
   console.log(`✅ HTMLを生成しました: ${outputPath}`);
   console.log(`   入力: ${inputPath}`);
   console.log(`   レポート日時: ${report.generated_at || '不明'}`);
-  console.log(`   掲載オファー: ${ranked.length} 件 (S/A/B ・ 鮮度順)`);
+  console.log(`   掲載オファー: ${ranked.length} 件 (S/A/B ・ ティア→余裕度→スコア→鮮度)`);
 }
 
 // Only auto-run when executed directly (`node build-html.js`), so other build

@@ -30,6 +30,11 @@ export SKILL_CONFIG_SOURCES="${SKILL_DIR}/config/sources.yaml"
 export SKILL_CONFIG_QUERIES="${SKILL_DIR}/config/search_queries.yaml"
 export SKILL_STATE_FILE="${SKILL_DIR}/state/known_offers.json"
 export SKILL_SCHEMA_FILE="${SKILL_DIR}/schemas/daily_report.schema.json"
+# Provider endpoint registry: single source of truth for base URLs. The skill
+# must read it before writing any base_url/model_id and grow it (from fetched
+# official docs) when a provider is missing. The validator gates on it and
+# re-fetches every endpoint_source citation.
+export PROVIDER_REGISTRY="${PROJECT_ROOT}/build/provider-registry.json"
 
 # ── pi agent settings ────────────────────────────────────────────
 # pi model used by the local batch (pi must be installed on this machine).

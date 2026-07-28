@@ -523,6 +523,26 @@
           ],
           "format": "date-time"
         },
+        "endpoint_source": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "free_allowance_rank": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "AMPLE",
+            "NORMAL",
+            "TIGHT",
+            "TINY",
+            null
+          ]
+        },
         "free_model_names": {
           "type": "array",
           "items": {
@@ -604,12 +624,27 @@
           },
           "then": {
             "required": [
-              "last_verified"
+              "last_verified",
+              "endpoint_source",
+              "free_allowance_rank"
             ],
             "properties": {
               "last_verified": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "endpoint_source": {
+                "type": "string",
+                "format": "uri"
+              },
+              "free_allowance_rank": {
+                "type": "string",
+                "enum": [
+                  "AMPLE",
+                  "NORMAL",
+                  "TIGHT",
+                  "TINY"
+                ]
               }
             }
           }
