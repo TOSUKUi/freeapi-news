@@ -522,100 +522,6 @@
       "free_allowance_rank": "NORMAL"
     },
     {
-      "rank": 6,
-      "name": "Kimi K3 (Kimi公式無料枠)",
-      "model_name": "Kimi K3",
-      "provider": "Kimi (Moonshot AI)",
-      "model_vendor": "Moonshot AI",
-      "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "start_at": "2026-07-16T00:00:00+00:00",
-      "end_at": null,
-      "end_timezone_known": false,
-      "regions": [
-        "China",
-        "Global (API)"
-      ],
-      "registration_conditions": [
-        "Kimi account required",
-        "Daily usage limits on free tier"
-      ],
-      "card_required": false,
-      "minimum_deposit": null,
-      "kyc_required": false,
-      "auto_renewal": null,
-      "refund_policy": null,
-      "free_limits": "Generous daily free quotas on kimi.com app; API is paid ($3/$15 per million tokens)",
-      "rate_limits": "Daily usage limits on free tier",
-      "context_tokens": 262144,
-      "max_output_tokens": null,
-      "tool_calling": true,
-      "structured_output": true,
-      "image_input": false,
-      "base_url": "https://api.moonshot.ai/v1",
-      "model_id": "kimi-k3",
-      "provider_count": null,
-      "recent_activity": "Verified live 2026-07-28 via platform.kimi.ai docs",
-      "normal_price_per_million": {
-        "input": 3,
-        "output": 15
-      },
-      "effective_price_per_million": {
-        "input": 0,
-        "output": 0
-      },
-      "effective_discount_percent": 100,
-      "data_retention": "Per Moonshot AI privacy policy",
-      "training_use": "Unknown",
-      "suspicion_score": 1,
-      "suspicion_reasons": [
-        "Chinese provider; data handling practices less transparent for international users"
-      ],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-07-28T13:56:00+00:00",
-      "endpoint_source": "https://platform.kimi.ai/docs/api/overview",
-      "sources": [
-        "https://platform.kimi.ai/docs/api/overview",
-        "https://www.kimi.com/blog/kimi-k3",
-        "https://emergent.sh/learn/kimi-k3-pricing"
-      ],
-      "benchmark": {
-        "score": 93.5,
-        "benchmark_name": "GPQA-Diamond",
-        "tier": "S"
-      },
-      "benchmarks": [
-        {
-          "name": "GPQA-Diamond",
-          "score": 93.5
-        },
-        {
-          "name": "HLE-Full w/ tools",
-          "score": 56
-        },
-        {
-          "name": "DeepSWE",
-          "score": 67.5
-        },
-        {
-          "name": "Terminal Bench 2.1",
-          "score": 88.3
-        },
-        {
-          "name": "FrontierSWE",
-          "score": 81.2
-        },
-        {
-          "name": "BrowseComp",
-          "score": 91.2
-        }
-      ],
-      "free_allowance_rank": "NORMAL"
-    },
-    {
       "rank": 7,
       "name": "Ling-3.0-flash (OpenRouter)",
       "model_name": "Ling-3.0-flash",
@@ -994,6 +900,10 @@
   ],
   "caution_offers": [],
   "excluded_offers": [
+    {
+      "name": "Kimi K3 (Kimi公式無料枠)",
+      "reason": "API is paid ($3/$15 per million tokens). The free quota is the kimi.com consumer app, not the API — not a free API offer."
+    },
     {
       "name": "xAI Grok 4.5 Free Developer Tier",
       "reason": "Free developer tier exists but has very limited daily token caps suitable only for prototyping; not production-viable as a free offer",
