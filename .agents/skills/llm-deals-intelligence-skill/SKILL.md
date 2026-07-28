@@ -406,16 +406,74 @@ Do not perform destructive or billable verification calls without explicit permi
 - If an offer is discovered but cannot be verified operationally, exclude it from ranking.
 - If the same model appears under multiple providers, compare each provider separately.
 
-## Subagent decomposition
+## Parallel batch architecture
 
-Use four specialized subagents where supported:
+The daily batch (`.devops/batch/run-skill.sh`) runs as a fail-safe pipeline with parallel workers. All workers write to `state/crawl/<run_id>/` and never edit shared state files directly.
 
-1. `discovery-agent`: finds new models and new providers.
-2. `offer-agent`: searches promotions, credits, and pricing for each discovered model.
-3. `verification-agent`: checks provider activity, limits, terms, privacy, and billing conditions.
-4. `editor-agent`: deduplicates, scores, compares with previous state, and writes the Japanese report.
+### Steps
 
-The editor must reject findings that do not include enough evidence.
+```
+Step 0: Preflight (bash)
+  flock, run_id, read-only snapshots, manifest generation
+
+Step 1: Discovery + Known refresh (parallel)
+  discovery-agent → state/crawl/<run_id>/discovery/task-discovery.json
+  refresh workers → state/crawl/<run_id>/refresh/task-<provider>.json
+
+Step 2: Crawl pool (parallel, manifest-driven)
+  crawl workers → state/crawl/<run_id>/offers/task-<provider>.json
+  Concurrency: CRAWL_CONCURRENCY env (default 2)
+
+Step 3: Reduce (deterministic, no LLM)
+  .devops/batch/reduce-crawl.js
+  → validates artifacts, merges benchmark/registry deltas
+  → produces reduced/candidates.json
+  → aborts if >50% tasks failed or zero candidates
+
+Step 4: Edit (1 pi, no fetch)
+  editor-agent reads candidates.json only
+  → report.json + state updates
+
+Step 5: Validate (auto-fix + exclude)
+  build/validate-report.js
+
+Step 6: Atomic deploy
+  report + state + registry + HTML in one git commit
+```
+
+### Agents
+
+1. `discovery-agent` (prompts/discovery-agent.md): finds new models and providers. Outputs discovery records + benchmark deltas.
+2. `crawl-worker` (prompts/crawl-worker.md): per-provider investigation. Handles both refresh (known offers) and crawl (new offers). Outputs offer records + benchmark/registry deltas.
+3. `editor-agent` (prompts/editor-agent.md): reads reduced candidates, deduplicates, scores, classifies, writes Japanese report. Does NOT fetch.
+
+### Fail-safe guarantees
+
+- Workers write `.tmp` then rename (no half-written JSON).
+- Workers never edit shared state; they output deltas only.
+- Reducer is deterministic (no LLM, no network) and aborts on catastrophic failure.
+- Validator auto-fixes what it can, excludes what it can't.
+- Deploy only if validate + build both succeed.
+- On any failure, the previous report stays live.
+- `flock` prevents concurrent runs.
+- Old crawl runs are pruned (keep last 3).
+
+### File conventions
+
+```
+state/crawl/<run_id>/
+  manifest.json              # task assignments
+  snapshots/                 # read-only copies of shared state
+  discovery/task-*.json      # Step 1 output
+  refresh/task-*.json        # Step 1 output
+  offers/task-*.json         # Step 2 output
+  reduced/candidates.json    # Step 3 output (editor input)
+  reduced/benchmarks.json    # merged benchmark state
+  reduced/provider-registry.json  # merged registry
+  REDUCED                    # sentinel file
+```
+
+Each artifact has `status: "complete" | "partial" | "failed"`. Even on failure, a worker must write its artifact file.
 
 ## Acceptance criteria
 

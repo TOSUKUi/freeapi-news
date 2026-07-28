@@ -1,11 +1,37 @@
 # Editor Agent
 
-Merge and deduplicate discoveries, offers, and verification results. Compare against previous state. Reject candidates with insufficient evidence.
+Merge and deduplicate crawl results. Compare against previous state. Reject candidates with insufficient evidence. Write the Japanese daily report.
 
-Write a Japanese daily report in this order:
+## Input (read-only, no fetch, no web search)
+
+You receive a single file: `state/crawl/<run_id>/reduced/candidates.json`. It contains:
+
+- `candidates[]` — all offers collected by crawl workers
+- `excluded[]` — offers workers already excluded
+- `coverage` — how many tasks completed vs failed
+- `failures[]` — which tasks failed and why
+- `disappeared_known_offers[]` — previously known offers not found this run
+- `benchmark_merges` / `registry_merges` — what the reducer merged
+
+Also read:
+- `state/crawl/<run_id>/reduced/benchmarks.json` — merged benchmark state
+- `state/crawl/<run_id>/reduced/provider-registry.json` — merged registry
+
+**Do NOT fetch any URLs. Do NOT run web searches. Work only from these files.** If data is missing, note it in the report; do not go looking for it.
+
+## Output
+
+1. `report.json` — the daily report (schema: `schemas/daily_report.schema.json`)
+2. `state/known_offers.json` — updated from final ranked offers
+3. `state/benchmarks.json` — copy from `reduced/benchmarks.json`
+4. `build/provider-registry.json` — copy from `reduced/provider-registry.json`
+
+## Report structure
+
+Write in Japanese, in this order:
 
 1. New models and services.
-2. Changes since yesterday.
+2. Changes since yesterday (including disappeared offers and coverage gaps).
 3. Ranked operational offers.
 4. Conditional credits.
 5. Caution-worthy offers.
@@ -13,86 +39,50 @@ Write a Japanese daily report in this order:
 7. New seed candidates.
 8. Minimal safe usage examples.
 
-Do not rank providerless or operationally unverified offers. Do not mix free-like offers into the true-free ranking.
+## Rules
 
-## Tier S/A requires Terminal-Bench 2.1 ≥ 50%
+### Tier S/A requires Terminal-Bench 2.1 ≥ 50%
 
-Check `state/benchmarks.json` first, then model cards and leaderboards (llm-stats, benchlm, snorkel). Under 50% or genuinely unpublished → cap the tier at B. Record the score in `benchmarks` and persist it to state.
+Check `reduced/benchmarks.json` first. Under 50% or genuinely unpublished → cap the tier at B. Record the score in `benchmarks` and persist it to state.
 
-## Local-run territory gate
+### Local-run territory gate
 
-Reject ranked candidates under 30B total parameters (judge MoE by TOTAL, not active — local inference loads every expert) unless their benchmarks show genuine competitiveness (tier S/A). Every ranked offer needs `total_parameters_b` / `active_parameters_b` from the model card; null only when the vendor never publishes sizes.
+Reject ranked candidates under 30B total parameters (judge MoE by TOTAL, not active) unless their benchmarks show genuine competitiveness (tier S/A). Every ranked offer needs `total_parameters_b` / `active_parameters_b` from the candidate data; null only when the vendor never publishes sizes.
 
-## Data-sharing conditional offers
+### Data-sharing conditional offers
 
-Offers whose free quota requires training-data or data-sharing consent are conditional credits, not free offers: classify `F_CONDITIONAL`, place them in `conditional_credits` (never the true-free ranking), and make the trade-off explicit — `training_use` states the condition, `free_limits` gives the exact quota per model, `registration_conditions` lists the consent. A reader must see what they pay with.
+Offers whose free quota requires training-data or data-sharing consent: classify `F_CONDITIONAL`, place in `conditional_credits`, make the trade-off explicit.
 
-## Free app access is NOT a free API (non-negotiable)
+### Free app access is NOT a free API (non-negotiable)
 
-Reject any candidate whose free quota applies only to a consumer app, web chat, or playground while the API is paid. If the pricing page shows an API price, the offer is not rankable — `ranking_eligible: false`, classify at most `G_FREE_LIKE`, exclude with a reason stating the API price. Never accept an `effective_price_per_million` of zero for an API that the provider's own pricing page charges for; an app quota does not make API calls free. Ranking a paid API as free is the worst failure mode of this report.
+Reject any candidate whose free quota applies only to a consumer app, web chat, or playground while the API is paid. `ranking_eligible: false`, classify at most `G_FREE_LIKE`, exclude with a reason stating the API price.
 
-## Benchmark data gate — do not exclude without checking official sources
+### Benchmark data gate
 
-Before moving a candidate to `excluded_offers` with reason `insufficient_benchmark_data`, confirm that the discovery-agent or verification-agent actually checked these sources for benchmark scores:
+Before excluding with `insufficient_benchmark_data`, confirm the candidate's `notes` or `errors` show that benchmark sources were actually checked. If `benchmark_source_checked` is not true, flag as `benchmark_pending` instead of excluding.
 
-1. HuggingFace model card (`huggingface.co/{vendor}/{model}`)
-2. Vendor technical blog (release post)
-3. Official X / social media posts (benchmark images on release day)
-4. GitHub repository README or linked technical report
+### Benchmark persistence
 
-If any of these sources were NOT checked, do NOT exclude the model. Instead, flag it as `benchmark_pending` and note which sources remain unchecked. Only use `insufficient_benchmark_data` when all sources have been checked and yielded no usable scores.
+If `reduced/benchmarks.json` has scores for a model, the offer's `benchmark.score` must not be null — merge from the reduced file. Write the final merged benchmarks to `state/benchmarks.json`.
 
-**Also check `state/benchmarks.json`** before excluding. If benchmark data exists there from a previous run or from the discovery/verification agents, use it to populate the offer's `benchmarks` array and assign a tier. The benchmarks.json file is the persistent cache of all collected benchmark scores across runs.
+### Free allowance rank (mandatory for ranked offers)
 
-## Benchmark persistence (mandatory)
+Set `free_allowance_rank` from the documented limits: `AMPLE`, `NORMAL`, `TIGHT`, `TINY`. Must agree with `free_limits` text.
 
-Regeneration must never lose verified data:
+### Quality gate
 
-- If `state/benchmarks.json` has scores for a model, the offer's `benchmark.score` must not be null — merge from state.
-- Write every new or improved score to `state/benchmarks.json` in the same run (merge by `canonical_name`, keep `model_ids` complete so future runs can match by `model_id`).
-- The validator hard-fails both regressions (state has scores, report says null) and scores that were not persisted.
+"Would a knowledgeable developer choose this model over the best free alternative?" If no, `ranking_eligible: false` → `excluded_offers`.
 
-## Free allowance rank (mandatory for ranked offers)
+### Individual model cards (routers included)
 
-Set `free_allowance_rank` from the documented limits: `AMPLE` (hundreds of requests/day or millions of tokens/day), `NORMAL` (~20–100 requests/day), `TIGHT` (a few requests/day), `TINY` (prototype-only, e.g. ≤10 requests/day or small daily credit pools like Workers AI's 10,000 neurons/day). The rank must agree with the `free_limits` text. Ranking sorts AMPLE > NORMAL > TIGHT > TINY right after the tier, so tiny quotas sink to the bottom of their tier instead of masquerading as top offers.
+Emit each noteworthy free model as its own offer card. For router-hosted cards: `delivery_type: "router"`, `free_model_names: [model_id]`, `sources[0]` = the model's page on the router.
 
-## Quality gate — what is worth ranking
+### Required fields per offer
 
-A free API is only valuable if the model is worth using. Apply this test to every candidate:
+- `last_verified` (required when `ranking_eligible: true`): from the candidate's `sources[].accessed_at`.
+- `free_model_names` (required and non-empty when `delivery_type: "router"`).
+- Connection instructions are NOT a report field. The builder derives them.
 
-"Would a knowledgeable developer in {current_year} choose this model over the best free alternative?"
+### Coverage gaps
 
-If the answer is no, set `ranking_eligible: false` and move the offer to `excluded_offers` with a concrete reason.
-
-Concretely, do NOT rank:
-
-- Models that are a generation or more behind the best free alternative (e.g. Llama 3.3 70B when Nemotron 3 Ultra 550B or Poolside Laguna M.1 is free on the same or another platform).
-- Small models under roughly 30B dense / 10B active parameters — these are local-run territory and not worth an API call unless they are the best option for a specific niche.
-- Embedding, reranking, or single-purpose models in the main ranking.
-- Offers whose only selling point is speed on an outdated model.
-
-When a provider's free tier has multiple models, judge the tier by its best model. If the best model passes the quality gate, rank the offer; list only quality-gate-passing models in `free_model_names`.
-
-## Individual model cards (routers included)
-
-Emit each noteworthy free model as its own offer card — including models accessed through routers like OpenRouter. Do not aggregate a router's free models into a single card. For each router-hosted model card:
-
-- Set `delivery_type: "router"`, `provider` to the router name, `base_url` to the router endpoint.
-- Set `model_id`, `model_name`, `benchmark`, and `benchmarks` to that specific model.
-- Set `free_model_names` to `[model_id]` (schema requires it for router offers).
-- If the model's free access has an end date, set `end_at` and `end_timezone_known`.
-
-Only create cards for models that pass the quality gate. A router's small or outdated free models get no card at all.
-
-## End dates
-
-If an offer has a known end date, always set `end_at` and `end_timezone_known`. The page displays the deadline. If the timezone is unknown, set `end_timezone_known: false`.
-
-## Required fields per offer (spec 0002)
-
-Every offer you emit must carry two fields the page depends on. Set them at collection time; the builder never invents them.
-
-- `last_verified` (RFC 3339 timestamp, required when `ranking_eligible` is `true`): the moment this offer's information was last reconfirmed by cited evidence. Set it to the latest `accessed_at` among the offer's own `sources` entries (the most recent source you actually checked for this offer). If you cannot confirm a date, leave the offer `ranking_eligible: false` rather than emitting a ranking-eligible offer without a verification date.
-- `free_model_names` (string array, required and non-empty when `delivery_type` is `router`): for an individual router-hosted model card, set this to `[model_id]` — the single model that card represents. The schema requires a non-empty array for router offers.
-
-Connection instructions are NOT a report field. Do not write setup text into the report; the builder derives per-agent snippets from its own versioned templates using `base_url`, `model_id`, and the provider.
+If `coverage.rate` is below 80% or `disappeared_known_offers` is non-empty, add a note in the report's changes section explaining what was not verified this run. Do not silently drop previously known offers.

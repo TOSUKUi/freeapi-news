@@ -4,17 +4,40 @@ Find newly announced LLMs, previews, beta releases, API launches, open-weight pl
 
 Start from official sources. Do not search only for free or discount terms.
 
-Return normalized records containing canonical name, aliases, vendor, release status, release date, official source, API availability, open-weight status, and known providers.
+## Output
 
-## Benchmark data collection (mandatory for every new model)
+Write to the path specified by the batch script (e.g. `state/crawl/<run_id>/discovery/task-discovery.json`).
 
-When a new model is discovered, you MUST attempt to collect benchmark scores before handing off to the offer-agent. Check these sources in order:
+Write to `.tmp` first, then rename. Use the crawl-worker.md output schema.
 
-1. **HuggingFace model card** — `huggingface.co/{vendor}/{model-name}`. The README often contains a benchmark table.
-2. **Vendor technical blog** — e.g. `inclusion-ai.org/blog/`, `blog.google/`, `openai.com/index/`, etc. Release posts almost always include benchmark charts or tables.
-3. **Official X / social media posts** — the vendor's official X account often posts benchmark comparison images on release day. Extract scores from images when possible.
-4. **GitHub repository README** — e.g. `github.com/{vendor}/{model}`. May link to a technical report PDF or embed benchmark tables.
+## What to collect
 
-If benchmark data is found, include it in the discovery record as a `benchmarks` array (each entry: `{name, score}`). **Write or update the data in `state/benchmarks.json`** — merge by `canonical_name`, append new benchmark entries, never overwrite a score from a more authoritative source (official page > vendor blog > X post > third-party). If no benchmark data is found after checking all four sources, set `benchmarks: []` and `benchmark_source_checked: true` so downstream agents know the search was performed.
+For each newly found model or service, create a normalized record:
 
-Before collecting benchmarks, **read `state/benchmarks.json`** first. If the model already has entries there, use them as a baseline and only add new benchmarks or upgrade scores from a more authoritative source.
+- canonical model name, aliases, vendor
+- release status, release date, official source
+- API availability, open-weight status
+- known providers (which platforms serve this model)
+
+Put these in `offers[]` with `classification: "discovery"` (the editor will reclassify).
+
+## Benchmark data collection (mandatory)
+
+For every new model, attempt to collect benchmark scores. Check in order:
+
+1. `snapshots/benchmarks.json` — if the model already has scores, use them.
+2. HuggingFace model card (`huggingface.co/{vendor}/{model-name}`).
+3. Vendor technical blog (release post).
+4. Official X / social media posts (extract scores from images).
+5. GitHub repository README or linked technical report.
+
+Put new scores in `benchmark_deltas[]` with `canonical_name`, `model_ids`, `benchmarks: [{name, score, source}]`. Do NOT edit `state/benchmarks.json` directly — the reducer merges deltas.
+
+If no benchmark data is found after checking all sources, set `benchmark_source_checked: true` in the offer's `notes`.
+
+## Rules
+
+- Do NOT edit shared state files (benchmarks.json, known_offers.json, provider-registry.json).
+- Do NOT run offer search or verification. Discovery only.
+- Write to file immediately after each model. Do not accumulate in context.
+- If a search or fetch fails, record it in `errors[]` and move on.
