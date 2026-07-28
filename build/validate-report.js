@@ -257,7 +257,7 @@ function citationSupports(html, baseUrl) {
 // must be on record and >= 50%. A missing score is a research failure
 // (check model card / llm-stats / benchlm / snorkel leaderboards); an
 // unpublished score caps the model at tier B.
-const TB21_PATTERN = /terminal[\s-]*bench\s*2(\.1)?/i;
+const TB21_PATTERN = /terminal[\s-]*bench[\s-]*v?2(\.1)?/i;
 const TB21_MIN = 50;
 
 function validateTierCriteria(report) {
