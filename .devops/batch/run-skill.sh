@@ -3,23 +3,18 @@
 #
 # Scheduled collection batch for the LLM Deals Intelligence Skill.
 #
-# Uses pi (or any agent with browser + web_search tools) to:
-#   1. Discover newly announced LLMs (Phase 0)
-#   2. Search each model for free/discounted offers (Phase 1)
-#   3. Check known providers and aggregators (Phase 2)
-#   4. Scan community sources (Phase 3)
-#   5. Verify offers are actually usable (Phase 4)
-#   6. Normalize pricing (Phase 5)
-#   7. Classify offers (Phase 6)
-#   8. Score risk and confidence (Phase 7)
-#   9. Compare with previous state (Phase 8)
-#  10. Produce the daily report (Phase 9)
-#
-# Output: report.json (validated against the JSON schema)
+# Flow:
+#   1. pi runs the skill → writes report.json
+#   2. validate: auto-fix what it can (state merge, tier cap, allowance
+#      default), exclude what it can't (fake URL, bad citation, paid API).
+#      Rewrites report.json. Emits fix-report on stderr.
+#   3. If fix-report has "exclude" entries that pi could have prevented:
+#      pass the fix-report to pi for 1 correction round, then re-validate.
+#   4. Build + deploy the cleaned report.
 #
 # Usage:
-#   .devops/batch/run-skill.sh           # Run with pi
-#   .devops/batch/run-skill.sh --dry-run # Validate existing report only
+#   .devops/batch/run-skill.sh           # full run
+#   .devops/batch/run-skill.sh --dry-run # validate existing report only
 
 set -euo pipefail
 
@@ -39,122 +34,82 @@ echo "============================================"
 if $DRY_RUN; then
   echo "[dry-run] Validating existing report: ${REPORT_FILE}"
   if [[ ! -f "${REPORT_FILE}" ]]; then
-    echo "[dry-run] No report found. Nothing to validate."
+    echo "[dry-run] No report found."
     exit 0
   fi
   node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}"
-  echo "[dry-run] Validation complete."
+  echo "[dry-run] Done."
   exit 0
 fi
 
-# ── Step 1: Ensure skill directory exists ────────────────────────
+# ── Step 1: Skill directory check ────────────────────────────────
 if [[ ! -d "${SKILL_DIR}" ]]; then
   echo "ERROR: Skill directory not found: ${SKILL_DIR}"
   exit 1
 fi
 
-# ── Step 2: Run the skill via pi ──────────────────────────────────
-# The skill is driven by pi using the SKILL.md instructions.
-# pi has access to: web_search, browser, and persistent file storage.
-#
-# The skill runs in 4 phases (discovery → offer → verification → editor)
-# and produces a JSON report following the schema.
-
-echo "[1/4] Discovery Agent — finding new models..."
-echo "  (using web_search with 24h/72h/30d recency filters)"
-echo "  (checking official blogs, pricing pages, GitHub Releases, changelogs)"
-
-echo "[2/4] Offer Agent — searching for free/discounted access..."
-echo "  (searching: free API, free tier, launch credits, 50-98% off, off-peak)"
-echo "  (languages: EN, JA, ZH)"
-
-echo "[3/4] Verification Agent — confirming offers are usable..."
-echo "  (checking: provider count, endpoint, model ID, base URL, rate limits)"
-echo "  (endpoint rule: base_url/model_id always from fetched official docs, never memory)"
-echo "  (provider registry: ${PROVIDER_REGISTRY} — read first, grow from docs if missing)"
-echo "  (OpenRouter rule: zero providers = excluded)"
-
-echo "[4/4] Editor Agent — writing the daily report..."
-echo "  (deduplicating, scoring, comparing with previous state)"
-
-# ── Invoke pi with the skill ──────────────────────────────────────
-# This uses the pi CLI to run the skill. The skill's SKILL.md
-# contains the full workflow, acceptance criteria, and subagent
-# decomposition (discovery-agent, offer-agent, verification-agent, editor-agent).
-#
-# pi reads:
-#   - config/sources.yaml      (information sources to check)
-#   - config/search_queries.yaml (multilingual search terms)
-#   - state/known_offers.json  (previous state for comparison)
-#   - prompts/*.md             (subagent prompts)
-#   - schemas/daily_report.schema.json (output schema)
-#
-# pi writes:
-#   - report.json              (the daily report, validated against schema)
+# ── Step 2: Run the skill via pi ─────────────────────────────────
+echo "[1/4] Running collection skill via pi..."
 
 if command -v pi &>/dev/null; then
-  echo "Running skill via pi CLI..."
   timeout "${PI_TIMEOUT}" pi \
     --skill "${SKILL_DIR}" \
     --model "${PI_MODEL}" \
     --approve \
     --no-session \
-    -p "Run the llm-deals-intelligence-skill full collection workflow (Phase 0-9). MANDATORY endpoint rule: before writing ANY base_url or model_id, read ${PROVIDER_REGISTRY}. Listed provider: use the registry base_url verbatim, re-fetch its docs_url, and cite it as endpoint_source. Unlisted provider: fetch the provider's official API docs, copy the documented base URL verbatim, ADD a registry entry with added_from = the docs URL you fetched, and cite it as endpoint_source. Never write endpoints from memory — validation re-fetches every citation and hard-fails if the page does not document the claimed base_url, and hard-fails base_urls that contradict the registry. Write the final validated JSON report to ${REPORT_FILE} following the schema at ${SKILL_SCHEMA_FILE}. Read previous state from ${SKILL_STATE_FILE}."
+    -p "Run the llm-deals-intelligence-skill full collection workflow (Phase 0-9). MANDATORY: before writing ANY base_url or model_id, read ${PROVIDER_REGISTRY}. Listed provider: use registry base_url verbatim, re-fetch docs_url, cite as endpoint_source. Unlisted provider: fetch official docs, add registry entry with added_from, cite as endpoint_source. Never write endpoints from memory. Write the final report to ${REPORT_FILE} following ${SKILL_SCHEMA_FILE}. Read previous state from ${SKILL_STATE_FILE}."
 else
-  echo "WARNING: pi CLI not found."
-  echo "Falling back to manual collection script..."
-  echo ""
-  echo "To run manually:"
-  echo "  1. Open pi"
-  echo "  2. Run: /llm-deals-intelligence-skill"
-  echo "  3. pi will use web_search + browser to collect the report"
-  echo "  4. Save the output as report.json"
-  echo ""
-  echo "Alternatively, run the fallback collector:"
+  echo "WARNING: pi CLI not found. Run manually or use fallback."
   node "${SCRIPT_DIR}/collect-fallback.js" "${REPORT_FILE}"
 fi
 
-# ── Step 3: Validate → fix loop → fallback downgrade ──────────────
-# 1. validate (no --fix): returns structured fix-report on stderr.
-# 2. If errors: pi reads the fix-report and patches report.json (1 attempt).
-# 3. Re-validate. If still errors: --fix auto-downgrades and continues.
-# No good offer is ever blocked by a bad one.
+# ── Step 3: Validate (auto-fix + exclude) ────────────────────────
+# The validator rewrites report.json: auto-fixes what it can, excludes
+# what it can't. Emits a JSON fix-report on stderr between markers.
 echo ""
-echo "[validate 1/3] Checking report (schema + gates + live citation re-check)..."
-FIX_REPORT_FILE="$(mktemp /tmp/fix-report-XXXXXX.json)"
+echo "[2/4] Validating (auto-fix + exclude)..."
 
-VALIDATE_STDERR="$(mktemp /tmp/validate-stderr-XXXXXX)"
+VALIDATE_STDERR="$(mktemp)"
+node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" 2>"${VALIDATE_STDERR}" || true
 
-if node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" 2>"${VALIDATE_STDERR}"; then
-  echo "[validate 1/3] ✅ All checks passed."
+# Extract fix-report JSON between markers.
+FIX_REPORT="$(mktemp)"
+sed -n '/__FIX_REPORT_START__/,/__FIX_REPORT_END__/{ /__FIX_REPORT/d; p; }' "${VALIDATE_STDERR}" > "${FIX_REPORT}"
+
+# Show what happened.
+cat "${VALIDATE_STDERR}" | grep -v '__FIX_REPORT' | grep -v '^\[' || true
+grep -E '✅|Auto-fixed|Excluded|Ranked' "${VALIDATE_STDERR}" || true
+
+# If there are excludes that pi could have prevented, ask pi to fix.
+EXCLUDE_COUNT=$(grep -c '"action": "exclude"' "${FIX_REPORT}" 2>/dev/null || echo 0)
+if [[ "${EXCLUDE_COUNT}" -gt 0 ]] && command -v pi &>/dev/null; then
+  echo ""
+  echo "[3/4] ${EXCLUDE_COUNT} offer(s) excluded. Asking pi to fix for next run..."
+  # Don't re-run the full skill — just fix the specific issues.
+  timeout 300 pi \
+    --skill "${SKILL_DIR}" \
+    --model "${PI_MODEL}" \
+    --approve \
+    --no-session \
+    -p "The validator excluded some offers from ${REPORT_FILE}. Read the fix-report at ${FIX_REPORT}. For each excluded offer: investigate the issue (fetch the source_hint URL, check state/benchmarks.json, etc.) and if you can fix it, add the offer back to ranked_offers with the corrected data. If you truly cannot fix it, leave it excluded. Save report.json." \
+    2>/dev/null || true
+
+  # Re-validate after pi's fix attempt.
+  echo "  Re-validating after pi fix..."
+  node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" 2>/dev/null || true
 else
-  # Extract the JSON fix-report between markers.
-  sed -n '/__FIX_REPORT_START__/,/__FIX_REPORT_END__/{ /__FIX_REPORT/d; p; }' "${VALIDATE_STDERR}" > "${FIX_REPORT_FILE}"
-  echo "[validate 1/3] ❌ Violations found. Asking pi to fix..."
-  if command -v pi &>/dev/null && [[ -s "${FIX_REPORT_FILE}" ]]; then
-    timeout 300 pi \
-      --skill "${SKILL_DIR}" \
-      --model "${PI_MODEL}" \
-      --approve \
-      --no-session \
-      -p "The validator found violations in ${REPORT_FILE}. Read the fix-report at ${FIX_REPORT_FILE} (JSON array of {offer, gate, field, current, action, source_hint}). For each entry: fix the specific field in report.json using the action and source_hint. Do NOT remove offers from the report — fix the data in place. After fixing, save report.json." \
-      2>/dev/null || true
-    echo "[validate 2/3] Re-validating after pi fix..."
-    if node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" 2>"${VALIDATE_STDERR}"; then
-      echo "[validate 2/3] ✅ Fixed successfully."
-    else
-      echo "[validate 2/3] ❌ Still has violations. Auto-downgrading remaining..."
-      node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" --fix 2>/dev/null
-    fi
-  else
-    echo "[validate 1/3] pi not available or no fix-report. Auto-downgrading..."
-    node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" --fix 2>/dev/null
-  fi
+  echo "[3/4] No excludes to fix, or pi not available."
 fi
-rm -f "${VALIDATE_STDERR}"
-rm -f "${FIX_REPORT_FILE}"
 
-# ── Step 4: Update state ─────────────────────────────────────────
+rm -f "${VALIDATE_STDERR}" "${FIX_REPORT}"
+
+# ── Step 4: Build + deploy ───────────────────────────────────────
+echo ""
+echo "[4/4] Building HTML + OGP..."
+node "${PROJECT_ROOT}/build/build-html.js" "${REPORT_FILE}" "${HTML_FILE}"
+node "${PROJECT_ROOT}/build/build-og-image.js" "${REPORT_FILE}" "${PROJECT_ROOT}/og-image.html" "${PROJECT_ROOT}/og-image.png" 2>/dev/null || echo "  (OGP image skipped — no Chrome)"
+
+# ── Step 5: Update state ─────────────────────────────────────────
 echo ""
 echo "Updating state..."
 node -e "
@@ -162,24 +117,22 @@ const fs = require('fs');
 const report = JSON.parse(fs.readFileSync('${REPORT_FILE}', 'utf8'));
 const state = {
   updated_at: report.generated_at,
-  offers: (report.ranked_offers || []).map(o => ({
-    name: o.name,
-    provider: o.provider,
-    classification: o.classification,
-    end_at: o.end_at,
-    operational_confidence: o.operational_confidence,
-    suspicion_score: o.suspicion_score,
-    base_url: o.base_url,
-    model_id: o.model_id,
+  offers: (report.ranked_offers || []).filter(o => o.ranking_eligible === true).map(o => ({
+    name: o.name, provider: o.provider, classification: o.classification,
+    end_at: o.end_at, operational_confidence: o.operational_confidence,
+    suspicion_score: o.suspicion_score, base_url: o.base_url, model_id: o.model_id,
   })),
 };
 fs.writeFileSync('${SKILL_STATE_FILE}', JSON.stringify(state, null, 2));
-console.log('State updated: ${SKILL_STATE_FILE}');
+console.log('State updated.');
 "
+
+# ── Step 6: Deploy ───────────────────────────────────────────────
+echo ""
+echo "Deploying..."
+"${SCRIPT_DIR}/../deploy/git-push.sh"
 
 echo ""
 echo "============================================"
 echo "  Batch run complete!"
-echo "  Report: ${REPORT_FILE}"
-echo "  State:  ${SKILL_STATE_FILE}"
 echo "============================================"
