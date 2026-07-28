@@ -716,7 +716,7 @@
       "kyc_required": false,
       "auto_renewal": null,
       "refund_policy": null,
-      "free_limits": "10,000 neurons/day free",
+      "free_limits": "10,000 neurons/day free ≈ $0.11/day (約 $3.30/月相当 ・ 超過分 $0.011/1,000 neurons)",
       "rate_limits": "100,000 requests/month free tier",
       "context_tokens": null,
       "max_output_tokens": null,

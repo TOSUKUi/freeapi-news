@@ -207,6 +207,8 @@ For subscription or credit-multiplier offers, show:
 
 Do not mix product-internal credits with public API token pricing.
 
+Normalize opaque quota units into money readers understand. When a free tier is denominated in vendor units (neurons, credits, compute units, CU, etc.), append the USD equivalent computed from the provider's published unit price, e.g. `10,000 neurons/day free ≈ $0.11/day (about $3.30/month equivalent; $0.011/1,000 neurons)`. Fetch the unit price from the provider's pricing page in the same run — never convert from memory.
+
 `effective_price_per_million` is what a reader pays for **API calls**. It may be zero only when API requests are genuinely billed at zero (free API tier or 100%-off campaign on the API). Never zero out a paid API price because a consumer app, web chat, or playground is free. If the pricing page says the API costs money, `effective_price_per_million` says the same money.
 
 ### Free app access is NOT a free API (zero tolerance)
