@@ -194,7 +194,8 @@
           "name": "SWE-bench Verified",
           "score": 52.8
         }
-      ]
+      ],
+      "free_allowance_rank": "NORMAL"
     },
     {
       "rank": 2,
@@ -273,7 +274,8 @@
           "name": "SWE-bench Verified",
           "score": 52.8
         }
-      ]
+      ],
+      "free_allowance_rank": "NORMAL"
     },
     {
       "rank": 3,
@@ -351,7 +353,8 @@
           "name": "GPQA Diamond",
           "score": 74.1
         }
-      ]
+      ],
+      "free_allowance_rank": "NORMAL"
     },
     {
       "rank": 4,
@@ -435,7 +438,8 @@
           "name": "AA Coding Index",
           "score": 37.7
         }
-      ]
+      ],
+      "free_allowance_rank": "NORMAL"
     },
     {
       "rank": 5,
@@ -514,7 +518,8 @@
           "name": "IFBench",
           "score": 71.5
         }
-      ]
+      ],
+      "free_allowance_rank": "NORMAL"
     },
     {
       "rank": 6,
@@ -607,7 +612,8 @@
           "name": "BrowseComp",
           "score": 91.2
         }
-      ]
+      ],
+      "free_allowance_rank": "NORMAL"
     },
     {
       "rank": 7,
@@ -702,7 +708,8 @@
           "name": "SysBench",
           "score": 85.61
         }
-      ]
+      ],
+      "free_allowance_rank": "NORMAL"
     },
     {
       "rank": 8,
@@ -777,7 +784,8 @@
           "name": "DeepSWE",
           "score": 40.4
         }
-      ]
+      ],
+      "free_allowance_rank": "NORMAL"
     },
     {
       "rank": 9,
@@ -802,7 +810,7 @@
       "kyc_required": false,
       "auto_renewal": null,
       "refund_policy": null,
-      "free_limits": "Workers AI free tier includes 100,000 requests/month for most models",
+      "free_limits": "10,000 neurons/day free",
       "rate_limits": "100,000 requests/month free tier",
       "context_tokens": null,
       "max_output_tokens": null,
@@ -836,11 +844,25 @@
         "https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/"
       ],
       "benchmark": {
-        "score": null,
-        "benchmark_name": null,
-        "tier": "B"
+        "score": 91.2,
+        "benchmark_name": "GPQA-Diamond",
+        "tier": "A"
       },
-      "benchmarks": []
+      "benchmarks": [
+        {
+          "name": "GPQA-Diamond",
+          "score": 91.2
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 82.7
+        },
+        {
+          "name": "DeepSWE",
+          "score": 46.2
+        }
+      ],
+      "free_allowance_rank": "TINY"
     },
     {
       "rank": 10,
@@ -919,7 +941,8 @@
           "name": "AIME 2025",
           "score": 82
         }
-      ]
+      ],
+      "free_allowance_rank": "NORMAL"
     }
   ],
   "conditional_credits": [

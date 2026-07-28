@@ -477,7 +477,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
 
     <div class="snapshot reveal" role="group" aria-label="今回のサマリー">
     <div class="snap-cell">
-      <span class="snap-num">9</span>
+      <span class="snap-num">10</span>
       <span class="snap-label">掲載オファー</span>
     </div>
     <div class="snap-cell">
@@ -485,7 +485,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
       <span class="snap-label">Sティア</span>
     </div>
     <div class="snap-cell">
-      <span class="snap-num snap-num-free">8</span>
+      <span class="snap-num snap-num-free">9</span>
       <span class="snap-label">完全無料</span>
     </div>
     <div class="snap-cell">
@@ -497,9 +497,9 @@ details.acc[open] .chev { transform: rotate(180deg); }
     <section id="ranked" class="mt-10 mb-14" aria-labelledby="ranked-h">
       <div class="flex items-end justify-between gap-4 mb-1">
         <h2 id="ranked-h" class="font-display text-2xl sm:text-3xl font-bold">無料・激安APIランキング</h2>
-        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">9 件</span>
+        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">10 件</span>
       </div>
-      <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">性能ティアとスコア</strong>で並び、同率内は情報の鮮度順。</p>
+      <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">性能ティア</strong> → 無料枠の余裕度 → スコア → 情報の鮮度順。</p>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2"><article class="offer-card reveal tier-accent-s" aria-labelledby="offer-0">
     <div class="card-accent" aria-hidden="true"></div>
     <span class="rank-watermark" aria-hidden="true">01</span>
@@ -1646,6 +1646,134 @@ codex --profile deepseek</code></pre>
 
         <div class="offer-links">
           <a class="btn btn-primary" href="https://api-docs.deepseek.com/" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </article>
+<article class="offer-card reveal tier-accent-a" aria-labelledby="offer-9">
+    <div class="card-accent" aria-hidden="true"></div>
+    <span class="rank-watermark" aria-hidden="true">10</span>
+    <div class="offer-inner">
+      <div class="offer-main">
+        <div class="offer-badges">
+          <span class="badge badge-b">B. 恒久無料枠</span>
+          <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
+        </div>
+        <h3 id="offer-9" class="offer-name">GLM 5.2 (Cloudflare Workers AI無料枠)</h3>
+        <p class="offer-meta">by <strong>Cloudflare</strong> ・ GLM 5.2</p>
+
+        <div class="offer-stats">
+          <div class="stat">
+      <div class="stat-label">ベンチマーク</div>
+      <div class="stat-value"><span class="bench-tier tier-a">A</span><span class="bench-score">91.2%</span></div>
+      <div class="stat-sub">GPQA-Diamond</div>
+    </div>
+          <div class="stat">
+            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
+            <div class="stat-value"><span class="price price-free">$0</span></div>
+            <div class="stat-sub">入力 / 出力</div>
+          </div>
+          <div class="stat">
+      <div class="stat-label">運用信頼度</div>
+      <div class="stat-value"><span class="conf conf-med">MEDIUM</span></div>
+      <div class="stat-sub">Verified live 2026-07-28 via developers.cloudflare.com docs</div>
+    </div>
+        </div>
+
+        <div class="offer-ids">
+          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/v1</code></div>
+          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">@cf/z-ai/glm-5.2</code></div>
+          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">10,000 neurons/day free</span></div>
+          
+          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">100,000 requests/month free tier</span></div>
+          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">Unknown</span></div>
+        </div>
+
+        <details class="bench-details">
+      <summary class="bench-summary">
+        <span class="bench-summary-label">ベンチマーク詳細</span>
+        <span class="bench-summary-count">3件</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="bench-list"><div class="bench-row"><span class="bench-name">GPQA-Diamond</span><span class="bench-val">91.2%</span></div><div class="bench-row"><span class="bench-name">Terminal Bench 2.1</span><span class="bench-val">82.7%</span></div><div class="bench-row"><span class="bench-name">DeepSWE</span><span class="bench-val">46.2%</span></div></div>
+    </details>
+        <details class="acc">
+      <summary class="acc-summary" aria-label="接続方法を表示">
+        <span class="acc-title">
+          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
+          接続方法
+        </span>
+        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="acc-body">
+        <p class="acc-note">テンプレート版本 2026.07.2 ・ エンドポイントは provider-registry.json (公式ドキュメント由来) で検証済み。Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
+        <div class="agent-grid"><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code>// ~/.pi/agent/models.json にプロバイダを登録
+{
+  &quot;providers&quot;: {
+    &quot;cloudflare&quot;: {
+      &quot;baseUrl&quot;: &quot;https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/v1&quot;,
+      &quot;api&quot;: &quot;openai-completions&quot;,
+      &quot;apiKey&quot;: &quot;$CLOUDFLARE_API_TOKEN&quot;,
+      &quot;models&quot;: [
+        { &quot;id&quot;: &quot;@cf/z-ai/glm-5.2&quot;, &quot;reasoning&quot;: false }
+      ]
+    }
+  }
+}
+
+export CLOUDFLARE_API_TOKEN=xxxxxxxxxxxxxxxx
+
+# 起動 (または .pi/settings.json の defaultProvider/defaultModel)
+pi --model cloudflare/@cf/z-ai/glm-5.2</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># Claude Code は OpenAI 互換 API に直接接続できません。
+# Anthropic 規約に変換するプロキシ (LiteLLM, claude-code-router 等) 経由で接続します。
+# プロキシの上流を https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/v1 ・ モデル @cf/z-ai/glm-5.2 に設定してから:
+export ANTHROPIC_BASE_URL=http://localhost:4000
+export ANTHROPIC_AUTH_TOKEN=xxxxxxxxxxxxxxxx
+
+claude --model @cf/z-ai/glm-5.2</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code>// opencode.json
+{
+  &quot;provider&quot;: {
+    &quot;cloudflare&quot;: {
+      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
+      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/v1&quot; },
+      &quot;models&quot;: { &quot;@cf/z-ai/glm-5.2&quot;: {} }
+    }
+  }
+}
+
+# APIキー登録 (無料キーで可)
+# opencode 起動後 → /connect cloudflare → キーを貼付</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># ~/.codex/config.toml
+[model_providers.cloudflare]
+name = &quot;Cloudflare Workers AI&quot;
+base_url = &quot;https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/v1&quot;
+env_key = &quot;CLOUDFLARE_API_TOKEN&quot;
+wire_api = &quot;chat&quot;
+
+[profiles.cloudflare]
+provider = &quot;cloudflare&quot;
+model = &quot;@cf/z-ai/glm-5.2&quot;
+
+# 起動
+codex --profile cloudflare</code></pre>
+      </div></div>
+      </div>
+    </details>
+
+        <div class="offer-links">
+          <a class="btn btn-primary" href="https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
         </div>
       </div>
     </div>
