@@ -198,45 +198,88 @@ echo "  Step 2 complete."
 echo ""
 echo "[3/6] Reducing artifacts..."
 if ! node "${SCRIPT_DIR}/reduce-crawl.js" "${CRAWL_DIR}"; then
-  echo "❌ Reducer aborted. Previous report stays live."
-  exit 1
+  echo "⚠️  Reducer aborted. Falling back to simple single-pi run..."
+  timeout "${PI_TIMEOUT}" pi \
+    --skill "${SKILL_DIR}" \
+    --model "${PI_MODEL}" \
+    --approve \
+    --no-session \
+    -p "Run the llm-deals-intelligence-skill full collection workflow (Phase 0-9). MANDATORY: before writing ANY base_url or model_id, read build/provider-registry.json. Listed provider: use registry base_url verbatim, re-fetch docs_url, cite as endpoint_source. Unlisted provider: fetch official docs, add registry entry with added_from, cite as endpoint_source. Never write endpoints from memory. Write the final report to ${REPORT_FILE} following ${SKILL_SCHEMA_FILE}. Read previous state from ${SKILL_DIR}/state/known_offers.json and ${SKILL_DIR}/state/benchmarks.json." \
+    2>/dev/null || true
+  if [[ ! -f "${REPORT_FILE}" ]]; then
+    echo "❌ Fallback also failed. Previous report stays live."
+    exit 1
+  fi
+  # Skip Steps 4-5, go straight to validate below.
+  SKIP_PARALLEL=true
 fi
 
 # ── Step 4: Edit (1 pi, reads candidates only) ───────────────────
-echo ""
-echo "[4/6] Editor (reading candidates, no fetch)..."
-CANDIDATES_FILE="${CRAWL_DIR}/reduced/candidates.json"
+if [[ "${SKIP_PARALLEL:-}" != "true" ]]; then
+  echo ""
+  echo "[4/6] Editor (reading candidates, no fetch)..."
+  CANDIDATES_FILE="${CRAWL_DIR}/reduced/candidates.json"
 
-timeout "${PI_TIMEOUT}" pi \
-  --skill "${SKILL_DIR}" \
-  --model "${PI_MODEL}" \
-  --approve \
-  --no-session \
-  -p "You are the editor. Read ${CANDIDATES_FILE} — it contains all candidates, exclusions, coverage info, and disappeared known offers from this crawl run. Also read ${CRAWL_DIR}/reduced/benchmarks.json (merged benchmark state) and ${CRAWL_DIR}/reduced/provider-registry.json (merged registry). Do NOT fetch any URLs. Do NOT run web searches. Work only from the files. Produce the daily Japanese report at ${REPORT_FILE} following the schema at ${SKILL_SCHEMA_FILE}. Apply tier rules, quality gate, allowance ranking, and classification. Update ${SKILL_DIR}/state/known_offers.json from the final ranked offers. If coverage.rate is low or disappeared_known_offers is non-empty, note it in the report's changes section. Write report.json, then write the merged benchmarks to ${SKILL_DIR}/state/benchmarks.json and the merged registry to build/provider-registry.json." \
-  2>/dev/null || true
+  timeout "${PI_TIMEOUT}" pi \
+    --skill "${SKILL_DIR}" \
+    --model "${PI_MODEL}" \
+    --approve \
+    --no-session \
+    -p "You are the editor. Read ${CANDIDATES_FILE} — it contains all candidates, exclusions, coverage info, and disappeared known offers from this crawl run. Also read ${CRAWL_DIR}/reduced/benchmarks.json (merged benchmark state) and ${CRAWL_DIR}/reduced/provider-registry.json (merged registry). Do NOT fetch any URLs. Do NOT run web searches. Work only from the files. Produce the daily Japanese report at ${REPORT_FILE} following the schema at ${SKILL_SCHEMA_FILE}. Apply tier rules, quality gate, allowance ranking, and classification. Update ${SKILL_DIR}/state/known_offers.json from the final ranked offers. If coverage.rate is low or disappeared_known_offers is non-empty, note it in the report's changes section. Write report.json, then write the merged benchmarks to ${SKILL_DIR}/state/benchmarks.json and the merged registry to build/provider-registry.json." \
+    2>/dev/null || true
 
-if [[ ! -f "${REPORT_FILE}" ]]; then
-  echo "❌ Editor did not produce report.json. Previous report stays live."
-  exit 1
+  if [[ ! -f "${REPORT_FILE}" ]]; then
+    echo "❌ Editor did not produce report.json. Previous report stays live."
+    exit 1
+  fi
 fi
 
-# ── Step 5: Validate ─────────────────────────────────────────────
+# ── Step 5: Validate → pi fix → re-validate ──────────────────────
 echo ""
 echo "[5/6] Validating..."
 VALIDATE_STDERR="$(mktemp)"
+FIX_REPORT="$(mktemp)"
+
 if ! node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" 2>"${VALIDATE_STDERR}"; then
-  # Validator exited non-zero. Check if it's a top-level schema error (fatal)
-  # or just gate violations (already auto-fixed/excluded by the validator).
+  # Top-level schema error = fatal, no fix possible.
   if grep -q "Top-level schema error" "${VALIDATE_STDERR}"; then
     echo "❌ Fatal schema error. Previous report stays live."
     cat "${VALIDATE_STDERR}"
-    rm -f "${VALIDATE_STDERR}"
+    rm -f "${VALIDATE_STDERR}" "${FIX_REPORT}"
     exit 1
   fi
-  # Gate violations were auto-fixed/excluded. Continue.
-  echo "  Validator auto-fixed/excluded some offers. Continuing."
+
+  # Extract fix-report JSON between markers.
+  sed -n '/__FIX_REPORT_START__/,/__FIX_REPORT_END__/{ /__FIX_REPORT/d; p; }' "${VALIDATE_STDERR}" > "${FIX_REPORT}"
+
+  # Ask pi to fix the specific issues (1 round).
+  if command -v pi &>/dev/null && [[ -s "${FIX_REPORT}" ]]; then
+    echo "  Violations found. Asking pi to fix..."
+    timeout 300 pi \
+      --skill "${SKILL_DIR}" \
+      --model "${PI_MODEL}" \
+      --approve \
+      --no-session \
+      -p "The validator found violations in ${REPORT_FILE}. Read the fix-report at ${FIX_REPORT} (JSON array of {offer, gate, field, current, action, source_hint}). For each entry: fix the specific field in report.json using the action and source_hint. Do NOT remove offers from the report — fix the data in place. After fixing, save report.json." \
+      2>/dev/null || true
+
+    # Re-validate after pi's fix.
+    echo "  Re-validating after pi fix..."
+    if ! node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" 2>"${VALIDATE_STDERR}"; then
+      if grep -q "Top-level schema error" "${VALIDATE_STDERR}"; then
+        echo "❌ Still fatal after fix. Previous report stays live."
+        rm -f "${VALIDATE_STDERR}" "${FIX_REPORT}"
+        exit 1
+      fi
+      echo "  Still has violations. Validator auto-fixed/excluded remaining."
+    else
+      echo "  ✅ Fixed successfully."
+    fi
+  else
+    echo "  Validator auto-fixed/excluded some offers. Continuing."
+  fi
 fi
-rm -f "${VALIDATE_STDERR}"
+rm -f "${VALIDATE_STDERR}" "${FIX_REPORT}"
 
 # ── Step 6: Build + atomic deploy ────────────────────────────────
 echo ""
