@@ -59,7 +59,7 @@ echo "  Model: ${PI_MODEL}"
 echo "============================================"
 
 # Create directory structure.
-mkdir -p "${CRAWL_DIR}"/{snapshots,discovery,refresh,offers,deltas,reduced}
+mkdir -p "${CRAWL_DIR}"/{snapshots,discovery,refresh,offers,deltas,reduced,logs}
 
 # Read-only snapshots for workers.
 cp "${SKILL_DIR}/state/benchmarks.json" "${CRAWL_DIR}/snapshots/" 2>/dev/null || echo '{"models":[]}' > "${CRAWL_DIR}/snapshots/benchmarks.json"
@@ -85,13 +85,21 @@ run_worker() {
   local output_file="$3"
 
   echo "  → Starting worker: ${task_id}"
+  local logfile="${CRAWL_DIR}/logs/${task_id//\//_}.log"
   timeout "${PI_TIMEOUT}" pi \
     --skill "${SKILL_DIR}" \
     --model "${PI_MODEL}" \
     --approve \
     --no-session \
     -p "${prompt}" \
-    2>/dev/null || true
+    > "${logfile}" 2>&1 || true
+  # Tail the last lines so a human can see why a worker failed without
+  # opening the log file. Empty log = pi produced nothing (timeout/OOM).
+  local tail_lines
+  tail_lines=$(tail -n 3 "${logfile}" 2>/dev/null | tr '\n' ' ')
+  if [[ ! -f "${output_file}" ]]; then
+    echo "     └─ no artifact. log tail: ${tail_lines:-(empty)}"
+  fi
 
   # Check if the worker produced output.
   if [[ ! -f "${output_file}" ]]; then

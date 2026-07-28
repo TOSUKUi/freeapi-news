@@ -184,15 +184,31 @@ if (results.failed.length > 0 || results.missing.length > 0) {
 }
 
 // ── Fail-safe gate ───────────────────────────────────────────────
-// Stop if more than half the tasks failed, or if ALL tasks failed.
-if (failedTasks > expectedTasks / 2) {
-  console.error(`\n❌ REDUCER ABORT: ${failedTasks}/${expectedTasks} tasks failed. Not safe to proceed.`);
+// Abort ONLY when nothing usable was collected.
+//
+// A high task-failure rate is NOT fatal by itself. Many crawl targets
+// are providers with NO free offer (anyscale, replicate, huggingface,
+// groq, moonshot, openai, ...). A local model investigating such a
+// provider legitimately finds nothing and may finish without writing
+// an artifact — which the reducer counts as "missing". Treating that
+// as a catastrophic failure aborts every run even when real candidates
+// were collected.
+//
+// The candidates we DID collect are real data. Their QUALITY is the
+// validator's job (openrouter-ghost, citation, endpoint, paid-api,
+// size gates), not the reducer's. The reducer only merges deltas and
+// checks completeness. So we proceed as long as at least one task
+// completed and produced something.
+if (completedTasks === 0) {
+  console.error('\n❌ REDUCER ABORT: zero tasks completed. Nothing to work with.');
   process.exit(1);
 }
-// Stop if zero candidates and zero excluded (nothing was collected).
 if (candidates.length === 0 && excluded.length === 0) {
   console.error('\n❌ REDUCER ABORT: zero candidates and zero exclusions. Nothing was collected.');
   process.exit(1);
+}
+if (failedTasks > expectedTasks / 2) {
+  console.warn(`\n⚠️  WARNING: ${failedTasks}/${expectedTasks} tasks failed/missing (likely no-offer providers or local-model timeouts). Proceeding with ${candidates.length} candidate(s); coverage gaps will be noted in the report.`);
 }
 
 // Write sentinel.
