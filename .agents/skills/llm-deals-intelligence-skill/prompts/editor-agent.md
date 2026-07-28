@@ -15,6 +15,10 @@ Write a Japanese daily report in this order:
 
 Do not rank providerless or operationally unverified offers. Do not mix free-like offers into the true-free ranking.
 
+## Local-run territory gate
+
+Reject ranked candidates under 30B total parameters (judge MoE by TOTAL, not active — local inference loads every expert) unless their benchmarks show genuine competitiveness (tier S/A). Every ranked offer needs `total_parameters_b` / `active_parameters_b` from the model card; null only when the vendor never publishes sizes.
+
 ## Data-sharing conditional offers
 
 Offers whose free quota requires training-data or data-sharing consent are conditional credits, not free offers: classify `F_CONDITIONAL`, place them in `conditional_credits` (never the true-free ranking), and make the trade-off explicit — `training_use` states the condition, `free_limits` gives the exact quota per model, `registration_conditions` lists the consent. A reader must see what they pay with.

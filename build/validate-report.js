@@ -88,8 +88,12 @@ async function main() {
   // misreported as a free API) must not reach the ranking.
   const freeClaimResult = validateFreeClaim(report);
 
-  const gateErrors = [...endpointResult.errors, ...citationResult.errors, ...stateResult.errors, ...freeClaimResult.errors];
-  const gateWarnings = [...endpointResult.warnings, ...citationResult.warnings, ...stateResult.warnings, ...freeClaimResult.warnings];
+  // Size gate: sub-30B total-parameter models are local-run territory and
+  // do not belong in a free-API ranking.
+  const sizeResult = validateModelSize(report);
+
+  const gateErrors = [...endpointResult.errors, ...citationResult.errors, ...stateResult.errors, ...freeClaimResult.errors, ...sizeResult.errors];
+  const gateWarnings = [...endpointResult.warnings, ...citationResult.warnings, ...stateResult.warnings, ...freeClaimResult.warnings, ...sizeResult.warnings];
 
   if (valid && gateErrors.length === 0) {
     console.log('✅ Report is valid against the schema.');
@@ -243,6 +247,42 @@ function citationSupports(html, baseUrl) {
   } catch {
     return false;
   }
+}
+
+// ── Model size gate ───────────────────────────────────────────────
+// A free API of a model anyone can run at home is not news. Total
+// parameters decide (MoE must load every expert locally; active params
+// only bound compute). Under 30B total = hard fail UNLESS the benchmarks
+// prove the model is genuinely competitive (tier S/A): a small model that
+// performs like a much larger one is still worth featuring. Unknown
+// size = warning.
+const LOCAL_TOTAL_MAX_B = 30;
+const COMPETITIVE_TIERS = ['S', 'A'];
+
+function validateModelSize(report) {
+  const errors = [];
+  const warnings = [];
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) continue;
+    const label = o.name || o.provider || 'unnamed offer';
+    const total = o.total_parameters_b;
+    const tier = o.benchmark && o.benchmark.tier;
+    if (typeof total === 'number' && total < LOCAL_TOTAL_MAX_B) {
+      if (COMPETITIVE_TIERS.includes(tier)) {
+        warnings.push(`"${label}": sub-${LOCAL_TOTAL_MAX_B}B model kept because tier ${tier} shows it is competitive.`);
+      } else {
+        errors.push(
+          `"${label}": ${total}B total parameters is local-run territory (under ${LOCAL_TOTAL_MAX_B}B) and tier ${tier || '?'} ` +
+          `does not show exceptional competitiveness (needs S/A). Exclude it.`
+        );
+      }
+      continue;
+    }
+    if (total == null) {
+      warnings.push(`"${label}": total_parameters_b unknown — confirm on the model card that this is not a sub-${LOCAL_TOTAL_MAX_B}B model.`);
+    }
+  }
+  return { errors, warnings };
 }
 
 // ── Free-claim gate ───────────────────────────────────────────────

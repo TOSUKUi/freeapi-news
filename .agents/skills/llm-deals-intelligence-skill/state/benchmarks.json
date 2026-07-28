@@ -523,6 +523,144 @@
         }
       ],
       "updated_at": "2026-07-28"
+    },
+    {
+      "canonical_name": "Gemma 4 31B IT",
+      "aliases": [
+        "gemma-4-31b-it",
+        "google/gemma-4-31b-it",
+        "google/gemma-4-31b-it:free"
+      ],
+      "vendor": "Google",
+      "model_ids": [
+        "google/gemma-4-31b-it",
+        "google/gemma-4-31b-it:free"
+      ],
+      "tier": null,
+      "benchmarks": [
+        {
+          "name": "MMLU Pro",
+          "score": 85.2,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "AIME 2026 no tools",
+          "score": 89.2,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "LiveCodeBench v6",
+          "score": 80.0,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 84.3,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "HLE no tools",
+          "score": 19.5,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "MMMU Pro",
+          "score": 76.9,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        }
+      ],
+      "sources_checked": [
+        {
+          "type": "vendor_technical_blog",
+          "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "status": "found_full_benchmark_table",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "type": "huggingface_model_card",
+          "url": "https://huggingface.co/google/gemma-4-31B-it",
+          "status": "no_benchmark_table_in_html",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        }
+      ]
+    },
+    {
+      "canonical_name": "Gemma 4 26B A4B IT",
+      "aliases": [
+        "gemma-4-26b-a4b-it",
+        "google/gemma-4-26b-a4b-it",
+        "google/gemma-4-26b-a4b-it:free"
+      ],
+      "vendor": "Google",
+      "model_ids": [
+        "google/gemma-4-26b-a4b-it",
+        "google/gemma-4-26b-a4b-it:free"
+      ],
+      "tier": null,
+      "benchmarks": [
+        {
+          "name": "MMLU Pro",
+          "score": 82.6,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "AIME 2026 no tools",
+          "score": 88.3,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "LiveCodeBench v6",
+          "score": 77.1,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 82.3,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "HLE no tools",
+          "score": 8.7,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "MMMU Pro",
+          "score": 73.8,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        }
+      ],
+      "sources_checked": [
+        {
+          "type": "vendor_technical_blog",
+          "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "status": "found_full_benchmark_table",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        }
+      ]
     }
   ]
 }

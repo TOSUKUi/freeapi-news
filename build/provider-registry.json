@@ -48,7 +48,8 @@
       ],
       "notes": "Free models use the ':free' suffix on the model ID.",
       "added_at": "2026-07-28",
-      "added_from": "https://openrouter.ai/docs/quickstart"
+      "added_from": "https://openrouter.ai/docs/quickstart",
+      "model_page_template": "https://openrouter.ai/{model_id}"
     },
     {
       "key": "deepseek",
@@ -284,6 +285,30 @@
       "notes": "OpenAI-compatible base is .../accounts/{ACCOUNT_ID}/ai/v1. The .../ai/run/@cf/... URL is the native Workers AI endpoint with a different request/response format — do not use it for OpenAI-style clients. Replace {ACCOUNT_ID} with your Cloudflare account ID; model IDs look like @cf/z-ai/glm-5.2.",
       "added_at": "2026-07-28",
       "added_from": "https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/"
+    },
+    {
+      "key": "openai",
+      "label": "OpenAI",
+      "match": [
+        "openai",
+        "api.openai.com"
+      ],
+      "base_url": "https://api.openai.com/v1",
+      "base_url_pattern": "^https://api\\.openai\\.com/v1/?$",
+      "openai_base_url": null,
+      "api_type": "openai-completions",
+      "env": "OPENAI_API_KEY",
+      "openai": true,
+      "docs_url": "https://platform.openai.com/docs/quickstart",
+      "agents": [
+        "pi",
+        "claude_code",
+        "opencode",
+        "codex"
+      ],
+      "notes": "Data-sharing opt-in grants eligible orgs daily free tokens (see help.openai.com article 10306912).",
+      "added_at": "2026-07-29",
+      "added_from": "https://platform.openai.com/docs/quickstart"
     }
   ]
 }

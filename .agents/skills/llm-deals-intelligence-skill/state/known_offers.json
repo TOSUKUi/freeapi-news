@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-28T13:56:00+00:00",
+  "updated_at": "2026-07-28T14:51:00+00:00",
   "offers": [
     {
       "name": "NVIDIA NIM - Nemotron 3 Ultra",
@@ -52,6 +52,16 @@
       "model_id": "nvidia/nemotron-3-super-120b-a12b:free"
     },
     {
+      "name": "Gemma 4 31B IT (OpenRouter)",
+      "provider": "OpenRouter",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "google/gemma-4-31b-it:free"
+    },
+    {
       "name": "Ling-3.0-flash (OpenRouter)",
       "provider": "OpenRouter",
       "classification": "B_PERMANENT_FREE_TIER",
@@ -90,6 +100,16 @@
       "suspicion_score": 0,
       "base_url": "https://api.deepseek.com/v1",
       "model_id": "deepseek-v4-flash"
+    },
+    {
+      "name": "Gemma 4 26B A4B IT (OpenRouter)",
+      "provider": "OpenRouter",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "google/gemma-4-26b-a4b-it:free"
     }
   ]
 }

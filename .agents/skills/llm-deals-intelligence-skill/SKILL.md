@@ -143,9 +143,13 @@ For coding products, distinguish:
 - third-party client access
 - terms-of-service restrictions
 
-#### Verification leads (unverified — check before reporting)
+#### "No free tier" is not a pricing-page conclusion
 
-- OpenAI may grant free API token quotas in exchange for data-sharing consent (community claim: GPT-5.6 Luna and Terra around 10M free tokens, Sol around 1M). This is an unverified lead, not a fact: verify the exact quotas, models, and conditions on OpenAI's official pricing / platform document pages before reporting anything. If confirmed, report it as an `F_CONDITIONAL` offer in `conditional_credits` with the data-use condition stated explicitly.
+Never exclude a model with "no free tier" based on the pricing page alone. Free quotas can live outside the price list: data-sharing opt-ins, platform settings, help-center articles, launch campaigns. Before writing `No free tier` as an exclusion reason, you must also have checked the vendor's help center and any data-sharing / opt-in program pages, and the exclusion reason must state that you checked them.
+
+#### Known conditional programs (verify current state each run)
+
+- **OpenAI data-sharing complimentary tokens** (verified 2026-07-29 on https://help.openai.com/en/articles/10306912): eligible organizations that opt into data sharing get daily free tokens — `gpt-5.6-sol` in the 1M/day group (250K for usage tiers 1–2), `gpt-5.6-terra` and `gpt-5.6-luna` in the 10M/day group (2.5M for tiers 1–2), resetting 00:00 UTC, overage billed at normal rates. Eligibility varies per organization. Report as `F_CONDITIONAL` in `conditional_credits` with the data-use condition stated explicitly; re-check the help article each run for quota or model-list changes.
 
 ### Phase 3 — Community early-warning scan
 
@@ -304,14 +308,15 @@ Rank only candidates with `operational_confidence` of `HIGH` or `MEDIUM`.
 A free API is only valuable if the model itself is worth using. Do not rank offers whose best available model is clearly outdated or outperformed by freely available alternatives. Concretely:
 
 - If a frontier-class or near-frontier model is available for free elsewhere, do not rank a free tier whose best model is a generation or more behind (e.g. Llama 3.3 70B when Nemotron 3 Ultra 550B is free).
-- Small models (roughly under 30B dense or under 10B active parameters) are local-run territory; they are not worth featuring as API offers unless they are the best available option for a specific use case (e.g. a specialized coding model).
+- Models under roughly 30B total parameters are local-run territory: a Q4 build fits in ≤24GB and anyone can run them at home, so a free API of one is not news. Do not rank them — unless the benchmarks prove the model is genuinely competitive (tier S/A): a small model that performs like a much larger one is worth featuring. Judge MoE models by TOTAL parameters, not active: active parameters only bound compute per token, but local inference must load every expert — a 118B/8B MoE needs ~60GB and is NOT easy local run territory, while a 26B/4B model loads in ~15GB and is. Borderline 30–35B totals may be featured.
+- Every ranked offer must carry `total_parameters_b` and `active_parameters_b` (MoE; null active for dense) from the model card or official release material. If the vendor never publishes sizes (e.g. Google), set null and say so in `recent_activity` — but confirm the model is not a small model before ranking.
 - Embedding, reranking, and single-purpose models do not belong in the main ranking.
 - When a provider's free tier has multiple models, judge the tier by its best model, not its average.
 - Ask: "Would a knowledgeable developer choose this over the best free alternative?" If no, exclude or demote.
 
 ### Individual model cards (routers included)
 
-Emit each noteworthy free model as its own offer card, including models accessed through routers like OpenRouter. Do not aggregate a router's free models into one card. For each router-hosted card set `delivery_type: "router"`, the router as `provider`, the router endpoint as `base_url`, the specific model's `model_id`/`benchmark`/`benchmarks`, and `free_model_names: [model_id]`. Only create cards for models that pass the quality gate.
+Emit each noteworthy free model as its own offer card, including models accessed through routers like OpenRouter. Do not aggregate a router's free models into one card. For each router-hosted card set `delivery_type: "router"`, the router as `provider`, the router endpoint as `base_url`, the specific model's `model_id`/`benchmark`/`benchmarks`, and `free_model_names: [model_id]`. Put the router's per-model page (e.g. `https://openrouter.ai/{model_id}`) as `sources[0]` — the card's primary link must open the exact model's page, not a generic docs page. Only create cards for models that pass the quality gate.
 
 ### End dates
 
@@ -425,6 +430,7 @@ A run is successful only when:
 - providers missing from the registry were researched from official docs and added to the registry (with `added_from` provenance) before ranking
 - every ranked offer has a `free_allowance_rank` consistent with its documented limits
 - no ranked offer's free quota is app/web-chat-only while its API is paid, and no `effective_price_per_million` was zeroed from an app quota
+- no ranked offer is a sub-30B total-parameter model (local-run territory), and parameter sizes were researched from model cards
 - no ranked offer lost a benchmark score that exists in `state/benchmarks.json`, and every new score was persisted there
 - no `base_url` or `model_id` was written from memory
 - the final report is in Japanese

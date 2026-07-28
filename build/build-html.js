@@ -408,7 +408,17 @@ function offerCard(o, index, generatedAt, tz) {
         ${connectionAccordion(o)}
 
         <div class="offer-links">
-          ${o.sources && o.sources[0] ? `<a class="btn btn-primary" href="${esc(o.sources[0])}" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>` : ''}
+          ${(() => {
+            // Router offers link to the model page (registry template), not a
+            // generic docs page — the reader wants the exact model's page.
+            const cap = getCapability(o);
+            const modelPage = cap && cap.model_page_template && o.model_id
+              ? cap.model_page_template.replace('{model_id}', o.model_id)
+              : null;
+            const href = modelPage || (o.sources && o.sources[0]);
+            const label = modelPage ? 'モデルページ' : '公式サイト';
+            return href ? `<a class="btn btn-primary" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${label} <span aria-hidden="true">↗</span></a>` : '';
+          })()}
         </div>
       </div>
     </div>

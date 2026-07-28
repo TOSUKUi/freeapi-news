@@ -543,6 +543,18 @@
             null
           ]
         },
+        "total_parameters_b": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "active_parameters_b": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "free_model_names": {
           "type": "array",
           "items": {
