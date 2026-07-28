@@ -84,8 +84,12 @@ async function main() {
   // State gate: daily regeneration must never lose verified benchmark data.
   const stateResult = validateBenchmarkState(report);
 
-  const gateErrors = [...endpointResult.errors, ...citationResult.errors, ...stateResult.errors];
-  const gateWarnings = [...endpointResult.warnings, ...citationResult.warnings, ...stateResult.warnings];
+  // Free-claim gate: a paid API dressed up as free (e.g. free app quota
+  // misreported as a free API) must not reach the ranking.
+  const freeClaimResult = validateFreeClaim(report);
+
+  const gateErrors = [...endpointResult.errors, ...citationResult.errors, ...stateResult.errors, ...freeClaimResult.errors];
+  const gateWarnings = [...endpointResult.warnings, ...citationResult.warnings, ...stateResult.warnings, ...freeClaimResult.warnings];
 
   if (valid && gateErrors.length === 0) {
     console.log('✅ Report is valid against the schema.');
@@ -239,6 +243,34 @@ function citationSupports(html, baseUrl) {
   } catch {
     return false;
   }
+}
+
+// ── Free-claim gate ───────────────────────────────────────────────
+// The site ranks free/discounted API access. A free consumer app does not
+// make the API free. Hard-fail ranked offers whose own free_limits text
+// admits the API is paid; warn when the free quota is app-scoped so a
+// human (or the next run) checks the pricing page.
+function validateFreeClaim(report) {
+  const errors = [];
+  const warnings = [];
+  const paidApi = /\bapi is paid\b|\bpaid api\b|\bapi access is paid\b|\bapi costs \$[1-9]/i;
+  const appScoped = /\bfree\b[\s\S]{0,60}\bapp\b|\bapp\b[\s\S]{0,60}\bfree\b/i;
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) continue;
+    const label = o.name || o.provider || 'unnamed offer';
+    const limits = `${o.free_limits || ''} ${o.rate_limits || ''}`;
+    if (paidApi.test(limits)) {
+      errors.push(
+        `"${label}": free_limits says the API is paid ("${(o.free_limits || '').slice(0, 100)}"). ` +
+        `A free app/web quota is NOT a free API. Exclude this offer (ranking_eligible: false) with the real API price.`
+      );
+      continue;
+    }
+    if (appScoped.test(limits)) {
+      warnings.push(`"${label}": free quota mentions an app — confirm on the pricing page that the API itself is free, not just the app.`);
+    }
+  }
+  return { errors, warnings };
 }
 
 // ── Benchmark state gate ──────────────────────────────────────────

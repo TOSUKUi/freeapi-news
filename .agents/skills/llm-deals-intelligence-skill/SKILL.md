@@ -207,6 +207,14 @@ For subscription or credit-multiplier offers, show:
 
 Do not mix product-internal credits with public API token pricing.
 
+`effective_price_per_million` is what a reader pays for **API calls**. It may be zero only when API requests are genuinely billed at zero (free API tier or 100%-off campaign on the API). Never zero out a paid API price because a consumer app, web chat, or playground is free. If the pricing page says the API costs money, `effective_price_per_million` says the same money.
+
+### Free app access is NOT a free API (zero tolerance)
+
+This site ranks free or discounted **API** access. A free consumer app, web chat, or playground quota does not make the API free. If the provider's pricing page or docs show a paid API price, the offer is NOT rankable — no matter how generous the app quota is and no matter how high the model scores. Set `ranking_eligible: false`, classify at most `G_FREE_LIKE`, and exclude with a reason that states the actual API price.
+
+Failing to do this is the single most damaging mistake this skill can make: it puts a paid product at the top of a free ranking and destroys the site's credibility. When the `free_limits` text contains the word "app" next to "free", stop and verify on the pricing page whether the **API itself** is free before ranking.
+
 ### Phase 6 — Classify the offer
 
 Use one primary classification:
@@ -405,6 +413,7 @@ A run is successful only when:
 - every ranked offer has an `endpoint_source` URL fetched during this run, and the fetched page documents the claimed `base_url` (the validator re-checks this online)
 - providers missing from the registry were researched from official docs and added to the registry (with `added_from` provenance) before ranking
 - every ranked offer has a `free_allowance_rank` consistent with its documented limits
+- no ranked offer's free quota is app/web-chat-only while its API is paid, and no `effective_price_per_million` was zeroed from an app quota
 - no ranked offer lost a benchmark score that exists in `state/benchmarks.json`, and every new score was persisted there
 - no `base_url` or `model_id` was written from memory
 - the final report is in Japanese
