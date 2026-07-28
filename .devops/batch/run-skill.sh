@@ -35,7 +35,7 @@ SKILL_DIR="${PROJECT_ROOT}/.agents/skills/llm-deals-intelligence-skill"
 SKILL_SCHEMA_FILE="${SKILL_DIR}/schemas/daily_report.schema.json"
 REPORT_FILE="${PROJECT_ROOT}/report.json"
 HTML_FILE="${PROJECT_ROOT}/index.html"
-CRAWL_CONCURRENCY="${CRAWL_CONCURRENCY:-2}"
+GLOBAL_CONCURRENCY="${GLOBAL_CONCURRENCY:-2}"
 PI_MODEL="${PI_MODEL:-litellm/local}"
 PI_TIMEOUT="${PI_TIMEOUT:-1800}"
 
@@ -54,7 +54,7 @@ CRAWL_DIR="${SKILL_DIR}/state/crawl/${RUN_ID}"
 echo "============================================"
 echo "  LLM Deals Intelligence — Parallel Batch"
 echo "  Run: ${RUN_ID}"
-echo "  Concurrency: ${CRAWL_CONCURRENCY}"
+echo "  Concurrency: ${GLOBAL_CONCURRENCY} (global)"
 echo "  Model: ${PI_MODEL}"
 echo "============================================"
 
@@ -70,6 +70,13 @@ cp "${PROJECT_ROOT}/build/provider-registry.json" "${CRAWL_DIR}/snapshots/" 2>/d
 echo ""
 echo "[0/6] Building manifest..."
 node "${SCRIPT_DIR}/build-manifest.js" "${CRAWL_DIR}"
+
+# ── Helper: throttle to GLOBAL_CONCURRENCY ───────────────────────
+throttle() {
+  while [[ $(jobs -rp | wc -l) -ge "${GLOBAL_CONCURRENCY}" ]]; do
+    wait -n 2>/dev/null || true
+  done
+}
 
 # ── Helper: run a pi worker ──────────────────────────────────────
 run_worker() {
@@ -109,8 +116,9 @@ REFRESH_TASKS=$(node -e "
   for (const t of m.tasks.filter(t => t.kind === 'refresh')) console.log(JSON.stringify(t));
 ")
 
-# Launch discovery.
+# Launch discovery (counts toward global concurrency).
 if [[ -n "${DISCOVERY_TASK}" ]]; then
+  throttle
   run_worker "discovery" \
     "You are the discovery worker. Read your task from ${CRAWL_DIR}/manifest.json (task_id: discovery). Read snapshots from ${CRAWL_DIR}/snapshots/. Search for newly announced LLMs, previews, betas, API launches, pricing changes from the last 24h/72h/30d. For each new model, collect benchmark data (check snapshots/benchmarks.json first, then HuggingFace model cards, vendor blogs, X posts). Write your output to ${CRAWL_DIR}/discovery/task-discovery.json.tmp then rename to task-discovery.json. Use the crawl-worker.md output schema. Do NOT edit any shared state files." \
     "${CRAWL_DIR}/discovery/task-discovery.json" &
@@ -126,11 +134,7 @@ while IFS= read -r task_json; do
   OUTPUT=$(echo "${task_json}" | node -e "process.stdin.on('data',d=>console.log(JSON.parse(d).output))")
   KNOWN_NAMES=$(echo "${task_json}" | node -e "process.stdin.on('data',d=>console.log((JSON.parse(d).known_offers||[]).join(', ')))")
 
-  # Wait if we have too many background jobs.
-  while [[ $(jobs -rp | wc -l) -ge $((CRAWL_CONCURRENCY + 1)) ]]; do
-    wait -n 2>/dev/null || true
-  done
-
+  throttle
   run_worker "${TASK_ID}" \
     "You are a refresh worker. Read your task from ${CRAWL_DIR}/manifest.json (task_id: ${TASK_ID}). Provider: ${PROVIDER_KEY}. Known offers: ${KNOWN_NAMES}. Read snapshots from ${CRAWL_DIR}/snapshots/ and the registry from build/provider-registry.json. Re-verify the known offers: fetch the docs page, confirm base_url is unchanged, confirm the model is still available, check if free quota or pricing changed. If nothing changed, copy the known offer data with updated last_verified. Write to ${CRAWL_DIR}/${OUTPUT}.tmp then rename. Use the crawl-worker.md output schema. Do NOT edit shared state files." \
     "${CRAWL_DIR}/${OUTPUT}" &
@@ -143,7 +147,7 @@ echo "  Step 1 complete."
 
 # ── Step 2: Crawl pool (parallel, manifest-driven) ───────────────
 echo ""
-echo "[2/6] Crawl pool (parallel, concurrency=${CRAWL_CONCURRENCY})..."
+echo "[2/6] Crawl pool (parallel, global concurrency=${GLOBAL_CONCURRENCY})..."
 
 CRAWL_TASKS=$(node -e "
   const m = require('${CRAWL_DIR}/manifest.json');
@@ -181,11 +185,7 @@ while IFS= read -r task_json; do
   PROVIDER_KEY=$(echo "${task_json}" | node -e "process.stdin.on('data',d=>console.log(JSON.parse(d).provider_key||''))")
   OUTPUT=$(echo "${task_json}" | node -e "process.stdin.on('data',d=>console.log(JSON.parse(d).output))")
 
-  # Throttle: wait if too many background jobs.
-  while [[ $(jobs -rp | wc -l) -ge "${CRAWL_CONCURRENCY}" ]]; do
-    wait -n 2>/dev/null || true
-  done
-
+  throttle
   run_worker "${TASK_ID}" \
     "You are a crawl worker. Read your task from ${CRAWL_DIR}/manifest.json (task_id: ${TASK_ID}). Provider: ${PROVIDER_KEY}. Read snapshots from ${CRAWL_DIR}/snapshots/ and the registry from build/provider-registry.json. If discovery found new models for this provider, read ${DISCOVERY_FILE}. Investigate free/discounted API offers: fetch pricing page, model catalog, API docs. For each candidate, verify endpoint, model ID, limits. Collect benchmarks (check snapshots/benchmarks.json first). Apply the quality gate. Write to ${CRAWL_DIR}/${OUTPUT}.tmp then rename. Use the crawl-worker.md output schema. Do NOT edit shared state files. Process one provider at a time; write after each provider to avoid context overflow." \
     "${CRAWL_DIR}/${OUTPUT}" &
@@ -298,7 +298,7 @@ git add report.json index.html og-image.png og-image.html \
 if git diff --cached --quiet; then
   echo "  No changes to deploy."
 else
-  git commit -q -m "chore: daily report ${RUN_ID} (parallel crawl, ${CRAWL_CONCURRENCY} workers)"
+  git commit -q -m "chore: daily report ${RUN_ID} (parallel crawl, concurrency=${GLOBAL_CONCURRENCY})"
   git push origin main
   echo "  ✅ Deployed."
 fi

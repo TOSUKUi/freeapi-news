@@ -97,7 +97,7 @@ if (orTask && orTask.kind === 'refresh') {
 const manifest = {
   run_id: path.basename(crawlDir),
   created_at: new Date().toISOString(),
-  concurrency: parseInt(process.env.CRAWL_CONCURRENCY || '2', 10),
+  concurrency: parseInt(process.env.GLOBAL_CONCURRENCY || '2', 10),
   provider_count: (registry.providers || []).length,
   known_offer_count: (known.offers || []).length,
   benchmark_model_count: (benchmarks.models || []).length,
