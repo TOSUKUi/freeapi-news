@@ -48,6 +48,7 @@ async function main() {
   const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
 
   // ── Schema validation (structural — always hard fail) ──────────
+  const fixReport = []; // structured fix entries for the LLM
   let schemaValid = true;
   let schemaErrors = [];
   try {
@@ -64,13 +65,58 @@ async function main() {
   }
 
   if (!schemaValid) {
-    console.error('❌ Schema validation failed (structural — cannot auto-fix):');
-    for (const err of schemaErrors) console.error(`   - ${err.instancePath || 'root'}: ${err.message}`);
-    process.exit(1);
+    // Classify schema errors: offer-level violations (inside an offer array)
+    // can be auto-downgraded; top-level structural errors cannot.
+    const offerArrayPattern = /^\/(ranked_offers|conditional_credits|caution_offers)\/(\d+)/;
+    const topLevelErrors = [];
+    const offerErrors = new Map(); // "arrayName/index" → [errors]
+
+    for (const err of schemaErrors) {
+      const m = (err.instancePath || '').match(offerArrayPattern);
+      if (m) {
+        const key = `${m[1]}/${m[2]}`;
+        if (!offerErrors.has(key)) offerErrors.set(key, []);
+        offerErrors.get(key).push(err);
+      } else {
+        topLevelErrors.push(err);
+      }
+    }
+
+    // Top-level structural errors always hard-fail.
+    if (topLevelErrors.length > 0) {
+      console.error('❌ Schema validation failed (top-level structural — cannot auto-fix):');
+      for (const err of topLevelErrors) console.error(`   - ${err.instancePath || 'root'}: ${err.message}`);
+      process.exit(1);
+    }
+
+    // Offer-level schema violations → push to fixReport for auto-downgrade.
+    if (offerErrors.size > 0) {
+      for (const [key, errs] of offerErrors) {
+        const [arrName, idxStr] = key.split('/');
+        const arr = report[arrName] || [];
+        const o = arr[parseInt(idxStr, 10)];
+        if (!o) continue;
+        const label = o.name || o.provider || `${arrName}[${idxStr}]`;
+        const details = errs.map(e => `${e.instancePath}: ${e.message}`).join('; ');
+        fixReport.push({
+          offer: label, gate: 'schema',
+          field: errs[0].instancePath,
+          current: 'schema violation',
+          action: `fix schema violations: ${details}`,
+          source_hint: 'schema: .agents/skills/llm-deals-intelligence-skill/schemas/daily_report.schema.json',
+          downgrade: true,
+          source_array: arrName,
+        });
+      }
+      if (!FIX_MODE) {
+        console.error('\n❌ Schema violations in offers (use --fix to auto-downgrade):');
+        for (const f of fixReport) console.error(`   - [${f.gate}] ${f.offer}: ${f.action}`);
+        process.exit(1);
+      }
+    }
   }
 
   // ── Mechanical gates ───────────────────────────────────────────
-  const fixReport = []; // structured fix entries for the LLM
   const providers = loadRegistry();
 
   runEndpointGate(report, providers, fixReport);
@@ -93,9 +139,15 @@ async function main() {
   if (fixReport.length > 0) {
     const json = JSON.stringify(fixReport, null, 2);
     if (FIX_MODE) {
-      console.warn('\n📋 Fix report (for next collection run):\n' + json);
+      console.warn('\n📋 Fix report (for next collection run):');
+      console.warn('__FIX_REPORT_START__');
+      console.warn(json);
+      console.warn('__FIX_REPORT_END__');
     } else {
-      console.error('\n❌ Gate violations found:\n' + json);
+      console.error('\n❌ Gate violations found:');
+      console.error('__FIX_REPORT_START__');
+      console.error(json);
+      console.error('__FIX_REPORT_END__');
       process.exit(1);
     }
   }
@@ -336,18 +388,24 @@ function applyDowngrades(report, fixReport) {
   }
 
   report.excluded_offers = report.excluded_offers || [];
-  const remaining = [];
-  for (const o of report.ranked_offers || []) {
-    const label = o.name || o.provider || '?';
-    if (downgradeOffers.has(label)) {
-      o.ranking_eligible = false;
-      o.exclusion_reason = reasons.get(label).join(' | ');
-      report.excluded_offers.push({ name: label, reason: o.exclusion_reason });
-    } else {
-      remaining.push(o);
+
+  // Walk all offer arrays (ranked_offers, conditional_credits, caution_offers).
+  for (const arrName of ['ranked_offers', 'conditional_credits', 'caution_offers']) {
+    const arr = report[arrName];
+    if (!Array.isArray(arr)) continue;
+    const remaining = [];
+    for (const o of arr) {
+      const label = o.name || o.provider || '?';
+      if (downgradeOffers.has(label)) {
+        o.ranking_eligible = false;
+        o.exclusion_reason = reasons.get(label).join(' | ');
+        report.excluded_offers.push({ name: label, reason: o.exclusion_reason });
+      } else {
+        remaining.push(o);
+      }
     }
+    report[arrName] = remaining;
   }
-  report.ranked_offers = remaining;
 }
 
 // ══════════════════════════════════════════════════════════════════

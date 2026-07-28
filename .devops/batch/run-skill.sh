@@ -114,14 +114,45 @@ else
   node "${SCRIPT_DIR}/collect-fallback.js" "${REPORT_FILE}"
 fi
 
-# ── Step 3: Validate + auto-fix the report ────────────────────────
-# Schema check (hard fail if structurally broken). Gate violations =
-# auto-downgrade offending offers to excluded_offers, rewrite report.json,
-# and emit a structured fix-report on stderr for the next run. The batch
-# continues with the cleaned report — no good offer is blocked by a bad one.
+# ── Step 3: Validate → fix loop → fallback downgrade ──────────────
+# 1. validate (no --fix): returns structured fix-report on stderr.
+# 2. If errors: pi reads the fix-report and patches report.json (1 attempt).
+# 3. Re-validate. If still errors: --fix auto-downgrades and continues.
+# No good offer is ever blocked by a bad one.
 echo ""
-echo "Validating + auto-fixing report (schema + gates + live citation re-check)..."
-node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" --fix
+echo "[validate 1/3] Checking report (schema + gates + live citation re-check)..."
+FIX_REPORT_FILE="$(mktemp /tmp/fix-report-XXXXXX.json)"
+
+VALIDATE_STDERR="$(mktemp /tmp/validate-stderr-XXXXXX)"
+
+if node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" 2>"${VALIDATE_STDERR}"; then
+  echo "[validate 1/3] ✅ All checks passed."
+else
+  # Extract the JSON fix-report between markers.
+  sed -n '/__FIX_REPORT_START__/,/__FIX_REPORT_END__/{ /__FIX_REPORT/d; p; }' "${VALIDATE_STDERR}" > "${FIX_REPORT_FILE}"
+  echo "[validate 1/3] ❌ Violations found. Asking pi to fix..."
+  if command -v pi &>/dev/null && [[ -s "${FIX_REPORT_FILE}" ]]; then
+    timeout 300 pi \
+      --skill "${SKILL_DIR}" \
+      --model "${PI_MODEL}" \
+      --approve \
+      --no-session \
+      -p "The validator found violations in ${REPORT_FILE}. Read the fix-report at ${FIX_REPORT_FILE} (JSON array of {offer, gate, field, current, action, source_hint}). For each entry: fix the specific field in report.json using the action and source_hint. Do NOT remove offers from the report — fix the data in place. After fixing, save report.json." \
+      2>/dev/null || true
+    echo "[validate 2/3] Re-validating after pi fix..."
+    if node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" 2>"${VALIDATE_STDERR}"; then
+      echo "[validate 2/3] ✅ Fixed successfully."
+    else
+      echo "[validate 2/3] ❌ Still has violations. Auto-downgrading remaining..."
+      node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" --fix 2>/dev/null
+    fi
+  else
+    echo "[validate 1/3] pi not available or no fix-report. Auto-downgrading..."
+    node "${PROJECT_ROOT}/build/validate-report.js" "${REPORT_FILE}" "${SKILL_SCHEMA_FILE}" --fix 2>/dev/null
+  fi
+fi
+rm -f "${VALIDATE_STDERR}"
+rm -f "${FIX_REPORT_FILE}"
 
 # ── Step 4: Update state ─────────────────────────────────────────
 echo ""

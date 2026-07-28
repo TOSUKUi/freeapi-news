@@ -407,7 +407,10 @@
           ]
         },
         "normal_price_per_million": {
-          "type": "object",
+          "type": [
+            "object",
+            "null"
+          ],
           "properties": {
             "input": {
               "type": [
@@ -436,7 +439,10 @@
           }
         },
         "effective_price_per_million": {
-          "type": "object",
+          "type": [
+            "object",
+            "null"
+          ],
           "properties": {
             "input": {
               "type": [
