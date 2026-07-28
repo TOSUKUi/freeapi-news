@@ -1020,7 +1020,135 @@ codex --profile openrouter</code></pre>
           <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
           <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
-        <h3 id="offer-4" class="offer-name">GLM 5.2 (Cloudflare Workers AI無料枠)</h3>
+        <h3 id="offer-4" class="offer-name">Ling-3.0-flash (OpenRouter)</h3>
+        <p class="offer-meta">by <strong>OpenRouter</strong> ・ Ling-3.0-flash</p>
+
+        <div class="offer-stats">
+          <div class="stat">
+      <div class="stat-label">ベンチマーク</div>
+      <div class="stat-value"><span class="bench-tier tier-a">A</span><span class="bench-score">57%</span></div>
+      <div class="stat-sub">Terminal Bench 2.1</div>
+    </div>
+          <div class="stat">
+            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
+            <div class="stat-value"><span class="price price-free">$0</span></div>
+            <div class="stat-sub">入力 / 出力</div>
+          </div>
+          <div class="stat">
+      <div class="stat-label">運用信頼度</div>
+      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
+      <div class="stat-sub">Verified live 2026-07-28 via costgoat.com listing | Benchmarks incl. Terminal-Bench 2.1 = 57 read from vendor X post (Ling-3.0-flash RC3 Thinking), 2026-07-29</div>
+    </div>
+        </div>
+
+        <div class="offer-ids">
+          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
+          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">inclusionai/ling-3.0-flash:free</code></div>
+          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">20 requests/minute, 200 requests/day per model</span></div>
+          
+          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">20 RPM, 200 RPD per model</span></div>
+          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">Unknown</span></div>
+        </div>
+
+        <details class="bench-details">
+      <summary class="bench-summary">
+        <span class="bench-summary-label">ベンチマーク詳細</span>
+        <span class="bench-summary-count">14件</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="bench-list"><div class="bench-row"><span class="bench-name">SWE-Bench Pro</span><span class="bench-val">56.63%</span></div><div class="bench-row"><span class="bench-name">MCP-Atlas</span><span class="bench-val">65.45%</span></div><div class="bench-row"><span class="bench-name">SkillsBench</span><span class="bench-val">44.83%</span></div><div class="bench-row"><span class="bench-name">WebSearch</span><span class="bench-val">72.3%</span></div><div class="bench-row"><span class="bench-name">BrowseComp</span><span class="bench-val">70.33%</span></div><div class="bench-row"><span class="bench-name">TFBench</span><span class="bench-val">74.18%</span></div><div class="bench-row"><span class="bench-name">SysBench</span><span class="bench-val">93.63%</span></div><div class="bench-row"><span class="bench-name">SWE-Bench Multilingual</span><span class="bench-val">72.44%</span></div><div class="bench-row"><span class="bench-name">Terminal Bench 2.1</span><span class="bench-val">57%</span></div><div class="bench-row"><span class="bench-name">Tau3-banking-AA</span><span class="bench-val">28%</span></div><div class="bench-row"><span class="bench-name">WideSearch</span><span class="bench-val">73.63%</span></div><div class="bench-row"><span class="bench-name">IFBench</span><span class="bench-val">74.49%</span></div><div class="bench-row"><span class="bench-name">MRCR-128K</span><span class="bench-val">90.78%</span></div><div class="bench-row"><span class="bench-name">Multi-IF</span><span class="bench-val">87.65%</span></div></div>
+    </details>
+        <details class="acc">
+      <summary class="acc-summary" aria-label="接続方法を表示">
+        <span class="acc-title">
+          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
+          接続方法
+        </span>
+        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="acc-body">
+        <p class="acc-note">テンプレート版本 2026.07.2 ・ エンドポイントは provider-registry.json (公式ドキュメント由来) で検証済み。Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
+        <div class="agent-grid"><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code>// ~/.pi/agent/models.json にプロバイダを登録
+{
+  &quot;providers&quot;: {
+    &quot;openrouter&quot;: {
+      &quot;baseUrl&quot;: &quot;https://openrouter.ai/api/v1&quot;,
+      &quot;api&quot;: &quot;openai-completions&quot;,
+      &quot;apiKey&quot;: &quot;$OPENROUTER_API_KEY&quot;,
+      &quot;models&quot;: [
+        { &quot;id&quot;: &quot;inclusionai/ling-3.0-flash:free&quot;, &quot;reasoning&quot;: false }
+      ]
+    }
+  }
+}
+
+export OPENROUTER_API_KEY=xxxxxxxxxxxxxxxx
+
+# 起動 (または .pi/settings.json の defaultProvider/defaultModel)
+pi --model openrouter/inclusionai/ling-3.0-flash:free</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># Claude Code は OpenAI 互換 API に直接接続できません。
+# Anthropic 規約に変換するプロキシ (LiteLLM, claude-code-router 等) 経由で接続します。
+# プロキシの上流を https://openrouter.ai/api/v1 ・ モデル inclusionai/ling-3.0-flash:free に設定してから:
+export ANTHROPIC_BASE_URL=http://localhost:4000
+export ANTHROPIC_AUTH_TOKEN=xxxxxxxxxxxxxxxx
+
+claude --model inclusionai/ling-3.0-flash:free</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code>// opencode.json
+{
+  &quot;provider&quot;: {
+    &quot;openrouter&quot;: {
+      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
+      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://openrouter.ai/api/v1&quot; },
+      &quot;models&quot;: { &quot;inclusionai/ling-3.0-flash:free&quot;: {} }
+    }
+  }
+}
+
+# APIキー登録 (無料キーで可)
+# opencode 起動後 → /connect openrouter → キーを貼付</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># ~/.codex/config.toml
+[model_providers.openrouter]
+name = &quot;OpenRouter&quot;
+base_url = &quot;https://openrouter.ai/api/v1&quot;
+env_key = &quot;OPENROUTER_API_KEY&quot;
+wire_api = &quot;chat&quot;
+
+[profiles.openrouter]
+provider = &quot;openrouter&quot;
+model = &quot;inclusionai/ling-3.0-flash:free&quot;
+
+# 起動
+codex --profile openrouter</code></pre>
+      </div></div>
+      </div>
+    </details>
+
+        <div class="offer-links">
+          <a class="btn btn-primary" href="https://openrouter.ai/inclusionai/ling-3.0-flash:free" target="_blank" rel="noopener noreferrer">モデルページ <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </article>
+<article class="offer-card reveal tier-accent-a" aria-labelledby="offer-5">
+    <div class="card-accent" aria-hidden="true"></div>
+    <span class="rank-watermark" aria-hidden="true">06</span>
+    <div class="offer-inner">
+      <div class="offer-main">
+        <div class="offer-badges">
+          <span class="badge badge-b">B. 恒久無料枠</span>
+          <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
+        </div>
+        <h3 id="offer-5" class="offer-name">GLM 5.2 (Cloudflare Workers AI無料枠)</h3>
         <p class="offer-meta">by <strong>Cloudflare</strong> ・ GLM 5.2</p>
 
         <div class="offer-stats">
@@ -1138,9 +1266,9 @@ codex --profile cloudflare</code></pre>
       </div>
     </div>
   </article>
-<article class="offer-card reveal tier-accent-b" aria-labelledby="offer-5">
+<article class="offer-card reveal tier-accent-b" aria-labelledby="offer-6">
     <div class="card-accent" aria-hidden="true"></div>
-    <span class="rank-watermark" aria-hidden="true">06</span>
+    <span class="rank-watermark" aria-hidden="true">07</span>
     <div class="offer-inner">
       <div class="offer-main">
         <div class="offer-badges">
@@ -1148,7 +1276,7 @@ codex --profile cloudflare</code></pre>
           <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
           <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
-        <h3 id="offer-5" class="offer-name">Gemma 4 31B IT (OpenRouter)</h3>
+        <h3 id="offer-6" class="offer-name">Gemma 4 31B IT (OpenRouter)</h3>
         <p class="offer-meta">by <strong>OpenRouter</strong> ・ Gemma 4 31B IT</p>
 
         <div class="offer-stats">
@@ -1266,9 +1394,9 @@ codex --profile openrouter</code></pre>
       </div>
     </div>
   </article>
-<article class="offer-card reveal tier-accent-b" aria-labelledby="offer-6">
+<article class="offer-card reveal tier-accent-b" aria-labelledby="offer-7">
     <div class="card-accent" aria-hidden="true"></div>
-    <span class="rank-watermark" aria-hidden="true">07</span>
+    <span class="rank-watermark" aria-hidden="true">08</span>
     <div class="offer-inner">
       <div class="offer-main">
         <div class="offer-badges">
@@ -1276,7 +1404,7 @@ codex --profile openrouter</code></pre>
           <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
           <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
-        <h3 id="offer-6" class="offer-name">Nemotron 3 Super (OpenRouter)</h3>
+        <h3 id="offer-7" class="offer-name">Nemotron 3 Super (OpenRouter)</h3>
         <p class="offer-meta">by <strong>OpenRouter</strong> ・ Nemotron 3 Super 120B-A12B</p>
 
         <div class="offer-stats">
@@ -1394,9 +1522,9 @@ codex --profile openrouter</code></pre>
       </div>
     </div>
   </article>
-<article class="offer-card reveal tier-accent-b" aria-labelledby="offer-7">
+<article class="offer-card reveal tier-accent-b" aria-labelledby="offer-8">
     <div class="card-accent" aria-hidden="true"></div>
-    <span class="rank-watermark" aria-hidden="true">08</span>
+    <span class="rank-watermark" aria-hidden="true">09</span>
     <div class="offer-inner">
       <div class="offer-main">
         <div class="offer-badges">
@@ -1404,7 +1532,7 @@ codex --profile openrouter</code></pre>
           <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
           <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
-        <h3 id="offer-7" class="offer-name">NVIDIA NIM - Nemotron 3 Super</h3>
+        <h3 id="offer-8" class="offer-name">NVIDIA NIM - Nemotron 3 Super</h3>
         <p class="offer-meta">by <strong>NVIDIA</strong> ・ Nemotron 3 Super 120B-A12B</p>
 
         <div class="offer-stats">
@@ -1518,134 +1646,6 @@ codex --profile nvidia</code></pre>
 
         <div class="offer-links">
           <a class="btn btn-primary" href="https://docs.api.nvidia.com/nim/reference/llm-apis" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-    </div>
-  </article>
-<article class="offer-card reveal tier-accent-b" aria-labelledby="offer-8">
-    <div class="card-accent" aria-hidden="true"></div>
-    <span class="rank-watermark" aria-hidden="true">09</span>
-    <div class="offer-inner">
-      <div class="offer-main">
-        <div class="offer-badges">
-          <span class="badge badge-b">B. 恒久無料枠</span>
-          <span class="tier tier-b" title="性能ティア"><span class="tier-letter">B</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
-        </div>
-        <h3 id="offer-8" class="offer-name">Ling-3.0-flash (OpenRouter)</h3>
-        <p class="offer-meta">by <strong>OpenRouter</strong> ・ Ling-3.0-flash</p>
-
-        <div class="offer-stats">
-          <div class="stat">
-      <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-b">B</span><span class="bench-score">52.8%</span></div>
-      <div class="stat-sub">SWE-Bench Pro</div>
-    </div>
-          <div class="stat">
-            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price price-free">$0</span></div>
-            <div class="stat-sub">入力 / 出力</div>
-          </div>
-          <div class="stat">
-      <div class="stat-label">運用信頼度</div>
-      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">Verified live 2026-07-28 via costgoat.com listing</div>
-    </div>
-        </div>
-
-        <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">inclusionai/ling-3.0-flash:free</code></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">20 requests/minute, 200 requests/day per model</span></div>
-          
-          <div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">20 RPM, 200 RPD per model</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">Unknown</span></div>
-        </div>
-
-        <details class="bench-details">
-      <summary class="bench-summary">
-        <span class="bench-summary-label">ベンチマーク詳細</span>
-        <span class="bench-summary-count">7件</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="bench-list"><div class="bench-row"><span class="bench-name">SWE-Bench Pro</span><span class="bench-val">52.8%</span></div><div class="bench-row"><span class="bench-name">MCP-Atlas</span><span class="bench-val">67%</span></div><div class="bench-row"><span class="bench-name">SkillsBench</span><span class="bench-val">52.94%</span></div><div class="bench-row"><span class="bench-name">WebSearch</span><span class="bench-val">72.3%</span></div><div class="bench-row"><span class="bench-name">BrowseComp</span><span class="bench-val">70.35%</span></div><div class="bench-row"><span class="bench-name">TFBench</span><span class="bench-val">74.18%</span></div><div class="bench-row"><span class="bench-name">SysBench</span><span class="bench-val">85.61%</span></div></div>
-    </details>
-        <details class="acc">
-      <summary class="acc-summary" aria-label="接続方法を表示">
-        <span class="acc-title">
-          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
-          接続方法
-        </span>
-        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="acc-body">
-        <p class="acc-note">テンプレート版本 2026.07.2 ・ エンドポイントは provider-registry.json (公式ドキュメント由来) で検証済み。Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
-        <div class="agent-grid"><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// ~/.pi/agent/models.json にプロバイダを登録
-{
-  &quot;providers&quot;: {
-    &quot;openrouter&quot;: {
-      &quot;baseUrl&quot;: &quot;https://openrouter.ai/api/v1&quot;,
-      &quot;api&quot;: &quot;openai-completions&quot;,
-      &quot;apiKey&quot;: &quot;$OPENROUTER_API_KEY&quot;,
-      &quot;models&quot;: [
-        { &quot;id&quot;: &quot;inclusionai/ling-3.0-flash:free&quot;, &quot;reasoning&quot;: false }
-      ]
-    }
-  }
-}
-
-export OPENROUTER_API_KEY=xxxxxxxxxxxxxxxx
-
-# 起動 (または .pi/settings.json の defaultProvider/defaultModel)
-pi --model openrouter/inclusionai/ling-3.0-flash:free</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># Claude Code は OpenAI 互換 API に直接接続できません。
-# Anthropic 規約に変換するプロキシ (LiteLLM, claude-code-router 等) 経由で接続します。
-# プロキシの上流を https://openrouter.ai/api/v1 ・ モデル inclusionai/ling-3.0-flash:free に設定してから:
-export ANTHROPIC_BASE_URL=http://localhost:4000
-export ANTHROPIC_AUTH_TOKEN=xxxxxxxxxxxxxxxx
-
-claude --model inclusionai/ling-3.0-flash:free</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// opencode.json
-{
-  &quot;provider&quot;: {
-    &quot;openrouter&quot;: {
-      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
-      &quot;options&quot;: { &quot;baseURL&quot;: &quot;https://openrouter.ai/api/v1&quot; },
-      &quot;models&quot;: { &quot;inclusionai/ling-3.0-flash:free&quot;: {} }
-    }
-  }
-}
-
-# APIキー登録 (無料キーで可)
-# opencode 起動後 → /connect openrouter → キーを貼付</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.codex/config.toml
-[model_providers.openrouter]
-name = &quot;OpenRouter&quot;
-base_url = &quot;https://openrouter.ai/api/v1&quot;
-env_key = &quot;OPENROUTER_API_KEY&quot;
-wire_api = &quot;chat&quot;
-
-[profiles.openrouter]
-provider = &quot;openrouter&quot;
-model = &quot;inclusionai/ling-3.0-flash:free&quot;
-
-# 起動
-codex --profile openrouter</code></pre>
-      </div></div>
-      </div>
-    </details>
-
-        <div class="offer-links">
-          <a class="btn btn-primary" href="https://openrouter.ai/inclusionai/ling-3.0-flash:free" target="_blank" rel="noopener noreferrer">モデルページ <span aria-hidden="true">↗</span></a>
         </div>
       </div>
     </div>
