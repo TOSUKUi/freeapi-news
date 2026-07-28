@@ -1,6 +1,26 @@
 {
-  "updated_at": "2026-07-28T14:51:00+00:00",
+  "updated_at": "2026-07-29T14:00:00+00:00",
   "offers": [
+    {
+      "name": "Google AI Studio - Gemini 3.6 Flash (無料枠)",
+      "provider": "Google",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "model_id": "gemini-3.6-flash"
+    },
+    {
+      "name": "Google AI Studio - Gemini 2.5 Pro (無料枠)",
+      "provider": "Google",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "model_id": "gemini-2.5-pro"
+    },
     {
       "name": "NVIDIA NIM - Nemotron 3 Ultra",
       "provider": "NVIDIA",
@@ -20,16 +40,6 @@
       "suspicion_score": 0,
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free"
-    },
-    {
-      "name": "Google AI Studio - Gemini 3.6 Flash",
-      "provider": "Google",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "HIGH",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta",
-      "model_id": "gemini-3.6-flash"
     },
     {
       "name": "NVIDIA NIM - Nemotron 3 Super",
@@ -52,36 +62,6 @@
       "model_id": "nvidia/nemotron-3-super-120b-a12b:free"
     },
     {
-      "name": "Gemma 4 31B IT (OpenRouter)",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "HIGH",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "google/gemma-4-31b-it:free"
-    },
-    {
-      "name": "Ling-3.0-flash (OpenRouter)",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "HIGH",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "inclusionai/ling-3.0-flash:free"
-    },
-    {
-      "name": "Poolside Laguna S 2.1 (OpenRouter)",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "HIGH",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "poolside/laguna-s-2.1:free"
-    },
-    {
       "name": "GLM 5.2 (Cloudflare Workers AI無料枠)",
       "provider": "Cloudflare",
       "classification": "B_PERMANENT_FREE_TIER",
@@ -92,14 +72,34 @@
       "model_id": "@cf/z-ai/glm-5.2"
     },
     {
-      "name": "DeepSeek V4 Flash",
-      "provider": "DeepSeek",
-      "classification": "E_DISCOUNT",
+      "name": "Ling-3.0-flash (OpenRouter)",
+      "provider": "OpenRouter",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 1,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "inclusionai/ling-3.0-flash:free"
+    },
+    {
+      "name": "Poolside Laguna S 2.1 (OpenRouter)",
+      "provider": "OpenRouter",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 1,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "poolside/laguna-s-2.1:free"
+    },
+    {
+      "name": "Gemma 4 31B IT (OpenRouter)",
+      "provider": "OpenRouter",
+      "classification": "B_PERMANENT_FREE_TIER",
       "end_at": null,
       "operational_confidence": "HIGH",
       "suspicion_score": 0,
-      "base_url": "https://api.deepseek.com/v1",
-      "model_id": "deepseek-v4-flash"
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "google/gemma-4-31b-it:free"
     },
     {
       "name": "Gemma 4 26B A4B IT (OpenRouter)",
@@ -110,6 +110,16 @@
       "suspicion_score": 0,
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "google/gemma-4-26b-a4b-it:free"
+    },
+    {
+      "name": "DeepSeek V4 Flash (低価格API)",
+      "provider": "DeepSeek",
+      "classification": "E_DISCOUNT",
+      "end_at": null,
+      "operational_confidence": "HIGH",
+      "suspicion_score": 0,
+      "base_url": "https://api.deepseek.com/v1",
+      "model_id": "deepseek-v4-flash"
     }
   ]
 }
