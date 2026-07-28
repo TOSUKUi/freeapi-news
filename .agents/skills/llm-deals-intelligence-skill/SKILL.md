@@ -322,6 +322,10 @@ Emit each noteworthy free model as its own offer card, including models accessed
 
 If an offer has a known end date, always set `end_at` and `end_timezone_known`. The page displays the deadline prominently. If the end date lacks a timezone, set `end_timezone_known: false`.
 
+### Tier criteria (S/A)
+
+Tier S/A certifies agentic coding competence and requires **Terminal-Bench 2.1 ≥ 50%** on record. Before assigning S/A: check `state/benchmarks.json` first, then the model card and leaderboards (`llm-stats.com/benchmarks/terminal-bench-2.1`, `benchlm.ai`, `snorkel.ai`). Record the score in the offer's `benchmarks` array and persist it to state. A model scoring under 50%, or with no published Terminal-Bench 2.1 score after checking those sources, is capped at tier B. The validator enforces this.
+
 ### Free allowance rank (mandatory for ranked offers)
 
 A free API with a prototype-only quota is not the same offer as one that is usable at scale. Set `free_allowance_rank` from the documented limits (`free_limits`):
@@ -431,6 +435,7 @@ A run is successful only when:
 - every ranked offer has a `free_allowance_rank` consistent with its documented limits
 - no ranked offer's free quota is app/web-chat-only while its API is paid, and no `effective_price_per_million` was zeroed from an app quota
 - no ranked offer is a sub-30B total-parameter model (local-run territory), and parameter sizes were researched from model cards
+- every tier S/A offer has a Terminal-Bench 2.1 score of 50%+ on record (state checked first)
 - no ranked offer lost a benchmark score that exists in `state/benchmarks.json`, and every new score was persisted there
 - no `base_url` or `model_id` was written from memory
 - the final report is in Japanese

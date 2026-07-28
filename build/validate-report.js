@@ -92,8 +92,11 @@ async function main() {
   // do not belong in a free-API ranking.
   const sizeResult = validateModelSize(report);
 
-  const gateErrors = [...endpointResult.errors, ...citationResult.errors, ...stateResult.errors, ...freeClaimResult.errors, ...sizeResult.errors];
-  const gateWarnings = [...endpointResult.warnings, ...citationResult.warnings, ...stateResult.warnings, ...freeClaimResult.warnings, ...sizeResult.warnings];
+  // Tier gate: tier S/A requires Terminal-Bench 2.1 >= 50%.
+  const tierResult = validateTierCriteria(report);
+
+  const gateErrors = [...endpointResult.errors, ...citationResult.errors, ...stateResult.errors, ...freeClaimResult.errors, ...sizeResult.errors, ...tierResult.errors];
+  const gateWarnings = [...endpointResult.warnings, ...citationResult.warnings, ...stateResult.warnings, ...freeClaimResult.warnings, ...sizeResult.warnings, ...tierResult.warnings];
 
   if (valid && gateErrors.length === 0) {
     console.log('✅ Report is valid against the schema.');
@@ -247,6 +250,39 @@ function citationSupports(html, baseUrl) {
   } catch {
     return false;
   }
+}
+
+// ── Tier criteria gate ────────────────────────────────────────────
+// Tier S/A certifies agentic coding competence: Terminal-Bench 2.1
+// must be on record and >= 50%. A missing score is a research failure
+// (check model card / llm-stats / benchlm / snorkel leaderboards); an
+// unpublished score caps the model at tier B.
+const TB21_PATTERN = /terminal[\s-]*bench\s*2(\.1)?/i;
+const TB21_MIN = 50;
+
+function validateTierCriteria(report) {
+  const errors = [];
+  const warnings = [];
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) continue;
+    const tier = o.benchmark && o.benchmark.tier;
+    if (tier !== 'S' && tier !== 'A') continue;
+    const label = o.name || o.provider || 'unnamed offer';
+    const tb = (o.benchmarks || []).find(b => b && TB21_PATTERN.test(b.name || ''));
+    if (!tb || tb.score == null) {
+      errors.push(
+        `"${label}": tier ${tier} requires a Terminal-Bench 2.1 score (>= ${TB21_MIN}%). ` +
+        `Collect it from the model card or a leaderboard (llm-stats, benchlm, snorkel); if it is truly unpublished, cap the tier at B.`
+      );
+      continue;
+    }
+    if (tb.score < TB21_MIN) {
+      errors.push(
+        `"${label}": Terminal-Bench 2.1 score ${tb.score} is below the ${TB21_MIN}% bar for tier ${tier}. Cap the tier at B.`
+      );
+    }
+  }
+  return { errors, warnings };
 }
 
 // ── Model size gate ───────────────────────────────────────────────

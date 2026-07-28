@@ -15,6 +15,10 @@ Write a Japanese daily report in this order:
 
 Do not rank providerless or operationally unverified offers. Do not mix free-like offers into the true-free ranking.
 
+## Tier S/A requires Terminal-Bench 2.1 ≥ 50%
+
+Check `state/benchmarks.json` first, then model cards and leaderboards (llm-stats, benchlm, snorkel). Under 50% or genuinely unpublished → cap the tier at B. Record the score in `benchmarks` and persist it to state.
+
 ## Local-run territory gate
 
 Reject ranked candidates under 30B total parameters (judge MoE by TOTAL, not active — local inference loads every expert) unless their benchmarks show genuine competitiveness (tier S/A). Every ranked offer needs `total_parameters_b` / `active_parameters_b` from the model card; null only when the vendor never publishes sizes.
