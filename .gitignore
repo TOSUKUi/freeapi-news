@@ -30,3 +30,7 @@ docs/
 
 # Redundant archive (the unpacked skill lives in .agents/skills/)
 llm-deals-intelligence-skill.zip
+
+# OGP image: the rendered PNG is a tracked, served artifact (like index.html);
+# the intermediate HTML used only to rasterize it is not.
+og-image.html

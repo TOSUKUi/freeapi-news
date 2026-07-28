@@ -31,8 +31,14 @@ if [[ -n "${GIT_COMMIT_EMAIL:-}" ]]; then
   git config user.email "${GIT_COMMIT_EMAIL}"
 fi
 
-# Stage the generated artifacts (report + rendered page).
+# Stage the generated artifacts (report + rendered page + OGP image).
+# og-image.png is a served artifact; stage it only if the build produced one
+# (the OGP render is skipped gracefully on machines without Chrome).
+OG_IMAGE="${PROJECT_ROOT}/og-image.png"
 git add "${REPORT_FILE}" "${HTML_FILE}"
+if [[ -f "${OG_IMAGE}" ]]; then
+  git add "${OG_IMAGE}"
+fi
 
 if git diff --cached --quiet; then
   echo "No changes to commit — page already up to date."

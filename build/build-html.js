@@ -364,14 +364,22 @@ function offerCard(o, index, generatedAt, tz) {
   </article>`;
 }
 
-function snapshotStrip(report, offers) {
+// Raw summary counts for the snapshot strip AND the OGP image, so the two
+// never disagree. Single source of truth for "what's in today's report".
+function computeSnapshot(report, offers) {
   const total = offers.length;
   const sCount = offers.filter(o => o.benchmark && o.benchmark.tier === 'S').length;
+  const aCount = offers.filter(o => o.benchmark && o.benchmark.tier === 'A').length;
   const freeCount = offers.filter(o => {
     const p = o.effective_price_per_million || {};
     return p.input === 0 && p.output === 0;
   }).length;
   const limitedCount = offers.filter(o => o.end_at).length;
+  return { total, sCount, aCount, freeCount, limitedCount };
+}
+
+function snapshotStrip(report, offers) {
+  const { total, sCount, freeCount, limitedCount } = computeSnapshot(report, offers);
   return `<div class="snapshot reveal" role="group" aria-label="今回のサマリー">
     <div class="snap-cell">
       <span class="snap-num">${total}</span>
@@ -761,6 +769,13 @@ function generateHTML(report) {
   const generatedAt = report.generated_at || new Date().toISOString();
   const tz = report.timezone || 'Asia/Tokyo';
   const dateStr = fmtDate(generatedAt, tz);
+  // Calendar day in JST — used as the OGP image cache-buster so the share
+  // card (and its embedded date) refreshes every daily batch. Twitter/X keys
+  // its image cache on the full URL incl. query string (~7d TTL otherwise).
+  const dateKey = dayKeyInTz(generatedAt, tz);
+  const ogImage = `https://freeapi-news.tosukui.xyz/og-image.png?v=${dateKey.replace(/-/g, '')}`;
+  const ogDesc = '検証済みの無料・割引LLM APIを、性能と鮮度で毎日ランキング。pi / Claude Code / OpenCode / Codex 向けの接続例も掲載。';
+  const ogImageAlt = '無料LLM API速報 — 検証済み無料APIを性能×鮮度でランキング（毎日11:00 JST更新）';
 
   const offers = selectRankedOffers(report);
   const cards = offers.map((o, i) => offerCard(o, i, generatedAt, tz)).join('\n');
@@ -771,10 +786,30 @@ function generateHTML(report) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="無料・割引LLM API速報 — 検証済みの無料APIを性能と鮮度でランキング。pi, Claude Code, OpenCode, Codex向け接続方法も掲載。">
+  <meta name="description" content="${esc(ogDesc)}">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#fcfcfc" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b0b0e" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23f5a623'/><g fill='none' stroke='%23101014' stroke-width='2.4' stroke-linecap='round'><circle cx='16' cy='16' r='2.4'/><path d='M20.5 11.5a6 6 0 0 1 0 9M11.5 20.5a6 6 0 0 1 0-9M23.5 8.5a10 10 0 0 1 0 15M8.5 23.5a10 10 0 0 1 0-15'/></g></svg>">
   <title>無料LLM API速報</title>
   <link rel="canonical" href="https://freeapi-news.tosukui.xyz/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="無料LLM API速報">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:title" content="無料LLM API速報">
+  <meta property="og:description" content="${esc(ogDesc)}">
   <meta property="og:url" content="https://freeapi-news.tosukui.xyz/">
+  <meta property="og:image" content="${esc(ogImage)}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="${esc(ogImageAlt)}">
+  <!-- Twitter / X Card (summary_large_image) -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="無料LLM API速報">
+  <meta name="twitter:description" content="${esc(ogDesc)}">
+  <meta name="twitter:image" content="${esc(ogImage)}">
+  <meta name="twitter:image:alt" content="${esc(ogImageAlt)}">
   <script>
     // Apply the theme before first paint (spec 0002 AC-1): read the stored
     // choice, fall back to the system preference, never flash the wrong theme.
@@ -984,4 +1019,15 @@ function main() {
   console.log(`   掲載オファー: ${ranked.length} 件 (S/A/B ・ 鮮度順)`);
 }
 
-main();
+// Only auto-run when executed directly (`node build-html.js`), so other build
+// scripts (e.g. build-og-image.js) can require the tokens/helpers safely.
+if (require.main === module) main();
+
+module.exports = {
+  generateHTML,
+  selectRankedOffers,
+  computeSnapshot,
+  dayKeyInTz,
+  fmtDate,
+  TOKEN_CSS,
+};
