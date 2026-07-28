@@ -239,6 +239,10 @@
         {
           "name": "SWE-bench Verified",
           "score": 52.8
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 56.4
         }
       ],
       "free_allowance_rank": "NORMAL",
@@ -322,6 +326,10 @@
         {
           "name": "SWE-bench Verified",
           "score": 52.8
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 56.4
         }
       ],
       "free_allowance_rank": "NORMAL",
@@ -403,6 +411,10 @@
         {
           "name": "GPQA Diamond",
           "score": 74.1
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 78
         }
       ],
       "free_allowance_rank": "NORMAL",
@@ -468,7 +480,7 @@
       "benchmark": {
         "score": 80,
         "benchmark_name": "GPQA Diamond",
-        "tier": "A"
+        "tier": "B"
       },
       "benchmarks": [
         {
@@ -559,7 +571,7 @@
       "benchmark": {
         "score": 80,
         "benchmark_name": "GPQA Diamond",
-        "tier": "A"
+        "tier": "B"
       },
       "benchmarks": [
         {
@@ -643,7 +655,7 @@
       "benchmark": {
         "score": 84.3,
         "benchmark_name": "GPQA Diamond",
-        "tier": "A"
+        "tier": "B"
       },
       "benchmarks": [
         {
@@ -738,7 +750,7 @@
       "benchmark": {
         "score": 52.8,
         "benchmark_name": "SWE-Bench Pro",
-        "tier": "A"
+        "tier": "B"
       },
       "benchmarks": [
         {
@@ -994,7 +1006,7 @@
       "benchmark": {
         "score": 51.6,
         "benchmark_name": "Humanity's Last Exam",
-        "tier": "A"
+        "tier": "B"
       },
       "benchmarks": [
         {
@@ -1008,6 +1020,10 @@
         {
           "name": "AIME 2025",
           "score": 82
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 49.1
         }
       ],
       "free_allowance_rank": "NORMAL",
