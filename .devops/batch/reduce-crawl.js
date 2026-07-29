@@ -31,6 +31,7 @@ const ROOT = path.join(__dirname, '..', '..');
 const REGISTRY_PATH = path.join(ROOT, 'build', 'provider-registry.json');
 const BENCHMARKS_PATH = path.join(ROOT, '.agents', 'skills', 'llm-deals-intelligence-skill', 'state', 'benchmarks.json');
 const KNOWN_PATH = path.join(ROOT, '.agents', 'skills', 'llm-deals-intelligence-skill', 'state', 'known_offers.json');
+const PAGE_CACHE_PATH = path.join(ROOT, '.agents', 'skills', 'llm-deals-intelligence-skill', 'state', 'page_cache.json');
 
 const crawlDir = process.argv[2];
 if (!crawlDir) { console.error('Usage: reduce-crawl.js <crawl_dir>'); process.exit(1); }
@@ -319,10 +320,30 @@ fs.writeFileSync(path.join(reducedDir, 'candidates.json'), JSON.stringify(output
 fs.writeFileSync(path.join(reducedDir, 'benchmarks.json'), JSON.stringify(benchmarks, null, 2) + '\n');
 fs.writeFileSync(path.join(reducedDir, 'provider-registry.json'), JSON.stringify(registry, null, 2) + '\n');
 
+// ── Update page cache (single writer: only the merger) ───────────
+// Record the URLs workers successfully fetched, so the next manifest hands
+// them back as cached_urls and workers re-use a known-good page instead of
+// re-discovering it. A URL that produced facts this run was fetchable.
+let pageCache = {};
+try { pageCache = JSON.parse(fs.readFileSync(PAGE_CACHE_PATH, 'utf8')); } catch {}
+let cacheWrites = 0;
+for (const { artifact } of [...results.complete, ...results.partial]) {
+  const crawledAt = artifact.crawled_at || new Date().toISOString();
+  for (const m of artifact.models || []) {
+    for (const u of [m.endpoint_source, m.docs_url]) {
+      if (u && /^https?:\/\//.test(u)) {
+        pageCache[u] = { fetched_at: crawledAt, provider_key: m.provider_key || artifact.provider_key || null, model_id: m.model_id || null, http_ok: true };
+        cacheWrites++;
+      }
+    }
+  }
+}
+fs.writeFileSync(PAGE_CACHE_PATH, JSON.stringify(pageCache, null, 2) + '\n');
+
 // ── Report ───────────────────────────────────────────────────────
 console.log(`Merger: ${completedTasks}/${expectedTasks} tasks completed, ${failedTasks} failed`);
 console.log(`  Candidates: ${candidates.length} | Excluded: ${excluded.length}`);
-console.log(`  Benchmark merges: ${benchmarkMerges} | New providers: ${newProviders.length}`);
+console.log(`  Benchmark merges: ${benchmarkMerges} | New providers: ${newProviders.length} | Page-cache writes: ${cacheWrites}`);
 if (disappeared.length > 0) {
   console.log(`  ⚠️  Known offers not found in candidates: ${disappeared.map(o => o.name).join(', ')}`);
 }

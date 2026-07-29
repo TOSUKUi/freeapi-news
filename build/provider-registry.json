@@ -51,7 +51,8 @@
       "notes": "Free models use the ':free' suffix on the model ID.",
       "added_at": "2026-07-28",
       "added_from": "https://openrouter.ai/docs/quickstart",
-      "model_page_template": "https://openrouter.ai/{model_id}"
+      "model_page_template": "https://openrouter.ai/{model_id}",
+      "api_catalog_url": "https://openrouter.ai/api/v1/models"
     },
     {
       "key": "deepseek",

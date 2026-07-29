@@ -20,6 +20,7 @@ const ROOT = path.join(__dirname, '..', '..');
 const REGISTRY = path.join(ROOT, 'build', 'provider-registry.json');
 const KNOWN = path.join(ROOT, '.agents', 'skills', 'llm-deals-intelligence-skill', 'state', 'known_offers.json');
 const BENCHMARKS = path.join(ROOT, '.agents', 'skills', 'llm-deals-intelligence-skill', 'state', 'benchmarks.json');
+const PAGE_CACHE = path.join(ROOT, '.agents', 'skills', 'llm-deals-intelligence-skill', 'state', 'page_cache.json');
 
 const crawlDir = process.argv[2];
 if (!crawlDir) { console.error('Usage: build-manifest.js <crawl_dir>'); process.exit(1); }
@@ -29,6 +30,27 @@ let known = { offers: [] };
 try { known = JSON.parse(fs.readFileSync(KNOWN, 'utf8')); } catch {}
 let benchmarks = { models: [] };
 try { benchmarks = JSON.parse(fs.readFileSync(BENCHMARKS, 'utf8')); } catch {}
+
+// Page cache: URLs the workers successfully fetched, with when. The manifest
+// hands each task the still-fresh URLs so workers re-use a known-good page
+// ("継続してあったらそのまま継続") instead of re-discovering it, and only fall
+// back to web_search/browser when a cached URL is stale or dead.
+let pageCache = {};
+try { pageCache = JSON.parse(fs.readFileSync(PAGE_CACHE, 'utf8')); } catch {}
+const FRESH_MS = 24 * 3600 * 1000;
+const freshUrls = urls => [...new Set((urls || []).filter(Boolean))].filter(u => {
+  const c = pageCache[u];
+  if (!c || c.http_ok === false) return false;
+  return Date.now() - new Date(c.fetched_at || 0).getTime() < FRESH_MS;
+});
+// Index cached URLs by provider so a task gets its provider's known-good
+// pages even when known_offers.json does not carry sources/endpoint_source.
+const cacheByProvider = new Map();
+for (const [url, c] of Object.entries(pageCache)) {
+  if (!c.provider_key) continue;
+  if (!cacheByProvider.has(c.provider_key)) cacheByProvider.set(c.provider_key, []);
+  cacheByProvider.get(c.provider_key).push(url);
+}
 
 // Index known offers by provider key.
 const knownByProvider = new Map();
@@ -67,7 +89,9 @@ for (const p of registry.providers || []) {
       provider_label: p.label,
       base_url: p.base_url,
       docs_url: p.docs_url,
+      api_catalog_url: p.api_catalog_url || null,
       known_offers: allKnown.map(o => o.name),
+      cached_urls: freshUrls([...allKnown.flatMap(o => [...(o.sources || []).map(s => s.url), o.endpoint_source]), ...(cacheByProvider.get(key) || [])]),
       status: 'pending',
       output: `refresh/task-${key}.json`,
     });
@@ -79,6 +103,8 @@ for (const p of registry.providers || []) {
       provider_label: p.label,
       base_url: p.base_url,
       docs_url: p.docs_url,
+      api_catalog_url: p.api_catalog_url || null,
+      cached_urls: [],
       status: 'pending',
       output: `offers/task-${key}.json`,
     });
