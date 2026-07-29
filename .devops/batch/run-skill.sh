@@ -338,6 +338,7 @@ git add report.json index.html og-image.png og-image.html \
   build/provider-registry.json \
   "${SKILL_DIR}/state/benchmarks.json" \
   "${SKILL_DIR}/state/known_offers.json" \
+  "${SKILL_DIR}/state/page_cache.json" \
   2>/dev/null || true
 
 if git diff --cached --quiet; then

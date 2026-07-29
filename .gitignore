@@ -36,6 +36,7 @@ llm-deals-intelligence-skill.zip
 og-image.html
 
 # Crawl intermediate artifacts — regenerated each run, never track.
+# (page_cache.json is NOT intermediate: it is durable cross-run state like
+# benchmarks.json / known_offers.json, so it IS tracked.)
 .agents/skills/llm-deals-intelligence-skill/state/crawl/
-.agents/skills/llm-deals-intelligence-skill/state/page_cache.json
 .devops/batch/.crawl.lock
