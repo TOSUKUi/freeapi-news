@@ -11,9 +11,11 @@ You receive a single file: `state/crawl/<run_id>/reduced/candidates.json`. It co
 - `coverage` — how many tasks completed vs failed
 - `failures[]` — which tasks failed and why
 - `disappeared_known_offers[]` — previously known offers not found this run
+- `changed_known_offers[]` — previously known offers whose base_url / free_limits / model_id changed, with the diffs
 - `benchmark_merges` / `new_providers` — what the merger merged / providers to register
 
 Also read:
+- `state/crawl/<run_id>/reduced/classifications.json` — if present, the classifier's FINAL `classification` + confidence per candidate. Use these; they override the merger's provisional classification.
 - `state/crawl/<run_id>/reduced/benchmarks.json` — merged benchmark state
 - `state/crawl/<run_id>/reduced/provider-registry.json` — merged registry
 
@@ -21,10 +23,12 @@ Also read:
 
 ## Output
 
-1. `report.json` — the daily report (schema: `schemas/daily_report.schema.json`)
-2. `state/known_offers.json` — updated from final ranked offers
-3. `state/benchmarks.json` — copy from `reduced/benchmarks.json`
-4. `build/provider-registry.json` — copy from `reduced/provider-registry.json`
+Write the state files with the write tool FIRST, then emit the report via `json_output` as your LAST action (json_output terminates your session, so it must come last):
+
+1. `state/known_offers.json` — updated from final ranked offers (write tool)
+2. `state/benchmarks.json` — copy from `reduced/benchmarks.json` (write tool)
+3. `build/provider-registry.json` — copy from `reduced/provider-registry.json` (write tool)
+4. `report.json` — the daily report, via `json_output`, conforming to `schemas/daily_report.schema.json`. The schema is enforced — a malformed report fails the run and the previous report stays live.
 
 ## Report structure
 

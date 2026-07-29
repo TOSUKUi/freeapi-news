@@ -90,9 +90,9 @@ function checkSchema(report, schema, fixLog) {
   let valid = true;
   let errors = [];
   try {
-    const { Ajv2020 } = require('ajv/dist/2020');
+    const Ajv = require('ajv');
     const addFormats = require('ajv-formats');
-    const ajv = new Ajv2020({ allErrors: true });
+    const ajv = new Ajv({ allErrors: true, strict: false });
     addFormats(ajv);
     const validate = ajv.compile(schema);
     valid = validate(report);

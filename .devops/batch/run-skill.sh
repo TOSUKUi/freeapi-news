@@ -229,22 +229,52 @@ if ! node "${SCRIPT_DIR}/reduce-crawl.js" "${CRAWL_DIR}"; then
   SKIP_PARALLEL=true
 fi
 
+# ── Step 3.5: Classify (1 pi, schema-enforced) ───────────────────
+if [[ "${SKIP_PARALLEL:-}" != "true" ]]; then
+  echo ""
+  echo "[3.5/6] Classifier (final classification, schema-enforced)..."
+  CLASSIFICATIONS_SCHEMA="$(cat "${SKILL_DIR}/schemas/classifications.schema.json")"
+  timeout 600 pi \
+    --skill "${SKILL_DIR}" \
+    --model "${PI_MODEL}" \
+    --approve \
+    --no-session \
+    --json-schema "${CLASSIFICATIONS_SCHEMA}" \
+    --json-output "${CRAWL_DIR}/reduced/classifications.json" \
+    --json-fallback force \
+    -p "You are the classifier. Read ${CRAWL_DIR}/reduced/candidates.json. For each candidate, decide the FINAL classification and confidence from its verbatim free_limits text and the merger's provisional classification. Call json_output as your last action conforming to schemas/classifications.schema.json. Do NOT fetch URLs. Do NOT re-derive mechanical fields. When in doubt between A_TRUE_FREE and B_PERMANENT_FREE_TIER, prefer B_PERMANENT_FREE_TIER." \
+    > "${CRAWL_DIR}/logs/classifier.log" 2>&1 || true
+  if [[ ! -f "${CRAWL_DIR}/reduced/classifications.json" ]]; then
+    echo "  ⚠️  Classifier produced no output; editor will use the merger's provisional classification."
+  fi
+fi
+
 # ── Step 4: Edit (1 pi, reads candidates only) ───────────────────
 if [[ "${SKIP_PARALLEL:-}" != "true" ]]; then
   echo ""
   echo "[4/6] Editor (reading candidates, no fetch)..."
   CANDIDATES_FILE="${CRAWL_DIR}/reduced/candidates.json"
 
+  # The editor reads the merger's candidates plus the classifier's final
+  # classifications (if the classifier ran). It emits the full report via
+  # json_output, validated against the daily report schema, so a malformed
+  # report can never reach the validator. State files are written with the
+  # write tool BEFORE json_output (json_output terminates the session).
+  REPORT_SCHEMA="$(cat "${SKILL_SCHEMA_FILE}")"
   timeout "${PI_TIMEOUT}" pi \
     --skill "${SKILL_DIR}" \
     --model "${PI_MODEL}" \
     --approve \
     --no-session \
-    -p "You are the editor. Read ${CANDIDATES_FILE} — it contains all candidates, exclusions, coverage info, and disappeared known offers from this crawl run. Also read ${CRAWL_DIR}/reduced/benchmarks.json (merged benchmark state) and ${CRAWL_DIR}/reduced/provider-registry.json (merged registry). Do NOT fetch any URLs. Do NOT run web searches. Work only from the files. Produce the daily Japanese report at ${REPORT_FILE} following the schema at ${SKILL_SCHEMA_FILE}. Apply tier rules, quality gate, allowance ranking, and classification. Update ${SKILL_DIR}/state/known_offers.json from the final ranked offers. If coverage.rate is low or disappeared_known_offers is non-empty, note it in the report's changes section. Write report.json, then write the merged benchmarks to ${SKILL_DIR}/state/benchmarks.json and the merged registry to build/provider-registry.json." \
-    2>/dev/null || true
+    --json-schema "${REPORT_SCHEMA}" \
+    --json-output "${REPORT_FILE}" \
+    --json-fallback force \
+    -p "You are the editor. Read ${CANDIDATES_FILE} — candidates, exclusions, coverage, disappeared_known_offers, changed_known_offers. If ${CRAWL_DIR}/reduced/classifications.json exists, read it and use its classification/confidence for each candidate (it overrides the provisional classification). Also read ${CRAWL_DIR}/reduced/benchmarks.json and ${CRAWL_DIR}/reduced/provider-registry.json. Do NOT fetch any URLs. Do NOT run web searches. Work only from these files. FIRST update ${SKILL_DIR}/state/known_offers.json from the final ranked offers, and copy the merged benchmarks to ${SKILL_DIR}/state/benchmarks.json and the merged registry to build/provider-registry.json. THEN call json_output as your LAST action with the full daily Japanese report conforming to ${SKILL_SCHEMA_FILE}. An offer in ranked_offers MUST have ranking_eligible=true; rejected offers go to excluded_offers. If coverage.rate is low or disappeared_known_offers/changed_known_offers is non-empty, note it in the report's changes section." \
+    > "${CRAWL_DIR}/logs/editor.log" 2>&1 || true
 
   if [[ ! -f "${REPORT_FILE}" ]]; then
     echo "❌ Editor did not produce report.json. Previous report stays live."
+    tail -5 "${CRAWL_DIR}/logs/editor.log" 2>/dev/null
     exit 1
   fi
 fi

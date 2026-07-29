@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "Layer 3 分類エージェントの出力。merger の仮分類を、正規化済み candidate ごとに最終判定する。classification は LLM の判断なのでここで enum を縛る。",
+  "type": "object",
+  "required": ["classifications"],
+  "properties": {
+    "classifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "classification"],
+        "properties": {
+          "name": { "type": "string" },
+          "classification": { "enum": ["A_TRUE_FREE", "B_PERMANENT_FREE_TIER", "C_LIMITED_FREE", "D_TRIAL_CREDIT", "E_DISCOUNT", "F_CONDITIONAL", "G_FREE_LIKE"] },
+          "suspicion_score": { "type": "number" },
+          "information_confidence": { "enum": ["HIGH", "MEDIUM", "LOW"] },
+          "operational_confidence": { "enum": ["HIGH", "MEDIUM", "LOW"] },
+          "reasoning": { "type": "string" }
+        }
+      }
+    }
+  }
+}

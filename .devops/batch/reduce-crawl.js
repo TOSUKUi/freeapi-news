@@ -277,6 +277,21 @@ const disappeared = (known.offers || []).filter(o =>
   o.operational_confidence !== 'LOW' && !candidateNames.has((o.name || '').toLowerCase())
 );
 
+// Delta detection (deterministic): compare candidates against known_offers
+// to report WHAT changed, so the editor never has to ask an LLM "did this
+// change?". A changed base_url or free-quota text is a mechanical diff.
+const knownByName = Object.fromEntries((known.offers || []).map(o => [(o.name || '').toLowerCase(), o]));
+const changed = [];
+for (const c of candidates) {
+  const k = knownByName[(c.name || '').toLowerCase()];
+  if (!k) continue;
+  const diffs = [];
+  if (k.base_url && c.base_url && k.base_url !== c.base_url) diffs.push(`base_url: ${k.base_url} -> ${c.base_url}`);
+  if (k.free_limits && c.free_limits && norm(k.free_limits) !== norm(c.free_limits)) diffs.push('free_limits text changed');
+  if (k.model_id && c.model_id && k.model_id !== c.model_id) diffs.push(`model_id: ${k.model_id} -> ${c.model_id}`);
+  if (diffs.length) changed.push({ name: c.name, diffs });
+}
+
 // ── Write outputs ────────────────────────────────────────────────
 const reducedDir = path.join(crawlDir, 'reduced');
 fs.mkdirSync(reducedDir, { recursive: true });
@@ -293,6 +308,7 @@ const output = {
   failures: [...results.failed, ...results.missing],
   warnings: results.partial.map(p => ({ task_id: p.task_id, warnings: p.warnings })),
   disappeared_known_offers: disappeared.map(o => o.name),
+  changed_known_offers: changed,
   new_providers: newProviders,
   benchmark_merges: benchmarkMerges,
   candidates,
@@ -309,6 +325,9 @@ console.log(`  Candidates: ${candidates.length} | Excluded: ${excluded.length}`)
 console.log(`  Benchmark merges: ${benchmarkMerges} | New providers: ${newProviders.length}`);
 if (disappeared.length > 0) {
   console.log(`  ⚠️  Known offers not found in candidates: ${disappeared.map(o => o.name).join(', ')}`);
+}
+if (changed.length > 0) {
+  console.log(`  Δ Known offers changed: ${changed.map(c => c.name).join(', ')}`);
 }
 if (results.failed.length > 0 || results.missing.length > 0) {
   console.log('  Failures:');
