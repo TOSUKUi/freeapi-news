@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "Layer 1 fetch/refresh ワーカーの出力。生の事実だけ。enum は一切使わない — classification / delivery_type / free_allowance_rank / tier は merger (reduce-crawl.js) が事実から決定的に導出する。LLM は判断しない、enum を書かない。",
+  "type": "object",
+  "required": ["schema_version", "task_id", "status", "crawled_at", "provider_key", "models", "errors"],
+  "properties": {
+    "schema_version": { "type": "number" },
+    "task_id": { "type": "string" },
+    "status": { "type": "string" },
+    "crawled_at": { "type": "string" },
+    "provider_key": { "type": "string" },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["model_id"],
+        "properties": {
+          "model_id": { "type": "string" },
+          "model_name": { "type": "string" },
+          "docs_url": { "type": "string" },
+          "endpoint_source": { "type": "string" },
+          "base_url": { "type": "string" },
+          "free_quota_text": { "type": "string" },
+          "pricing_text": { "type": "string" },
+          "params_text": { "type": "string" },
+          "is_free_signal": { "type": "boolean" },
+          "benchmark_finds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "score"],
+              "properties": {
+                "name": { "type": "string" },
+                "score": { "type": "number" },
+                "source_url": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "errors": { "type": "array", "items": { "type": "string" } }
+  }
+}

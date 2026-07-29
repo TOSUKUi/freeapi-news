@@ -33,6 +33,8 @@ source "${SCRIPT_DIR}/../config/env.sh"
 
 SKILL_DIR="${PROJECT_ROOT}/.agents/skills/llm-deals-intelligence-skill"
 SKILL_SCHEMA_FILE="${SKILL_DIR}/schemas/daily_report.schema.json"
+FACTS_SCHEMA_FILE="${SKILL_DIR}/schemas/crawl-facts.schema.json"
+FACTS_SCHEMA="$(cat "${FACTS_SCHEMA_FILE}")"
 REPORT_FILE="${PROJECT_ROOT}/report.json"
 HTML_FILE="${PROJECT_ROOT}/index.html"
 GLOBAL_CONCURRENCY="${GLOBAL_CONCURRENCY:-2}"
@@ -86,11 +88,19 @@ run_worker() {
 
   echo "  → Starting worker: ${task_id}"
   local logfile="${CRAWL_DIR}/logs/${task_id//\//_}.log"
+  # --json-schema/--json-output (via @nqbao/pi-json-schema): the worker
+  # calls json_output as its last action; pi validates against the facts
+  # schema and writes the file. Non-conforming output fails the run, so
+  # workers can never emit a bad enum. --json-fallback force retries once,
+  # forcing the tool choice, if the model forgot to call json_output.
   timeout "${PI_TIMEOUT}" pi \
     --skill "${SKILL_DIR}" \
     --model "${PI_MODEL}" \
     --approve \
     --no-session \
+    --json-schema "${FACTS_SCHEMA}" \
+    --json-output "${output_file}" \
+    --json-fallback force \
     -p "${prompt}" \
     > "${logfile}" 2>&1 || true
   # Tail the last lines so a human can see why a worker failed without
@@ -99,12 +109,9 @@ run_worker() {
   tail_lines=$(tail -n 3 "${logfile}" 2>/dev/null | tr '\n' ' ')
   if [[ ! -f "${output_file}" ]]; then
     echo "     └─ no artifact. log tail: ${tail_lines:-(empty)}"
-  fi
-
-  # Check if the worker produced output.
-  if [[ ! -f "${output_file}" ]]; then
-    # Worker failed to write. Create a failure artifact.
-    echo "{\"schema_version\":1,\"task_id\":\"${task_id}\",\"status\":\"failed\",\"crawled_at\":\"$(date -u '+%Y-%m-%dT%H:%M:%SZ')\",\"offers\":[],\"excluded\":[],\"benchmark_deltas\":[],\"registry_deltas\":[],\"errors\":[\"worker did not produce output file\"]}" > "${output_file}"
+    # Worker never produced conforming output. Write a facts-shaped failure
+    # artifact so the merger counts it as failed (not missing).
+    echo "{\"schema_version\":1,\"task_id\":\"${task_id}\",\"status\":\"failed\",\"crawled_at\":\"$(date -u '+%Y-%m-%dT%H:%M:%SZ')\",\"provider_key\":\"\",\"models\":[],\"errors\":[\"worker did not produce conforming output\"]}" > "${output_file}"
     echo "  ⚠️  ${task_id}: no output, wrote failure artifact"
   fi
 }
@@ -128,7 +135,7 @@ REFRESH_TASKS=$(node -e "
 if [[ -n "${DISCOVERY_TASK}" ]]; then
   throttle
   run_worker "discovery" \
-    "You are the discovery worker. Read your task from ${CRAWL_DIR}/manifest.json (task_id: discovery). Read snapshots from ${CRAWL_DIR}/snapshots/. Search for newly announced LLMs, previews, betas, API launches, pricing changes from the last 24h/72h/30d. For each new model, collect benchmark data (check snapshots/benchmarks.json first, then HuggingFace model cards, vendor blogs, X posts). Write your output to ${CRAWL_DIR}/discovery/task-discovery.json.tmp then rename to task-discovery.json. Use the crawl-worker.md output schema. Do NOT edit any shared state files." \
+    "You are the discovery worker. Read your task from ${CRAWL_DIR}/manifest.json (task_id: discovery). Read snapshots from ${CRAWL_DIR}/snapshots/. Search for newly announced LLMs, previews, betas, API launches, pricing changes from the last 24h/72h/30d. For each new model, collect benchmark data (check snapshots/benchmarks.json first, then HuggingFace model cards, vendor blogs, X posts). Call json_output as your LAST action with facts conforming to schemas/crawl-facts.schema.json: set provider_key='_discovery' and put one models[] entry per new model, each carrying its own provider_key, verbatim quota/pricing text, and benchmark_finds. The schema is enforced — non-conforming output fails the run. Do NOT edit any shared state files." \
     "${CRAWL_DIR}/discovery/task-discovery.json" &
   DISCOVERY_PID=$!
 fi
@@ -144,7 +151,7 @@ while IFS= read -r task_json; do
 
   throttle
   run_worker "${TASK_ID}" \
-    "You are a refresh worker. Read your task from ${CRAWL_DIR}/manifest.json (task_id: ${TASK_ID}). Provider: ${PROVIDER_KEY}. Known offers: ${KNOWN_NAMES}. Read snapshots from ${CRAWL_DIR}/snapshots/ and the registry from build/provider-registry.json. Re-verify the known offers: fetch the docs page, confirm base_url is unchanged, confirm the model is still available, check if free quota or pricing changed. If nothing changed, copy the known offer data with updated last_verified. Write to ${CRAWL_DIR}/${OUTPUT}.tmp then rename. Use the crawl-worker.md output schema. Do NOT edit shared state files." \
+    "You are a refresh worker. Read your task from ${CRAWL_DIR}/manifest.json (task_id: ${TASK_ID}). Provider: ${PROVIDER_KEY}. Known offers: ${KNOWN_NAMES}. Read snapshots from ${CRAWL_DIR}/snapshots/ and the registry from build/provider-registry.json. Re-fetch the known offers' docs pages and report their CURRENT facts: fetch the docs page, copy base_url verbatim, copy the free-quota and pricing sentences verbatim. Call json_output as your LAST action with facts conforming to schemas/crawl-facts.schema.json (provider_key=${PROVIDER_KEY}). Do NOT decide whether anything changed — the merger diffs your facts against known_offers.json. The schema is enforced. Do NOT edit shared state files." \
     "${CRAWL_DIR}/${OUTPUT}" &
   REFRESH_PIDS+=($!)
 done <<< "${REFRESH_TASKS}"
@@ -171,11 +178,11 @@ if [[ -f "${DISCOVERY_FILE}" ]]; then
       const m = require('${CRAWL_DIR}/manifest.json');
       const knownKeys = new Set(m.tasks.filter(t=>t.provider_key).map(t=>t.provider_key));
       const seen = new Set();
-      for (const o of d.offers||[]) {
+      for (const o of d.models||[]) {
         const k = (o.provider_key||'').toLowerCase();
-        if (k && !knownKeys.has(k) && !seen.has(k)) {
+        if (k && k !== '_discovery' && !knownKeys.has(k) && !seen.has(k)) {
           seen.add(k);
-          console.log(JSON.stringify({task_id:'crawl:'+k, kind:'crawl', provider_key:k, provider_label:o.provider||k, base_url:o.base_url||null, docs_url:null, status:'pending', output:'offers/task-'+k+'.json', from_discovery:true}));
+          console.log(JSON.stringify({task_id:'crawl:'+k, kind:'crawl', provider_key:k, provider_label:o.provider_key||k, base_url:o.base_url||null, docs_url:o.docs_url||null, status:'pending', output:'offers/task-'+k+'.json', from_discovery:true}));
         }
       }
     } catch {}
@@ -195,7 +202,7 @@ while IFS= read -r task_json; do
 
   throttle
   run_worker "${TASK_ID}" \
-    "You are a crawl worker. Read your task from ${CRAWL_DIR}/manifest.json (task_id: ${TASK_ID}). Provider: ${PROVIDER_KEY}. Read snapshots from ${CRAWL_DIR}/snapshots/ and the registry from build/provider-registry.json. If discovery found new models for this provider, read ${DISCOVERY_FILE}. Investigate free/discounted API offers: fetch pricing page, model catalog, API docs. For each candidate, verify endpoint, model ID, limits. Collect benchmarks (check snapshots/benchmarks.json first). Apply the quality gate. Write to ${CRAWL_DIR}/${OUTPUT}.tmp then rename. Use the crawl-worker.md output schema. Do NOT edit shared state files. Process one provider at a time; write after each provider to avoid context overflow." \
+    "You are a crawl worker. Read your task from ${CRAWL_DIR}/manifest.json (task_id: ${TASK_ID}). Provider: ${PROVIDER_KEY}. Read snapshots from ${CRAWL_DIR}/snapshots/ and the registry from build/provider-registry.json. If discovery found new models for this provider, read ${DISCOVERY_FILE}. Investigate free/discounted API offers: fetch pricing page, model catalog, API docs. For each free or discounted model, copy model_id and base_url verbatim and quote the free-quota and pricing sentences verbatim. Collect benchmarks (check snapshots/benchmarks.json first). Call json_output ONCE at the end with all models for this provider, conforming to schemas/crawl-facts.schema.json (provider_key=${PROVIDER_KEY}). Do NOT classify or write enums — the merger derives those. The schema is enforced. Do NOT edit shared state files." \
     "${CRAWL_DIR}/${OUTPUT}" &
 done <<< "${CRAWL_TASKS}"
 
