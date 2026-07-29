@@ -34,3 +34,8 @@ llm-deals-intelligence-skill.zip
 # OGP image: the rendered PNG is a tracked, served artifact (like index.html);
 # the intermediate HTML used only to rasterize it is not.
 og-image.html
+
+# Crawl intermediate artifacts — regenerated each run, never track.
+.agents/skills/llm-deals-intelligence-skill/state/crawl/
+.agents/skills/llm-deals-intelligence-skill/state/page_cache.json
+.devops/batch/.crawl.lock
