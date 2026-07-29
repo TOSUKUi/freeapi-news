@@ -120,11 +120,17 @@ function deriveParamsB(text) {
 }
 
 // tier from Terminal-Bench 2.1 (the S/A admission gate). >=65 S, >=50 A, else B.
+// The representative score prefers Terminal-Bench 2.1 so the score and the
+// tier come from the SAME benchmark — comparing raw scores across different
+// benchmarks is forbidden (AGENTS.md). Only when Terminal-Bench is absent
+// (e.g. Nemotron 3 Super) do we fall back to the strongest available score.
 function deriveTier(finds) {
   const list = finds || [];
   const tb = list.find(b => /terminal[\s-]?bench/i.test(b.name || ''));
   let score = null, name = null;
-  if (list.length > 0) {
+  if (tb) {
+    score = tb.score; name = tb.name;
+  } else if (list.length > 0) {
     const best = list.reduce((a, b) => (b.score > (a ? a.score : -1) ? b : a), null);
     if (best) { score = best.score; name = best.name; }
   }

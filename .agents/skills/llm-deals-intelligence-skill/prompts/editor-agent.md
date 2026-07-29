@@ -6,12 +6,12 @@ Merge and deduplicate crawl results. Compare against previous state. Reject cand
 
 You receive a single file: `state/crawl/<run_id>/reduced/candidates.json`. It contains:
 
-- `candidates[]` — all offers collected by crawl workers
-- `excluded[]` — offers workers already excluded
+- `candidates[]` — all offers collected by crawl workers. The merger has ALREADY derived `delivery_type`, `free_allowance_rank`, `total_parameters_b`, `benchmark.tier`, `benchmark.score`, and a provisional `classification` deterministically from the workers' raw facts. Do NOT re-derive or override these mechanical fields — only adjust `classification` if the provisional value is clearly wrong, and write Japanese prose.
+- `excluded[]` — offers the merger's quality gate already excluded (paid-api, app-only, sub-30B), with reasons
 - `coverage` — how many tasks completed vs failed
 - `failures[]` — which tasks failed and why
 - `disappeared_known_offers[]` — previously known offers not found this run
-- `benchmark_merges` / `registry_merges` — what the reducer merged
+- `benchmark_merges` / `new_providers` — what the merger merged / providers to register
 
 Also read:
 - `state/crawl/<run_id>/reduced/benchmarks.json` — merged benchmark state
@@ -68,6 +68,13 @@ If `reduced/benchmarks.json` has scores for a model, the offer's `benchmark.scor
 ### Free allowance rank (mandatory for ranked offers)
 
 Set `free_allowance_rank` from the documented limits: `AMPLE`, `NORMAL`, `TIGHT`, `TINY`. Must agree with `free_limits` text.
+
+### ranking_eligible must never contradict the array (non-negotiable)
+
+An offer in `ranked_offers` MUST have `ranking_eligible: true`. Never place an offer in `ranked_offers` with `ranking_eligible: false` — that contradictory state makes the offer silently vanish from the page (the builder filters on `ranking_eligible === true`). This is exactly how the NVIDIA NIM offers disappeared. The rule:
+
+- If the merger gave a candidate `benchmark.tier` in S/A/B AND `benchmark.score != null`, it is rankable → put it in `ranked_offers` with `ranking_eligible: true`.
+- If you reject a candidate (quality gate, app-only, missing data), put it in `excluded_offers` with a reason. Do NOT leave it in `ranked_offers` with `ranking_eligible: false`.
 
 ### Quality gate
 

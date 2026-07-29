@@ -6,7 +6,7 @@
   "properties": {
     "schema_version": { "type": "number" },
     "task_id": { "type": "string" },
-    "status": { "type": "string" },
+    "status": { "enum": ["complete", "partial", "failed"] },
     "crawled_at": { "type": "string" },
     "provider_key": { "type": "string" },
     "models": {
