@@ -293,7 +293,7 @@
       "suspicion_score": 0,
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
-      "ranking_eligible": false,
+      "ranking_eligible": true,
       "last_verified": "2026-07-28T19:23:03Z",
       "benchmark": {
         "score": 56.4,
@@ -312,6 +312,14 @@
         {
           "name": "GPQA (no tools)",
           "score": 87.9
+        },
+        {
+          "name": "Humanity's Last Exam",
+          "score": 55
+        },
+        {
+          "name": "AIME 2025",
+          "score": 86
         }
       ],
       "sources": [
@@ -402,11 +410,11 @@
       "suspicion_score": 0,
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
-      "ranking_eligible": false,
+      "ranking_eligible": true,
       "last_verified": "2026-07-28T19:23:03Z",
       "benchmark": {
-        "score": null,
-        "benchmark_name": null,
+        "score": 80,
+        "benchmark_name": "GPQA Diamond",
         "tier": "B"
       },
       "benchmarks": [
@@ -417,6 +425,18 @@
         {
           "name": "IFBench",
           "score": 71.5
+        },
+        {
+          "name": "Humanity's Last Exam",
+          "score": 19.2
+        },
+        {
+          "name": "AA Intelligence Index",
+          "score": 25.4
+        },
+        {
+          "name": "AA Coding Index",
+          "score": 37.7
         }
       ],
       "sources": [
