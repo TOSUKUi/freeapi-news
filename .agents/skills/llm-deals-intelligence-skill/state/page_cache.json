@@ -24,9 +24,9 @@
     "http_ok": true
   },
   "https://openrouter.ai/docs/quickstart": {
-    "fetched_at": "2026-07-30T02:10:00Z",
+    "fetched_at": "2026-07-30T17:05:52Z",
     "provider_key": "openrouter",
-    "model_id": "openai/gpt-oss-20b:free",
+    "model_id": "nvidia/nemotron-3.5-content-safety:free",
     "http_ok": true
   },
   "https://openrouter.ai/inclusionai/ling-3.0-flash": {
@@ -126,13 +126,13 @@
     "http_ok": true
   },
   "https://api-docs.deepseek.com/": {
-    "fetched_at": "2026-07-30T02:10:00Z",
+    "fetched_at": "2026-07-30T17:05:52Z",
     "provider_key": "deepseek",
     "model_id": "deepseek-v4-flash",
     "http_ok": true
   },
   "https://api-docs.deepseek.com/quick_start/pricing": {
-    "fetched_at": "2026-07-29T02:00:01Z",
+    "fetched_at": "2026-07-30T17:05:52Z",
     "provider_key": "deepseek",
     "model_id": "deepseek-v4-flash",
     "http_ok": true
@@ -150,9 +150,9 @@
     "http_ok": true
   },
   "https://ai.google.dev/gemini-api/docs/openai": {
-    "fetched_at": "2026-07-30T02:00:01Z",
+    "fetched_at": "2026-07-30T17:09:31Z",
     "provider_key": "google",
-    "model_id": "gemini-2.5-flash-preview-tts",
+    "model_id": "gemini-2.5-flash-lite",
     "http_ok": true
   },
   "https://ai.google.dev/pricing": {
@@ -228,15 +228,99 @@
     "http_ok": true
   },
   "https://docs.api.nvidia.com/nim/reference/llm-apis": {
-    "fetched_at": "2026-07-30T02:10:00Z",
+    "fetched_at": "2026-07-30T17:05:52Z",
     "provider_key": "nvidia",
-    "model_id": "nvidia/nemotron-4-340b-instruct",
+    "model_id": "microsoft/phi-4-multimodal-instruct",
     "http_ok": true
   },
   "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-nano-30b-a3b-infer": {
     "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "nvidia",
     "model_id": "nvidia/nemotron-3-nano-30b-a3b",
+    "http_ok": true
+  },
+  "https://platform.openai.com/docs/quickstart": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "_discovery",
+    "model_id": "gpt-5.6-luna",
+    "http_ok": true
+  },
+  "https://openai.com/index/gpt-5-6/": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "_discovery",
+    "model_id": "gpt-5.6-luna",
+    "http_ok": true
+  },
+  "https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "_discovery",
+    "model_id": "muse-spark-1.1",
+    "http_ok": true
+  },
+  "https://pricepertoken.com/pricing-page/model/minimax-minimax-m3": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "_discovery",
+    "model_id": "minimax-m3",
+    "http_ok": true
+  },
+  "https://api.deepseek.com/v1": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "_discovery",
+    "model_id": "deepseek-v4-pro",
+    "http_ok": true
+  },
+  "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "_discovery",
+    "model_id": "deepseek-v4-pro",
+    "http_ok": true
+  },
+  "https://api.anthropic.com": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "_discovery",
+    "model_id": "claude-fable-5",
+    "http_ok": true
+  },
+  "https://myclaw.ai/blog/claude-sonnet-5-review": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "_discovery",
+    "model_id": "claude-sonnet-5",
+    "http_ok": true
+  },
+  "https://iternal.ai/llm-selection-guide": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "_discovery",
+    "model_id": "claude-fable-5",
+    "http_ok": true
+  },
+  "https://api.x.ai/v1": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "_discovery",
+    "model_id": "grok-4.5",
+    "http_ok": true
+  },
+  "https://x.ai/news/grok-4-5": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "_discovery",
+    "model_id": "grok-4.5",
+    "http_ok": true
+  },
+  "https://www.thundercompute.com/blog/best-open-source-llms": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "_discovery",
+    "model_id": "llama-4-scout",
+    "http_ok": true
+  },
+  "https://build.nvidia.com/models": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "nvidia",
+    "model_id": "qwen/qwq-32b",
+    "http_ok": true
+  },
+  "https://openrouter.ai/api/v1/models": {
+    "fetched_at": "2026-07-30T17:05:52Z",
+    "provider_key": "openrouter",
+    "model_id": "nvidia/nemotron-3.5-content-safety:free",
     "http_ok": true
   }
 }

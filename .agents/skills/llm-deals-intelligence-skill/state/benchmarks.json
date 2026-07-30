@@ -4,333 +4,1533 @@
   "models": [
     {
       "canonical_name": "Ling-3.0-flash",
-      "aliases": ["ling-3.0-flash", "inclusionai/ling-3.0-flash", "inclusionai/ling-3.0-flash:free"],
+      "aliases": [
+        "ling-3.0-flash",
+        "inclusionai/ling-3.0-flash",
+        "inclusionai/ling-3.0-flash:free"
+      ],
       "vendor": "InclusionAI",
-      "model_ids": ["inclusionai/ling-3.0-flash", "inclusionai/ling-3.0-flash:free"],
+      "model_ids": [
+        "inclusionai/ling-3.0-flash",
+        "inclusionai/ling-3.0-flash:free"
+      ],
       "tier": "A",
       "benchmarks": [
-        {"name": "SWE-Bench Pro", "score": 56.63, "source": "https://x.com/AntLingAGI/status/2080351022028095681", "extraction_method": "visual_approximate", "accessed_at": "2026-07-24T21:30:00+09:00"},
-        {"name": "MCP-Atlas", "score": 65.45, "source": "https://x.com/AntLingAGI/status/2080351022028095681", "extraction_method": "visual_approximate", "accessed_at": "2026-07-24T21:30:00+09:00"},
-        {"name": "SkillsBench", "score": 44.83, "source": "https://x.com/AntLingAGI/status/2080351022028095681", "extraction_method": "visual_approximate", "accessed_at": "2026-07-24T21:30:00+09:00"},
-        {"name": "WebSearch", "score": 72.3, "source": "https://x.com/AntLingAGI/status/2080351022028095681", "extraction_method": "visual_approximate", "accessed_at": "2026-07-24T21:30:00+09:00"},
-        {"name": "BrowseComp", "score": 70.33, "source": "https://x.com/AntLingAGI/status/2080351022028095681", "extraction_method": "visual_approximate", "accessed_at": "2026-07-24T21:30:00+09:00"},
-        {"name": "TFBench", "score": 74.18, "source": "https://x.com/AntLingAGI/status/2080351022028095681", "extraction_method": "visual_approximate", "accessed_at": "2026-07-24T21:30:00+09:00"},
-        {"name": "SysBench", "score": 93.63, "source": "https://x.com/AntLingAGI/status/2080351022028095681", "extraction_method": "visual_approximate", "accessed_at": "2026-07-24T21:30:00+09:00"},
-        {"name": "MRCR-128K", "score": 90.78, "source": "https://x.com/AntLingAGI/status/2080351022028095681", "extraction_method": "visual_approximate", "accessed_at": "2026-07-24T21:30:00+09:00"},
-        {"name": "Multi-IF", "score": 87.65, "source": "https://x.com/AntLingAGI/status/2080351022028095681", "extraction_method": "visual_approximate", "accessed_at": "2026-07-24T21:30:00+09:00"},
-        {"name": "SWE-Bench Multilingual", "score": 72.44},
-        {"name": "Terminal Bench 2.1", "score": 57},
-        {"name": "Tau3-banking-AA", "score": 28},
-        {"name": "WideSearch", "score": 73.63},
-        {"name": "IFBench", "score": 74.49}
+        {
+          "name": "SWE-Bench Pro",
+          "score": 56.63,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "MCP-Atlas",
+          "score": 65.45,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "SkillsBench",
+          "score": 44.83,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "WebSearch",
+          "score": 72.3,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "BrowseComp",
+          "score": 70.33,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "TFBench",
+          "score": 74.18,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "SysBench",
+          "score": 93.63,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "MRCR-128K",
+          "score": 90.78,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "Multi-IF",
+          "score": 87.65,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "extraction_method": "visual_approximate",
+          "accessed_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "SWE-Bench Multilingual",
+          "score": 72.44
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 57
+        },
+        {
+          "name": "Tau3-banking-AA",
+          "score": 28
+        },
+        {
+          "name": "WideSearch",
+          "score": 73.63
+        },
+        {
+          "name": "IFBench",
+          "score": 74.49
+        }
       ],
       "sources_checked": [
-        {"type": "huggingface_model_card", "url": "https://huggingface.co/inclusionAI/Ling-3.0-flash", "status": "not_found", "accessed_at": "2026-07-24T21:20:00+09:00"},
-        {"type": "vendor_technical_blog", "url": "https://www.inclusion-ai.org/blog/tags/release/", "status": "no_matching_post", "accessed_at": "2026-07-24T21:22:00+09:00"},
-        {"type": "official_x_post", "url": "https://x.com/AntLingAGI/status/2080351022028095681", "status": "found_image", "accessed_at": "2026-07-24T21:25:00+09:00"},
-        {"type": "github_readme", "url": "https://github.com/InclusionAI/Ling", "status": "no_3.0_data", "accessed_at": "2026-07-24T21:23:00+09:00"}
+        {
+          "type": "huggingface_model_card",
+          "url": "https://huggingface.co/inclusionAI/Ling-3.0-flash",
+          "status": "not_found",
+          "accessed_at": "2026-07-24T21:20:00+09:00"
+        },
+        {
+          "type": "vendor_technical_blog",
+          "url": "https://www.inclusion-ai.org/blog/tags/release/",
+          "status": "no_matching_post",
+          "accessed_at": "2026-07-24T21:22:00+09:00"
+        },
+        {
+          "type": "official_x_post",
+          "url": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "status": "found_image",
+          "accessed_at": "2026-07-24T21:25:00+09:00"
+        },
+        {
+          "type": "github_readme",
+          "url": "https://github.com/InclusionAI/Ling",
+          "status": "no_3.0_data",
+          "accessed_at": "2026-07-24T21:23:00+09:00"
+        }
       ]
     },
     {
       "canonical_name": "Poolside Laguna M.1",
-      "aliases": ["laguna-m.1", "poolside/laguna-m.1"],
+      "aliases": [
+        "laguna-m.1",
+        "poolside/laguna-m.1"
+      ],
       "vendor": "Poolside",
-      "model_ids": ["poolside/laguna-m.1:free", "poolside/laguna-m.1"],
+      "model_ids": [
+        "poolside/laguna-m.1:free",
+        "poolside/laguna-m.1"
+      ],
       "tier": null,
       "benchmarks": [
-        {"name": "SWE-bench Verified", "score": 72.5, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
-        {"name": "SWE-bench Multilingual", "score": 67.3, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
-        {"name": "Terminal-Bench 2.0", "score": 40.7, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"}
+        {
+          "name": "SWE-bench Verified",
+          "score": 72.5,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "SWE-bench Multilingual",
+          "score": 67.3,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "Terminal-Bench 2.0",
+          "score": 40.7,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        }
       ],
       "sources_checked": []
     },
     {
       "canonical_name": "Nemotron 3 Ultra",
-      "aliases": ["nemotron-3-ultra-550b-a55b", "nvidia/nemotron-3-ultra-550b-a55b"],
+      "aliases": [
+        "nemotron-3-ultra-550b-a55b",
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
       "vendor": "NVIDIA",
-      "model_ids": ["nvidia/nemotron-3-ultra-550b-a55b:free", "nvidia/nemotron-3-ultra-550b-a55b"],
+      "model_ids": [
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
       "tier": "A",
       "benchmarks": [
-        {"name": "Humanity's Last Exam", "score": 55, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
-        {"name": "AIME 2025", "score": 86, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
-        {"name": "SWE-bench Verified", "score": 52.8, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
-        {"name": "Terminal Bench 2.1", "score": 56.4}
+        {
+          "name": "Humanity's Last Exam",
+          "score": 55,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "AIME 2025",
+          "score": 86,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "SWE-bench Verified",
+          "score": 52.8,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 56.4
+        }
       ],
       "sources_checked": []
     },
     {
       "canonical_name": "Gemini 3.6 Flash",
-      "aliases": ["gemini-3.6-flash"],
+      "aliases": [
+        "gemini-3.6-flash"
+      ],
       "vendor": "Google",
-      "model_ids": ["gemini-3.6-flash"],
+      "model_ids": [
+        "gemini-3.6-flash"
+      ],
       "tier": "S",
       "benchmarks": [
-        {"name": "Humanity's Last Exam", "score": 52, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
-        {"name": "MMLU", "score": 89.2, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
-        {"name": "GPQA Diamond", "score": 74.1, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
-        {"name": "Terminal Bench 2.1", "score": 78}
+        {
+          "name": "Humanity's Last Exam",
+          "score": 52,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "MMLU",
+          "score": 89.2,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 74.1,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 78
+        }
       ],
       "sources_checked": []
     },
     {
       "canonical_name": "Poolside Laguna S 2.1",
-      "aliases": ["laguna-s-2.1", "poolside/laguna-s-2.1"],
+      "aliases": [
+        "laguna-s-2.1",
+        "poolside/laguna-s-2.1"
+      ],
       "vendor": "Poolside",
-      "model_ids": ["poolside/laguna-s-2.1:free", "poolside/laguna-s-2.1"],
+      "model_ids": [
+        "poolside/laguna-s-2.1:free",
+        "poolside/laguna-s-2.1"
+      ],
       "tier": "S",
       "benchmarks": [
-        {"name": "Terminal-Bench 2.1", "score": 70.2, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
-        {"name": "DeepSWE", "score": 40.4, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"}
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 70.2,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "DeepSWE",
+          "score": 40.4,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        }
       ],
       "sources_checked": []
     },
     {
       "canonical_name": "DeepSeek V4 Flash",
-      "aliases": ["deepseek-v4-flash"],
+      "aliases": [
+        "deepseek-v4-flash"
+      ],
       "vendor": "DeepSeek",
-      "model_ids": ["deepseek-v4-flash"],
+      "model_ids": [
+        "deepseek-v4-flash"
+      ],
       "tier": null,
       "benchmarks": [
-        {"name": "Humanity's Last Exam", "score": 51.6, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
-        {"name": "SWE-bench Verified", "score": 58.4, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
-        {"name": "AIME 2025", "score": 82, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
-        {"name": "Terminal Bench 2.1", "score": 49.1}
+        {
+          "name": "Humanity's Last Exam",
+          "score": 51.6,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "SWE-bench Verified",
+          "score": 58.4,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "AIME 2025",
+          "score": 82,
+          "source": "report.json",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-24T21:07:00+09:00"
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 49.1
+        }
       ],
       "sources_checked": []
     },
     {
       "canonical_name": "Nemotron 3 Super",
-      "aliases": ["nemotron-3-super-120b-a12b", "nvidia/nemotron-3-super-120b-a12b"],
+      "aliases": [
+        "nemotron-3-super-120b-a12b",
+        "nvidia/nemotron-3-super-120b-a12b"
+      ],
       "vendor": "NVIDIA",
-      "model_ids": ["nvidia/nemotron-3-super-120b-a12b:free", "nvidia/nemotron-3-super-120b-a12b"],
+      "model_ids": [
+        "nvidia/nemotron-3-super-120b-a12b:free",
+        "nvidia/nemotron-3-super-120b-a12b"
+      ],
       "tier": null,
       "benchmarks": [
-        {"name": "GPQA Diamond", "score": 80, "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b", "extraction_method": "third_party_aggregator", "accessed_at": "2026-07-25T01:30:00+09:00"},
-        {"name": "Humanity's Last Exam", "score": 19.2, "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b", "extraction_method": "third_party_aggregator", "accessed_at": "2026-07-25T01:30:00+09:00"},
-        {"name": "IFBench", "score": 71.5, "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b", "extraction_method": "third_party_aggregator", "accessed_at": "2026-07-25T01:30:00+09:00"},
-        {"name": "AA Intelligence Index", "score": 25.4, "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b", "extraction_method": "third_party_aggregator", "accessed_at": "2026-07-25T01:30:00+09:00"},
-        {"name": "AA Coding Index", "score": 37.7, "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b", "extraction_method": "third_party_aggregator", "accessed_at": "2026-07-25T01:30:00+09:00"}
+        {
+          "name": "GPQA Diamond",
+          "score": 80,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        },
+        {
+          "name": "Humanity's Last Exam",
+          "score": 19.2,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        },
+        {
+          "name": "IFBench",
+          "score": 71.5,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        },
+        {
+          "name": "AA Intelligence Index",
+          "score": 25.4,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        },
+        {
+          "name": "AA Coding Index",
+          "score": 37.7,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        }
       ],
       "sources_checked": [
-        {"type": "huggingface_model_card", "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8", "status": "checked_no_benchmark_table", "accessed_at": "2026-07-25T01:30:00+09:00"},
-        {"type": "third_party_aggregator", "url": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b", "status": "found_scores", "accessed_at": "2026-07-25T01:30:00+09:00"}
+        {
+          "type": "huggingface_model_card",
+          "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8",
+          "status": "checked_no_benchmark_table",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        },
+        {
+          "type": "third_party_aggregator",
+          "url": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
+          "status": "found_scores",
+          "accessed_at": "2026-07-25T01:30:00+09:00"
+        }
       ]
     },
     {
       "canonical_name": "Kimi K3",
-      "aliases": ["kimi-k3", "moonshotai/kimi-k3"],
+      "aliases": [
+        "kimi-k3",
+        "moonshotai/kimi-k3"
+      ],
       "vendor": "Moonshot AI",
-      "model_ids": ["kimi-k3", "moonshotai/kimi-k3"],
+      "model_ids": [
+        "kimi-k3",
+        "moonshotai/kimi-k3"
+      ],
       "tier": "S",
       "benchmarks": [
-        {"name": "GPQA-Diamond", "score": 93.5, "source": "https://www.kimi.com/blog/kimi-k3", "extraction_method": "official_page", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "HLE-Full", "score": 43.5, "source": "https://www.kimi.com/blog/kimi-k3", "extraction_method": "official_page", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "HLE-Full w/ tools", "score": 56, "source": "https://www.kimi.com/blog/kimi-k3", "extraction_method": "official_page", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "SWE Marathon", "score": 42, "source": "https://www.kimi.com/blog/kimi-k3", "extraction_method": "official_page", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "DeepSWE", "score": 67.5, "source": "https://www.kimi.com/blog/kimi-k3", "extraction_method": "official_page", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "Terminal Bench 2.1", "score": 88.3, "source": "https://www.kimi.com/blog/kimi-k3", "extraction_method": "official_page", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "FrontierSWE", "score": 81.2, "source": "https://www.kimi.com/blog/kimi-k3", "extraction_method": "official_page", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "BrowseComp", "score": 91.2, "source": "https://www.kimi.com/blog/kimi-k3", "extraction_method": "official_page", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "MMMU-Pro", "score": 81.6, "source": "https://www.kimi.com/blog/kimi-k3", "extraction_method": "official_page", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "Program Bench", "score": 77.8, "source": "https://www.kimi.com/blog/kimi-k3", "extraction_method": "official_page", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "MCP Atlas", "score": 84.2, "source": "https://www.kimi.com/blog/kimi-k3", "extraction_method": "official_page", "accessed_at": "2026-07-28T22:00:00+09:00"}
+        {
+          "name": "GPQA-Diamond",
+          "score": 93.5,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "HLE-Full",
+          "score": 43.5,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "HLE-Full w/ tools",
+          "score": 56,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "SWE Marathon",
+          "score": 42,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "DeepSWE",
+          "score": 67.5,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 88.3,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "FrontierSWE",
+          "score": 81.2,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "BrowseComp",
+          "score": 91.2,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "MMMU-Pro",
+          "score": 81.6,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "Program Bench",
+          "score": 77.8,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "MCP Atlas",
+          "score": 84.2,
+          "source": "https://www.kimi.com/blog/kimi-k3",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        }
       ],
       "sources_checked": [
-        {"type": "vendor_technical_blog", "url": "https://www.kimi.com/blog/kimi-k3", "status": "found_full_benchmark_table", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"type": "huggingface_model_card", "url": "https://huggingface.co/moonshotai/Kimi-K3", "status": "released", "accessed_at": "2026-07-28T22:00:00+09:00"}
+        {
+          "type": "vendor_technical_blog",
+          "url": "https://www.kimi.com/blog/kimi-k3",
+          "status": "found_full_benchmark_table",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "type": "huggingface_model_card",
+          "url": "https://huggingface.co/moonshotai/Kimi-K3",
+          "status": "released",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        }
       ]
     },
     {
       "canonical_name": "Claude Opus 5",
-      "aliases": ["claude-opus-5"],
+      "aliases": [
+        "claude-opus-5"
+      ],
       "vendor": "Anthropic",
-      "model_ids": ["claude-opus-5"],
+      "model_ids": [
+        "claude-opus-5"
+      ],
       "tier": null,
       "benchmarks": [
-        {"name": "SWE-bench Verified", "score": 96, "source": "https://benchlm.ai/benchmarks/sweVerified", "extraction_method": "third_party_aggregator", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "SWE-bench Pro", "score": 79.2, "source": "https://codingfleet.com/blog/swe-bench-pro-leaderboard-2026/", "extraction_method": "third_party_aggregator", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "Frontier-Bench v0.1", "score": 43.3, "source": "https://www.vellum.ai/blog/claude-opus-5-benchmarks-explained", "extraction_method": "third_party_aggregator", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "Terminal Bench 2.1", "score": 89, "source": "https://x.com/ArtificialAnlys/status/2080734447717298483"},
-        {"name": "MMLU-Pro", "score": 91.6, "source": "https://openlm.ai/chatbot-arena/"},
-        {"name": "Arena Elo", "score": 1511, "source": "https://openlm.ai/chatbot-arena/"}
+        {
+          "name": "SWE-bench Verified",
+          "score": 96,
+          "source": "https://benchlm.ai/benchmarks/sweVerified",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "SWE-bench Pro",
+          "score": 79.2,
+          "source": "https://codingfleet.com/blog/swe-bench-pro-leaderboard-2026/",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "Frontier-Bench v0.1",
+          "score": 43.3,
+          "source": "https://www.vellum.ai/blog/claude-opus-5-benchmarks-explained",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 89,
+          "source": "https://x.com/ArtificialAnlys/status/2080734447717298483"
+        },
+        {
+          "name": "MMLU-Pro",
+          "score": 91.6,
+          "source": "https://openlm.ai/chatbot-arena/"
+        },
+        {
+          "name": "Arena Elo",
+          "score": 1511,
+          "source": "https://openlm.ai/chatbot-arena/"
+        }
       ],
       "sources_checked": [
-        {"type": "vendor_technical_blog", "url": "https://www.anthropic.com/news/claude-opus-5", "status": "found_benchmarks", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"type": "third_party_aggregator", "url": "https://goldiebench.com/benchmarks/opus5", "status": "found_scores", "accessed_at": "2026-07-28T22:00:00+09:00"}
+        {
+          "type": "vendor_technical_blog",
+          "url": "https://www.anthropic.com/news/claude-opus-5",
+          "status": "found_benchmarks",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "type": "third_party_aggregator",
+          "url": "https://goldiebench.com/benchmarks/opus5",
+          "status": "found_scores",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        }
       ]
     },
     {
       "canonical_name": "GLM 5.2",
       "vendor": "Z.ai",
-      "model_ids": ["@cf/z-ai/glm-5.2", "z-ai/glm-5.2", "glm-5.2"],
+      "model_ids": [
+        "@cf/z-ai/glm-5.2",
+        "z-ai/glm-5.2",
+        "glm-5.2"
+      ],
       "tier": "A",
       "benchmarks": [
-        {"name": "GPQA-Diamond", "score": 91.2},
-        {"name": "Terminal Bench 2.1", "score": 82.7},
-        {"name": "DeepSWE", "score": 46.2}
+        {
+          "name": "GPQA-Diamond",
+          "score": 91.2
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 82.7
+        },
+        {
+          "name": "DeepSWE",
+          "score": 46.2
+        }
       ],
       "updated_at": "2026-07-28"
     },
     {
       "canonical_name": "Gemma 4 31B IT",
-      "aliases": ["gemma-4-31b-it", "google/gemma-4-31b-it", "google/gemma-4-31b-it:free"],
+      "aliases": [
+        "gemma-4-31b-it",
+        "google/gemma-4-31b-it",
+        "google/gemma-4-31b-it:free"
+      ],
       "vendor": "Google",
-      "model_ids": ["google/gemma-4-31b-it", "google/gemma-4-31b-it:free"],
+      "model_ids": [
+        "google/gemma-4-31b-it",
+        "google/gemma-4-31b-it:free"
+      ],
       "tier": null,
       "benchmarks": [
-        {"name": "MMLU Pro", "score": 85.2, "source": "https://ai.google.dev/gemma/docs/core/model_card_4", "extraction_method": "official_page", "accessed_at": "2026-07-29T00:00:00+09:00"},
-        {"name": "AIME 2026 no tools", "score": 89.2, "source": "https://ai.google.dev/gemma/docs/core/model_card_4", "extraction_method": "official_page", "accessed_at": "2026-07-29T00:00:00+09:00"},
-        {"name": "LiveCodeBench v6", "score": 80, "source": "https://ai.google.dev/gemma/docs/core/model_card_4", "extraction_method": "official_page", "accessed_at": "2026-07-29T00:00:00+09:00"},
-        {"name": "GPQA Diamond", "score": 84.3, "source": "https://ai.google.dev/gemma/docs/core/model_card_4", "extraction_method": "official_page", "accessed_at": "2026-07-29T00:00:00+09:00"},
-        {"name": "HLE no tools", "score": 19.5, "source": "https://ai.google.dev/gemma/docs/core/model_card_4", "extraction_method": "official_page", "accessed_at": "2026-07-29T00:00:00+09:00"},
-        {"name": "MMMU Pro", "score": 76.9, "source": "https://ai.google.dev/gemma/docs/core/model_card_4", "extraction_method": "official_page", "accessed_at": "2026-07-29T00:00:00+09:00"}
+        {
+          "name": "MMLU Pro",
+          "score": 85.2,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "AIME 2026 no tools",
+          "score": 89.2,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "LiveCodeBench v6",
+          "score": 80,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 84.3,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "HLE no tools",
+          "score": 19.5,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "MMMU Pro",
+          "score": 76.9,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        }
       ],
       "sources_checked": [
-        {"type": "vendor_technical_blog", "url": "https://ai.google.dev/gemma/docs/core/model_card_4", "status": "found_full_benchmark_table", "accessed_at": "2026-07-29T00:00:00+09:00"},
-        {"type": "huggingface_model_card", "url": "https://huggingface.co/google/gemma-4-31B-it", "status": "no_benchmark_table_in_html", "accessed_at": "2026-07-29T00:00:00+09:00"}
+        {
+          "type": "vendor_technical_blog",
+          "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "status": "found_full_benchmark_table",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "type": "huggingface_model_card",
+          "url": "https://huggingface.co/google/gemma-4-31B-it",
+          "status": "no_benchmark_table_in_html",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        }
       ]
     },
     {
       "canonical_name": "Gemma 4 26B A4B IT",
-      "aliases": ["gemma-4-26b-a4b-it", "google/gemma-4-26b-a4b-it", "google/gemma-4-26b-a4b-it:free"],
+      "aliases": [
+        "gemma-4-26b-a4b-it",
+        "google/gemma-4-26b-a4b-it",
+        "google/gemma-4-26b-a4b-it:free"
+      ],
       "vendor": "Google",
-      "model_ids": ["google/gemma-4-26b-a4b-it", "google/gemma-4-26b-a4b-it:free"],
+      "model_ids": [
+        "google/gemma-4-26b-a4b-it",
+        "google/gemma-4-26b-a4b-it:free"
+      ],
       "tier": null,
       "benchmarks": [
-        {"name": "MMLU Pro", "score": 82.6, "source": "https://ai.google.dev/gemma/docs/core/model_card_4", "extraction_method": "official_page", "accessed_at": "2026-07-29T00:00:00+09:00"},
-        {"name": "AIME 2026 no tools", "score": 88.3, "source": "https://ai.google.dev/gemma/docs/core/model_card_4", "extraction_method": "official_page", "accessed_at": "2026-07-29T00:00:00+09:00"},
-        {"name": "LiveCodeBench v6", "score": 77.1, "source": "https://ai.google.dev/gemma/docs/core/model_card_4", "extraction_method": "official_page", "accessed_at": "2026-07-29T00:00:00+09:00"},
-        {"name": "GPQA Diamond", "score": 82.3, "source": "https://ai.google.dev/gemma/docs/core/model_card_4", "extraction_method": "official_page", "accessed_at": "2026-07-29T00:00:00+09:00"},
-        {"name": "HLE no tools", "score": 8.7, "source": "https://ai.google.dev/gemma/docs/core/model_card_4", "extraction_method": "official_page", "accessed_at": "2026-07-29T00:00:00+09:00"},
-        {"name": "MMMU Pro", "score": 73.8, "source": "https://ai.google.dev/gemma/docs/core/model_card_4", "extraction_method": "official_page", "accessed_at": "2026-07-29T00:00:00+09:00"}
+        {
+          "name": "MMLU Pro",
+          "score": 82.6,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "AIME 2026 no tools",
+          "score": 88.3,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "LiveCodeBench v6",
+          "score": 77.1,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 82.3,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "HLE no tools",
+          "score": 8.7,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        },
+        {
+          "name": "MMMU Pro",
+          "score": 73.8,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "extraction_method": "official_page",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        }
       ],
       "sources_checked": [
-        {"type": "vendor_technical_blog", "url": "https://ai.google.dev/gemma/docs/core/model_card_4", "status": "found_full_benchmark_table", "accessed_at": "2026-07-29T00:00:00+09:00"}
+        {
+          "type": "vendor_technical_blog",
+          "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
+          "status": "found_full_benchmark_table",
+          "accessed_at": "2026-07-29T00:00:00+09:00"
+        }
       ]
     },
     {
       "canonical_name": "gpt-oss-20b",
-      "aliases": ["openai/gpt-oss-20b", "gpt-oss-20b"],
+      "aliases": [
+        "openai/gpt-oss-20b",
+        "gpt-oss-20b"
+      ],
       "vendor": "OpenAI",
-      "model_ids": ["openai/gpt-oss-20b", "openai/gpt-oss-20b:free"],
+      "model_ids": [
+        "openai/gpt-oss-20b",
+        "openai/gpt-oss-20b:free"
+      ],
       "tier": null,
       "benchmarks": [],
       "sources_checked": [
-        {"type": "huggingface_model_card", "url": "https://huggingface.co/openai/gpt-oss-20b", "status": "checked_no_terminal_bench", "accessed_at": "2026-07-29T13:50:00+09:00"}
+        {
+          "type": "huggingface_model_card",
+          "url": "https://huggingface.co/openai/gpt-oss-20b",
+          "status": "checked_no_terminal_bench",
+          "accessed_at": "2026-07-29T13:50:00+09:00"
+        }
       ]
     },
     {
       "canonical_name": "Nemotron 3 Nano 30B A3B",
-      "aliases": ["nvidia/nemotron-3-nano-30b-a3b", "nemotron-3-nano"],
+      "aliases": [
+        "nvidia/nemotron-3-nano-30b-a3b",
+        "nemotron-3-nano"
+      ],
       "vendor": "NVIDIA",
-      "model_ids": ["nvidia/nemotron-3-nano-30b-a3b", "nvidia/nemotron-3-nano-30b-a3b:free"],
+      "model_ids": [
+        "nvidia/nemotron-3-nano-30b-a3b",
+        "nvidia/nemotron-3-nano-30b-a3b:free"
+      ],
       "tier": null,
       "benchmarks": [],
       "sources_checked": [
-        {"type": "third_party_aggregator", "url": "https://costgoat.com/pricing/openrouter-free-models", "status": "quality_score_40_only", "accessed_at": "2026-07-29T13:00:00+09:00"}
+        {
+          "type": "third_party_aggregator",
+          "url": "https://costgoat.com/pricing/openrouter-free-models",
+          "status": "quality_score_40_only",
+          "accessed_at": "2026-07-29T13:00:00+09:00"
+        }
       ]
     },
     {
       "canonical_name": "Gemini 2.5 Pro",
-      "aliases": ["gemini-2.5-pro"],
+      "aliases": [
+        "gemini-2.5-pro"
+      ],
       "vendor": "Google",
-      "model_ids": ["gemini-2.5-pro"],
+      "model_ids": [
+        "gemini-2.5-pro"
+      ],
       "tier": null,
       "benchmarks": [
-        {"name": "SWE-bench Verified", "score": 96, "source": "https://benchlm.ai/benchmarks/sweVerified", "extraction_method": "third_party_aggregator", "accessed_at": "2026-07-28T22:00:00+09:00"},
-        {"name": "GPQA Diamond", "score": 85.3, "source": "https://evals.report/models/google-gemini-2-5-pro"},
-        {"name": "Humanity's Last Exam", "score": 21.64, "source": "https://evals.report/models/google-gemini-2-5-pro"},
-        {"name": "AIME (OTIS Mock)", "score": 84.2, "source": "https://evals.report/models/google-gemini-2-5-pro"},
-        {"name": "MMLU-Pro", "score": 86.2, "source": "https://evals.report/models/google-gemini-2-5-pro"},
-        {"name": "MMMU-Pro", "score": 68, "source": "https://evals.report/models/google-gemini-2-5-pro"},
-        {"name": "Arena Elo", "score": 1459, "source": "https://openlm.ai/chatbot-arena/"}
+        {
+          "name": "SWE-bench Verified",
+          "score": 96,
+          "source": "https://benchlm.ai/benchmarks/sweVerified",
+          "extraction_method": "third_party_aggregator",
+          "accessed_at": "2026-07-28T22:00:00+09:00"
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 85.3,
+          "source": "https://evals.report/models/google-gemini-2-5-pro"
+        },
+        {
+          "name": "Humanity's Last Exam",
+          "score": 21.64,
+          "source": "https://evals.report/models/google-gemini-2-5-pro"
+        },
+        {
+          "name": "AIME (OTIS Mock)",
+          "score": 84.2,
+          "source": "https://evals.report/models/google-gemini-2-5-pro"
+        },
+        {
+          "name": "MMLU-Pro",
+          "score": 86.2,
+          "source": "https://evals.report/models/google-gemini-2-5-pro"
+        },
+        {
+          "name": "MMMU-Pro",
+          "score": 68,
+          "source": "https://evals.report/models/google-gemini-2-5-pro"
+        },
+        {
+          "name": "Arena Elo",
+          "score": 1459,
+          "source": "https://openlm.ai/chatbot-arena/"
+        }
       ],
       "sources_checked": []
     },
     {
       "canonical_name": "Qwen3.7 Flash",
-      "aliases": ["qwen3.7-flash", "qwen/qwen3.7-flash"],
+      "aliases": [
+        "qwen3.7-flash",
+        "qwen/qwen3.7-flash"
+      ],
       "vendor": "Alibaba (Qwen)",
-      "model_ids": ["qwen/qwen3.7-flash"],
+      "model_ids": [
+        "qwen/qwen3.7-flash"
+      ],
       "tier": null,
       "benchmarks": [],
       "sources_checked": [
-        {"type": "openrouter_model_page", "url": "https://openrouter.ai/qwen/qwen3.7-flash", "status": "no_benchmark_table", "accessed_at": "2026-07-29T02:30:00+09:00"}
+        {
+          "type": "openrouter_model_page",
+          "url": "https://openrouter.ai/qwen/qwen3.7-flash",
+          "status": "no_benchmark_table",
+          "accessed_at": "2026-07-29T02:30:00+09:00"
+        }
       ]
     },
     {
       "canonical_name": "Nemotron 4 340B Instruct",
-      "aliases": ["nemotron-4-340b-instruct", "nvidia/nemotron-4-340b-instruct"],
+      "aliases": [
+        "nemotron-4-340b-instruct",
+        "nvidia/nemotron-4-340b-instruct"
+      ],
       "vendor": "NVIDIA",
-      "model_ids": ["nvidia/nemotron-4-340b-instruct"],
+      "model_ids": [
+        "nvidia/nemotron-4-340b-instruct"
+      ],
       "tier": null,
       "benchmarks": [],
       "sources_checked": [
-        {"type": "nvidia_nim_catalog", "url": "https://docs.api.nvidia.com/nim/reference/llm-apis", "status": "listed_no_benchmark", "accessed_at": "2026-07-29T15:05:00+09:00"},
-        {"type": "third_party_aggregator", "url": "https://llm-stats.com/benchmarks/terminal-bench-2.1", "status": "not_found", "accessed_at": "2026-07-29T15:05:00+09:00"}
+        {
+          "type": "nvidia_nim_catalog",
+          "url": "https://docs.api.nvidia.com/nim/reference/llm-apis",
+          "status": "listed_no_benchmark",
+          "accessed_at": "2026-07-29T15:05:00+09:00"
+        },
+        {
+          "type": "third_party_aggregator",
+          "url": "https://llm-stats.com/benchmarks/terminal-bench-2.1",
+          "status": "not_found",
+          "accessed_at": "2026-07-29T15:05:00+09:00"
+        }
       ]
     },
     {
       "canonical_name": "GPT-OSS 120B",
-      "aliases": ["gpt-oss-120b", "openai/gpt-oss-120b"],
+      "aliases": [
+        "gpt-oss-120b",
+        "openai/gpt-oss-120b"
+      ],
       "vendor": "OpenAI",
-      "model_ids": ["openai/gpt-oss-120b"],
+      "model_ids": [
+        "openai/gpt-oss-120b"
+      ],
       "tier": null,
       "benchmarks": [
-        {"name": "GPQA Diamond", "score": 75.8, "source": "https://evals.report/models/openai-gpt-oss-120b"},
-        {"name": "SWE-bench Pro", "score": 16.2, "source": "https://evals.report/models/openai-gpt-oss-120b"},
-        {"name": "AIME (OTIS Mock)", "score": 88.9, "source": "https://evals.report/models/openai-gpt-oss-120b"},
-        {"name": "MMLU-Pro", "score": 80.8, "source": "https://evals.report/models/openai-gpt-oss-120b"},
-        {"name": "LiveCodeBench Pro", "score": 1299, "source": "https://evals.report/models/openai-gpt-oss-120b"},
-        {"name": "IFBench", "score": 69, "source": "https://evals.report/models/openai-gpt-oss-120b"},
-        {"name": "Arena Elo", "score": 1368, "source": "https://openlm.ai/chatbot-arena/"}
+        {
+          "name": "GPQA Diamond",
+          "score": 75.8,
+          "source": "https://evals.report/models/openai-gpt-oss-120b"
+        },
+        {
+          "name": "SWE-bench Pro",
+          "score": 16.2,
+          "source": "https://evals.report/models/openai-gpt-oss-120b"
+        },
+        {
+          "name": "AIME (OTIS Mock)",
+          "score": 88.9,
+          "source": "https://evals.report/models/openai-gpt-oss-120b"
+        },
+        {
+          "name": "MMLU-Pro",
+          "score": 80.8,
+          "source": "https://evals.report/models/openai-gpt-oss-120b"
+        },
+        {
+          "name": "LiveCodeBench Pro",
+          "score": 1299,
+          "source": "https://evals.report/models/openai-gpt-oss-120b"
+        },
+        {
+          "name": "IFBench",
+          "score": 69,
+          "source": "https://evals.report/models/openai-gpt-oss-120b"
+        },
+        {
+          "name": "Arena Elo",
+          "score": 1368,
+          "source": "https://openlm.ai/chatbot-arena/"
+        }
       ],
       "sources_checked": [
-        {"type": "nvidia_nim_catalog", "url": "https://docs.api.nvidia.com/nim/reference/llm-apis", "status": "listed_no_benchmark", "accessed_at": "2026-07-29T15:05:00+09:00"},
-        {"type": "third_party_aggregator", "url": "https://llm-stats.com/benchmarks/terminal-bench-2.1", "status": "not_found", "accessed_at": "2026-07-29T15:05:00+09:00"}
+        {
+          "type": "nvidia_nim_catalog",
+          "url": "https://docs.api.nvidia.com/nim/reference/llm-apis",
+          "status": "listed_no_benchmark",
+          "accessed_at": "2026-07-29T15:05:00+09:00"
+        },
+        {
+          "type": "third_party_aggregator",
+          "url": "https://llm-stats.com/benchmarks/terminal-bench-2.1",
+          "status": "not_found",
+          "accessed_at": "2026-07-29T15:05:00+09:00"
+        }
       ]
     },
     {
       "canonical_name": "Poolside Laguna XS 2.1",
-      "model_ids": ["poolside/laguna-xs-2.1:free", "poolside/laguna-xs-2.1"],
+      "model_ids": [
+        "poolside/laguna-xs-2.1:free",
+        "poolside/laguna-xs-2.1"
+      ],
       "benchmarks": [
-        {"name": "SWE-bench Multilingual", "score": 63.1, "source": "https://poolside.ai/blog/introducing-laguna-xs-2-1"}
+        {
+          "name": "SWE-bench Multilingual",
+          "score": 63.1,
+          "source": "https://poolside.ai/blog/introducing-laguna-xs-2-1"
+        }
       ],
       "tier": null
     },
     {
       "canonical_name": "PrismML Ternary Bonsai 27B",
-      "model_ids": ["Prism-ML/Ternary-Bonsai-27B"],
+      "model_ids": [
+        "Prism-ML/Ternary-Bonsai-27B"
+      ],
       "benchmarks": [
-        {"name": "AIME 2025", "score": 90.84, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"},
-        {"name": "LiveCodeBench", "score": 82.75, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"},
-        {"name": "MATH-500", "score": 99.2, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"},
-        {"name": "HumanEval+", "score": 93.9, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"},
-        {"name": "MBPP+", "score": 81.22, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"},
-        {"name": "GSM8K", "score": 96.06, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"},
-        {"name": "BFCL v3", "score": 74.41, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"},
-        {"name": "Tau2-Bench", "score": 73.61, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"},
-        {"name": "IFEval", "score": 85.03, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"},
-        {"name": "MMMU-Pro", "score": 68.96, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"},
-        {"name": "OCR Bench v2", "score": 61.42, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"}
+        {
+          "name": "AIME 2025",
+          "score": 90.84,
+          "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"
+        },
+        {
+          "name": "LiveCodeBench",
+          "score": 82.75,
+          "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"
+        },
+        {
+          "name": "MATH-500",
+          "score": 99.2,
+          "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"
+        },
+        {
+          "name": "HumanEval+",
+          "score": 93.9,
+          "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"
+        },
+        {
+          "name": "MBPP+",
+          "score": 81.22,
+          "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"
+        },
+        {
+          "name": "GSM8K",
+          "score": 96.06,
+          "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"
+        },
+        {
+          "name": "BFCL v3",
+          "score": 74.41,
+          "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"
+        },
+        {
+          "name": "Tau2-Bench",
+          "score": 73.61,
+          "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"
+        },
+        {
+          "name": "IFEval",
+          "score": 85.03,
+          "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"
+        },
+        {
+          "name": "MMMU-Pro",
+          "score": 68.96,
+          "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"
+        },
+        {
+          "name": "OCR Bench v2",
+          "score": 61.42,
+          "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"
+        }
       ],
       "tier": null
     },
     {
       "canonical_name": "Cohere North Mini Code",
-      "model_ids": ["cohere/north-mini-code:free", "cohere/north-mini-code"],
+      "model_ids": [
+        "cohere/north-mini-code:free",
+        "cohere/north-mini-code"
+      ],
       "benchmarks": [
-        {"name": "AA Intelligence Index", "score": 19.8, "source": "OpenRouter API catalog"},
-        {"name": "AA Coding Index", "score": 36.5, "source": "OpenRouter API catalog"},
-        {"name": "AA Agentic Index", "score": 3.1, "source": "OpenRouter API catalog"}
+        {
+          "name": "AA Intelligence Index",
+          "score": 19.8,
+          "source": "OpenRouter API catalog"
+        },
+        {
+          "name": "AA Coding Index",
+          "score": 36.5,
+          "source": "OpenRouter API catalog"
+        },
+        {
+          "name": "AA Agentic Index",
+          "score": 3.1,
+          "source": "OpenRouter API catalog"
+        }
       ],
       "tier": null
     },
     {
       "canonical_name": "Nemotron 3 Nano Omni",
-      "model_ids": ["nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"],
+      "model_ids": [
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+      ],
       "benchmarks": [
-        {"name": "AA Coding Index", "score": 13.8, "source": "OpenRouter API catalog"}
+        {
+          "name": "AA Coding Index",
+          "score": 13.8,
+          "source": "OpenRouter API catalog"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "GPT-5.6 Sol",
+      "model_ids": [
+        "gpt-5.6-sol"
+      ],
+      "benchmarks": [
+        {
+          "name": "SWE-bench Verified",
+          "score": 96.2,
+          "source": "https://www.morphllm.com/best-ai-model-for-coding"
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 95.2,
+          "source": "https://www.mangomindbd.com/blog/july-2026-ai-benchmarks"
+        },
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 91.9,
+          "source": "https://www.mangomindbd.com/blog/july-2026-ai-benchmarks"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "GPT-5.6 Terra",
+      "model_ids": [
+        "gpt-5.6-terra"
+      ],
+      "benchmarks": [
+        {
+          "name": "SWE-bench Pro",
+          "score": 64.6,
+          "source": "https://x.com/EntelligenceAI/article/2078095134538002590"
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 84.3,
+          "source": "https://openai.com/index/gpt-5-6/"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "GPT-5.6 Luna",
+      "model_ids": [
+        "gpt-5.6-luna"
+      ],
+      "benchmarks": [
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 87,
+          "source": "https://www.mangomindbd.com/blog/july-2026-ai-benchmarks"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Muse Spark 1.1",
+      "model_ids": [
+        "muse-spark-1.1"
+      ],
+      "benchmarks": [
+        {
+          "name": "SWE-Bench Pro",
+          "score": 61.5,
+          "source": "https://llm-stats.com/models/compare/muse-spark-1.1-vs-seed-2.1-turbo"
+        },
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 93,
+          "source": "https://llm-stats.com/models/compare/muse-spark-1.1-vs-seed-2.1-turbo"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "MiniMax M3",
+      "model_ids": [
+        "minimax-m3"
+      ],
+      "benchmarks": [
+        {
+          "name": "GPQA Diamond",
+          "score": 92.68,
+          "source": "https://vals.ai/benchmarks/gpqa"
+        },
+        {
+          "name": "SWE-Bench Verified",
+          "score": 80.5,
+          "source": "https://telnyx.com/resources/best-open-source-llms"
+        },
+        {
+          "name": "SWE-bench Pro",
+          "score": 59,
+          "source": "https://benchlm.ai/compare/minimax-m3-vs-step-3-7-flash"
+        },
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 66,
+          "source": "https://regolo.ai/minimax-m3-vs-glm-5-2-when-to-use-each-open-weight-giant"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "DeepSeek V4 Pro",
+      "model_ids": [
+        "deepseek-v4-pro"
+      ],
+      "benchmarks": [
+        {
+          "name": "GPQA Diamond",
+          "score": 90.1,
+          "source": "https://benchlm.ai/models/deepseek-v4-pro-max"
+        },
+        {
+          "name": "SWE-bench Verified",
+          "score": 80.6,
+          "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro"
+        },
+        {
+          "name": "SWE-Bench Pro",
+          "score": 80,
+          "source": "https://emergent.sh/learn/glm-5-2-vs-deepseek-v4-pro"
+        },
+        {
+          "name": "Terminal Bench 2.0",
+          "score": 67.9,
+          "source": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Claude Sonnet 5",
+      "model_ids": [
+        "claude-sonnet-5"
+      ],
+      "benchmarks": [
+        {
+          "name": "SWE-bench Verified",
+          "score": 81.42,
+          "source": "https://www.facebook.com/vaibhavsisintyofficial/posts/claude-opus-5-is-cheaper-than-fable-5anthropic-just-launched-claude-opus-5-and-i/1494677049343080/"
+        },
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 85,
+          "source": "https://spectrumailab.com/blog/claude-sonnet-5-review-2026"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Claude Fable 5",
+      "model_ids": [
+        "claude-fable-5"
+      ],
+      "benchmarks": [
+        {
+          "name": "SWE-bench Verified",
+          "score": 95,
+          "source": "https://www.morphllm.com/best-ai-model-for-coding"
+        },
+        {
+          "name": "SWE-bench Pro",
+          "score": 80.3,
+          "source": "https://www.mangomindbd.com/blog/july-2026-ai-benchmarks"
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 88,
+          "source": "https://x.com/EntelligenceAI/article/2078095134538002590"
+        },
+        {
+          "name": "Humanity's Last Exam",
+          "score": 53.3,
+          "source": "https://iternal.ai/llm-selection-guide"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Grok 4.5",
+      "model_ids": [
+        "grok-4.5"
+      ],
+      "benchmarks": [
+        {
+          "name": "GPQA Diamond",
+          "score": 88,
+          "source": "https://www.facebook.com/61578004873269/posts/grok-45-completes-hard-tasks-in-under-half-the-steps-of-comparable-frontier-mode/122191734350933495/"
+        },
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 83.3,
+          "source": "https://benchlm.ai/models/grok-4-5"
+        },
+        {
+          "name": "SWE-bench Verified",
+          "score": 86.6,
+          "source": "https://www.bleap.finance/en-us/blog/grok-4-5-vs-claude-opus-4.8-vs-chatgpt-4o"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Llama 4 Scout",
+      "model_ids": [
+        "llama-4-scout"
+      ],
+      "benchmarks": [
+        {
+          "name": "GPQA Diamond",
+          "score": 91.2,
+          "source": "https://www.thundercompute.com/blog/best-open-source-llms"
+        },
+        {
+          "name": "AIME 2026",
+          "score": 99.2,
+          "source": "https://www.thundercompute.com/blog/best-open-source-llms"
+        },
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 78,
+          "source": "https://www.mangomindbd.com/blog/july-2026-ai-benchmarks"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Nemotron 3 Nano Omni 30B A3B Reasoning",
+      "model_ids": [
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+      ],
+      "benchmarks": [
+        {
+          "name": "AA Coding Index",
+          "score": 13.8,
+          "source": "https://docs.api.nvidia.com/nim/reference/llm-apis"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Ling-3.0-flash (free)",
+      "model_ids": [
+        "inclusionai/ling-3.0-flash:free"
+      ],
+      "benchmarks": [
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 57,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681"
+        },
+        {
+          "name": "SWE-Bench Pro",
+          "score": 56.63,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681"
+        },
+        {
+          "name": "MCP-Atlas",
+          "score": 65.45,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681"
+        },
+        {
+          "name": "SkillsBench",
+          "score": 44.83,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681"
+        },
+        {
+          "name": "WebSearch",
+          "score": 72.3,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681"
+        },
+        {
+          "name": "BrowseComp",
+          "score": 70.33,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681"
+        },
+        {
+          "name": "TFBench",
+          "score": 74.18,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681"
+        },
+        {
+          "name": "SysBench",
+          "score": 93.63,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681"
+        },
+        {
+          "name": "MRCR-128K",
+          "score": 90.78,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681"
+        },
+        {
+          "name": "Multi-IF",
+          "score": 87.65,
+          "source": "https://x.com/AntLingAGI/status/2080351022028095681"
+        },
+        {
+          "name": "WideSearch",
+          "score": 73.63,
+          "source": "crawl"
+        },
+        {
+          "name": "IFBench",
+          "score": 74.49,
+          "source": "crawl"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Poolside: Laguna S 2.1 (free)",
+      "model_ids": [
+        "poolside/laguna-s-2.1:free"
+      ],
+      "benchmarks": [
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 70.2,
+          "source": "report.json"
+        },
+        {
+          "name": "DeepSWE",
+          "score": 40.4,
+          "source": "report.json"
+        },
+        {
+          "name": "SWE-bench Verified",
+          "score": 72.5,
+          "source": "report.json"
+        },
+        {
+          "name": "SWE-bench Multilingual",
+          "score": 67.3,
+          "source": "report.json"
+        },
+        {
+          "name": "Terminal-Bench 2.0",
+          "score": 40.7,
+          "source": "report.json"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Poolside: Laguna XS 2.1 (free)",
+      "model_ids": [
+        "poolside/laguna-xs-2.1:free"
+      ],
+      "benchmarks": [
+        {
+          "name": "SWE-bench Multilingual",
+          "score": 63.1,
+          "source": "https://poolside.ai/blog/introducing-laguna-xs-2-1"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Cohere: North Mini Code (free)",
+      "model_ids": [
+        "cohere/north-mini-code:free"
+      ],
+      "benchmarks": [
+        {
+          "name": "AA Intelligence Index",
+          "score": 19.8,
+          "source": "OpenRouter API catalog"
+        },
+        {
+          "name": "AA Coding Index",
+          "score": 36.5,
+          "source": "OpenRouter API catalog"
+        },
+        {
+          "name": "AA Agentic Index",
+          "score": 3.1,
+          "source": "OpenRouter API catalog"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "NVIDIA: Nemotron 3 Ultra (free)",
+      "model_ids": [
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ],
+      "benchmarks": [
+        {
+          "name": "Humanity's Last Exam",
+          "score": 55,
+          "source": "report.json"
+        },
+        {
+          "name": "AIME 2025",
+          "score": 86,
+          "source": "report.json"
+        },
+        {
+          "name": "SWE-bench Verified",
+          "score": 52.8,
+          "source": "report.json"
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 56.4,
+          "source": "crawl"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "NVIDIA: Nemotron 3 Super (free)",
+      "model_ids": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "benchmarks": [
+        {
+          "name": "GPQA Diamond",
+          "score": 80,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b"
+        },
+        {
+          "name": "Humanity's Last Exam",
+          "score": 19.2,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b"
+        },
+        {
+          "name": "IFBench",
+          "score": 71.5,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b"
+        },
+        {
+          "name": "AA Intelligence Index",
+          "score": 25.4,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b"
+        },
+        {
+          "name": "AA Coding Index",
+          "score": 37.7,
+          "source": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "NVIDIA: Nemotron 3 Nano Omni (free)",
+      "model_ids": [
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+      ],
+      "benchmarks": [
+        {
+          "name": "AA Coding Index",
+          "score": 13.8,
+          "source": "OpenRouter API catalog"
+        }
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Google: Gemma 4 31B (free)",
+      "model_ids": [
+        "google/gemma-4-31b-it:free"
+      ],
+      "benchmarks": [
+        {
+          "name": "MMLU Pro",
+          "score": 85.2,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4"
+        },
+        {
+          "name": "AIME 2026 no tools",
+          "score": 89.2,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4"
+        },
+        {
+          "name": "LiveCodeBench v6",
+          "score": 80,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4"
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 84.3,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4"
+        },
+        {
+          "name": "HLE no tools",
+          "score": 19.5,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4"
+        },
+        {
+          "name": "MMMU Pro",
+          "score": 76.9,
+          "source": "https://ai.google.dev/gemma/docs/core/model_card_4"
+        }
       ],
       "tier": null
     }

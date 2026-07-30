@@ -1,15 +1,47 @@
 {
-  "updated_at": "2026-07-30T02:10:32Z",
+  "updated_at": "2026-07-30T17:16:24.486Z",
   "offers": [
     {
-      "name": "Gemini 3.6 Flash",
-      "provider": "Google Gemini",
-      "classification": "G_FREE_LIKE",
+      "name": "MiniMax M3",
+      "provider": "MiniMax",
+      "classification": "A_TRUE_FREE",
       "end_at": null,
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-3.6-flash"
+      "base_url": null,
+      "model_id": "minimax-m3",
+      "ranking_eligible": true,
+      "rank": 1,
+      "free_allowance_rank": "AMPLE",
+      "delivery_type": "official",
+      "benchmark_tier": "S",
+      "benchmark_score": 66,
+      "last_verified": "2026-07-30T17:05:52Z",
+      "endpoint_source": "MiniMax API",
+      "free_model_names": [
+        "minimax-m3"
+      ]
+    },
+    {
+      "name": "Muse Spark 1.1",
+      "provider": "_discovery",
+      "classification": "D_TRIAL_CREDIT",
+      "end_at": null,
+      "operational_confidence": "MEDIUM",
+      "suspicion_score": 0,
+      "base_url": null,
+      "model_id": "muse-spark-1.1",
+      "ranking_eligible": true,
+      "rank": 2,
+      "free_allowance_rank": "NORMAL",
+      "delivery_type": "official",
+      "benchmark_tier": "S",
+      "benchmark_score": 93,
+      "last_verified": "2026-07-30T17:05:52Z",
+      "endpoint_source": "Meta Model API",
+      "free_model_names": [
+        "muse-spark-1.1"
+      ]
     },
     {
       "name": "Poolside: Laguna S 2.1 (free)",
@@ -19,7 +51,39 @@
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
       "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "poolside/laguna-s-2.1:free"
+      "model_id": "poolside/laguna-s-2.1:free",
+      "ranking_eligible": true,
+      "rank": 3,
+      "free_allowance_rank": "NORMAL",
+      "delivery_type": "router",
+      "benchmark_tier": "S",
+      "benchmark_score": 70.2,
+      "last_verified": "2026-07-30T17:05:52Z",
+      "endpoint_source": "https://openrouter.ai/api/v1/models",
+      "free_model_names": [
+        "poolside/laguna-s-2.1:free"
+      ]
+    },
+    {
+      "name": "Grok 4.5",
+      "provider": "_discovery",
+      "classification": "C_LIMITED_FREE",
+      "end_at": null,
+      "operational_confidence": "MEDIUM",
+      "suspicion_score": 0,
+      "base_url": null,
+      "model_id": "grok-4.5",
+      "ranking_eligible": true,
+      "rank": 4,
+      "free_allowance_rank": "TIGHT",
+      "delivery_type": "official",
+      "benchmark_tier": "S",
+      "benchmark_score": 83.3,
+      "last_verified": "2026-07-30T17:05:52Z",
+      "endpoint_source": "https://api.x.ai/v1",
+      "free_model_names": [
+        "grok-4.5"
+      ]
     },
     {
       "name": "Ling-3.0-flash (free)",
@@ -29,7 +93,18 @@
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
       "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "inclusionai/ling-3.0-flash:free"
+      "model_id": "inclusionai/ling-3.0-flash:free",
+      "ranking_eligible": true,
+      "rank": 5,
+      "free_allowance_rank": "NORMAL",
+      "delivery_type": "router",
+      "benchmark_tier": "A",
+      "benchmark_score": 57,
+      "last_verified": "2026-07-30T17:05:52Z",
+      "endpoint_source": "https://openrouter.ai/api/v1/models",
+      "free_model_names": [
+        "inclusionai/ling-3.0-flash:free"
+      ]
     },
     {
       "name": "NVIDIA: Nemotron 3 Ultra (free)",
@@ -39,137 +114,39 @@
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
       "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free"
+      "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "ranking_eligible": true,
+      "rank": 6,
+      "free_allowance_rank": "NORMAL",
+      "delivery_type": "router",
+      "benchmark_tier": "A",
+      "benchmark_score": 56.4,
+      "last_verified": "2026-07-30T17:05:52Z",
+      "endpoint_source": "https://openrouter.ai/api/v1/models",
+      "free_model_names": [
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ]
     },
     {
-      "name": "NVIDIA: Nemotron 3 Super (free)",
-      "provider": "OpenRouter",
+      "name": "Nemotron 3 Ultra",
+      "provider": "NVIDIA NIM",
       "classification": "B_PERMANENT_FREE_TIER",
       "end_at": null,
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3-super-120b-a12b:free"
-    },
-    {
-      "name": "Google: Gemma 4 31B (free)",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "google/gemma-4-31b-it:free"
-    },
-    {
-      "name": "Poolside: Laguna XS 2.1 (free)",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "poolside/laguna-xs-2.1:free"
-    },
-    {
-      "name": "Gemini 2.5 Pro",
-      "provider": "Google Gemini",
-      "classification": "G_FREE_LIKE",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-2.5-pro"
-    },
-    {
-      "name": "Gemini 3.5 Flash",
-      "provider": "Google Gemini",
-      "classification": "G_FREE_LIKE",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-3.5-flash"
-    },
-    {
-      "name": "Gemini 3.5 Flash-Lite",
-      "provider": "Google Gemini",
-      "classification": "G_FREE_LIKE",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-3.5-flash-lite"
-    },
-    {
-      "name": "Gemini 3.1 Flash-Lite",
-      "provider": "Google Gemini",
-      "classification": "G_FREE_LIKE",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-3.1-flash-lite"
-    },
-    {
-      "name": "Gemini 3 Flash Preview",
-      "provider": "Google Gemini",
-      "classification": "G_FREE_LIKE",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-3-flash-preview"
-    },
-    {
-      "name": "Gemini 2.5 Flash",
-      "provider": "Google Gemini",
-      "classification": "G_FREE_LIKE",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-2.5-flash"
-    },
-    {
-      "name": "Gemini 2.5 Flash-Lite",
-      "provider": "Google Gemini",
-      "classification": "G_FREE_LIKE",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-2.5-flash-lite"
-    },
-    {
-      "name": "NVIDIA: Nemotron 3 Nano 30B A3B (free)",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3-nano-30b-a3b:free"
-    },
-    {
-      "name": "Cohere: North Mini Code (free)",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "cohere/north-mini-code:free"
-    },
-    {
-      "name": "NVIDIA: Nemotron 3 Nano Omni (free)",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+      "base_url": "https://integrate.api.nvidia.com/v1",
+      "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
+      "ranking_eligible": true,
+      "rank": 7,
+      "free_allowance_rank": "TINY",
+      "delivery_type": "official",
+      "benchmark_tier": "A",
+      "benchmark_score": 56.4,
+      "last_verified": "2026-07-30T17:05:52Z",
+      "endpoint_source": "https://docs.api.nvidia.com/nim/reference/llm-apis",
+      "free_model_names": [
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ]
     }
   ]
 }
