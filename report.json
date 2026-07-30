@@ -1,281 +1,29 @@
 {
-  "generated_at": "2026-07-29T02:15:00+09:00",
+  "generated_at": "2026-07-30T02:10:32Z",
   "timezone": "Asia/Tokyo",
-  "new_models": [
-    {
-      "canonical_name": "Gemini 3.6 Flash",
-      "aliases": [
-        "gemini-3.6-flash"
-      ],
-      "vendor": "Google",
-      "status": "ga",
-      "official_source": "https://ai.google.dev/gemini-api/docs/openai",
-      "api_available": true,
-      "known_providers": [
-        "Google Gemini"
-      ]
-    },
-    {
-      "canonical_name": "Gemini 3.5 Flash",
-      "aliases": [
-        "gemini-3.5-flash"
-      ],
-      "vendor": "Google",
-      "status": "ga",
-      "official_source": "https://ai.google.dev/gemini-api/docs/openai",
-      "api_available": true,
-      "known_providers": [
-        "Google Gemini"
-      ]
-    },
-    {
-      "canonical_name": "Gemini 3.5 Flash-Lite",
-      "aliases": [
-        "gemini-3.5-flash-lite"
-      ],
-      "vendor": "Google",
-      "status": "ga",
-      "official_source": "https://ai.google.dev/gemini-api/docs/openai",
-      "api_available": true,
-      "known_providers": [
-        "Google Gemini"
-      ]
-    },
-    {
-      "canonical_name": "Gemini 3.1 Flash-Lite",
-      "aliases": [
-        "gemini-3.1-flash-lite"
-      ],
-      "vendor": "Google",
-      "status": "ga",
-      "official_source": "https://ai.google.dev/gemini-api/docs/openai",
-      "api_available": true,
-      "known_providers": [
-        "Google Gemini"
-      ]
-    },
-    {
-      "canonical_name": "Gemini 3 Flash Preview",
-      "aliases": [
-        "gemini-3-flash-preview"
-      ],
-      "vendor": "Google",
-      "status": "preview",
-      "official_source": "https://ai.google.dev/gemini-api/docs/openai",
-      "api_available": true,
-      "known_providers": [
-        "Google Gemini"
-      ]
-    },
-    {
-      "canonical_name": "OpenAI GPT OSS 120B",
-      "aliases": [
-        "gpt-oss-120b",
-        "openai/gpt-oss-120b"
-      ],
-      "vendor": "OpenAI",
-      "status": "ga",
-      "official_source": "https://inference-docs.cerebras.ai/quickstart",
-      "api_available": true,
-      "open_weight": true,
-      "known_providers": [
-        "Cerebras"
-      ]
-    },
-    {
-      "canonical_name": "Z.ai GLM 4.7",
-      "aliases": [
-        "zai-glm-4.7"
-      ],
-      "vendor": "Z.ai",
-      "status": "ga",
-      "official_source": "https://inference-docs.cerebras.ai/quickstart",
-      "api_available": true,
-      "known_providers": [
-        "Cerebras"
-      ]
-    },
-    {
-      "canonical_name": "Cohere North Mini Code",
-      "aliases": [
-        "cohere/north-mini-code"
-      ],
-      "vendor": "Cohere",
-      "status": "ga",
-      "official_source": "https://openrouter.ai/docs/quickstart",
-      "api_available": true,
-      "known_providers": [
-        "OpenRouter"
-      ]
-    },
-    {
-      "canonical_name": "Nemotron 3.5 Content Safety",
-      "aliases": [
-        "nvidia/nemotron-3.5-content-safety"
-      ],
-      "vendor": "NVIDIA",
-      "status": "ga",
-      "official_source": "https://openrouter.ai/docs/quickstart",
-      "api_available": true,
-      "known_providers": [
-        "OpenRouter"
-      ]
-    },
-    {
-      "canonical_name": "Lyria 3 Pro",
-      "aliases": [
-        "google/lyria-3-pro-preview"
-      ],
-      "vendor": "Google",
-      "status": "preview",
-      "official_source": "https://openrouter.ai/docs/quickstart",
-      "api_available": true,
-      "known_providers": [
-        "OpenRouter"
-      ]
-    }
-  ],
+  "new_models": [],
   "changes": [
     {
-      "offer_name": "Poolside Laguna S 2.1 (OpenRouter)",
       "change_type": "ended",
-      "summary": "前回の known offer「Poolside Laguna S 2.1 (OpenRouter)」は消失。代わりに「Poolside: Laguna S 2.1 (free)」として :free バリアントが再確認された。"
+      "offer_name": "NVIDIA: Nemotron 3.5 Content Safety (free)",
+      "summary": "前回のレポートから消失。OpenRouter の無料モデルリストから外れた可能性あり。次回以降の収集で再確認する。"
     },
     {
-      "offer_name": "Ling-3.0-flash (OpenRouter)",
-      "change_type": "ended",
-      "summary": "前回の known offer「Ling-3.0-flash (OpenRouter)」は消失。代わりに「Ling-3.0-flash (free)」として :free バリアントが再確認された。"
-    },
-    {
-      "offer_name": "NVIDIA NIM - Nemotron 3 Ultra (無料API)",
-      "change_type": "ended",
-      "summary": "NVIDIA NIM 経由の無料 API オファーは消失。OpenRouter :free バリアント「NVIDIA: Nemotron 3 Ultra (free)」のみ確認。"
-    },
-    {
-      "offer_name": "NVIDIA Nemotron 3 Ultra (OpenRouter)",
-      "change_type": "ended",
-      "summary": "前回の known offer は消失。代わりに「NVIDIA: Nemotron 3 Ultra (free)」として :free バリアントが再確認された。"
-    },
-    {
-      "offer_name": "NVIDIA NIM - Nemotron 3 Super (無料API)",
-      "change_type": "ended",
-      "summary": "NVIDIA NIM 経由の無料 API オファーは消失。OpenRouter :free バリアント「NVIDIA: Nemotron 3 Super (free)」のみ確認。"
-    },
-    {
-      "offer_name": "NVIDIA Nemotron 3 Super (OpenRouter)",
-      "change_type": "ended",
-      "summary": "前回の known offer は消失。代わりに「NVIDIA: Nemotron 3 Super (free)」として :free バリアントが再確認された。"
-    },
-    {
-      "offer_name": "Gemma 4 31B IT (OpenRouter)",
-      "change_type": "ended",
-      "summary": "前回の known offer は消失。代わりに「Google: Gemma 4 31B (free)」として :free バリアントが再確認された。"
-    },
-    {
-      "offer_name": "Poolside Laguna XS 2.1 (OpenRouter)",
-      "change_type": "ended",
-      "summary": "前回の known offer は消失。代わりに「Poolside: Laguna XS 2.1 (free)」として :free バリアントが再確認された。"
-    },
-    {
-      "offer_name": "DeepSeek V4 Flash (低価格API)",
-      "change_type": "ended",
-      "summary": "DeepSeek V4 Flash の低価格 API オファーは消失。公式ドキュメントに無料アクセスの記載なし。"
-    },
-    {
-      "offer_name": "Gemini 3.6 Flash",
-      "change_type": "new",
-      "summary": "Google Gemini 公式無料ティアの新モデル。Terminal Bench 2.1 で 78点 (ティア A/S 相当)。入力・出力ともに Free of charge。"
-    },
-    {
-      "offer_name": "Gemini 3.5 Flash",
-      "change_type": "new",
-      "summary": "Google Gemini 公式無料ティアの新シリーズ。入出力無料。"
-    },
-    {
-      "offer_name": "Google: Lyria 3 Pro Preview",
-      "change_type": "new",
-      "summary": "OpenRouter 上でプレビュー期間中無料 ($0/1M tokens)。終了時期不明。"
-    },
-    {
-      "offer_name": "OpenAI GPT OSS (Cerebras)",
-      "change_type": "new",
-      "summary": "Cerebras 新規登録で $5 クレジット付与。GPT-OSS 120B を含む全モデル利用可能。"
-    },
-    {
-      "offer_name": "Crawl coverage low",
       "change_type": "availability_change",
-      "summary": "今回の収集カバレッジは 29% (4/14 タスク完了、10タスク失敗)。Together/AI AnyScale/Replicate/HuggingFace/Groq/Moonshot/Cloudflare/OpenAI のクローリングに失敗。レポートは不完全な可能性がある。"
+      "offer_name": "Google Gemini 全モデル",
+      "summary": "分類を B_PERMANENT_FREE_TIER から G_FREE_LIKE に変更。公式ドキュメントによると「Content used to improve our products」および「Limited access to certain models」という条件付きであり、完全な永久無料枠ではないため。ランキング対象外とし、caution_offers に移動。"
+    },
+    {
+      "change_type": "availability_change",
+      "offer_name": "収集カバレッジ低下",
+      "summary": "今回の収集で 14件中5件(36%) のみ完了。cerebras, together, anyscale, replicate, huggingface, groq, moonshot, cloudflare, openai の9プロバイダーが失敗（artifact file not found）。次回収集での再試行が必要。"
     }
   ],
   "ranked_offers": [
     {
-      "rank": 1,
-      "name": "Gemini 3.6 Flash",
-      "model_name": "Gemini 3.6 Flash",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
-      "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge; Output price (including thinking tokens) Free of charge; Context caching price Free of charge. 5,000 prompts per month free for Grounding with Google Search.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-3.6-flash",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
       "benchmark": {
-        "score": 78,
-        "benchmark_name": "Terminal Bench 2.1",
-        "tier": "S"
-      },
-      "benchmarks": [
-        {
-          "name": "Humanity's Last Exam",
-          "score": 52
-        },
-        {
-          "name": "MMLU",
-          "score": 89.2
-        },
-        {
-          "name": "GPQA Diamond",
-          "score": 74.1
-        },
-        {
-          "name": "Terminal Bench 2.1",
-          "score": 78
-        }
-      ],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ]
-    },
-    {
-      "rank": 2,
-      "name": "Poolside: Laguna S 2.1 (free)",
-      "model_name": "Poolside: Laguna S 2.1 (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "Poolside",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": ":free variant — always provided for free with low rate limits.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "poolside/laguna-s-2.1:free",
-      "free_model_names": [
-        "poolside/laguna-s-2.1:free"
-      ],
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "benchmark": {
-        "score": 70.2,
         "benchmark_name": "Terminal-Bench 2.1",
+        "score": 70.2,
         "tier": "S"
       },
       "benchmarks": [
@@ -288,36 +36,35 @@
           "score": 40.4
         }
       ],
-      "suspicion_score": 0,
+      "classification": "B_PERMANENT_FREE_TIER",
+      "delivery_type": "router",
+      "endpoint_source": "https://openrouter.ai/poolside/laguna-s-2.1",
+      "free_allowance_rank": "NORMAL",
+      "free_limits": "Free variant provides access to models without cost, but may have different rate limits or availability compared to paid versions. Free model rate limit: 50 requests per day total (without credits); 1000 requests per day if at least $10 credits purchased.",
+      "free_model_names": [
+        "poolside/laguna-s-2.1:free"
+      ],
       "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:10:00Z",
+      "model_id": "poolside/laguna-s-2.1:free",
+      "model_name": "Poolside: Laguna S 2.1 (free)",
+      "model_vendor": "Poolside",
+      "name": "Poolside: Laguna S 2.1 (free)",
       "operational_confidence": "MEDIUM",
+      "provider": "OpenRouter",
+      "rank": 1,
       "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:06:30Z",
       "sources": [
-        "https://openrouter.ai/docs/quickstart"
-      ]
+        "https://openrouter.ai/poolside/laguna-s-2.1"
+      ],
+      "suspicion_score": 0,
+      "total_parameters_b": 118,
+      "base_url": "https://openrouter.ai/api/v1"
     },
     {
-      "rank": 3,
-      "name": "Ling-3.0-flash (free)",
-      "model_name": "Ling-3.0-flash (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "InclusionAI",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": ":free variant — always provided for free with low rate limits.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "inclusionai/ling-3.0-flash:free",
-      "free_model_names": [
-        "inclusionai/ling-3.0-flash:free"
-      ],
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "benchmark": {
-        "score": 57,
         "benchmark_name": "Terminal Bench 2.1",
+        "score": 57,
         "tier": "A"
       },
       "benchmarks": [
@@ -366,48 +113,47 @@
           "score": 72.44
         },
         {
-          "name": "Tau3-banking-AA",
-          "score": 28
-        },
-        {
           "name": "WideSearch",
           "score": 73.63
         },
         {
           "name": "IFBench",
           "score": 74.49
+        },
+        {
+          "name": "Tau3-banking-AA",
+          "score": 28
         }
       ],
-      "suspicion_score": 0,
+      "classification": "B_PERMANENT_FREE_TIER",
+      "delivery_type": "router",
+      "endpoint_source": "https://openrouter.ai/inclusionai/ling-3.0-flash",
+      "free_allowance_rank": "NORMAL",
+      "free_limits": "Free variant provides access to models without cost, but may have different rate limits or availability compared to paid versions. Free model rate limit: 50 requests per day total (without credits); 1000 requests per day if at least $10 credits purchased.",
+      "free_model_names": [
+        "inclusionai/ling-3.0-flash:free"
+      ],
       "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:10:00Z",
+      "model_id": "inclusionai/ling-3.0-flash:free",
+      "model_name": "Ling-3.0-flash (free)",
+      "model_vendor": "InclusionAI",
+      "name": "Ling-3.0-flash (free)",
       "operational_confidence": "MEDIUM",
+      "provider": "OpenRouter",
+      "rank": 2,
       "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:06:30Z",
       "sources": [
-        "https://openrouter.ai/docs/quickstart"
-      ]
+        "https://openrouter.ai/inclusionai/ling-3.0-flash"
+      ],
+      "suspicion_score": 0,
+      "total_parameters_b": 124,
+      "base_url": "https://openrouter.ai/api/v1"
     },
     {
-      "rank": 4,
-      "name": "NVIDIA: Nemotron 3 Ultra (free)",
-      "model_name": "NVIDIA: Nemotron 3 Ultra (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "NVIDIA",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": ":free variant — always provided for free with low rate limits.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 550,
-      "active_parameters_b": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "free_model_names": [
-        "nvidia/nemotron-3-ultra-550b-a55b:free"
-      ],
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "benchmark": {
-        "score": 56.4,
         "benchmark_name": "Terminal Bench 2.1",
+        "score": 56.4,
         "tier": "A"
       },
       "benchmarks": [
@@ -428,36 +174,35 @@
           "score": 52.8
         }
       ],
-      "suspicion_score": 0,
+      "classification": "B_PERMANENT_FREE_TIER",
+      "delivery_type": "router",
+      "endpoint_source": "https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b",
+      "free_allowance_rank": "NORMAL",
+      "free_limits": "Free variant provides access to models without cost, but may have different rate limits or availability compared to paid versions. Free model rate limit: 50 requests per day total (without credits); 1000 requests per day if at least $10 credits purchased.",
+      "free_model_names": [
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ],
       "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:10:00Z",
+      "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "model_name": "NVIDIA: Nemotron 3 Ultra (free)",
+      "model_vendor": "NVIDIA",
+      "name": "NVIDIA: Nemotron 3 Ultra (free)",
       "operational_confidence": "MEDIUM",
+      "provider": "OpenRouter",
+      "rank": 3,
       "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:06:30Z",
       "sources": [
-        "https://openrouter.ai/docs/quickstart"
-      ]
+        "https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b"
+      ],
+      "suspicion_score": 0,
+      "total_parameters_b": 550,
+      "base_url": "https://openrouter.ai/api/v1"
     },
     {
-      "rank": 5,
-      "name": "Google: Gemma 4 31B (free)",
-      "model_name": "Google: Gemma 4 31B (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "Google",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": ":free variant — always provided for free with low rate limits.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 31,
-      "active_parameters_b": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "google/gemma-4-31b-it:free",
-      "free_model_names": [
-        "google/gemma-4-31b-it:free"
-      ],
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "benchmark": {
-        "score": 89.2,
         "benchmark_name": "AIME 2026 no tools",
+        "score": 89.2,
         "tier": "B"
       },
       "benchmarks": [
@@ -486,36 +231,72 @@
           "score": 76.9
         }
       ],
-      "suspicion_score": 0,
+      "classification": "B_PERMANENT_FREE_TIER",
+      "delivery_type": "router",
+      "endpoint_source": "https://openrouter.ai/google/gemma-4-31b-it",
+      "free_allowance_rank": "NORMAL",
+      "free_limits": "Free variant provides access to models without cost, but may have different rate limits or availability compared to paid versions. Free model rate limit: 50 requests per day total (without credits); 1000 requests per day if at least $10 credits purchased.",
+      "free_model_names": [
+        "google/gemma-4-31b-it:free"
+      ],
       "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:10:00Z",
+      "model_id": "google/gemma-4-31b-it:free",
+      "model_name": "Google: Gemma 4 31B (free)",
+      "model_vendor": "Google",
+      "name": "Google: Gemma 4 31B (free)",
       "operational_confidence": "MEDIUM",
+      "provider": "OpenRouter",
+      "rank": 4,
       "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:06:30Z",
       "sources": [
-        "https://openrouter.ai/docs/quickstart"
-      ]
+        "https://openrouter.ai/google/gemma-4-31b-it"
+      ],
+      "suspicion_score": 0,
+      "total_parameters_b": 30.7,
+      "base_url": "https://openrouter.ai/api/v1"
     },
     {
-      "rank": 6,
-      "name": "NVIDIA: Nemotron 3 Super (free)",
-      "model_name": "NVIDIA: Nemotron 3 Super (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "NVIDIA",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": ":free variant — always provided for free with low rate limits.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 120,
-      "active_parameters_b": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
-      "free_model_names": [
-        "nvidia/nemotron-3-super-120b-a12b:free"
-      ],
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "benchmark": {
-        "score": 80,
+        "benchmark_name": "SWE-bench Multilingual",
+        "score": 63.1,
+        "tier": "B"
+      },
+      "benchmarks": [
+        {
+          "name": "SWE-bench Multilingual",
+          "score": 63.1
+        }
+      ],
+      "classification": "B_PERMANENT_FREE_TIER",
+      "delivery_type": "router",
+      "endpoint_source": "https://openrouter.ai/poolside/laguna-xs-2.1",
+      "free_allowance_rank": "NORMAL",
+      "free_limits": "Free variant provides access to models without cost, but may have different rate limits or availability compared to paid versions. Free model rate limit: 50 requests per day total (without credits); 1000 requests per day if at least $10 credits purchased.",
+      "free_model_names": [
+        "poolside/laguna-xs-2.1:free"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:10:00Z",
+      "model_id": "poolside/laguna-xs-2.1:free",
+      "model_name": "Poolside: Laguna XS 2.1 (free)",
+      "model_vendor": "Poolside",
+      "name": "Poolside: Laguna XS 2.1 (free)",
+      "operational_confidence": "MEDIUM",
+      "provider": "OpenRouter",
+      "rank": 5,
+      "ranking_eligible": true,
+      "sources": [
+        "https://openrouter.ai/poolside/laguna-xs-2.1"
+      ],
+      "suspicion_score": 0,
+      "total_parameters_b": 33,
+      "base_url": "https://openrouter.ai/api/v1"
+    },
+    {
+      "benchmark": {
         "benchmark_name": "GPQA Diamond",
+        "score": 80,
         "tier": "B"
       },
       "benchmarks": [
@@ -540,71 +321,200 @@
           "score": 37.7
         }
       ],
-      "suspicion_score": 0,
+      "classification": "B_PERMANENT_FREE_TIER",
+      "delivery_type": "router",
+      "endpoint_source": "https://openrouter.ai/nvidia/nemotron-3-super-120b-a12b",
+      "free_allowance_rank": "NORMAL",
+      "free_limits": "Free variant provides access to models without cost, but may have different rate limits or availability compared to paid versions. Free model rate limit: 50 requests per day total (without credits); 1000 requests per day if at least $10 credits purchased.",
+      "free_model_names": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
       "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:10:00Z",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "model_name": "NVIDIA: Nemotron 3 Super (free)",
+      "model_vendor": "NVIDIA",
+      "name": "NVIDIA: Nemotron 3 Super (free)",
       "operational_confidence": "MEDIUM",
+      "provider": "OpenRouter",
+      "rank": 6,
       "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:06:30Z",
       "sources": [
-        "https://openrouter.ai/docs/quickstart"
-      ]
+        "https://openrouter.ai/nvidia/nemotron-3-super-120b-a12b"
+      ],
+      "suspicion_score": 0,
+      "total_parameters_b": 120,
+      "base_url": "https://openrouter.ai/api/v1"
     },
     {
-      "rank": 7,
-      "name": "Poolside: Laguna XS 2.1 (free)",
-      "model_name": "Poolside: Laguna XS 2.1 (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "Poolside",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": ":free variant — always provided for free with low rate limits.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "poolside/laguna-xs-2.1:free",
-      "free_model_names": [
-        "poolside/laguna-xs-2.1:free"
-      ],
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "benchmark": {
-        "score": 63.1,
-        "benchmark_name": "SWE-bench Multilingual",
+        "benchmark_name": null,
+        "score": null,
+        "tier": "B"
+      },
+      "benchmarks": [],
+      "classification": "B_PERMANENT_FREE_TIER",
+      "delivery_type": "router",
+      "endpoint_source": "https://openrouter.ai/nvidia/nemotron-3-nano-30b-a3b",
+      "free_allowance_rank": "NORMAL",
+      "free_limits": "Free variant provides access to models without cost, but may have different rate limits or availability compared to paid versions. Free model rate limit: 50 requests per day total (without credits); 1000 requests per day if at least $10 credits purchased.",
+      "free_model_names": [
+        "nvidia/nemotron-3-nano-30b-a3b:free"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:10:00Z",
+      "model_id": "nvidia/nemotron-3-nano-30b-a3b:free",
+      "model_name": "NVIDIA: Nemotron 3 Nano 30B A3B (free)",
+      "model_vendor": "NVIDIA",
+      "name": "NVIDIA: Nemotron 3 Nano 30B A3B (free)",
+      "operational_confidence": "MEDIUM",
+      "provider": "OpenRouter",
+      "rank": 7,
+      "ranking_eligible": true,
+      "sources": [
+        "https://openrouter.ai/nvidia/nemotron-3-nano-30b-a3b"
+      ],
+      "suspicion_score": 0,
+      "total_parameters_b": 30,
+      "base_url": "https://openrouter.ai/api/v1"
+    },
+    {
+      "benchmark": {
+        "benchmark_name": "AA Coding Index",
+        "score": 36.5,
         "tier": "B"
       },
       "benchmarks": [
         {
-          "name": "SWE-bench Multilingual",
-          "score": 63.1
+          "name": "AA Intelligence Index",
+          "score": 19.8
+        },
+        {
+          "name": "AA Coding Index",
+          "score": 36.5
+        },
+        {
+          "name": "AA Agentic Index",
+          "score": 3.1
         }
       ],
-      "suspicion_score": 0,
+      "classification": "B_PERMANENT_FREE_TIER",
+      "delivery_type": "router",
+      "endpoint_source": "https://openrouter.ai/cohere/north-mini-code",
+      "free_allowance_rank": "NORMAL",
+      "free_limits": "Free variant provides access to models without cost, but may have different rate limits or availability compared to paid versions. Free model rate limit: 50 requests per day total (without credits); 1000 requests per day if at least $10 credits purchased.",
+      "free_model_names": [
+        "cohere/north-mini-code:free"
+      ],
       "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:10:00Z",
+      "model_id": "cohere/north-mini-code:free",
+      "model_name": "Cohere: North Mini Code (free)",
+      "model_vendor": "Cohere",
+      "name": "Cohere: North Mini Code (free)",
       "operational_confidence": "MEDIUM",
+      "provider": "OpenRouter",
+      "rank": 8,
       "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:06:30Z",
       "sources": [
-        "https://openrouter.ai/docs/quickstart"
-      ]
+        "https://openrouter.ai/cohere/north-mini-code"
+      ],
+      "suspicion_score": 0,
+      "total_parameters_b": 30,
+      "base_url": "https://openrouter.ai/api/v1"
     },
     {
-      "rank": 8,
-      "name": "Gemini 2.5 Pro",
-      "model_name": "Gemini 2.5 Pro",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
-      "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge; Output price Free of charge. Grounding with Google Search: 1,500 RPD free.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-2.5-pro",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
       "benchmark": {
-        "score": 1459,
+        "benchmark_name": "AA Coding Index",
+        "score": 13.8,
+        "tier": "B"
+      },
+      "benchmarks": [
+        {
+          "name": "AA Coding Index",
+          "score": 13.8
+        }
+      ],
+      "classification": "B_PERMANENT_FREE_TIER",
+      "delivery_type": "router",
+      "endpoint_source": "https://openrouter.ai/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+      "free_allowance_rank": "NORMAL",
+      "free_limits": "Free variant provides access to models without cost, but may have different rate limits or availability compared to paid versions. Free model rate limit: 50 requests per day total (without credits); 1000 requests per day if at least $10 credits purchased.",
+      "free_model_names": [
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:10:00Z",
+      "model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "model_name": "NVIDIA: Nemotron 3 Nano Omni (free)",
+      "model_vendor": "NVIDIA",
+      "name": "NVIDIA: Nemotron 3 Nano Omni (free)",
+      "operational_confidence": "MEDIUM",
+      "provider": "OpenRouter",
+      "rank": 9,
+      "ranking_eligible": true,
+      "sources": [
+        "https://openrouter.ai/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+      ],
+      "suspicion_score": 0,
+      "total_parameters_b": 30,
+      "base_url": "https://openrouter.ai/api/v1"
+    }
+  ],
+  "conditional_credits": [],
+  "caution_offers": [
+    {
+      "benchmark": {
+        "benchmark_name": "Terminal Bench 2.1",
+        "score": 78,
+        "tier": "S"
+      },
+      "benchmarks": [
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 78
+        },
+        {
+          "name": "Humanity's Last Exam",
+          "score": 52
+        },
+        {
+          "name": "MMLU",
+          "score": 89.2
+        },
+        {
+          "name": "GPQA Diamond",
+          "score": 74.1
+        }
+      ],
+      "classification": "G_FREE_LIKE",
+      "delivery_type": "official",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "free_allowance_rank": "TIGHT",
+      "free_limits": "Free of charge (Standard and Priority inference). Limited access to certain models. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-3.6-flash"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:00:01Z",
+      "model_id": "gemini-3.6-flash",
+      "model_name": "Gemini 3.6 Flash",
+      "model_vendor": "Google",
+      "name": "Gemini 3.6 Flash",
+      "operational_confidence": "MEDIUM",
+      "provider": "Google Gemini",
+      "ranking_eligible": false,
+      "sources": [
+        "https://ai.google.dev/gemini-api/docs/openai"
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+    },
+    {
+      "benchmark": {
         "benchmark_name": "Arena Elo",
+        "score": 1459,
         "tier": "B"
       },
       "benchmarks": [
@@ -637,812 +547,570 @@
           "score": 1459
         }
       ],
-      "suspicion_score": 0,
+      "classification": "G_FREE_LIKE",
+      "delivery_type": "official",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "free_allowance_rank": "TIGHT",
+      "free_limits": "Free of charge (Standard and Priority inference). Limited access to certain models. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-2.5-pro"
+      ],
       "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:00:01Z",
+      "model_id": "gemini-2.5-pro",
+      "model_name": "Gemini 2.5 Pro",
+      "model_vendor": "Google",
+      "name": "Gemini 2.5 Pro",
       "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
+      "provider": "Google Gemini",
+      "ranking_eligible": false,
       "sources": [
         "https://ai.google.dev/gemini-api/docs/openai"
-      ]
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
     },
     {
-      "rank": 9,
-      "name": "Gemini 3.5 Flash",
-      "model_name": "Gemini 3.5 Flash",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
+      "benchmark": {
+        "benchmark_name": null,
+        "score": null,
+        "tier": "B"
+      },
+      "benchmarks": [],
+      "classification": "G_FREE_LIKE",
       "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge; Output price Free of charge. 5,000 prompts per month free for Grounding with Google Search.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "free_allowance_rank": "TIGHT",
+      "free_limits": "Free of charge (Standard and Priority inference). Limited access to certain models. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-3.5-flash"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:00:01Z",
       "model_id": "gemini-3.5-flash",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "model_name": "Gemini 3.5 Flash",
+      "model_vendor": "Google",
+      "name": "Gemini 3.5 Flash",
+      "operational_confidence": "MEDIUM",
+      "provider": "Google Gemini",
+      "ranking_eligible": false,
+      "sources": [
+        "https://ai.google.dev/gemini-api/docs/openai"
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+    },
+    {
       "benchmark": {
-        "score": null,
         "benchmark_name": null,
+        "score": null,
         "tier": "B"
       },
       "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ]
-    },
-    {
-      "rank": 10,
-      "name": "Gemini 3.5 Flash-Lite",
-      "model_name": "Gemini 3.5 Flash-Lite",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
+      "classification": "G_FREE_LIKE",
       "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge; Output price Free of charge.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "free_allowance_rank": "TIGHT",
+      "free_limits": "Free of charge (Standard, Batch, Flex, and Priority inference). Most cost-efficient GA model. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-3.5-flash-lite"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:00:01Z",
       "model_id": "gemini-3.5-flash-lite",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "model_name": "Gemini 3.5 Flash-Lite",
+      "model_vendor": "Google",
+      "name": "Gemini 3.5 Flash-Lite",
+      "operational_confidence": "MEDIUM",
+      "provider": "Google Gemini",
+      "ranking_eligible": false,
+      "sources": [
+        "https://ai.google.dev/gemini-api/docs/openai"
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+    },
+    {
       "benchmark": {
-        "score": null,
         "benchmark_name": null,
+        "score": null,
         "tier": "B"
       },
       "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ]
-    },
-    {
-      "rank": 11,
-      "name": "Gemini 3.1 Flash-Lite",
-      "model_name": "Gemini 3.1 Flash-Lite",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
+      "classification": "G_FREE_LIKE",
       "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge; Output price Free of charge.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "free_allowance_rank": "AMPLE",
+      "free_limits": "Free of charge (Standard, Batch, Flex, and Priority inference). Frontier-class performance rivaling larger models at a fraction of the cost. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-3.1-flash-lite"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:00:01Z",
       "model_id": "gemini-3.1-flash-lite",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "model_name": "Gemini 3.1 Flash-Lite",
+      "model_vendor": "Google",
+      "name": "Gemini 3.1 Flash-Lite",
+      "operational_confidence": "MEDIUM",
+      "provider": "Google Gemini",
+      "ranking_eligible": false,
+      "sources": [
+        "https://ai.google.dev/gemini-api/docs/openai"
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+    },
+    {
       "benchmark": {
-        "score": null,
         "benchmark_name": null,
+        "score": null,
         "tier": "B"
       },
       "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ]
-    },
-    {
-      "rank": 12,
-      "name": "Gemini 3 Flash Preview",
-      "model_name": "Gemini 3 Flash Preview",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
+      "classification": "G_FREE_LIKE",
       "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge; Output price Free of charge.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "free_allowance_rank": "AMPLE",
+      "free_limits": "Free of charge (Standard inference). Frontier-class performance rivaling larger models at a fraction of the cost. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-3-flash-preview"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:00:01Z",
       "model_id": "gemini-3-flash-preview",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "model_name": "Gemini 3 Flash Preview",
+      "model_vendor": "Google",
+      "name": "Gemini 3 Flash Preview",
+      "operational_confidence": "MEDIUM",
+      "provider": "Google Gemini",
+      "ranking_eligible": false,
+      "sources": [
+        "https://ai.google.dev/gemini-api/docs/openai"
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+    },
+    {
       "benchmark": {
-        "score": null,
         "benchmark_name": null,
+        "score": null,
         "tier": "B"
       },
       "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ]
-    },
-    {
-      "rank": 13,
-      "name": "Gemini 3.5 Live Translate",
-      "model_name": "Gemini 3.5 Live Translate",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
+      "classification": "G_FREE_LIKE",
       "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge; Output price Free of charge.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-3.5-live-translate-preview",
       "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
-      "benchmark": {
-        "score": null,
-        "benchmark_name": null,
-        "tier": "B"
-      },
-      "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ]
-    },
-    {
-      "rank": 14,
-      "name": "Gemini 3.1 Flash TTS Preview",
-      "model_name": "Gemini 3.1 Flash TTS Preview",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
-      "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge (text); Output price Free of charge.",
       "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-3.1-flash-tts-preview",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
-      "benchmark": {
-        "score": null,
-        "benchmark_name": null,
-        "tier": "B"
-      },
-      "benchmarks": [],
-      "suspicion_score": 0,
+      "free_limits": "Free of charge (Standard and Priority inference). First hybrid reasoning model with 1M token context window and thinking budgets. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-2.5-flash"
+      ],
       "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ]
-    },
-    {
-      "rank": 15,
-      "name": "Gemini 3.1 Flash Live Preview",
-      "model_name": "Gemini 3.1 Flash Live Preview",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
-      "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge; Output price Free of charge.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-3.1-flash-live-preview",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
-      "benchmark": {
-        "score": null,
-        "benchmark_name": null,
-        "tier": "B"
-      },
-      "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ]
-    },
-    {
-      "rank": 16,
-      "name": "Gemini 2.5 Flash",
-      "model_name": "Gemini 2.5 Flash",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
-      "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge; Output price Free of charge. Grounding with Google Search: Free of charge up to 500 RPD.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "last_verified": "2026-07-30T02:00:01Z",
       "model_id": "gemini-2.5-flash",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "model_name": "Gemini 2.5 Flash",
+      "model_vendor": "Google",
+      "name": "Gemini 2.5 Flash",
+      "operational_confidence": "MEDIUM",
+      "provider": "Google Gemini",
+      "ranking_eligible": false,
+      "sources": [
+        "https://ai.google.dev/gemini-api/docs/openai"
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+    },
+    {
       "benchmark": {
-        "score": null,
         "benchmark_name": null,
+        "score": null,
         "tier": "B"
       },
       "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ]
-    },
-    {
-      "rank": 17,
-      "name": "Gemini 2.5 Flash-Lite",
-      "model_name": "Gemini 2.5 Flash-Lite",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
+      "classification": "G_FREE_LIKE",
       "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge; Output price Free of charge.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "free_allowance_rank": "TIGHT",
+      "free_limits": "Free of charge (Standard, Batch, Flex, and Priority inference). Smallest and most cost effective model, built for at scale usage. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-2.5-flash-lite"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:00:01Z",
       "model_id": "gemini-2.5-flash-lite",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "model_name": "Gemini 2.5 Flash-Lite",
+      "model_vendor": "Google",
+      "name": "Gemini 2.5 Flash-Lite",
+      "operational_confidence": "MEDIUM",
+      "provider": "Google Gemini",
+      "ranking_eligible": false,
+      "sources": [
+        "https://ai.google.dev/gemini-api/docs/openai"
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+    },
+    {
       "benchmark": {
-        "score": null,
         "benchmark_name": null,
+        "score": null,
         "tier": "B"
       },
       "benchmarks": [],
-      "suspicion_score": 0,
+      "classification": "G_FREE_LIKE",
+      "delivery_type": "official",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "free_allowance_rank": "NORMAL",
+      "free_limits": "Free of charge. Low-latency, real-time speech to speech translation model that supports 70+ languages. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-3.5-live-translate-preview"
+      ],
       "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:00:01Z",
+      "model_id": "gemini-3.5-live-translate-preview",
+      "model_name": "Gemini 3.5 Live Translate",
+      "model_vendor": "Google",
+      "name": "Gemini 3.5 Live Translate",
       "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
+      "provider": "Google Gemini",
+      "ranking_eligible": false,
       "sources": [
         "https://ai.google.dev/gemini-api/docs/openai"
-      ]
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
     },
     {
-      "rank": 18,
-      "name": "Gemini 2.5 Flash-Lite Preview",
-      "model_name": "Gemini 2.5 Flash-Lite Preview",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
+      "benchmark": {
+        "benchmark_name": null,
+        "score": null,
+        "tier": "B"
+      },
+      "benchmarks": [],
+      "classification": "G_FREE_LIKE",
       "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge; Output price Free of charge.",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
       "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "free_limits": "Free of charge (Standard and Batch inference). Price-performant, low-latency, controllable speech generation. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-3.1-flash-tts-preview"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:00:01Z",
+      "model_id": "gemini-3.1-flash-tts-preview",
+      "model_name": "Gemini 3.1 Flash TTS Preview",
+      "model_vendor": "Google",
+      "name": "Gemini 3.1 Flash TTS Preview",
+      "operational_confidence": "MEDIUM",
+      "provider": "Google Gemini",
+      "ranking_eligible": false,
+      "sources": [
+        "https://ai.google.dev/gemini-api/docs/openai"
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+    },
+    {
+      "benchmark": {
+        "benchmark_name": null,
+        "score": null,
+        "tier": "B"
+      },
+      "benchmarks": [],
+      "classification": "G_FREE_LIKE",
+      "delivery_type": "official",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "free_allowance_rank": "NORMAL",
+      "free_limits": "Free of charge. Low-latency, audio-to-audio model optimized for real-time dialogue with acoustic nuance detection. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-3.1-flash-live-preview"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:00:01Z",
+      "model_id": "gemini-3.1-flash-live-preview",
+      "model_name": "Gemini 3.1 Flash Live Preview",
+      "model_vendor": "Google",
+      "name": "Gemini 3.1 Flash Live Preview",
+      "operational_confidence": "MEDIUM",
+      "provider": "Google Gemini",
+      "ranking_eligible": false,
+      "sources": [
+        "https://ai.google.dev/gemini-api/docs/openai"
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+    },
+    {
+      "benchmark": {
+        "benchmark_name": null,
+        "score": null,
+        "tier": "B"
+      },
+      "benchmarks": [],
+      "classification": "G_FREE_LIKE",
+      "delivery_type": "official",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "free_allowance_rank": "NORMAL",
+      "free_limits": "Free of charge (Standard and Batch inference). Latest model based on Gemini 2.5 Flash lite optimized for cost-efficiency, high throughput and high quality. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-2.5-flash-lite-preview-09-2025"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:00:01Z",
       "model_id": "gemini-2.5-flash-lite-preview-09-2025",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
+      "model_name": "Gemini 2.5 Flash-Lite Preview",
+      "model_vendor": "Google",
+      "name": "Gemini 2.5 Flash-Lite Preview",
+      "operational_confidence": "MEDIUM",
+      "provider": "Google Gemini",
+      "ranking_eligible": false,
+      "sources": [
+        "https://ai.google.dev/gemini-api/docs/openai"
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+    },
+    {
       "benchmark": {
-        "score": null,
         "benchmark_name": null,
+        "score": null,
         "tier": "B"
       },
       "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ]
-    },
-    {
-      "rank": 19,
-      "name": "Gemini 2.5 Flash Native Audio (Live API)",
-      "model_name": "Gemini 2.5 Flash Native Audio (Live API)",
-      "provider": "Google Gemini",
-      "model_vendor": "Google",
+      "classification": "G_FREE_LIKE",
       "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge; Output price Free of charge.",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
       "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "free_limits": "Free of charge. Live API native audio models optimized for higher quality audio outputs with better pacing, voice naturalness, verbosity, and mood. Content used to improve our products.",
+      "free_model_names": [
+        "gemini-2.5-flash-native-audio-preview-12-2025"
+      ],
+      "information_confidence": "HIGH",
+      "last_verified": "2026-07-30T02:00:01Z",
       "model_id": "gemini-2.5-flash-native-audio-preview-12-2025",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
-      "benchmark": {
-        "score": null,
-        "benchmark_name": null,
-        "tier": "B"
-      },
-      "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
+      "model_name": "Gemini 2.5 Flash Native Audio (Live API)",
+      "model_vendor": "Google",
+      "name": "Gemini 2.5 Flash Native Audio (Live API)",
       "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
-      "sources": [
-        "https://ai.google.dev/gemini-api/docs/openai"
-      ]
-    },
-    {
-      "rank": 20,
-      "name": "Gemini 2.5 Flash Preview TTS",
-      "model_name": "Gemini 2.5 Flash Preview TTS",
       "provider": "Google Gemini",
-      "model_vendor": "Google",
-      "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": "Free Tier: Input price Free of charge (text); Output price Free of charge.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-2.5-flash-preview-tts",
-      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
-      "benchmark": {
-        "score": null,
-        "benchmark_name": null,
-        "tier": "B"
-      },
-      "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:12:02Z",
+      "ranking_eligible": false,
       "sources": [
         "https://ai.google.dev/gemini-api/docs/openai"
-      ]
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
     },
     {
-      "rank": 21,
-      "name": "NVIDIA: Nemotron 3 Nano 30B A3B (free)",
-      "model_name": "NVIDIA: Nemotron 3 Nano 30B A3B (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "NVIDIA",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": ":free variant — always provided for free with low rate limits.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 30,
-      "active_parameters_b": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3-nano-30b-a3b:free",
-      "free_model_names": [
-        "nvidia/nemotron-3-nano-30b-a3b:free"
-      ],
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "benchmark": {
-        "score": null,
         "benchmark_name": null,
+        "score": null,
         "tier": "B"
       },
       "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:06:30Z",
-      "sources": [
-        "https://openrouter.ai/docs/quickstart"
-      ]
-    },
-    {
-      "rank": 22,
-      "name": "Cohere: North Mini Code (free)",
-      "model_name": "Cohere: North Mini Code (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "Cohere",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": ":free variant — always provided for free with low rate limits.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "cohere/north-mini-code:free",
-      "free_model_names": [
-        "cohere/north-mini-code:free"
-      ],
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "benchmark": {
-        "score": null,
-        "benchmark_name": null,
-        "tier": "B"
-      },
-      "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:06:30Z",
-      "sources": [
-        "https://openrouter.ai/docs/quickstart"
-      ]
-    },
-    {
-      "rank": 23,
-      "name": "NVIDIA: Nemotron 3.5 Content Safety (free)",
-      "model_name": "NVIDIA: Nemotron 3.5 Content Safety (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "NVIDIA",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": ":free variant — always provided for free with low rate limits.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3.5-content-safety:free",
-      "free_model_names": [
-        "nvidia/nemotron-3.5-content-safety:free"
-      ],
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "benchmark": {
-        "score": null,
-        "benchmark_name": null,
-        "tier": "B"
-      },
-      "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:06:30Z",
-      "sources": [
-        "https://openrouter.ai/docs/quickstart"
-      ]
-    },
-    {
-      "rank": 24,
-      "name": "NVIDIA: Nemotron 3 Nano Omni (free)",
-      "model_name": "NVIDIA: Nemotron 3 Nano Omni (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "NVIDIA",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "free_limits": ":free variant — always provided for free with low rate limits.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 30,
-      "active_parameters_b": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
-      "free_model_names": [
-        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
-      ],
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "benchmark": {
-        "score": null,
-        "benchmark_name": null,
-        "tier": "B"
-      },
-      "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-29T02:06:30Z",
-      "sources": [
-        "https://openrouter.ai/docs/quickstart"
-      ]
-    }
-  ],
-  "conditional_credits": [
-    {
-      "name": "OpenAI GPT OSS",
-      "model_name": "OpenAI GPT OSS",
-      "provider": "Cerebras",
-      "model_vendor": "OpenAI",
+      "classification": "G_FREE_LIKE",
       "delivery_type": "official",
-      "classification": "D_TRIAL_CREDIT",
-      "free_limits": "$5 in free credits after making an account. Access to all Cerebras powered models.",
+      "endpoint_source": "https://ai.google.dev/gemini-api/docs/openai",
       "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 120,
-      "active_parameters_b": null,
-      "base_url": "https://api.cerebras.ai/v1",
-      "model_id": "gpt-oss-120b",
-      "endpoint_source": "https://inference-docs.cerebras.ai/quickstart",
-      "benchmark": {
-        "score": 1368,
-        "benchmark_name": "Arena Elo",
-        "tier": "B"
-      },
-      "benchmarks": [
-        {
-          "name": "GPQA Diamond",
-          "score": 75.8
-        },
-        {
-          "name": "SWE-bench Pro",
-          "score": 16.2
-        },
-        {
-          "name": "AIME (OTIS Mock)",
-          "score": 88.9
-        },
-        {
-          "name": "MMLU-Pro",
-          "score": 80.8
-        },
-        {
-          "name": "LiveCodeBench Pro",
-          "score": 1299
-        },
-        {
-          "name": "IFBench",
-          "score": 69
-        },
-        {
-          "name": "Arena Elo",
-          "score": 1368
-        }
-      ],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": false,
-      "exclusion_reason": "Trial credit only — one-time $5 signup bonus",
-      "last_verified": "2026-07-29T02:00:01Z",
-      "sources": [
-        "https://inference-docs.cerebras.ai/quickstart"
-      ]
-    },
-    {
-      "name": "Gemma 4 31B",
-      "model_name": "Gemma 4 31B",
-      "provider": "Cerebras",
-      "model_vendor": "Google",
-      "delivery_type": "official",
-      "classification": "D_TRIAL_CREDIT",
-      "free_limits": "$5 in free credits after making an account.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 31,
-      "active_parameters_b": null,
-      "base_url": "https://api.cerebras.ai/v1",
-      "model_id": "gemma-4-31b",
-      "endpoint_source": "https://inference-docs.cerebras.ai/quickstart",
-      "benchmark": {
-        "score": 89.2,
-        "benchmark_name": "AIME 2026 no tools",
-        "tier": "B"
-      },
-      "benchmarks": [
-        {
-          "name": "MMLU Pro",
-          "score": 85.2
-        },
-        {
-          "name": "AIME 2026 no tools",
-          "score": 89.2
-        },
-        {
-          "name": "LiveCodeBench v6",
-          "score": 80
-        },
-        {
-          "name": "GPQA Diamond",
-          "score": 84.3
-        },
-        {
-          "name": "HLE no tools",
-          "score": 19.5
-        },
-        {
-          "name": "MMMU Pro",
-          "score": 76.9
-        }
-      ],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": false,
-      "exclusion_reason": "Trial credit only — one-time $5 signup bonus",
-      "last_verified": "2026-07-29T02:00:01Z",
-      "sources": [
-        "https://inference-docs.cerebras.ai/quickstart"
-      ]
-    },
-    {
-      "name": "Z.ai GLM 4.7",
-      "model_name": "Z.ai GLM 4.7",
-      "provider": "Cerebras",
-      "model_vendor": "Z.ai",
-      "delivery_type": "official",
-      "classification": "D_TRIAL_CREDIT",
-      "free_limits": "$5 in free credits after making an account.",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 355,
-      "active_parameters_b": null,
-      "base_url": "https://api.cerebras.ai/v1",
-      "model_id": "zai-glm-4.7",
-      "endpoint_source": "https://inference-docs.cerebras.ai/quickstart",
-      "benchmark": {
-        "score": null,
-        "benchmark_name": null,
-        "tier": "B"
-      },
-      "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": false,
-      "exclusion_reason": "Trial credit only — one-time $5 signup bonus",
-      "last_verified": "2026-07-29T02:00:01Z",
-      "sources": [
-        "https://inference-docs.cerebras.ai/quickstart"
-      ]
-    }
-  ],
-  "caution_offers": [
-    {
-      "name": "Google: Lyria 3 Pro Preview",
-      "model_name": "Google: Lyria 3 Pro Preview",
-      "provider": "OpenRouter",
-      "model_vendor": "Google",
-      "delivery_type": "router",
-      "classification": "C_LIMITED_FREE",
-      "free_limits": "Preview — currently free ($0/1M tokens). Not a :free variant; listed as zero-cost model. May end at any time.",
-      "free_allowance_rank": "TINY",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "google/lyria-3-pro-preview",
+      "free_limits": "Free of charge (Standard and Batch inference). Text-to-speech audio model optimized for price-performant, low-latency, controllable speech generation. Content used to improve our products.",
       "free_model_names": [
-        "google/lyria-3-pro-preview"
+        "gemini-2.5-flash-preview-tts"
       ],
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "benchmark": {
-        "score": null,
-        "benchmark_name": null,
-        "tier": "B"
-      },
-      "benchmarks": [],
-      "suspicion_score": 0,
       "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": false,
-      "exclusion_reason": "Preview period — free access may end without notice",
-      "last_verified": "2026-07-29T02:06:30Z",
-      "sources": [
-        "https://openrouter.ai/docs/quickstart"
-      ]
-    },
-    {
-      "name": "Google: Lyria 3 Clip Preview",
-      "model_name": "Google: Lyria 3 Clip Preview",
-      "provider": "OpenRouter",
+      "last_verified": "2026-07-30T02:00:01Z",
+      "model_id": "gemini-2.5-flash-preview-tts",
+      "model_name": "Gemini 2.5 Flash Preview TTS",
       "model_vendor": "Google",
-      "delivery_type": "router",
-      "classification": "C_LIMITED_FREE",
-      "free_limits": "Preview — currently free ($0/1M tokens). Not a :free variant; listed as zero-cost model. May end at any time.",
-      "free_allowance_rank": "TINY",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "google/lyria-3-clip-preview",
-      "free_model_names": [
-        "google/lyria-3-clip-preview"
-      ],
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "benchmark": {
-        "score": null,
-        "benchmark_name": null,
-        "tier": "B"
-      },
-      "benchmarks": [],
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
+      "name": "Gemini 2.5 Flash Preview TTS",
       "operational_confidence": "MEDIUM",
+      "provider": "Google Gemini",
       "ranking_eligible": false,
-      "exclusion_reason": "Preview period — free access may end without notice",
-      "last_verified": "2026-07-29T02:06:30Z",
       "sources": [
-        "https://openrouter.ai/docs/quickstart"
-      ]
+        "https://ai.google.dev/gemini-api/docs/openai"
+      ],
+      "suspicion_score": 0,
+      "training_use": "Content used to improve Google products",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
     }
   ],
   "excluded_offers": [
     {
-      "name": "Poolside Laguna S 2.1 (OpenRouter)",
-      "reason": "Known offer disappeared from this crawl cycle. Replaced by :free variant naming.",
-      "last_known_status": "B_PERMANENT_FREE_TIER via OpenRouter"
+      "last_known_status": "paid-only",
+      "name": "DeepSeek V4 Pro",
+      "reason": "[paid-api] is_free_signal=false — no free access documented"
     },
     {
-      "name": "Ling-3.0-flash (OpenRouter)",
-      "reason": "Known offer disappeared from this crawl cycle. Replaced by :free variant naming.",
-      "last_known_status": "B_PERMANENT_FREE_TIER via OpenRouter"
+      "last_known_status": "paid-only",
+      "name": "Thinking Machines Inkling",
+      "reason": "[paid-api] is_free_signal=false — no free access documented"
     },
     {
-      "name": "NVIDIA NIM - Nemotron 3 Ultra (無料API)",
-      "reason": "NVIDIA NIM free API offer no longer confirmed in this cycle.",
-      "last_known_status": "A_TRUE_FREE via NVIDIA NIM"
+      "last_known_status": "paid-only",
+      "name": "Sakana Fugu Ultra",
+      "reason": "[paid-api] is_free_signal=false — no free access documented"
     },
     {
-      "name": "NVIDIA Nemotron 3 Ultra (OpenRouter)",
-      "reason": "Known offer disappeared from this crawl cycle. Replaced by :free variant naming.",
-      "last_known_status": "B_PERMANENT_FREE_TIER via OpenRouter"
+      "last_known_status": "paid-only",
+      "name": "Tencent HY3",
+      "reason": "[paid-api] is_free_signal=false — no free access documented"
     },
     {
-      "name": "NVIDIA NIM - Nemotron 3 Super (無料API)",
-      "reason": "NVIDIA NIM free API offer no longer confirmed in this cycle.",
-      "last_known_status": "A_TRUE_FREE via NVIDIA NIM"
+      "last_known_status": "paid-only",
+      "name": "Xiaomi MiMo v2.5 Pro",
+      "reason": "[paid-api] is_free_signal=false — no free access documented"
     },
     {
-      "name": "NVIDIA Nemotron 3 Super (OpenRouter)",
-      "reason": "Known offer disappeared from this crawl cycle. Replaced by :free variant naming.",
-      "last_known_status": "B_PERMANENT_FREE_TIER via OpenRouter"
+      "last_known_status": "paid-only",
+      "name": "Meituan LongCat 2.0",
+      "reason": "[paid-api] is_free_signal=false — no free access documented"
     },
     {
-      "name": "Gemma 4 31B IT (OpenRouter)",
-      "reason": "Known offer disappeared from this crawl cycle. Replaced by :free variant naming.",
-      "last_known_status": "B_PERMANENT_FREE_TIER via OpenRouter"
+      "last_known_status": "paid-only",
+      "name": "Meta Muse Spark 1.1",
+      "reason": "[paid-api] is_free_signal=false — no free access documented"
     },
     {
-      "name": "Poolside Laguna XS 2.1 (OpenRouter)",
-      "reason": "Known offer disappeared from this crawl cycle. Replaced by :free variant naming.",
-      "last_known_status": "B_PERMANENT_FREE_TIER via OpenRouter"
+      "last_known_status": "paid-only",
+      "name": "Nex-AGI NEX-N2 Pro",
+      "reason": "[paid-api] is_free_signal=false — no free access documented"
     },
     {
-      "name": "DeepSeek V4 Flash (低価格API)",
-      "reason": "Offer ended — no free access documented in current crawl.",
-      "last_known_status": "E_DISCOUNT via DeepSeek"
+      "last_known_status": "paid-only",
+      "name": "StepFun Step 3.7 Flash",
+      "reason": "[paid-api] is_free_signal=false — no free access documented"
     },
     {
+      "last_known_status": "paid-only",
+      "name": "MiniMax M3",
+      "reason": "[paid-api] is_free_signal=false — no free access documented"
+    },
+    {
+      "last_known_status": "paid-only",
+      "name": "Nemotron 3 Ultra 550B A55B",
+      "reason": "[paid-api] is_free_signal=false — no free access documented (NVIDIA NIM official)"
+    },
+    {
+      "last_known_status": "paid-only",
+      "name": "Nemotron 3 Super 120B A12B",
+      "reason": "[paid-api] is_free_signal=false — no free access documented (NVIDIA NIM official)"
+    },
+    {
+      "last_known_status": "paid-only",
+      "name": "Nemotron 3 Nano 30B A3B",
+      "reason": "[paid-api] is_free_signal=false — no free access documented (NVIDIA NIM official)"
+    },
+    {
+      "last_known_status": "paid-only",
+      "name": "Nemotron 4 340B Instruct",
+      "reason": "[paid-api] is_free_signal=false — no free access documented (NVIDIA NIM official)"
+    },
+    {
+      "last_known_status": "local-run-only",
       "name": "Google: Gemma 4 26B A4B (free)",
-      "reason": "Total parameters 26B < 30B and tier B (not S/A competitive) — excluded from ranking per local-run policy.",
-      "last_known_status": "tier B, 26B params"
+      "reason": "[local-run] total 25.2B < 30B and tier B (not S/A competitive)"
     },
     {
-      "name": "OpenAI: gpt-oss-20b (free)",
-      "reason": "Total parameters 20B < 30B and tier B (not S/A competitive) — excluded from ranking per local-run policy.",
-      "last_known_status": "tier B, 20B params"
+      "last_known_status": "disappeared",
+      "name": "NVIDIA: Nemotron 3.5 Content Safety (free)",
+      "reason": "[local-run] total 4B < 30B and tier B; also disappeared from known_offers"
     },
     {
-      "name": "NVIDIA: Nemotron Nano 12B 2 VL (free)",
-      "reason": "Total parameters 12B < 30B and tier B (not S/A competitive) — excluded from ranking per local-run policy.",
-      "last_known_status": "tier B, 12B params"
+      "last_known_status": "local-run-only",
+      "name": "NVIDIA: Nemotron Nano 12B V2 VL (free)",
+      "reason": "[local-run] total 12B < 30B and tier B (not S/A competitive)"
     },
     {
+      "last_known_status": "local-run-only",
       "name": "NVIDIA: Nemotron Nano 9B V2 (free)",
-      "reason": "Total parameters 9B < 30B and tier B (not S/A competitive) — excluded from ranking per local-run policy.",
-      "last_known_status": "tier B, 9B params"
+      "reason": "[local-run] total 9B < 30B and tier B (not S/A competitive)"
     },
     {
+      "last_known_status": "local-run-only",
+      "name": "OpenAI: gpt-oss-20b (free)",
+      "reason": "[local-run] total 21B < 30B and tier B (not S/A competitive)"
+    },
+    {
+      "last_known_status": "paid-only",
+      "name": "DeepSeek-V4-Pro",
+      "reason": "[paid-api] is_free_signal=false — no free access documented (DeepSeek official)"
+    },
+    {
+      "last_known_status": "paid-only",
       "name": "DeepSeek-V4-Flash",
-      "reason": "Paid API only — no free access signal detected.",
-      "last_known_status": "paid-only"
+      "reason": "[paid-api] is_free_signal=false — no free access documented (DeepSeek official)"
     }
   ],
   "sources": [
     {
-      "url": "https://openrouter.ai/docs/quickstart",
+      "accessed_at": "2026-07-30T02:10:00Z",
       "source_type": "official",
-      "title": "OpenRouter API Quickstart",
-      "accessed_at": "2026-07-29T02:06:30Z"
+      "title": "OpenRouter Model Pages",
+      "url": "https://openrouter.ai/inclusionai/ling-3.0-flash"
     },
     {
-      "url": "https://ai.google.dev/gemini-api/docs/openai",
+      "accessed_at": "2026-07-30T02:10:00Z",
       "source_type": "official",
-      "title": "Google Gemini API OpenAI Compatibility",
-      "accessed_at": "2026-07-29T02:12:02Z"
+      "title": "OpenRouter Model Pages",
+      "url": "https://openrouter.ai/poolside/laguna-s-2.1"
     },
     {
-      "url": "https://inference-docs.cerebras.ai/quickstart",
+      "accessed_at": "2026-07-30T02:10:00Z",
       "source_type": "official",
-      "title": "Cerebras Inference Quickstart",
-      "accessed_at": "2026-07-29T02:00:01Z"
+      "title": "OpenRouter Model Pages",
+      "url": "https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b"
+    },
+    {
+      "accessed_at": "2026-07-30T02:10:00Z",
+      "source_type": "official",
+      "title": "OpenRouter Model Pages",
+      "url": "https://openrouter.ai/nvidia/nemotron-3-super-120b-a12b"
+    },
+    {
+      "accessed_at": "2026-07-30T02:10:00Z",
+      "source_type": "official",
+      "title": "OpenRouter Model Pages",
+      "url": "https://openrouter.ai/google/gemma-4-31b-it"
+    },
+    {
+      "accessed_at": "2026-07-30T02:10:00Z",
+      "source_type": "official",
+      "title": "OpenRouter Model Pages",
+      "url": "https://openrouter.ai/poolside/laguna-xs-2.1"
+    },
+    {
+      "accessed_at": "2026-07-30T02:10:00Z",
+      "source_type": "official",
+      "title": "OpenRouter Model Pages",
+      "url": "https://openrouter.ai/nvidia/nemotron-3-nano-30b-a3b"
+    },
+    {
+      "accessed_at": "2026-07-30T02:10:00Z",
+      "source_type": "official",
+      "title": "OpenRouter Model Pages",
+      "url": "https://openrouter.ai/cohere/north-mini-code"
+    },
+    {
+      "accessed_at": "2026-07-30T02:10:00Z",
+      "source_type": "official",
+      "title": "OpenRouter Model Pages",
+      "url": "https://openrouter.ai/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+    },
+    {
+      "accessed_at": "2026-07-30T02:00:01Z",
+      "source_type": "official",
+      "title": "Google Gemini API Documentation",
+      "url": "https://ai.google.dev/gemini-api/docs/openai"
     }
   ]
 }

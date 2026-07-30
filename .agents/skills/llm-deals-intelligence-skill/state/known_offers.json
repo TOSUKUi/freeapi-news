@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-07-29T15:05:00+09:00",
+  "updated_at": "2026-07-30T02:10:32Z",
   "offers": [
     {
       "name": "Gemini 3.6 Flash",
       "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
+      "classification": "G_FREE_LIKE",
       "end_at": null,
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
@@ -74,7 +74,7 @@
     {
       "name": "Gemini 2.5 Pro",
       "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
+      "classification": "G_FREE_LIKE",
       "end_at": null,
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
@@ -84,7 +84,7 @@
     {
       "name": "Gemini 3.5 Flash",
       "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
+      "classification": "G_FREE_LIKE",
       "end_at": null,
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
@@ -94,7 +94,7 @@
     {
       "name": "Gemini 3.5 Flash-Lite",
       "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
+      "classification": "G_FREE_LIKE",
       "end_at": null,
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
@@ -104,7 +104,7 @@
     {
       "name": "Gemini 3.1 Flash-Lite",
       "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
+      "classification": "G_FREE_LIKE",
       "end_at": null,
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
@@ -114,7 +114,7 @@
     {
       "name": "Gemini 3 Flash Preview",
       "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
+      "classification": "G_FREE_LIKE",
       "end_at": null,
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
@@ -122,39 +122,9 @@
       "model_id": "gemini-3-flash-preview"
     },
     {
-      "name": "Gemini 3.5 Live Translate",
-      "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-3.5-live-translate-preview"
-    },
-    {
-      "name": "Gemini 3.1 Flash TTS Preview",
-      "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-3.1-flash-tts-preview"
-    },
-    {
-      "name": "Gemini 3.1 Flash Live Preview",
-      "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-3.1-flash-live-preview"
-    },
-    {
       "name": "Gemini 2.5 Flash",
       "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
+      "classification": "G_FREE_LIKE",
       "end_at": null,
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
@@ -164,42 +134,12 @@
     {
       "name": "Gemini 2.5 Flash-Lite",
       "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
+      "classification": "G_FREE_LIKE",
       "end_at": null,
       "operational_confidence": "MEDIUM",
       "suspicion_score": 0,
       "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
       "model_id": "gemini-2.5-flash-lite"
-    },
-    {
-      "name": "Gemini 2.5 Flash-Lite Preview",
-      "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-2.5-flash-lite-preview-09-2025"
-    },
-    {
-      "name": "Gemini 2.5 Flash Native Audio (Live API)",
-      "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-2.5-flash-native-audio-preview-12-2025"
-    },
-    {
-      "name": "Gemini 2.5 Flash Preview TTS",
-      "provider": "Google Gemini",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model_id": "gemini-2.5-flash-preview-tts"
     },
     {
       "name": "NVIDIA: Nemotron 3 Nano 30B A3B (free)",
@@ -220,16 +160,6 @@
       "suspicion_score": 0,
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "cohere/north-mini-code:free"
-    },
-    {
-      "name": "NVIDIA: Nemotron 3.5 Content Safety (free)",
-      "provider": "OpenRouter",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "end_at": null,
-      "operational_confidence": "MEDIUM",
-      "suspicion_score": 0,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nvidia/nemotron-3.5-content-safety:free"
     },
     {
       "name": "NVIDIA: Nemotron 3 Nano Omni (free)",

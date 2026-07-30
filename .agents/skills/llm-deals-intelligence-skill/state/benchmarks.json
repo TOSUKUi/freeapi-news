@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-29T15:05:00+09:00",
+  "updated_at": "2026-07-30T02:10:32Z",
   "models": [
     {
       "canonical_name": "Ling-3.0-flash",
@@ -63,7 +63,7 @@
       "aliases": ["gemini-3.6-flash"],
       "vendor": "Google",
       "model_ids": ["gemini-3.6-flash"],
-      "tier": "A",
+      "tier": "S",
       "benchmarks": [
         {"name": "Humanity's Last Exam", "score": 52, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
         {"name": "MMLU", "score": 89.2, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
@@ -77,7 +77,7 @@
       "aliases": ["laguna-s-2.1", "poolside/laguna-s-2.1"],
       "vendor": "Poolside",
       "model_ids": ["poolside/laguna-s-2.1:free", "poolside/laguna-s-2.1"],
-      "tier": "A",
+      "tier": "S",
       "benchmarks": [
         {"name": "Terminal-Bench 2.1", "score": 70.2, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"},
         {"name": "DeepSWE", "score": 40.4, "source": "report.json", "extraction_method": "official_page", "accessed_at": "2026-07-24T21:07:00+09:00"}
@@ -313,6 +313,24 @@
         {"name": "IFEval", "score": 85.03, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"},
         {"name": "MMMU-Pro", "score": 68.96, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"},
         {"name": "OCR Bench v2", "score": 61.42, "source": "https://www.together.ai/models/prism-ml-ternary-bonsai-27b"}
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Cohere North Mini Code",
+      "model_ids": ["cohere/north-mini-code:free", "cohere/north-mini-code"],
+      "benchmarks": [
+        {"name": "AA Intelligence Index", "score": 19.8, "source": "OpenRouter API catalog"},
+        {"name": "AA Coding Index", "score": 36.5, "source": "OpenRouter API catalog"},
+        {"name": "AA Agentic Index", "score": 3.1, "source": "OpenRouter API catalog"}
+      ],
+      "tier": null
+    },
+    {
+      "canonical_name": "Nemotron 3 Nano Omni",
+      "model_ids": ["nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"],
+      "benchmarks": [
+        {"name": "AA Coding Index", "score": 13.8, "source": "OpenRouter API catalog"}
       ],
       "tier": null
     }

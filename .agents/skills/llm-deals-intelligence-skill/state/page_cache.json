@@ -1,6 +1,6 @@
 {
   "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-ultra-550b-a55b-infer": {
-    "fetched_at": "2026-07-29T01:19:06Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "nvidia",
     "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
     "http_ok": true
@@ -12,7 +12,7 @@
     "http_ok": true
   },
   "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-super-120b-a12b-infer": {
-    "fetched_at": "2026-07-29T01:19:06Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "nvidia",
     "model_id": "nvidia/nemotron-3-super-120b-a12b",
     "http_ok": true
@@ -24,91 +24,91 @@
     "http_ok": true
   },
   "https://openrouter.ai/docs/quickstart": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
-    "model_id": "google/lyria-3-clip-preview",
+    "model_id": "openai/gpt-oss-20b:free",
     "http_ok": true
   },
   "https://openrouter.ai/inclusionai/ling-3.0-flash": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "inclusionai/ling-3.0-flash:free",
     "http_ok": true
   },
   "https://openrouter.ai/poolside/laguna-s-2.1": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "poolside/laguna-s-2.1:free",
     "http_ok": true
   },
   "https://openrouter.ai/poolside/laguna-xs-2.1": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "poolside/laguna-xs-2.1:free",
     "http_ok": true
   },
   "https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
     "http_ok": true
   },
   "https://openrouter.ai/nvidia/nemotron-3-super-120b-a12b": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
     "http_ok": true
   },
   "https://openrouter.ai/google/gemma-4-31b-it": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "google/gemma-4-31b-it:free",
     "http_ok": true
   },
   "https://openrouter.ai/google/gemma-4-26b-a4b-it": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "google/gemma-4-26b-a4b-it:free",
     "http_ok": true
   },
   "https://openrouter.ai/nvidia/nemotron-3-nano-30b-a3b": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "nvidia/nemotron-3-nano-30b-a3b:free",
     "http_ok": true
   },
   "https://openrouter.ai/openai/gpt-oss-20b": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "openai/gpt-oss-20b:free",
     "http_ok": true
   },
   "https://openrouter.ai/cohere/north-mini-code": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "cohere/north-mini-code:free",
     "http_ok": true
   },
   "https://openrouter.ai/nvidia/nemotron-3.5-content-safety": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "nvidia/nemotron-3.5-content-safety:free",
     "http_ok": true
   },
   "https://openrouter.ai/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
     "http_ok": true
   },
   "https://openrouter.ai/nvidia/nemotron-nano-12b-v2-vl": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "nvidia/nemotron-nano-12b-v2-vl:free",
     "http_ok": true
   },
   "https://openrouter.ai/nvidia/nemotron-nano-9b-v2": {
-    "fetched_at": "2026-07-29T02:06:30Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "openrouter",
     "model_id": "nvidia/nemotron-nano-9b-v2:free",
     "http_ok": true
@@ -126,7 +126,7 @@
     "http_ok": true
   },
   "https://api-docs.deepseek.com/": {
-    "fetched_at": "2026-07-29T02:00:01Z",
+    "fetched_at": "2026-07-30T02:10:00Z",
     "provider_key": "deepseek",
     "model_id": "deepseek-v4-flash",
     "http_ok": true
@@ -150,15 +150,93 @@
     "http_ok": true
   },
   "https://ai.google.dev/gemini-api/docs/openai": {
-    "fetched_at": "2026-07-29T02:12:02Z",
+    "fetched_at": "2026-07-30T02:00:01Z",
     "provider_key": "google",
     "model_id": "gemini-2.5-flash-preview-tts",
     "http_ok": true
   },
   "https://ai.google.dev/pricing": {
-    "fetched_at": "2026-07-29T02:12:02Z",
+    "fetched_at": "2026-07-30T02:00:01Z",
     "provider_key": "google",
     "model_id": "gemini-2.5-flash-preview-tts",
+    "http_ok": true
+  },
+  "https://openrouter.ai/deepseek/deepseek-v4-pro": {
+    "fetched_at": "2026-07-30T02:05:00Z",
+    "provider_key": "_discovery",
+    "model_id": "deepseek/deepseek-v4-pro",
+    "http_ok": true
+  },
+  "https://openrouter.ai/thinkingmachines/inkling": {
+    "fetched_at": "2026-07-30T02:05:00Z",
+    "provider_key": "_discovery",
+    "model_id": "thinkingmachines/inkling",
+    "http_ok": true
+  },
+  "https://huggingface.co/thinkingmachines/Inkling": {
+    "fetched_at": "2026-07-30T02:05:00Z",
+    "provider_key": "_discovery",
+    "model_id": "thinkingmachines/inkling",
+    "http_ok": true
+  },
+  "https://openrouter.ai/sakana/fugu-ultra": {
+    "fetched_at": "2026-07-30T02:05:00Z",
+    "provider_key": "_discovery",
+    "model_id": "sakana/fugu-ultra",
+    "http_ok": true
+  },
+  "https://openrouter.ai/tencent/hy3": {
+    "fetched_at": "2026-07-30T02:05:00Z",
+    "provider_key": "_discovery",
+    "model_id": "tencent/hy3",
+    "http_ok": true
+  },
+  "https://openrouter.ai/xiaomi/mimo-v2.5-pro": {
+    "fetched_at": "2026-07-30T02:05:00Z",
+    "provider_key": "_discovery",
+    "model_id": "xiaomi/mimo-v2.5-pro",
+    "http_ok": true
+  },
+  "https://openrouter.ai/meituan/longcat-2.0": {
+    "fetched_at": "2026-07-30T02:05:00Z",
+    "provider_key": "_discovery",
+    "model_id": "meituan/longcat-2.0",
+    "http_ok": true
+  },
+  "https://openrouter.ai/meta/muse-spark-1.1": {
+    "fetched_at": "2026-07-30T02:05:00Z",
+    "provider_key": "_discovery",
+    "model_id": "meta/muse-spark-1.1",
+    "http_ok": true
+  },
+  "https://openrouter.ai/nex-agi/nex-n2-pro": {
+    "fetched_at": "2026-07-30T02:05:00Z",
+    "provider_key": "_discovery",
+    "model_id": "nex-agi/nex-n2-pro",
+    "http_ok": true
+  },
+  "https://openrouter.ai/stepfun/step-3.7-flash": {
+    "fetched_at": "2026-07-30T02:05:00Z",
+    "provider_key": "_discovery",
+    "model_id": "stepfun/step-3.7-flash",
+    "http_ok": true
+  },
+  "https://openrouter.ai/minimax/minimax-m3": {
+    "fetched_at": "2026-07-30T02:05:00Z",
+    "provider_key": "_discovery",
+    "model_id": "minimax/minimax-m3",
+    "http_ok": true
+  },
+  "https://docs.api.nvidia.com/nim/reference/llm-apis": {
+    "fetched_at": "2026-07-30T02:10:00Z",
+    "provider_key": "nvidia",
+    "model_id": "nvidia/nemotron-4-340b-instruct",
+    "http_ok": true
+  },
+  "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-nano-30b-a3b-infer": {
+    "fetched_at": "2026-07-30T02:10:00Z",
+    "provider_key": "nvidia",
+    "model_id": "nvidia/nemotron-3-nano-30b-a3b",
     "http_ok": true
   }
 }
