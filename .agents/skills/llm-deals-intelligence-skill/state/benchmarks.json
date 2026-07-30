@@ -800,6 +800,11 @@
           "name": "Arena Elo",
           "score": 1459,
           "source": "https://openlm.ai/chatbot-arena/"
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 59,
+          "source": "https://ai.google.dev/gemini-api/docs/pricing"
         }
       ],
       "sources_checked": []
@@ -1036,7 +1041,8 @@
     {
       "canonical_name": "GPT-5.6 Sol",
       "model_ids": [
-        "gpt-5.6-sol"
+        "gpt-5.6-sol",
+        "openai/gpt-5.6-sol"
       ],
       "benchmarks": [
         {
@@ -1060,7 +1066,8 @@
     {
       "canonical_name": "GPT-5.6 Terra",
       "model_ids": [
-        "gpt-5.6-terra"
+        "gpt-5.6-terra",
+        "openai/gpt-5.6-terra"
       ],
       "benchmarks": [
         {
@@ -1079,7 +1086,8 @@
     {
       "canonical_name": "GPT-5.6 Luna",
       "model_ids": [
-        "gpt-5.6-luna"
+        "gpt-5.6-luna",
+        "openai/gpt-5.6-luna"
       ],
       "benchmarks": [
         {
@@ -1093,7 +1101,8 @@
     {
       "canonical_name": "Muse Spark 1.1",
       "model_ids": [
-        "muse-spark-1.1"
+        "muse-spark-1.1",
+        "meta/muse-spark-1.1"
       ],
       "benchmarks": [
         {
@@ -1105,6 +1114,16 @@
           "name": "Terminal-Bench 2.1",
           "score": 93,
           "source": "https://llm-stats.com/models/compare/muse-spark-1.1-vs-seed-2.1-turbo"
+        },
+        {
+          "name": "MCP Atlas",
+          "score": 88.1,
+          "source": "https://developer.meta.com/ai/models/muse-spark/"
+        },
+        {
+          "name": "OSWorld-Verified",
+          "score": 80.8,
+          "source": "https://developer.meta.com/ai/models/muse-spark/"
         }
       ],
       "tier": null

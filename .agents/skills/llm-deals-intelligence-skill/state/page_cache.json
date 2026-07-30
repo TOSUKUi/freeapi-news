@@ -6,7 +6,7 @@
     "http_ok": true
   },
   "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b": {
-    "fetched_at": "2026-07-29T01:19:06Z",
+    "fetched_at": "2026-07-30T18:02:03Z",
     "provider_key": "nvidia",
     "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
     "http_ok": true
@@ -144,7 +144,7 @@
     "http_ok": true
   },
   "https://inference-docs.cerebras.ai/models/overview": {
-    "fetched_at": "2026-07-29T02:00:01Z",
+    "fetched_at": "2026-07-30T18:02:03Z",
     "provider_key": "cerebras",
     "model_id": "zai-glm-4.7",
     "http_ok": true
@@ -198,8 +198,8 @@
     "http_ok": true
   },
   "https://openrouter.ai/meituan/longcat-2.0": {
-    "fetched_at": "2026-07-30T02:05:00Z",
-    "provider_key": "_discovery",
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "meituan",
     "model_id": "meituan/longcat-2.0",
     "http_ok": true
   },
@@ -228,9 +228,9 @@
     "http_ok": true
   },
   "https://docs.api.nvidia.com/nim/reference/llm-apis": {
-    "fetched_at": "2026-07-30T17:05:52Z",
+    "fetched_at": "2026-07-30T18:02:03Z",
     "provider_key": "nvidia",
-    "model_id": "microsoft/phi-4-multimodal-instruct",
+    "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
     "http_ok": true
   },
   "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-nano-30b-a3b-infer": {
@@ -246,15 +246,15 @@
     "http_ok": true
   },
   "https://openai.com/index/gpt-5-6/": {
-    "fetched_at": "2026-07-30T17:05:52Z",
-    "provider_key": "_discovery",
-    "model_id": "gpt-5.6-luna",
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "openai",
+    "model_id": "openai/gpt-5.6-luna",
     "http_ok": true
   },
   "https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/": {
-    "fetched_at": "2026-07-30T17:05:52Z",
-    "provider_key": "_discovery",
-    "model_id": "muse-spark-1.1",
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "meta",
+    "model_id": "meta/muse-spark-1.1",
     "http_ok": true
   },
   "https://pricepertoken.com/pricing-page/model/minimax-minimax-m3": {
@@ -321,6 +321,138 @@
     "fetched_at": "2026-07-30T17:05:52Z",
     "provider_key": "openrouter",
     "model_id": "nvidia/nemotron-3.5-content-safety:free",
+    "http_ok": true
+  },
+  "https://api-docs.deepseek.com/quick_start/pricing/": {
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "deepseek",
+    "model_id": "deepseek-v4-pro",
+    "http_ok": true
+  },
+  "https://ai.google.dev/gemini-api/docs/pricing": {
+    "fetched_at": "2026-07-30T18:10:46Z",
+    "provider_key": "google",
+    "model_id": "gemini-2.5-flash-preview-tts",
+    "http_ok": true
+  },
+  "https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash": {
+    "fetched_at": "2026-07-30T18:10:46Z",
+    "provider_key": "google",
+    "model_id": "gemini-3.6-flash",
+    "http_ok": true
+  },
+  "https://ai.google.dev/gemini-api/docs/models/gemini-3-flash-preview": {
+    "fetched_at": "2026-07-30T18:10:46Z",
+    "provider_key": "google",
+    "model_id": "gemini-3-flash-preview",
+    "http_ok": true
+  },
+  "https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash": {
+    "fetched_at": "2026-07-30T18:10:46Z",
+    "provider_key": "google",
+    "model_id": "gemini-3.1-flash",
+    "http_ok": true
+  },
+  "https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-live-preview": {
+    "fetched_at": "2026-07-30T18:10:46Z",
+    "provider_key": "google",
+    "model_id": "gemini-3.1-flash-live-preview",
+    "http_ok": true
+  },
+  "https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-tts-preview": {
+    "fetched_at": "2026-07-30T18:10:46Z",
+    "provider_key": "google",
+    "model_id": "gemini-3.1-flash-tts-preview",
+    "http_ok": true
+  },
+  "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-pro": {
+    "fetched_at": "2026-07-30T18:10:46Z",
+    "provider_key": "google",
+    "model_id": "gemini-2.5-pro",
+    "http_ok": true
+  },
+  "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash": {
+    "fetched_at": "2026-07-30T18:10:46Z",
+    "provider_key": "google",
+    "model_id": "gemini-2.5-flash",
+    "http_ok": true
+  },
+  "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-lite": {
+    "fetched_at": "2026-07-30T18:10:46Z",
+    "provider_key": "google",
+    "model_id": "gemini-2.5-flash-lite",
+    "http_ok": true
+  },
+  "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-lite-preview-09-2025": {
+    "fetched_at": "2026-07-30T18:10:46Z",
+    "provider_key": "google",
+    "model_id": "gemini-2.5-flash-lite-preview-09-2025",
+    "http_ok": true
+  },
+  "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-native-audio-preview-12-2025": {
+    "fetched_at": "2026-07-30T18:10:46Z",
+    "provider_key": "google",
+    "model_id": "gemini-2.5-flash-native-audio-preview-12-2025",
+    "http_ok": true
+  },
+  "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-preview-tts": {
+    "fetched_at": "2026-07-30T18:10:46Z",
+    "provider_key": "google",
+    "model_id": "gemini-2.5-flash-preview-tts",
+    "http_ok": true
+  },
+  "https://openrouter.ai/qwen/qwen3.7-flash": {
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "openrouter",
+    "model_id": "qwen/qwen3.7-flash",
+    "http_ok": true
+  },
+  "https://openrouter.ai/thinkingmachines": {
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "thinkingmachines",
+    "model_id": "thinkingmachines/inkling",
+    "http_ok": true
+  },
+  "https://thinkingmachines.ai/news/introducing-inkling/": {
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "thinkingmachines",
+    "model_id": "thinkingmachines/inkling",
+    "http_ok": true
+  },
+  "https://www.marktechpost.com/2026/07/05/meituan-releases-longcat-2-0-a-1-6t-parameter-open-moe-model-with-native-1m-context-and-longcat-sparse-attention/": {
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "meituan",
+    "model_id": "meituan/longcat-2.0",
+    "http_ok": true
+  },
+  "https://openrouter.ai/moonshotai/kimi-k3": {
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "openrouter",
+    "model_id": "moonshotai/kimi-k3",
+    "http_ok": true
+  },
+  "https://www.kimi.com/blog/kimi-k3": {
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "openrouter",
+    "model_id": "moonshotai/kimi-k3",
+    "http_ok": true
+  },
+  "https://developer.meta.com/ai/models/muse-spark/": {
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "meta",
+    "model_id": "meta/muse-spark-1.1",
+    "http_ok": true
+  },
+  "https://openrouter.ai": {
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "openrouter",
+    "model_id": "kwaipilot/kat-coder-pro-v2.5",
+    "http_ok": true
+  },
+  "https://pricepertoken.com/news/model-releases": {
+    "fetched_at": "2026-07-30T18:02:03Z",
+    "provider_key": "openrouter",
+    "model_id": "kwaipilot/kat-coder-pro-v2.5",
     "http_ok": true
   }
 }

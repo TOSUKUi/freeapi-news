@@ -1,345 +1,143 @@
 {
-  "generated_at": "2026-07-30T17:16:24.486Z",
+  "generated_at": "2026-07-30T18:11:26Z",
   "timezone": "Asia/Tokyo",
-  "new_models": [
-    {
-      "canonical_name": "MiniMax M3",
-      "vendor": "MiniMax",
-      "status": "ga",
-      "official_source": "https://api.minimax.chat"
-    },
-    {
-      "canonical_name": "Muse Spark 1.1",
-      "vendor": "Meta",
-      "status": "ga",
-      "official_source": "https://www.meta.com/llama/"
-    },
-    {
-      "canonical_name": "Grok 4.5",
-      "vendor": "xAI",
-      "status": "ga",
-      "official_source": "https://api.x.ai/v1"
-    },
-    {
-      "canonical_name": "Nemotron 3 Ultra",
-      "vendor": "NVIDIA",
-      "status": "ga",
-      "official_source": "https://docs.api.nvidia.com/nim/reference/llm-apis"
-    }
-  ],
+  "new_models": [],
   "changes": [
     {
-      "offer_name": "collect-coverage",
-      "change_type": "availability_change",
-      "summary": "収集カバー率が36%（5/14完了、9失敗）と低水準。9プロバイダーのクラウリングに失敗（Cerebras, Together, Anyscale, Replicate, HuggingFace, Groq, Moonshot, Cloudflare, OpenAI）。Google Gemini モデルページ（ai.google.dev/models）が404を返し、14件のGeminiオファーが再確認不可。"
-    },
-    {
-      "offer_name": "Gemini 3.6 Flash",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "NVIDIA: Nemotron 3 Super (free)",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "Google: Gemma 4 31B (free)",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "Poolside: Laguna XS 2.1 (free)",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "Gemini 2.5 Pro",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "Gemini 3.5 Flash",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "Gemini 3.5 Flash-Lite",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "Gemini 3.1 Flash-Lite",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "Gemini 3 Flash Preview",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "Gemini 2.5 Flash",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "Gemini 2.5 Flash-Lite",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "NVIDIA: Nemotron 3 Nano 30B A3B (free)",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "Cohere: North Mini Code (free)",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
-      "offer_name": "NVIDIA: Nemotron 3 Nano Omni (free)",
-      "change_type": "ended",
-      "summary": "前回レポートに存在した無料オファーが今回の収集で再発見されず、消失している。"
-    },
-    {
       "offer_name": "MiniMax M3",
-      "change_type": "new",
-      "summary": "MiniMax M3が新たに無料/Free APIオファーとして発見された。A_TRUE_FREE分類、Terminal-Bench 2.1スコア66（S tier）。"
+      "change_type": "ended",
+      "summary": "前回ランキング入りしていたMiniMax M3が今回のクラウドで収集できず、確認不能。"
     },
     {
-      "offer_name": "Muse Spark 1.1",
-      "change_type": "new",
-      "summary": "Muse Spark 1.1が新たに無料/Free APIオファーとして発見された。D_TRIAL_CREDIT分類（$20無料クレジット）、Terminal-Bench 2.1スコア93（S tier）。"
+      "offer_name": "Poolside: Laguna S 2.1 (free)",
+      "change_type": "ended",
+      "summary": "前回ランキング入りしていたPoolside Laguna S 2.1 (free)が今回のクラウドで収集できず、確認不能。"
     },
     {
       "offer_name": "Grok 4.5",
-      "change_type": "new",
-      "summary": "Grok 4.5が新たに無料/Free APIオファーとして発見された。C_LIMITED_FREE分類（限定時間無料）、Terminal-Bench 2.1スコア83.3（S tier）。"
+      "change_type": "ended",
+      "summary": "前回ランキング入りしていたGrok 4.5が今回のクラウドで収集できず、確認不能。"
     },
     {
-      "offer_name": "Nemotron 3 Ultra",
-      "change_type": "new",
-      "summary": "Nemotron 3 Ultraが新たに無料/Free APIオファーとして発見された。B_PERMANENT_FREE_TIER分類（NVIDIA NIM）、Terminal-Bench 2.1スコア56.4（A tier）。"
+      "offer_name": "Ling-3.0-flash (free)",
+      "change_type": "ended",
+      "summary": "前回ランキング入りしていたLing-3.0-flash (free)が今回のクラウドで収集できず、確認不能。"
+    },
+    {
+      "offer_name": "NVIDIA: Nemotron 3 Ultra (free)",
+      "change_type": "ended",
+      "summary": "OpenRouter :freeルートの収集タスクが失敗。"
+    },
+    {
+      "offer_name": "Muse Spark 1.1",
+      "change_type": "availability_change",
+      "summary": "model_idがmuse-spark-1.1からmeta/muse-spark-1.1に変更。"
+    },
+    {
+      "offer_name": "crawl_coverage",
+      "change_type": "availability_change",
+      "summary": "14タスク中6タスク完了（43%）。8タスク失敗：openrouter, anyscale, replicate, huggingface, groq, moonshot, cloudflare, openai。"
     }
   ],
   "ranked_offers": [
     {
-      "rank": 3,
-      "name": "Poolside: Laguna S 2.1 (free)",
-      "model_name": "Poolside: Laguna S 2.1 (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "OpenRouter",
+      "rank": 1,
+      "name": "Kimi K3",
       "delivery_type": "router",
       "classification": "B_PERMANENT_FREE_TIER",
       "suspicion_score": 0,
       "information_confidence": "HIGH",
       "operational_confidence": "MEDIUM",
       "ranking_eligible": true,
-      "last_verified": "2026-07-30T17:05:52Z",
-      "endpoint_source": "https://openrouter.ai/api/v1/models",
-      "free_allowance_rank": "NORMAL",
-      "model_id": "poolside/laguna-s-2.1:free",
-      "free_model_names": [
-        "poolside/laguna-s-2.1:free"
-      ],
+      "last_verified": "2026-07-30T18:02:03Z",
       "base_url": "https://openrouter.ai/api/v1",
-      "free_limits": "Laguna S 2.1 is a 118B total parameter model with 8B active parameters, scoring 70.2% on Terminal-Bench 2.1. Price: Free.",
+      "model_id": "moonshotai/kimi-k3",
+      "free_model_names": [
+        "moonshotai/kimi-k3"
+      ],
+      "free_allowance_rank": "NORMAL",
       "benchmark": {
-        "score": 70.2,
-        "benchmark_name": "Terminal-Bench 2.1",
+        "score": 88.3,
+        "benchmark_name": "Terminal Bench 2.1",
         "tier": "S"
       },
+      "endpoint_source": "https://openrouter.ai/moonshotai/kimi-k3",
+      "sources": [
+        "https://openrouter.ai/moonshotai/kimi-k3"
+      ],
       "benchmarks": [
         {
-          "name": "Terminal-Bench 2.1",
-          "score": 70.2
+          "name": "GPQA-Diamond",
+          "score": 93.5
+        },
+        {
+          "name": "HLE-Full",
+          "score": 43.5
+        },
+        {
+          "name": "HLE-Full w/ tools",
+          "score": 56
+        },
+        {
+          "name": "SWE Marathon",
+          "score": 42
         },
         {
           "name": "DeepSWE",
-          "score": 40.4
+          "score": 67.5
         },
-        {
-          "name": "SWE-bench Verified",
-          "score": 72.5
-        },
-        {
-          "name": "SWE-bench Multilingual",
-          "score": 67.3
-        },
-        {
-          "name": "Terminal-Bench 2.0",
-          "score": 40.7
-        }
-      ],
-      "sources": [
-        "https://openrouter.ai/api/v1/models"
-      ]
-    },
-    {
-      "rank": 5,
-      "name": "Ling-3.0-flash (free)",
-      "model_name": "Ling-3.0-flash (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "InclusionAI",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-30T17:05:52Z",
-      "endpoint_source": "https://openrouter.ai/api/v1/models",
-      "free_allowance_rank": "NORMAL",
-      "model_id": "inclusionai/ling-3.0-flash:free",
-      "free_model_names": [
-        "inclusionai/ling-3.0-flash:free"
-      ],
-      "base_url": "https://openrouter.ai/api/v1",
-      "free_limits": "Ling-3.0-flash is a 124B-parameter Mixture-of-Experts (MoE) model with approximately 5.1B parameters activated per token. Price: Free.",
-      "benchmark": {
-        "score": 57,
-        "benchmark_name": "Terminal Bench 2.1",
-        "tier": "A"
-      },
-      "benchmarks": [
         {
           "name": "Terminal Bench 2.1",
-          "score": 57
+          "score": 88.3
         },
         {
-          "name": "SWE-Bench Pro",
-          "score": 56.63
-        },
-        {
-          "name": "MCP-Atlas",
-          "score": 65.45
-        },
-        {
-          "name": "SkillsBench",
-          "score": 44.83
-        },
-        {
-          "name": "WebSearch",
-          "score": 72.3
+          "name": "FrontierSWE",
+          "score": 81.2
         },
         {
           "name": "BrowseComp",
-          "score": 70.33
+          "score": 91.2
         },
         {
-          "name": "TFBench",
-          "score": 74.18
+          "name": "MMMU-Pro",
+          "score": 81.6
         },
         {
-          "name": "SysBench",
-          "score": 93.63
+          "name": "Program Bench",
+          "score": 77.8
         },
         {
-          "name": "MRCR-128K",
-          "score": 90.78
-        },
-        {
-          "name": "Multi-IF",
-          "score": 87.65
-        },
-        {
-          "name": "WideSearch",
-          "score": 73.63
-        },
-        {
-          "name": "IFBench",
-          "score": 74.49
-        },
-        {
-          "name": "SWE-Bench Multilingual",
-          "score": 72.44
-        },
-        {
-          "name": "Tau3-banking-AA",
-          "score": 28
+          "name": "MCP Atlas",
+          "score": 84.2
         }
-      ],
-      "sources": [
-        "https://openrouter.ai/api/v1/models"
       ]
     },
     {
-      "rank": 6,
-      "name": "NVIDIA: Nemotron 3 Ultra (free)",
-      "model_name": "NVIDIA: Nemotron 3 Ultra (free)",
-      "provider": "OpenRouter",
-      "model_vendor": "NVDA",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-30T17:05:52Z",
-      "endpoint_source": "https://openrouter.ai/api/v1/models",
-      "free_allowance_rank": "NORMAL",
-      "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "free_model_names": [
-        "nvidia/nemotron-3-ultra-550b-a55b:free"
-      ],
-      "base_url": "https://openrouter.ai/api/v1",
-      "free_limits": "NVIDIA Nemotron 3 Ultra is an open frontier-reasoning and orchestration model from NVIDIA, with 55B active parameters out of 550B total (MoE). Price: Free.",
-      "benchmark": {
-        "score": 56.4,
-        "benchmark_name": "Terminal Bench 2.1",
-        "tier": "A"
-      },
-      "benchmarks": [
-        {
-          "name": "Humanity's Last Exam",
-          "score": 55
-        },
-        {
-          "name": "AIME 2025",
-          "score": 86
-        },
-        {
-          "name": "SWE-bench Verified",
-          "score": 52.8
-        },
-        {
-          "name": "Terminal Bench 2.1",
-          "score": 56.4
-        }
-      ],
-      "sources": [
-        "https://openrouter.ai/api/v1/models"
-      ]
-    },
-    {
-      "rank": 7,
+      "rank": 3,
       "name": "Nemotron 3 Ultra",
-      "model_name": "Nemotron 3 Ultra",
-      "provider": "NVIDIA NIM",
-      "model_vendor": "NVIDIA",
       "delivery_type": "official",
       "classification": "B_PERMANENT_FREE_TIER",
       "suspicion_score": 0,
       "information_confidence": "HIGH",
       "operational_confidence": "MEDIUM",
       "ranking_eligible": true,
-      "last_verified": "2026-07-30T17:05:52Z",
-      "endpoint_source": "https://docs.api.nvidia.com/nim/reference/llm-apis",
-      "free_allowance_rank": "TINY",
+      "last_verified": "2026-07-30T18:02:03Z",
+      "base_url": "https://integrate.api.nvidia.com/v1",
       "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
       "free_model_names": [
         "nvidia/nemotron-3-ultra-550b-a55b"
       ],
-      "base_url": "https://integrate.api.nvidia.com/v1",
-      "free_limits": "All models on build.nvidia.com are free to prototype with. The free tier runs on rate limits - up to 40 requests per minute (RPM) for most models, with no per-token billing.",
-      "total_parameters_b": 550,
+      "free_allowance_rank": "NORMAL",
+      "total_parameters_b": 561,
       "benchmark": {
         "score": 56.4,
         "benchmark_name": "Terminal Bench 2.1",
         "tier": "A"
       },
+      "endpoint_source": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b",
+      "sources": [
+        "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b"
+      ],
       "benchmarks": [
         {
           "name": "Humanity's Last Exam",
@@ -357,296 +155,159 @@
           "name": "Terminal Bench 2.1",
           "score": 56.4
         }
-      ],
-      "sources": [
-        "https://docs.api.nvidia.com/nim/reference/llm-apis"
       ]
+    }
+  ],
+  "conditional_credits": [],
+  "caution_offers": [
+    {
+      "name": "Muse Spark 1.1",
+      "delivery_type": "official",
+      "classification": "D_TRIAL_CREDIT",
+      "suspicion_score": 0,
+      "information_confidence": "HIGH",
+      "operational_confidence": "MEDIUM",
+      "ranking_eligible": false,
+      "base_url": "https://api.meta.ai/v1",
+      "model_id": "meta/muse-spark-1.1",
+      "free_allowance_rank": "NORMAL",
+      "benchmark": {
+        "score": 93,
+        "benchmark_name": "Terminal-Bench 2.1",
+        "tier": "S"
+      },
+      "exclusion_reason": "D_TRIAL_CREDIT: $20の一度限り試用クレジット。"
+    },
+    {
+      "name": "Gemini 3.6 Flash",
+      "delivery_type": "official",
+      "classification": "G_FREE_LIKE",
+      "suspicion_score": 0,
+      "information_confidence": "HIGH",
+      "operational_confidence": "MEDIUM",
+      "ranking_eligible": false,
+      "base_url": "https://generativelanguage.googleapis.com/v1beta",
+      "model_id": "gemini-3.6-flash",
+      "free_allowance_rank": "NORMAL",
+      "benchmark": {
+        "score": 78,
+        "benchmark_name": "Terminal Bench 2.1",
+        "tier": "S"
+      },
+      "exclusion_reason": "G_FREE_LIKE: API自体は有料。無料アクセスは消費者アプリのみ。"
     }
   ],
   "excluded_offers": [
     {
-      "name": "GPT-5.6 Sol",
-      "reason": "[paid-api] is_free_signal=false — no free access documented"
-    },
-    {
-      "name": "GPT-5.6 Terra",
-      "reason": "[paid-api] is_free_signal=false — no free access documented"
-    },
-    {
-      "name": "GPT-5.6 Luna",
-      "reason": "[paid-api] is_free_signal=false — no free access documented"
+      "name": "DeepSeek V4 Flash",
+      "reason": "[paid-api] APIは有料。"
     },
     {
       "name": "DeepSeek V4 Pro",
-      "reason": "[paid-api] is_free_signal=false — no free access documented"
+      "reason": "[paid-api] APIは有料。"
     },
     {
-      "name": "Claude Sonnet 5",
-      "reason": "[paid-api] is_free_signal=false — no free access documented"
+      "name": "OpenAI GPT OSS",
+      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
     },
     {
-      "name": "Claude Fable 5",
-      "reason": "[paid-api] is_free_signal=false — no free access documented"
+      "name": "Gemma 4 31B",
+      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
     },
     {
-      "name": "Llama 4 Scout",
-      "reason": "[paid-api] is_free_signal=false — no free access documented"
+      "name": "Z.ai GLM 4.7",
+      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
     },
     {
-      "name": "Nemotron 3 Super",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
+      "name": "Gemini 3 Flash Preview through TTS Preview",
+      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
     },
     {
-      "name": "Nemotron 3 Nano 30B A3B",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
+      "name": "Gemini 2.5 Flash and Flash-Lite variants",
+      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
     },
     {
-      "name": "Nemotron 3 Nano 30B A3B Reasoning",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
+      "name": "Qwen 3.7 Flash",
+      "reason": "[paid-api] APIは有料。"
     },
     {
-      "name": "Nemotron 3 Nano Omni 30B A3B Reasoning",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
+      "name": "Thinking Machines Inkling",
+      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
     },
     {
-      "name": "Nemotron 4 340B Instruct",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
+      "name": "LongCat 2.0",
+      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
     },
     {
-      "name": "Nemotron Nano 9B V2",
-      "reason": "[local-run] total 9B < 30B and tier B (not S/A competitive)"
+      "name": "GPT-5.6 Sol/Terra/Luna",
+      "reason": "[paid-api] APIは有料。"
     },
     {
-      "name": "Nemotron Nano 12B V2 VL",
-      "reason": "[local-run] total 12B < 30B and tier B (not S/A competitive)"
-    },
-    {
-      "name": "Llama 3.3 70B Instruct (NVIDIA-hosted)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "Llama 3.1 70B Instruct",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "Llama 3.1 8B Instruct",
-      "reason": "[local-run] total 8B < 30B and tier B (not S/A competitive)"
-    },
-    {
-      "name": "Llama Guard 4 12B",
-      "reason": "[local-run] total 12B < 30B and tier B (not S/A competitive)"
-    },
-    {
-      "name": "Qwen 3 235B A22B",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "Qwen 3 30B A3B",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "Qwen 3 8B",
-      "reason": "[local-run] total 8B < 30B and tier B (not S/A competitive)"
-    },
-    {
-      "name": "QwQ 32B",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "DeepSeek V3 (0324)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "DeepSeek V3.1",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "Gemma 4 31B IT",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "Kimi K2.5",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "Kimi K2.6",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "GLM 5.2",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "GLM 5.1",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "GLM 4.7",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "Step 3.7 Flash",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "Mistral 7B Instruct",
-      "reason": "[local-run] total 7B < 30B and tier B (not S/A competitive)"
-    },
-    {
-      "name": "Mistral Large 3 675B",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "Mistral Mini 14B",
-      "reason": "[local-run] total 14B < 30B and tier B (not S/A competitive)"
-    },
-    {
-      "name": "Phi 4 Multimodal Instruct",
-      "reason": "[local-run] total 14B < 30B and tier B (not S/A competitive)"
-    },
-    {
-      "name": "Poolside: Laguna XS 2.1 (free)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "Cohere: North Mini Code (free)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "NVIDIA: Nemotron 3 Super (free)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "NVIDIA: Nemotron 3 Nano 30B A3B (free)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "NVIDIA: Nemotron 3 Nano Omni (free)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "Google: Gemma 4 31B (free)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "Google: Gemma 4 26B A4B (free)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "NVIDIA: Nemotron Nano 12B 2 VL (free)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "NVIDIA: Nemotron Nano 9B V2 (free)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "OpenAI: gpt-oss-20b (free)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "NVIDIA: Nemotron 3.5 Content Safety (free)",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness"
-    },
-    {
-      "name": "deepseek-v4-pro",
-      "reason": "[paid-api] is_free_signal=false — no free access documented"
-    },
-    {
-      "name": "deepseek-v4-flash",
-      "reason": "[paid-api] is_free_signal=false — no free access documented"
-    },
-    {
-      "name": "Gemini 3.6 Flash",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "Gemini 2.5 Pro",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "Gemini 3.5 Flash",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "Gemini 3.5 Flash-Lite",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "Gemini 3.1 Flash-Lite",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "Gemini 3 Flash Preview",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "Gemini 2.5 Flash",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
-    },
-    {
-      "name": "Gemini 2.5 Flash-Lite",
-      "reason": "[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness",
-      "last_known_status": "known_free"
+      "name": "KAT Coder Air v2.5 and Pro v2.5",
+      "reason": "[paid-api] APIは有料。"
     },
     {
       "name": "MiniMax M3",
-      "reason": "[endpoint] missing base_url"
+      "reason": "収集タスク失敗。前回ランキング入り済み。"
     },
     {
-      "name": "Muse Spark 1.1",
-      "reason": "[endpoint] missing base_url"
+      "name": "Poolside: Laguna S 2.1 (free)",
+      "reason": "収集タスク失敗。前回ランキング入り済み。"
     },
     {
       "name": "Grok 4.5",
-      "reason": "[endpoint] missing base_url"
+      "reason": "収集タスク失敗。前回ランキング入り済み。"
+    },
+    {
+      "name": "Ling-3.0-flash (free)",
+      "reason": "収集タスク失敗。前回ランキング入り済み。"
+    },
+    {
+      "name": "NVIDIA: Nemotron 3 Ultra (free)",
+      "reason": "収集タスク失敗。NVIDIA NIM公式経由は含まれている。"
+    },
+    {
+      "name": "Gemini 2.5 Pro",
+      "reason": "[citation] https://ai.google.dev/gemini-api/docs/pricing does not document base_url \"https://generativelanguage.googleapis.com/v1beta\""
     }
   ],
+  "new_seed_candidates": [],
   "sources": [
     {
-      "url": "https://api.minimax.chat",
+      "url": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b",
       "source_type": "official",
-      "title": "MiniMax API",
-      "accessed_at": "2026-07-30T17:05:52Z"
+      "title": "NVIDIA NIM Nemotron 3 Ultra",
+      "accessed_at": "2026-07-30T18:02:03Z"
     },
     {
-      "url": "https://www.meta.com/llama/",
+      "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "source_type": "official",
-      "title": "Meta Model API",
-      "accessed_at": "2026-07-30T17:05:52Z"
+      "title": "Google Gemini API Pricing",
+      "accessed_at": "2026-07-30T18:10:46Z"
     },
     {
-      "url": "https://api.x.ai/v1",
+      "url": "https://openrouter.ai/moonshotai/kimi-k3",
       "source_type": "official",
-      "title": "xAI API",
-      "accessed_at": "2026-07-30T17:05:52Z"
+      "title": "OpenRouter Kimi K3",
+      "accessed_at": "2026-07-30T18:02:03Z"
     },
     {
-      "url": "https://docs.api.nvidia.com/nim/reference/llm-apis",
+      "url": "https://developer.meta.com/ai/models/muse-spark/",
       "source_type": "official",
-      "title": "NVIDIA NIM Reference",
-      "accessed_at": "2026-07-30T17:05:52Z"
+      "title": "Meta Muse Spark 1.1",
+      "accessed_at": "2026-07-30T18:02:03Z"
     },
     {
-      "url": "https://openrouter.ai/api/v1/models",
+      "url": "https://www.kimi.com/blog/kimi-k3",
       "source_type": "official",
-      "title": "OpenRouter API catalog",
-      "accessed_at": "2026-07-30T17:05:52Z"
+      "title": "Kimi K3 Blog",
+      "accessed_at": "2026-07-28T22:00:00+09:00"
+    },
+    {
+      "url": "https://benchlm.ai/models/nemotron-3-ultra",
+      "source_type": "other",
+      "title": "BenchLM Benchmarks",
+      "accessed_at": "2026-07-30T18:02:03Z"
     }
-  ],
-  "conditional_credits": [],
-  "caution_offers": []
+  ]
 }
