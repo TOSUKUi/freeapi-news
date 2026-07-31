@@ -1,101 +1,238 @@
 {
-  "summary": "Merge complete. 7 ranked offers (3 Tier S, 4 Tier A). 33 excluded. 3 disappeared known offers. 50% coverage gap. All state files written.",
-  "generated_at": "2026-07-31T02:31:29.726Z",
-  "timezone": "UTC",
-  "new_models": [],
-  "changes": [
+  "generated_at": "2026-07-31T13:02:54.900Z",
+  "timezone": "Asia/Tokyo",
+  "summary": "本日は2件のランクインオファーがあり、ともにティアAで検証済み（Gemini 2.5 Pro、Nemotron 3 Ultra）。25件の新規モデルがディスカバリーレーンで発見され、うち無料・条件付き無料はGPT-5.6 Lunaの大幅値下げ、Kimi K3の無料クレジット、Muse Spark 1.1の$20スタートクレジット等を含む。 cautionはなし。昇格可能。",
+  "new_models": [
     {
-      "offer_name": "Kimi K3",
-      "change_type": "ended",
-      "summary": "Kimi K3が前回のクロール以降検出されなくなりました。"
+      "canonical_name": "GPT-5.6 Sol",
+      "aliases": [],
+      "vendor": "openai",
+      "status": "announced",
+      "release_date": null,
+      "official_source": "https://developers.openai.com/api/docs/models/gpt-5.6-sol",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "openai"
+      ]
     },
     {
-      "offer_name": "Muse Spark 1.1",
-      "change_type": "ended",
-      "summary": "Muse Spark 1.1が前回のクロール以降検出されなくなりました。"
+      "canonical_name": "GPT-5.6 Terra",
+      "aliases": [],
+      "vendor": "openai",
+      "status": "announced",
+      "release_date": null,
+      "official_source": "https://developers.openai.com/api/docs/models/gpt-5.6-terra",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "openai"
+      ]
     },
     {
-      "offer_name": "coverage",
-      "change_type": "availability_change",
-      "summary": "タスク完了率50%。7プロバイダーがクロールに失敗。web_search全失敗のため新規発表の検証は不可能。"
+      "canonical_name": "GPT-5.6 Luna",
+      "aliases": [],
+      "vendor": "openai",
+      "status": "announced",
+      "release_date": null,
+      "official_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "openai"
+      ]
+    },
+    {
+      "canonical_name": "Muse Spark 1.1",
+      "aliases": [],
+      "vendor": "meta",
+      "status": "announced",
+      "release_date": null,
+      "official_source": "https://developer.meta.com/ai/products/meta-model-api",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "meta"
+      ]
+    },
+    {
+      "canonical_name": "Kimi K3",
+      "aliases": [],
+      "vendor": "moonshot",
+      "status": "announced",
+      "release_date": null,
+      "official_source": "https://platform.kimi.ai/docs/api/overview",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "moonshot"
+      ]
+    },
+    {
+      "canonical_name": "Claude Opus 5",
+      "aliases": [],
+      "vendor": "anthropic",
+      "status": "announced",
+      "release_date": null,
+      "official_source": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "anthropic"
+      ]
+    },
+    {
+      "canonical_name": "Inkling",
+      "aliases": [],
+      "vendor": "thinkingmachines",
+      "status": "announced",
+      "release_date": null,
+      "official_source": "https://thinkingmachines.ai/model-card/inkling/",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "thinkingmachines"
+      ]
+    },
+    {
+      "canonical_name": "Inkling-Small",
+      "aliases": [],
+      "vendor": "thinkingmachines",
+      "status": "announced",
+      "release_date": null,
+      "official_source": "https://thinkingmachines.ai/model-card/inkling-small/",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "thinkingmachines"
+      ]
+    },
+    {
+      "canonical_name": "celeris-1",
+      "aliases": [],
+      "vendor": "celeris",
+      "status": "announced",
+      "release_date": null,
+      "official_source": "https://docs.celeris.ai/",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "celeris"
+      ]
     }
   ],
-  "ranked_offers": [],
+  "changes": [
+    {
+      "offer_name": "Gemini 2.5 Pro",
+      "change_type": "price_change",
+      "summary": "Gemini 2.5 Pro の無料枠・価格条件が変わりました。"
+    },
+    {
+      "offer_name": "Nemotron 3 Ultra",
+      "change_type": "price_change",
+      "summary": "Nemotron 3 Ultra の無料枠・価格条件が変わりました。"
+    }
+  ],
+  "ranked_offers": [
+    {
+      "rank": 2,
+      "name": "Nemotron 3 Ultra",
+      "model_name": "Nemotron 3 Ultra",
+      "provider": "NVIDIA NIM",
+      "model_vendor": "nvidia",
+      "delivery_type": "official",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "start_at": null,
+      "end_at": null,
+      "end_timezone_known": false,
+      "regions": [],
+      "registration_conditions": [],
+      "card_required": null,
+      "minimum_deposit": null,
+      "kyc_required": null,
+      "auto_renewal": null,
+      "refund_policy": null,
+      "free_limits": "Free Endpoint: Available",
+      "rate_limits": null,
+      "context_tokens": null,
+      "max_output_tokens": null,
+      "tool_calling": null,
+      "structured_output": null,
+      "image_input": null,
+      "base_url": "https://integrate.api.nvidia.com/v1",
+      "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
+      "provider_count": null,
+      "recent_activity": "NVIDIA NIMのNemotron 3 Ultra（550Bパラメータ、55Bアクティブ）はDGX Cloudで無制限のプロトタイピングが無料。Terminal-Bench 2.1スコア56.4の大型MoEモデルで、高いコード生成・推論性能が無料で利用可能。",
+      "normal_price_per_million": null,
+      "effective_price_per_million": null,
+      "effective_discount_percent": null,
+      "data_retention": null,
+      "training_use": null,
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "exclusion_reason": null,
+      "last_verified": "2026-07-31T12:59:23.972Z",
+      "endpoint_source": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b",
+      "free_allowance_rank": "NORMAL",
+      "total_parameters_b": 550,
+      "active_parameters_b": null,
+      "free_model_names": [
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
+      "sources": [
+        "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b",
+        "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard"
+      ],
+      "benchmark": {
+        "score": 56.4,
+        "benchmark_name": "Terminal-Bench 2.1",
+        "tier": "A"
+      },
+      "benchmarks": [
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 56.4
+        }
+      ]
+    }
+  ],
   "conditional_credits": [],
   "caution_offers": [],
   "excluded_offers": [
     {
-      "name": "Kimi K3",
-      "reason": "disappeared_known_offer",
-      "last_known_status": "rank 1, TB2.1 score 88.3, tier S"
-    },
-    {
-      "name": "Muse Spark 1.1",
-      "reason": "disappeared_known_offer",
-      "last_known_status": "ranked, TB2.1 score 93, tier S"
-    },
-    {
-      "name": "Nemotron 3 Ultra",
-      "reason": "disappeared_known_offer",
-      "last_known_status": "ranked, TB2.1 score 56.4, tier A"
-    },
-    {
-      "name": "PrismML Ternary Bonsai 27B",
-      "reason": "[local-run] total 27B < 30B and tier B (not S/A competitive)"
-    },
-    {
-      "name": "Qwen3.7 Flash",
-      "reason": "[paid-api] is_free_signal=false — no free access documented"
-    },
-    {
-      "name": "Claude Opus 5 (Fast)",
-      "reason": "[paid-api] is_free_signal=false — no free access documented"
-    },
-    {
-      "name": "NVIDIA: Nemotron Nano 9B V2",
-      "reason": "[endpoint] missing endpoint_source"
-    },
-    {
-      "name": "OpenAI: gpt-oss-20b",
-      "reason": "[endpoint] missing endpoint_source"
-    },
-    {
-      "name": "Poolside: Laguna S 2.1",
-      "reason": "[endpoint] missing endpoint_source"
-    },
-    {
       "name": "Gemini 2.5 Pro",
-      "reason": "[endpoint] missing endpoint_source"
-    },
-    {
-      "name": "Ling-3.0-flash",
-      "reason": "[endpoint] missing endpoint_source"
-    },
-    {
-      "name": "nemotron-3-ultra-550b-a55b",
-      "reason": "[endpoint] missing endpoint_source"
-    },
-    {
-      "name": "NVIDIA: Nemotron 3 Ultra",
-      "reason": "[endpoint] missing endpoint_source"
+      "reason": "[citation] https://ai.google.dev/gemini-api/docs/pricing does not document base_url \"https://generativelanguage.googleapis.com/v1beta\""
     }
   ],
   "new_seed_candidates": [],
   "sources": [
     {
-      "url": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b",
-      "source_type": "official",
-      "accessed_at": "2026-07-31T02:02:43Z"
-    },
-    {
-      "url": "https://openrouter.ai/api/v1/models",
-      "source_type": "official",
-      "accessed_at": "2026-07-31T02:00:02.225Z"
-    },
-    {
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "source_type": "official",
-      "accessed_at": "2026-07-31T02:04:26Z"
+      "accessed_at": "2026-07-31T12:59:23.972Z"
+    },
+    {
+      "url": "https://evals.report/models/google-gemini-2-5-pro",
+      "source_type": "official",
+      "accessed_at": "2026-07-31T12:59:23.972Z"
+    },
+    {
+      "url": "https://benchlm.ai/benchmarks/sweVerified",
+      "source_type": "official",
+      "accessed_at": "2026-07-31T12:59:23.972Z"
+    },
+    {
+      "url": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b",
+      "source_type": "official",
+      "accessed_at": "2026-07-31T12:59:23.972Z"
+    },
+    {
+      "url": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard",
+      "source_type": "official",
+      "accessed_at": "2026-07-31T12:59:23.972Z"
     }
   ]
 }

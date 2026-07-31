@@ -1,6 +1,5 @@
 {
-  "$comment": "Living provider list — the single source of truth for endpoints, shared by validate-report.js (endpoint + citation gates), build-html.js (connection snippets), and the collection skill. LISTED provider: skill uses base_url verbatim and re-fetches docs_url each run. UNLISTED provider: skill researches official docs, then ADDS an entry (with added_at/added_from provenance) before ranking. The validator re-fetches every endpoint_source page and hard-fails when it does not document the claimed base_url, so entries must come from fetched docs, never from memory. Update existing entries only when the fetched docs contradict them.",
-  "version": "2026.07.1",
+  "version": "candidate",
   "providers": [
     {
       "key": "nvidia",
