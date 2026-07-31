@@ -13,8 +13,7 @@
 // <run_dir>/candidate/report.json. LLMs never write offer state, benchmark
 // state, the provider registry, the cache, or the production report (AC-12).
 //
-// Deterministic derivations are carried forward from the legacy merger
-// (.devops/batch/reduce-crawl.js) and the spec's value sourcing table:
+// Deterministic derivations follow the spec's value sourcing table:
 // delivery_type from the registry, free_allowance_rank from the quota parser,
 // total_parameters_b from official facts (MoE uses total), tier from
 // terminal_bench_2_1 (AC-10), the local model gate (sub 30B needs S or A),
