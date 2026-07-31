@@ -46,10 +46,8 @@ Do not require user credentials. Never request session cookies, browser tokens, 
 
 - Current date and time.
 - User timezone, default `Asia/Tokyo`.
-- `config/sources.yaml`.
-- `config/search_queries.yaml`.
-- Previous state in `state/known_offers.json`, if available.
-- Benchmark cache in `state/benchmarks.json`, if available.
+- The run manifest (the orchestrator passes its path) — your task assignment, provider, assigned model ids, and cached URLs.
+- Operational state lives in SQLite (`state/collector.sqlite`); workers cannot read or write it directly. The deterministic pipeline reads it and hands you only what you need. **Never write state files** — you emit facts via `json_output` and the pipeline merges them.
 - Provider endpoint registry at `build/provider-registry.json` (project root). Read it before writing any `base_url` or `model_id`. It is the single source of truth shared with the validator and the site build.
 
 ## Core workflow
@@ -91,9 +89,7 @@ For every newly found model or service, create a normalized discovery record:
 3. Official X / social media posts — release-day posts frequently include benchmark comparison images; extract scores from images.
 4. GitHub repository README — may link to a technical report PDF or embed benchmark tables.
 
-If benchmark data is found, include it in the discovery record and **write/update it in `state/benchmarks.json`** (merge by `canonical_name`; append new benchmark entries, never overwrite existing scores from a more authoritative source). If no data is found after checking all four sources, set `benchmark_source_checked: true` so downstream phases know the search was performed.
-
-Before starting benchmark collection, **read `state/benchmarks.json`** first. If the model already has benchmark entries there, use them as a baseline and only add new benchmarks or upgrade scores from a more authoritative source (official page > vendor blog > X post > third-party).
+If benchmark data is found, include it in the record's `benchmark_finds[]` with the score, the source URL, and (for text) a `body_excerpt` quoting the model, benchmark version, and score. The deterministic pipeline validates the evidence and persists accepted scores to SQLite; a proposal is not a fact until confirmed. If no data is found after checking all four sources, note `benchmark_source_checked` in `errors[]` so downstream phases know the search was performed.
 
 ### Phase 1 — Search each discovered model for offers
 
@@ -181,7 +177,7 @@ For each candidate, verify as many of the following as possible:
 - end date and timezone
 - billing behavior
 
-**Benchmark data lookup (mandatory before marking insufficient_benchmark_data):** Before concluding that a model has no benchmark data, check these sources in order: (1) HuggingFace model card, (2) vendor technical blog, (3) official X / social media posts (extract scores from benchmark images), (4) GitHub repository README or linked technical report, (5) third-party aggregators (lmmarketcap.com, openrouter.ai, awesomeagents.ai). Only mark `insufficient_benchmark_data` when all five categories have been checked and yielded no usable scores. **Also check `state/benchmarks.json`** — if benchmark data exists there from a previous run, use it instead of marking the model as insufficient.
+**Benchmark data lookup (mandatory before marking insufficient_benchmark_data):** Before concluding that a model has no benchmark data, check these sources in order: (1) HuggingFace model card, (2) vendor technical blog, (3) official X / social media posts (extract scores from benchmark images), (4) GitHub repository README or linked technical report, (5) third-party aggregators (lmmarketcap.com, openrouter.ai, awesomeagents.ai). Only mark `insufficient_benchmark_data` when all five categories have been checked and yielded no usable scores. The pipeline already attaches every score on record to the candidate view; only search for what is genuinely missing.
 
 **Endpoint verification (mandatory, no exceptions):** Never write `base_url` or `model_id` from memory, training data, or a previous report. Every value must be copied from a page fetched during this run.
 
@@ -269,18 +265,7 @@ Score 5 candidates are excluded and only mentioned as warnings without direct li
 
 ### Phase 8 — Compare with previous state
 
-Compare current findings with `state/known_offers.json` and identify:
-
-- newly added offers
-- changed prices
-- changed limits
-- changed provider count
-- changed end dates
-- ended offers
-- revived offers
-- previously active offers that are now unavailable
-
-Update state only after the report is complete.
+The deterministic reducer diffs the current run against the prior SQLite state and identifies newly added offers, changed prices, changed limits, changed provider count, changed end dates, ended offers, revived offers, and previously active offers that are now unavailable. Workers do not maintain this state — they only report current facts, and the pipeline computes the change records. The Editor writes the Japanese prose for those change records.
 
 ### Phase 9 — Produce the daily report
 
@@ -324,7 +309,7 @@ If an offer has a known end date, always set `end_at` and `end_timezone_known`. 
 
 ### Tier criteria (S/A)
 
-Tier S/A certifies agentic coding competence and requires **Terminal-Bench 2.1 ≥ 50%** on record. Before assigning S/A: check `state/benchmarks.json` first, then the model card and leaderboards (`llm-stats.com/benchmarks/terminal-bench-2.1`, `benchlm.ai`, `snorkel.ai`). Record the score in the offer's `benchmarks` array and persist it to state. A model scoring under 50%, or with no published Terminal-Bench 2.1 score after checking those sources, is capped at tier B. The validator enforces this.
+Tier S/A certifies agentic coding competence and requires **Terminal-Bench 2.1 ≥ 50%** on record. The deterministic assembler derives tier from the verified benchmark rows in SQLite (≥65 S, 50–64.999 A); the benchmark scout searches the model card and leaderboards (`llm-stats.com/benchmarks/terminal-bench-2.1`, `benchlm.ai`, `snorkel.ai`) for missing scores and reports them as proposals. A model scoring under 50%, or with no verified Terminal-Bench 2.1 score, is capped at tier B (or `benchmark_pending` and unranked). The assembler and validator enforce this; workers never assign tier.
 
 ### Free allowance rank (mandatory for ranked offers)
 
@@ -348,11 +333,11 @@ Performance is the primary axis. A high-score model verified yesterday outranks 
 
 ### Benchmark persistence (mandatory)
 
-`state/benchmarks.json` is the persistent cache of verified scores across runs. Regeneration must never lose data:
+The SQLite `benchmarks` table is the persistent cache of verified scores across runs. Regeneration must never lose data:
 
-- Before assigning benchmarks, read `state/benchmarks.json`. If the model has scores there, the report's `benchmark.score` must not be null — merge from state (upgrading only from a more authoritative source).
-- Every new or improved score collected during a run must be written to `state/benchmarks.json` in the same run (merge by `canonical_name`, include the model's `model_ids`).
-- The validator hard-fails both a regression (state has scores, report says null) and a score that was not persisted to state.
+- The assembler reads verified benchmark rows from SQLite; an offer with a score on record is never assembled with a null `benchmark.score`.
+- Verified benchmark rows are immutable: a newly proposed score never replaces an existing verified row merely for being higher. A correction requires separately verified evidence naming the old value and reason.
+- Workers report scores as proposals (`benchmark_finds[]`); the deterministic validator accepts them only when the fetched evidence confirms the model, benchmark version, and score, then persists them to SQLite.
 
 Recommended ranking formula:
 
@@ -406,74 +391,59 @@ Do not perform destructive or billable verification calls without explicit permi
 - If an offer is discovered but cannot be verified operationally, exclude it from ranking.
 - If the same model appears under multiple providers, compare each provider separately.
 
-## Parallel batch architecture
+## Collection pipeline architecture
 
-The daily batch (`.devops/batch/run-skill.sh`) runs as a fail-safe pipeline with parallel workers. All workers write to `state/crawl/<run_id>/` and never edit shared state files directly.
+The daily collection (`.devops/db/collect.js`, driven by `npm run collect` / `full`) runs as a fail-safe pipeline. SQLite (`state/collector.sqlite`) is the sole operational state. Known offer verification and new discovery are separate lanes. Mechanical work (catalog fetch, liveness, tier, ranking, assembly) is deterministic code; LLM workers only extract facts, classify, scout benchmarks, and write Japanese prose. Workers emit facts via `json_output` and never write state files.
 
 ### Steps
 
 ```
-Step 0: Preflight (bash)
-  flock, run_id, read-only snapshots, manifest generation
-
-Step 1: Discovery + Known refresh (parallel)
-  discovery-agent → state/crawl/<run_id>/discovery/task-discovery.json
-  refresh workers → state/crawl/<run_id>/refresh/task-<provider>.json
-
-Step 2: Crawl pool (parallel, manifest-driven)
-  crawl workers → state/crawl/<run_id>/offers/task-<provider>.json
-  Concurrency: CRAWL_CONCURRENCY env (default 2)
-
-Step 3: Reduce (deterministic, no LLM)
-  .devops/batch/reduce-crawl.js
-  → validates artifacts, merges benchmark/registry deltas
-  → produces reduced/candidates.json
-  → aborts if >50% tasks failed or zero candidates
-
-Step 4: Edit (1 pi, no fetch)
-  editor-agent reads candidates.json only
-  → report.json + state updates
-
-Step 5: Validate (auto-fix + exclude)
-  build/validate-report.js
-
-Step 6: Atomic deploy
-  report + state + registry + HTML in one git commit
+1. Migrate + recover      apply migrations; recover any interrupted promotion
+2. Pre run DB copy        copy the closed DB into the ignored run directory
+3. Manifest + start run   build lane manifest from SQLite + registry
+4. Catalog (deterministic)  providers with api_catalog_url fetched from their API
+5. Lane workers (LLM)     known_refresh + discovery, parallel (GLOBAL_CONCURRENCY)
+6. Lane reduction         liveness + enums + promotion gate (zero verified blocks)
+7. Benchmark scout (LLM)  only models missing the gate score; proposals validated
+8. Candidate view         deterministic input for classifier + editor
+9. Classifier + editor    final classification; Japanese prose only
+10. Assembly              deterministic report.json from SQLite + prose
+11. Validation + build    schema + live citation re-fetch; HTML + OG in candidate/
+12. Promotion + deploy    phased manifest; canonical files change only after all
+                          checks pass; push failure keeps validated_not_deployed
 ```
 
-### Agents
+### Workers
 
-1. `discovery-agent` (prompts/discovery-agent.md): finds new models and providers. Outputs discovery records + benchmark deltas.
-2. `crawl-worker` (prompts/crawl-worker.md): per-provider investigation. Handles both refresh (known offers) and crawl (new offers). Outputs offer records + benchmark/registry deltas.
-3. `editor-agent` (prompts/editor-agent.md): reads reduced candidates, deduplicates, scores, classifies, writes Japanese report. Does NOT fetch.
+1. `crawl-worker` (prompts/crawl-worker.md): per-provider facts. Handles known_refresh (re-verify known offers). Emits `crawl-facts.schema.json` facts.
+2. `discovery-agent` (prompts/discovery-agent.md): finds new models and providers. Emits facts; failure never mutates known offers.
+3. `benchmark-scout` (prompts/benchmark-scout.md): finds benchmark scores for models missing the gate score. Emits proposals (`benchmark-scout.schema.json`), confirmed by evidence before becoming facts.
+4. `classifier-agent` (prompts/classifier-agent.md): final classification per candidate. Does NOT fetch.
+5. `editor-agent` (prompts/editor-agent.md): writes Japanese prose only (`editorial.json`). Does NOT fetch, does NOT write data.
 
 ### Fail-safe guarantees
 
-- Workers write `.tmp` then rename (no half-written JSON).
-- Workers never edit shared state; they output deltas only.
-- Reducer is deterministic (no LLM, no network) and aborts on catastrophic failure.
-- Validator auto-fixes what it can, excludes what it can't.
-- Deploy only if validate + build both succeed.
-- On any failure, the previous report stays live.
-- `flock` prevents concurrent runs.
-- Old crawl runs are pruned (keep last 3).
+- Current tracked files change only after a candidate passes every check, via a phased promotion manifest with backups and hash verification.
+- Workers never edit state; they emit facts only. SQLite is the sole operational state.
+- A failed provider makes an offer stale, never confirmed_removed; a failed run leaves the previous report live.
+- A benchmark proposal is not a fact; verified benchmark rows are immutable.
+- A git push failure records validated_not_deployed and preserves the generation for retry.
+- A concurrency lock prevents overlapping runs; run directories older than seven days are pruned.
 
-### File conventions
+### Run directory layout
 
 ```
 state/crawl/<run_id>/
-  manifest.json              # task assignments
-  snapshots/                 # read-only copies of shared state
-  discovery/task-*.json      # Step 1 output
-  refresh/task-*.json        # Step 1 output
-  offers/task-*.json         # Step 2 output
-  reduced/candidates.json    # Step 3 output (editor input)
-  reduced/benchmarks.json    # merged benchmark state
-  reduced/provider-registry.json  # merged registry
-  REDUCED                    # sentinel file
+  manifest.json                 # lane task assignments
+  artifacts/<task_id>.json      # worker + catalog outputs
+  benchmarks/needs-*.json       # benchmark scout queue
+  reduced/                      # lane coverage, candidate view, classifications
+  candidate/                    # staged report.json, index.html, og-image.png, editorial.json
+  backup/                       # pre run DB copy + canonical file backups
+  promotion-manifest.json       # phased promotion state
 ```
 
-Each artifact has `status: "complete" | "partial" | "failed"`. Even on failure, a worker must write its artifact file.
+Each artifact has `status: "complete" | "partial" | "failed"`. Even on failure, a worker must produce its artifact (the orchestrator writes a failure artifact when a worker yields nothing).
 
 ## Acceptance criteria
 
@@ -493,7 +463,7 @@ A run is successful only when:
 - every ranked offer has a `free_allowance_rank` consistent with its documented limits
 - no ranked offer's free quota is app/web-chat-only while its API is paid, and no `effective_price_per_million` was zeroed from an app quota
 - no ranked offer is a sub-30B total-parameter model (local-run territory), and parameter sizes were researched from model cards
-- every tier S/A offer has a Terminal-Bench 2.1 score of 50%+ on record (state checked first)
-- no ranked offer lost a benchmark score that exists in `state/benchmarks.json`, and every new score was persisted there
+- every tier S/A offer has a verified Terminal-Bench 2.1 score of 50%+ in SQLite
+- no ranked offer lost a benchmark score that exists in the SQLite `benchmarks` table, and every accepted new score was persisted there
 - no `base_url` or `model_id` was written from memory
 - the final report is in Japanese
