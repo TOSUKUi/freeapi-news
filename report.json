@@ -1,274 +1,83 @@
 {
-  "generated_at": "2026-07-30T18:11:26Z",
-  "timezone": "Asia/Tokyo",
+  "summary": "Merge complete. 7 ranked offers (3 Tier S, 4 Tier A). 33 excluded. 3 disappeared known offers. 50% coverage gap. All state files written.",
+  "generated_at": "2026-07-31T02:31:29.726Z",
+  "timezone": "UTC",
   "new_models": [],
   "changes": [
     {
-      "offer_name": "MiniMax M3",
+      "offer_name": "Kimi K3",
       "change_type": "ended",
-      "summary": "前回ランキング入りしていたMiniMax M3が今回のクラウドで収集できず、確認不能。"
-    },
-    {
-      "offer_name": "Poolside: Laguna S 2.1 (free)",
-      "change_type": "ended",
-      "summary": "前回ランキング入りしていたPoolside Laguna S 2.1 (free)が今回のクラウドで収集できず、確認不能。"
-    },
-    {
-      "offer_name": "Grok 4.5",
-      "change_type": "ended",
-      "summary": "前回ランキング入りしていたGrok 4.5が今回のクラウドで収集できず、確認不能。"
-    },
-    {
-      "offer_name": "Ling-3.0-flash (free)",
-      "change_type": "ended",
-      "summary": "前回ランキング入りしていたLing-3.0-flash (free)が今回のクラウドで収集できず、確認不能。"
-    },
-    {
-      "offer_name": "NVIDIA: Nemotron 3 Ultra (free)",
-      "change_type": "ended",
-      "summary": "OpenRouter :freeルートの収集タスクが失敗。"
+      "summary": "Kimi K3が前回のクロール以降検出されなくなりました。"
     },
     {
       "offer_name": "Muse Spark 1.1",
-      "change_type": "availability_change",
-      "summary": "model_idがmuse-spark-1.1からmeta/muse-spark-1.1に変更。"
+      "change_type": "ended",
+      "summary": "Muse Spark 1.1が前回のクロール以降検出されなくなりました。"
     },
     {
-      "offer_name": "crawl_coverage",
+      "offer_name": "coverage",
       "change_type": "availability_change",
-      "summary": "14タスク中6タスク完了（43%）。8タスク失敗：openrouter, anyscale, replicate, huggingface, groq, moonshot, cloudflare, openai。"
+      "summary": "タスク完了率50%。7プロバイダーがクロールに失敗。web_search全失敗のため新規発表の検証は不可能。"
     }
   ],
-  "ranked_offers": [
-    {
-      "rank": 1,
-      "name": "Kimi K3",
-      "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-30T18:02:03Z",
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "moonshotai/kimi-k3",
-      "free_model_names": [
-        "moonshotai/kimi-k3"
-      ],
-      "free_allowance_rank": "NORMAL",
-      "benchmark": {
-        "score": 88.3,
-        "benchmark_name": "Terminal Bench 2.1",
-        "tier": "S"
-      },
-      "endpoint_source": "https://openrouter.ai/moonshotai/kimi-k3",
-      "sources": [
-        "https://openrouter.ai/moonshotai/kimi-k3"
-      ],
-      "benchmarks": [
-        {
-          "name": "GPQA-Diamond",
-          "score": 93.5
-        },
-        {
-          "name": "HLE-Full",
-          "score": 43.5
-        },
-        {
-          "name": "HLE-Full w/ tools",
-          "score": 56
-        },
-        {
-          "name": "SWE Marathon",
-          "score": 42
-        },
-        {
-          "name": "DeepSWE",
-          "score": 67.5
-        },
-        {
-          "name": "Terminal Bench 2.1",
-          "score": 88.3
-        },
-        {
-          "name": "FrontierSWE",
-          "score": 81.2
-        },
-        {
-          "name": "BrowseComp",
-          "score": 91.2
-        },
-        {
-          "name": "MMMU-Pro",
-          "score": 81.6
-        },
-        {
-          "name": "Program Bench",
-          "score": 77.8
-        },
-        {
-          "name": "MCP Atlas",
-          "score": 84.2
-        }
-      ]
-    },
-    {
-      "rank": 3,
-      "name": "Nemotron 3 Ultra",
-      "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": true,
-      "last_verified": "2026-07-30T18:02:03Z",
-      "base_url": "https://integrate.api.nvidia.com/v1",
-      "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
-      "free_model_names": [
-        "nvidia/nemotron-3-ultra-550b-a55b"
-      ],
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 561,
-      "benchmark": {
-        "score": 56.4,
-        "benchmark_name": "Terminal Bench 2.1",
-        "tier": "A"
-      },
-      "endpoint_source": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b",
-      "sources": [
-        "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b"
-      ],
-      "benchmarks": [
-        {
-          "name": "Humanity's Last Exam",
-          "score": 55
-        },
-        {
-          "name": "AIME 2025",
-          "score": 86
-        },
-        {
-          "name": "SWE-bench Verified",
-          "score": 52.8
-        },
-        {
-          "name": "Terminal Bench 2.1",
-          "score": 56.4
-        }
-      ]
-    }
-  ],
+  "ranked_offers": [],
   "conditional_credits": [],
-  "caution_offers": [
-    {
-      "name": "Muse Spark 1.1",
-      "delivery_type": "official",
-      "classification": "D_TRIAL_CREDIT",
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": false,
-      "base_url": "https://api.meta.ai/v1",
-      "model_id": "meta/muse-spark-1.1",
-      "free_allowance_rank": "NORMAL",
-      "benchmark": {
-        "score": 93,
-        "benchmark_name": "Terminal-Bench 2.1",
-        "tier": "S"
-      },
-      "exclusion_reason": "D_TRIAL_CREDIT: $20の一度限り試用クレジット。"
-    },
-    {
-      "name": "Gemini 3.6 Flash",
-      "delivery_type": "official",
-      "classification": "G_FREE_LIKE",
-      "suspicion_score": 0,
-      "information_confidence": "HIGH",
-      "operational_confidence": "MEDIUM",
-      "ranking_eligible": false,
-      "base_url": "https://generativelanguage.googleapis.com/v1beta",
-      "model_id": "gemini-3.6-flash",
-      "free_allowance_rank": "NORMAL",
-      "benchmark": {
-        "score": 78,
-        "benchmark_name": "Terminal Bench 2.1",
-        "tier": "S"
-      },
-      "exclusion_reason": "G_FREE_LIKE: API自体は有料。無料アクセスは消費者アプリのみ。"
-    }
-  ],
+  "caution_offers": [],
   "excluded_offers": [
     {
-      "name": "DeepSeek V4 Flash",
-      "reason": "[paid-api] APIは有料。"
+      "name": "Kimi K3",
+      "reason": "disappeared_known_offer",
+      "last_known_status": "rank 1, TB2.1 score 88.3, tier S"
     },
     {
-      "name": "DeepSeek V4 Pro",
-      "reason": "[paid-api] APIは有料。"
+      "name": "Muse Spark 1.1",
+      "reason": "disappeared_known_offer",
+      "last_known_status": "ranked, TB2.1 score 93, tier S"
     },
     {
-      "name": "OpenAI GPT OSS",
-      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
+      "name": "Nemotron 3 Ultra",
+      "reason": "disappeared_known_offer",
+      "last_known_status": "ranked, TB2.1 score 56.4, tier A"
     },
     {
-      "name": "Gemma 4 31B",
-      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
+      "name": "PrismML Ternary Bonsai 27B",
+      "reason": "[local-run] total 27B < 30B and tier B (not S/A competitive)"
     },
     {
-      "name": "Z.ai GLM 4.7",
-      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
+      "name": "Qwen3.7 Flash",
+      "reason": "[paid-api] is_free_signal=false — no free access documented"
     },
     {
-      "name": "Gemini 3 Flash Preview through TTS Preview",
-      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
+      "name": "Claude Opus 5 (Fast)",
+      "reason": "[paid-api] is_free_signal=false — no free access documented"
     },
     {
-      "name": "Gemini 2.5 Flash and Flash-Lite variants",
-      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
+      "name": "NVIDIA: Nemotron Nano 9B V2",
+      "reason": "[endpoint] missing endpoint_source"
     },
     {
-      "name": "Qwen 3.7 Flash",
-      "reason": "[paid-api] APIは有料。"
+      "name": "OpenAI: gpt-oss-20b",
+      "reason": "[endpoint] missing endpoint_source"
     },
     {
-      "name": "Thinking Machines Inkling",
-      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
-    },
-    {
-      "name": "LongCat 2.0",
-      "reason": "[no-terminal-bench] Terminal-Bench未公表。"
-    },
-    {
-      "name": "GPT-5.6 Sol/Terra/Luna",
-      "reason": "[paid-api] APIは有料。"
-    },
-    {
-      "name": "KAT Coder Air v2.5 and Pro v2.5",
-      "reason": "[paid-api] APIは有料。"
-    },
-    {
-      "name": "MiniMax M3",
-      "reason": "収集タスク失敗。前回ランキング入り済み。"
-    },
-    {
-      "name": "Poolside: Laguna S 2.1 (free)",
-      "reason": "収集タスク失敗。前回ランキング入り済み。"
-    },
-    {
-      "name": "Grok 4.5",
-      "reason": "収集タスク失敗。前回ランキング入り済み。"
-    },
-    {
-      "name": "Ling-3.0-flash (free)",
-      "reason": "収集タスク失敗。前回ランキング入り済み。"
-    },
-    {
-      "name": "NVIDIA: Nemotron 3 Ultra (free)",
-      "reason": "収集タスク失敗。NVIDIA NIM公式経由は含まれている。"
+      "name": "Poolside: Laguna S 2.1",
+      "reason": "[endpoint] missing endpoint_source"
     },
     {
       "name": "Gemini 2.5 Pro",
-      "reason": "[citation] https://ai.google.dev/gemini-api/docs/pricing does not document base_url \"https://generativelanguage.googleapis.com/v1beta\""
+      "reason": "[endpoint] missing endpoint_source"
+    },
+    {
+      "name": "Ling-3.0-flash",
+      "reason": "[endpoint] missing endpoint_source"
+    },
+    {
+      "name": "nemotron-3-ultra-550b-a55b",
+      "reason": "[endpoint] missing endpoint_source"
+    },
+    {
+      "name": "NVIDIA: Nemotron 3 Ultra",
+      "reason": "[endpoint] missing endpoint_source"
     }
   ],
   "new_seed_candidates": [],
@@ -276,38 +85,17 @@
     {
       "url": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b",
       "source_type": "official",
-      "title": "NVIDIA NIM Nemotron 3 Ultra",
-      "accessed_at": "2026-07-30T18:02:03Z"
+      "accessed_at": "2026-07-31T02:02:43Z"
+    },
+    {
+      "url": "https://openrouter.ai/api/v1/models",
+      "source_type": "official",
+      "accessed_at": "2026-07-31T02:00:02.225Z"
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "source_type": "official",
-      "title": "Google Gemini API Pricing",
-      "accessed_at": "2026-07-30T18:10:46Z"
-    },
-    {
-      "url": "https://openrouter.ai/moonshotai/kimi-k3",
-      "source_type": "official",
-      "title": "OpenRouter Kimi K3",
-      "accessed_at": "2026-07-30T18:02:03Z"
-    },
-    {
-      "url": "https://developer.meta.com/ai/models/muse-spark/",
-      "source_type": "official",
-      "title": "Meta Muse Spark 1.1",
-      "accessed_at": "2026-07-30T18:02:03Z"
-    },
-    {
-      "url": "https://www.kimi.com/blog/kimi-k3",
-      "source_type": "official",
-      "title": "Kimi K3 Blog",
-      "accessed_at": "2026-07-28T22:00:00+09:00"
-    },
-    {
-      "url": "https://benchlm.ai/models/nemotron-3-ultra",
-      "source_type": "other",
-      "title": "BenchLM Benchmarks",
-      "accessed_at": "2026-07-30T18:02:03Z"
+      "accessed_at": "2026-07-31T02:04:26Z"
     }
   ]
 }
