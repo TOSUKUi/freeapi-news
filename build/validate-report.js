@@ -24,6 +24,7 @@
 const fs = require('fs');
 const path = require('path');
 const { loadRegistry, matchProvider } = require('./provider-registry');
+const { buildReportSummary } = require('./summary-text');
 
 const BENCHMARK_STATE_PATH = path.join(
   __dirname, '..', '.agents', 'skills', 'llm-deals-intelligence-skill', 'state', 'benchmarks.json'
@@ -76,6 +77,9 @@ async function main() {
   excludeNoTerminalBench(report, fixLog);
 
   // ── 4. Rewrite report.json ─────────────────────────────────────
+  // This is the final authority: all auto-fixes and exclusions, including
+  // async citation/OpenRouter gates, have finished before the summary is set.
+  report.summary = buildReportSummary(report);
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
 
   // ── 5. Emit fix log ────────────────────────────────────────────

@@ -18,6 +18,7 @@ function reportWithOffers(rankedOffers) {
   return {
     generated_at: '2026-07-31T00:00:00.000Z',
     timezone: 'Asia/Tokyo',
+    summary: '事前検証の誤った件数',
     new_models: [],
     changes: [],
     ranked_offers: rankedOffers,
@@ -50,6 +51,33 @@ function routerOffer(overrides = {}) {
     },
     benchmarks: [{ name: 'Terminal-Bench 2.1', score: 57 }],
     sources: ['https://openrouter.ai/api/v1/models'],
+    ...overrides,
+  };
+}
+
+function officialOffer(name, overrides = {}) {
+  return {
+    name,
+    model_name: name,
+    provider: 'Google Gemini',
+    delivery_type: 'official',
+    classification: 'B_PERMANENT_FREE_TIER',
+    suspicion_score: 0,
+    information_confidence: 'HIGH',
+    operational_confidence: 'HIGH',
+    ranking_eligible: true,
+    last_verified: '2026-07-31T00:00:00.000Z',
+    base_url: 'https://generativelanguage.googleapis.com/v1beta',
+    model_id: `test/${name.toLowerCase().replace(/\s+/g, '-')}`,
+    endpoint_source: 'https://ai.google.dev/gemini-api/docs',
+    free_allowance_rank: 'NORMAL',
+    benchmark: {
+      score: 60,
+      benchmark_name: 'Terminal-Bench 2.1',
+      tier: 'A',
+    },
+    benchmarks: [{ name: 'Terminal-Bench 2.1', score: 60 }],
+    sources: ['https://ai.google.dev/gemini-api/docs'],
     ...overrides,
   };
 }
@@ -93,6 +121,53 @@ test('ordinary offer-level schema errors retain auto-exclude behavior', () => {
 
   assert.equal(result.status, 0);
   assert.ok(validated.excluded_offers.some((entry) => /\[schema\]/.test(entry.reason)));
+});
+
+test('validator refreshes summary after an exclusion changes ranked and excluded counts', () => {
+  const report = reportWithOffers([
+    officialOffer('Kept A'),
+    officialOffer('No Terminal Bench', {
+      model_id: 'test/no-terminal-bench',
+      benchmark: {
+        score: 80,
+        benchmark_name: 'LiveCodeBench v6',
+        tier: 'B',
+      },
+      benchmarks: [{ name: 'LiveCodeBench v6', score: 80 }],
+    }),
+  ]);
+  const { result, output } = runValidator(report);
+  const validated = JSON.parse(output);
+
+  assert.equal(result.status, 0);
+  assert.equal(validated.ranked_offers.length, 1);
+  assert.equal(validated.excluded_offers.length, 1);
+  assert.equal(
+    validated.summary,
+    '無料・割引 LLM API の日次ランキング。今回ランクイン 1 件（S 0、A 1、B 0）、注意 0 件、対象外 1 件。'
+  );
+});
+
+test('validator refreshes tier counts after auto-fixing A to B', () => {
+  const report = reportWithOffers([officialOffer('Near Terminal Gate', {
+    model_id: 'test/near-terminal-gate',
+    benchmark: {
+      score: 49,
+      benchmark_name: 'Terminal-Bench 2.1',
+      tier: 'A',
+    },
+    benchmarks: [{ name: 'Terminal-Bench 2.1', score: 49 }],
+  })]);
+  const { result, output } = runValidator(report);
+  const validated = JSON.parse(output);
+
+  assert.equal(result.status, 0);
+  assert.match(result.stderr, /tier A → B/);
+  assert.equal(validated.ranked_offers[0].benchmark.tier, 'B');
+  assert.equal(
+    validated.summary,
+    '無料・割引 LLM API の日次ランキング。今回ランクイン 1 件（S 0、A 0、B 1）、注意 0 件、対象外 0 件。'
+  );
 });
 
 test('only router offers require a non-empty catalog inventory', () => {

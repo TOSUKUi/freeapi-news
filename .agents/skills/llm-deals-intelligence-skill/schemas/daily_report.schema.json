@@ -19,6 +19,9 @@
     "timezone": {
       "type": "string"
     },
+    "summary": {
+      "type": "string"
+    },
     "new_models": {
       "type": "array",
       "items": {

@@ -410,7 +410,7 @@ test('a stale offer at run four moves to caution with prior facts (AC-3)', (t) =
 
 // ── Editorial boundary (AC-12) ───────────────────────────────────
 
-test('editorial prose is combined; data fields stay deterministic (AC-12)', (t) => {
+test('editorial offer prose is combined; summary and data stay deterministic (AC-12)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
@@ -421,13 +421,16 @@ test('editorial prose is combined; data fields stay deterministic (AC-12)', (t) 
   const runDir = runDirFor(ctx, 'run-editorial');
   fs.writeFileSync(path.join(runDir, 'candidate', 'editorial.json'), JSON.stringify({
     schema_version: 1,
-    summary: '今回は1件がランクインしました。',
+    summary: '今回は999件がランクインしました（S 9、A 8、B 7）。注意999件、対象外999件。',
     offer_prose: [
       { offer_key: 'openrouter/acme/a:free', summary: 'Acme A は高速な無料モデルです。' },
     ],
   }));
   const { report } = assemble.assembleReport('run-editorial', runDir, ctx.options);
-  assert.equal(report.summary, '今回は1件がランクインしました。');
+  assert.equal(
+    report.summary,
+    '無料・割引 LLM API の日次ランキング。今回ランクイン 1 件（S 1、A 0、B 0）、注意 0 件、対象外 0 件。'
+  );
   assert.equal(report.ranked_offers[0].recent_activity, 'Acme A は高速な無料モデルです。');
   // Deterministic fields are not taken from prose.
   assert.equal(report.ranked_offers[0].benchmark.score, 70);

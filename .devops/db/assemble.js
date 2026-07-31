@@ -24,6 +24,7 @@ const path = require('node:path');
 
 const db = require('./collector-db');
 const benchmarks = require('./benchmarks');
+const { buildReportSummary } = require('../../build/summary-text');
 
 // Ranking order weights (AGENTS.md): tier S>A>B, then free allowance
 // AMPLE>NORMAL>TIGHT>TINY, then same key benchmark score descending, then
@@ -571,13 +572,13 @@ function assembleReport(runId, runDir, options = {}) {
     }
   }
 
-  const summary = (editorial && typeof editorial.summary === 'string' && editorial.summary.trim())
-    ? editorial.summary
-    : `無料・割引 LLM API の日次ランキング。今回ランクイン ${rankedOffers.length} 件` +
-      `（S ${rankedOffers.filter((o) => o.benchmark && o.benchmark.tier === 'S').length}、` +
-      `A ${rankedOffers.filter((o) => o.benchmark && o.benchmark.tier === 'A').length}、` +
-      `B ${rankedOffers.filter((o) => o.benchmark && o.benchmark.tier === 'B').length}）、` +
-      `注意 ${caution.length} 件、対象外 ${excluded.length} 件。`;
+  // Summary counts are code-owned; staged editorial.summary is intentionally
+  // ignored so LLM-authored counts cannot reach the public report.
+  const summary = buildReportSummary({
+    ranked_offers: rankedOffers,
+    caution_offers: caution,
+    excluded_offers: excluded,
+  });
 
   const report = {
     generated_at: now,

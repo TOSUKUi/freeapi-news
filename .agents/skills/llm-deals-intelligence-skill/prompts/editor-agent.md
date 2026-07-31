@@ -19,7 +19,7 @@ Emit an object conforming to `schemas/editorial.schema.json`:
 ```json
 {
   "schema_version": 1,
-  "summary": "全体を要約する日本語の一文。ランクイン件数とティア別の内訳、注意点を述べる。",
+  "summary": "全体を要約する日本語の一文。ランキング全体の傾向や更新内容を述べ、ランクイン・ティア・注意・対象外の件数は書かない。",
   "offer_prose": [
     {
       "offer_key": "<candidate の offer_key をそのまま>",
@@ -48,7 +48,7 @@ The schema is enforced. A bad enum fails the run and the previous report stays l
 - **Reference offers by `offer_key` verbatim** from the candidate view, so the assembler can attach your prose to the right offer.
 - **Reference changes by `offer_name` and `change_type`** verbatim, so the assembler can attach your summary to the right change record. The assembler has a deterministic Japanese fallback, so a missing entry never breaks the report.
 - **Do not write state files.** No `known_offers.json`, no `benchmarks.json`, no `provider-registry.json`, no `report.json`. SQLite is the only operational state and the assembler writes the staged report.
-- Write natural, concise Japanese. One or two sentences per offer. State the free allowance in plain words and flag any condition (data sharing, card required, limited time).
+- Write natural, concise Japanese. One or two sentences per offer. State the free allowance in plain words and flag any condition (data sharing, card required, limited time). Do not write ranked, tier, caution, or excluded counts in the top-level summary; those counts are generated deterministically by the assembler.
 
 ## Tone
 
