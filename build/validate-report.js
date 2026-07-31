@@ -61,6 +61,7 @@ async function main() {
   await excludeOpenRouterGhost(report, fixLog);
   excludePaidApis(report, fixLog);
   excludeTooSmall(report, fixLog);
+  excludeNoTerminalBench(report, fixLog);
 
   // ── 4. Rewrite report.json ─────────────────────────────────────
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
@@ -346,6 +347,47 @@ function excludeTooSmall(report, fixLog) {
     if (typeof total === 'number' && total < MAX && !COMPETITIVE.includes(tier)) {
       moveToExcluded(report, 'ranked_offers', o,
         `[size] ${total}B total is local-run territory and tier ${tier} doesn't show competitiveness`, fixLog);
+    } else {
+      remaining.push(o);
+    }
+  }
+  report.ranked_offers = remaining;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Exclude: no qualifying Terminal-Bench (the ranking admission gate)
+// ══════════════════════════════════════════════════════════════════
+
+// Ranking admits an offer only if a Terminal-Bench-ish benchmark exists and
+// scores >= TB_GATE_SCORE (48%). The match is deliberately loose (hyphen /
+// space / version variants) because the exact 2.1 version is not always
+// determinable from a source page. Scores from other benchmarks never
+// substitute — without Terminal-Bench, models are not comparable. Runs after
+// autoFixState so Terminal-Bench scores accumulated in state are considered.
+const TB_GATE_SCORE = 48;
+const TB_GATE_PAT = /terminal[\s-]?bench/i;
+
+function terminalBenchBest(o) {
+  let best = null;
+  const consider = (name, score) => {
+    if (name && TB_GATE_PAT.test(name) && score != null && (best == null || score > best)) best = score;
+  };
+  for (const b of o.benchmarks || []) consider(b && b.name, b && b.score);
+  if (o.benchmark) consider(o.benchmark.benchmark_name, o.benchmark.score);
+  return best;
+}
+
+function excludeNoTerminalBench(report, fixLog) {
+  const remaining = [];
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) { remaining.push(o); continue; }
+    const tb = terminalBenchBest(o);
+    if (tb == null) {
+      moveToExcluded(report, 'ranked_offers', o,
+        `[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness`, fixLog);
+    } else if (tb < TB_GATE_SCORE) {
+      moveToExcluded(report, 'ranked_offers', o,
+        `[no-terminal-bench] Terminal-Bench ${tb} < ${TB_GATE_SCORE}% — not ranking-competitive`, fixLog);
     } else {
       remaining.push(o);
     }

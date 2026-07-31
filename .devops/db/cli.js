@@ -21,6 +21,9 @@ const db = require('./collector-db');
 const lanes = require('./lanes');
 const benchmarks = require('./benchmarks');
 const assemble = require('./assemble');
+const publication = require('./publication');
+const collect = require('./collect');
+const importLegacy = require('./import-legacy');
 
 const USAGE = [
   'usage: node .devops/db/cli.js <command>',
@@ -29,6 +32,7 @@ const USAGE = [
   '  migrate             create or update the collector SQLite schema',
   '  status              print schema version, active run, last promoted run, DB copies',
   '  bootstrap [--force] explicit one time import of the current report.json',
+  '  import-legacy [--force]  one time cutover import of known_offers.json + benchmarks.json',
   '  restore             restore the newest validated database copy',
   '  manifest <run_dir>  build the lane manifest from current state and write <run_dir>/manifest.json',
   '  ingest <run_id> <run_dir>  validate run artifacts and stage them in the tasks table',
@@ -37,6 +41,12 @@ const USAGE = [
   '  bench-reduce <run_id> <run_dir>  validate benchmark proposals and apply accepted facts',
   '  candidate-view <run_dir>  write the deterministic candidate view for the classifier and editor',
   '  assemble <run_id> <run_dir>  assemble the staged report.json from SQLite state and prose',
+  '  collect [--dry-run] [--push] [--skip-citation] [--vision]  run the full fail safe pipeline',
+  '  validate-candidate <run_id> <run_dir>  validate candidate, build HTML and OG, record manifest',
+  '  promote <run_id> <run_dir>  promote validated candidate to canonical tracked files',
+  '  deploy [run_id] [run_dir]  commit and push the promoted generation (retries validated_not_deployed)',
+  '  recover             check and recover interrupted promotions',
+  '  cleanup             remove run directories older than seven days',
 ].join('\n');
 
 function main() {
@@ -62,6 +72,16 @@ function main() {
         `bootstrap complete: ${summary.offersImported} offers imported, ` +
         `${summary.offersSkipped} skipped, ${summary.benchmarksImported} benchmarks imported, ` +
         `${summary.benchmarksExisting} already present, ${summary.benchmarksInvalid} invalid`
+      );
+      return;
+    }
+    case 'import-legacy': {
+      const summary = importLegacy.importLegacyState({ force: flags.includes('--force') });
+      console.log(JSON.stringify(summary, null, 2));
+      console.log(
+        `import-legacy complete: ${summary.offersImported} offers imported, `
+        + `${summary.offersSkipped} skipped, ${summary.benchmarksImported} benchmarks imported, `
+        + `${summary.benchmarksExisting} already present, ${summary.benchmarksInvalid} invalid`
       );
       return;
     }
@@ -199,6 +219,101 @@ function main() {
         candidate_dir: result.candidateDir,
         counts: result.counts,
       }, null, 2));
+      return;
+    }
+    case 'collect': {
+      const options = {
+        dryRun: flags.includes('--dry-run'),
+        push: flags.includes('--push'),
+        skipCitation: flags.includes('--skip-citation') || process.env.SKIP_CITATION_CHECK === '1',
+        visionCapable: flags.includes('--vision'),
+      };
+      collect.runPipeline(options).then((result) => {
+        console.log(JSON.stringify({
+          run_id: result.runId,
+          mode: options.dryRun ? 'dry-run' : options.push ? 'full' : 'collect',
+          promoted: result.promoted,
+          deployed: result.deployed,
+          can_promote: result.canPromote,
+          gate_reason: result.gateReason || null,
+          candidate_hash: result.candidateHash || null,
+          counts: result.counts || null,
+        }, null, 2));
+        if (!result.canPromote) process.exitCode = 2;
+        else if (options.push && !result.deployed) process.exitCode = 3;
+      }).catch((err) => {
+        console.error(`collect failed: ${err.message}`);
+        process.exitCode = 1;
+      });
+      return;
+    }
+    case 'validate-candidate': {
+      const [runId, runDir] = flags;
+      if (!runId || !runDir) {
+        console.error('validate-candidate requires <run_id> <run_dir>');
+        process.exitCode = 1;
+        return;
+      }
+      const skipCitation = flags.includes('--skip-citation') ||
+        process.env.SKIP_CITATION_CHECK === '1';
+      const result = publication.validateCandidate(runId, runDir, { skipCitationCheck: skipCitation });
+      console.log(JSON.stringify({
+        run_id: result.runId,
+        candidate_hash: result.candidateHash,
+        og_provenance: result.ogProvenance,
+        files: Object.fromEntries(
+          Object.entries(result.files).map(([k, v]) => [k, { sha256: v.sha256, provenance: v.provenance }])
+        ),
+      }, null, 2));
+      return;
+    }
+    case 'promote': {
+      const [runId, runDir] = flags;
+      if (!runId || !runDir) {
+        console.error('promote requires <run_id> <run_dir>');
+        process.exitCode = 1;
+        return;
+      }
+      const result = publication.promoteGeneration(runId, runDir);
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+    case 'deploy': {
+      let [runId, runDir] = flags;
+      // Without explicit args, find the newest locally promoted run that has
+      // not been pushed yet (a fresh collect or a failed push retry).
+      if (!runId) {
+        const target = publication.findDeployTarget();
+        if (!target) {
+          console.error('no promoted run awaiting deploy found (nothing to push)');
+          process.exitCode = 1;
+          return;
+        }
+        runId = target.run_id;
+        runDir = target.run_dir;
+        console.log(`deploy: targeting run ${runId} (phase ${target.phase}, status ${target.status})`);
+      }
+      if (!runDir) {
+        const paths = db.resolvePaths();
+        runDir = path.join(paths.stateDir, 'crawl', runId);
+      }
+      const result = publication.deployGeneration(runId, runDir);
+      console.log(JSON.stringify(result, null, 2));
+      if (!result.deployed) process.exitCode = 2;
+      return;
+    }
+    case 'recover': {
+      const results = publication.recoverInterruptedPromotion();
+      if (!results) {
+        console.log('no interrupted promotions found');
+        return;
+      }
+      console.log(JSON.stringify(results, null, 2));
+      return;
+    }
+    case 'cleanup': {
+      const cleaned = publication.cleanupOldRuns();
+      console.log(`removed ${cleaned} old run directory(ies)`);
       return;
     }
     default: {

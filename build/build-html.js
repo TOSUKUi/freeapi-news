@@ -44,6 +44,22 @@ const CLASS_BADGE = {
 const TIER_RANK = { S: 0, A: 1, B: 2 };
 const ADMITTED_TIERS = ['S', 'A', 'B'];
 
+// Ranking admission gate: a Terminal-Bench-ish score must exist and be >= 48%.
+// Loose match (hyphen / space / version variants) because the exact 2.1 version
+// is not always determinable. Fail-safe mirror of the validator gate so a
+// hand-edited or unvalidated report.json still cannot render non-qualifiers.
+const TB_GATE_SCORE = 48;
+const TB_GATE_PAT = /terminal[\s-]?bench/i;
+function terminalBenchBest(o) {
+  let best = null;
+  const consider = (name, score) => {
+    if (name && TB_GATE_PAT.test(name) && score != null && (best == null || score > best)) best = score;
+  };
+  for (const b of o.benchmarks || []) consider(b && b.name, b && b.score);
+  if (o.benchmark) consider(o.benchmark.benchmark_name, o.benchmark.score);
+  return best;
+}
+
 // ── Provider capability registry ──────────────────────────────────
 // Loaded from build/provider-registry.json — the single source of truth
 // shared with validate-report.js (endpoint gate) and the collection skill.
@@ -239,7 +255,8 @@ function selectRankedOffers(report) {
     o.benchmark &&
     o.benchmark.tier != null &&
     o.benchmark.score != null &&
-    ADMITTED_TIERS.includes(o.benchmark.tier)
+    ADMITTED_TIERS.includes(o.benchmark.tier) &&
+    (terminalBenchBest(o) ?? -1) >= TB_GATE_SCORE
   );
   return eligible.sort((a, b) => {
     const at = TIER_RANK[a.benchmark.tier];

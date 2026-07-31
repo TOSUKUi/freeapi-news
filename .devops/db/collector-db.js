@@ -27,7 +27,7 @@ const DB_FILE_NAME = 'collector.sqlite';
 
 const RUN_STATUSES = [
   'collecting', 'candidate_ready', 'validated',
-  'validated_not_deployed', 'promoted', 'failed',
+  'validated_not_deployed', 'promoted', 'superseded', 'failed',
 ];
 const RUN_TERMINAL_STATUSES = ['promoted', 'failed'];
 const TASK_KINDS = [
@@ -398,6 +398,56 @@ function startRun(runId, manifestTasks, options = {}) {
     const tasks = db.prepare('SELECT * FROM tasks WHERE run_id = ? ORDER BY task_id')
       .all(runId).map((row) => parseRow('tasks', row));
     return { run, tasks };
+  } finally {
+    db.close();
+  }
+}
+
+// Adds task rows to a run that already exists. The benchmark scout tasks are
+// only known after the lane reduction builds the daily benchmark queue, which
+// happens after startRun has created the run from the lane manifest. This
+// inserts those scout tasks as pending so ingest can stage their artifacts.
+// Existing task_ids are skipped, never overwritten (idempotent).
+function addRunTasks(runId, tasks, options = {}) {
+  assertRunId(runId);
+  const db = openCollectorDb(options);
+  try {
+    db.exec('BEGIN IMMEDIATE');
+    try {
+      if (!getRunRow(db, runId)) {
+        throw new Error(`unknown run: ${runId}`);
+      }
+      const insertTask = db.prepare(
+        'INSERT INTO tasks (run_id, task_id, kind, provider_key, assigned_json, status) '
+        + 'VALUES (?, ?, ?, ?, ?, ?) '
+        + 'ON CONFLICT(run_id, task_id) DO NOTHING'
+      );
+      let added = 0;
+      for (const task of tasks || []) {
+        if (!task || typeof task.task_id !== 'string' || task.task_id.length === 0) {
+          throw new Error('task requires a task_id');
+        }
+        if (!TASK_KINDS.includes(task.kind)) {
+          throw new Error(`unknown task kind: ${JSON.stringify(task.kind)}`);
+        }
+        const info = insertTask.run(
+          runId,
+          task.task_id,
+          task.kind,
+          task.provider_key ?? null,
+          Array.isArray(task.assigned_model_ids) && task.assigned_model_ids.length > 0
+            ? JSON.stringify(task.assigned_model_ids)
+            : null,
+          'pending'
+        );
+        if (info.changes > 0) added += 1;
+      }
+      db.exec('COMMIT');
+      return { runId, added };
+    } catch (err) {
+      try { db.exec('ROLLBACK'); } catch { /* connection state already reset */ }
+      throw err;
+    }
   } finally {
     db.close();
   }
@@ -1052,6 +1102,7 @@ module.exports = {
   sha256File,
   // runs and tasks
   startRun,
+  addRunTasks,
   recordTaskResult,
   loadRunCandidate,
   finalizeRun,
@@ -1072,4 +1123,5 @@ module.exports = {
   // bootstrap
   bootstrapFromReport,
   resolveProviderKey,
+  loadProviderRegistry,
 };

@@ -35,15 +35,12 @@ llm-deals-intelligence-skill.zip
 # the intermediate HTML used only to rasterize it is not.
 og-image.html
 
-# Crawl intermediate artifacts — regenerated each run, never track.
-# (page_cache.json is NOT intermediate: it is durable cross-run state like
-# benchmarks.json / known_offers.json, so it IS tracked.)
-.agents/skills/llm-deals-intelligence-skill/state/crawl/
+# Collector operational state (spec 0003): local only, never tracked.
+# SQLite is the sole operational state after cutover. The whole skill state
+# directory is local: the database and its journal sidecars, the per run
+# directories (manifest, task artifacts, candidate files, DB copies, promotion
+# manifests, logs), and the retired legacy JSON state. Git tracks only the
+# public report.json, generated index.html and og-image.png, and the human
+# managed build/provider-registry.json.
+.agents/skills/llm-deals-intelligence-skill/state/
 .devops/batch/.crawl.lock
-
-# Collector SQLite operational state (spec 0003): local only, never tracked.
-# The database, its journal sidecars, corrupt file quarantine copies, and the
-# ignored run directory DB copies are the sole operational state after
-# cutover. Git keeps public report.json, generated assets, and the registry.
-.agents/skills/llm-deals-intelligence-skill/state/collector.sqlite
-.agents/skills/llm-deals-intelligence-skill/state/collector.sqlite-*

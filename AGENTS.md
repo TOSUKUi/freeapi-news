@@ -10,39 +10,38 @@
 
 ## Stack
 
-- Node.js 20 以上。ランタイム依存なし (devDependencies は検証用の ajv のみ)。
+- Node.js 24 必須 (`>=24.0.0 <25`)。運用状態は Node 24 組み込み `node:sqlite` で扱う。ランタイム依存なし (devDependencies は検証用の ajv のみ)。SQLite Agent Skill も MCP サーバーも追加しない (ビルトインランタイムで十分と判断)。
 - 静的ビルド。`build/build-html.js` が `report.json` を読んで `index.html` を生成。フレームワークなし、React なし、サーバーなし。
 - スタイルは Tailwind CSS (CDN を 3.4.1 に固定、浮動版を使わない) と shadcn/ui のデザイントークン (CSS 変数 `:root` と `.dark`)。色はトークンを唯一の真実源にする。
 - フォントは Space Grotesk (見出し)、Noto Sans JP (本文)、JetBrains Mono (コード)。
 - 配布は GitHub Pages。
-- 収集は pi (LLM エージェント) と `@nqbao/pi-json-schema` extension (構造化出力の強制)。ローカルモデル (`PI_MODEL=litellm/local`) での実行を前提にする。
+- 収集は pi (LLM エージェント) と `@nqbao/pi-json-schema` extension (構造化出力の強制)。ローカルモデル (`PI_MODEL=litellm/free`) での実行を前提にする。
 
 ## Build and run
 
-- `npm run validate` … report.json をスキーマで検証 (auto-fix + 問題オファーの除外)。
-- `npm run build` … index.html を生成。
-- `npm run collect` … `.devops/batch/run-skill.sh` で並列収集バッチを実行。
-- `npm run deploy` … `.devops/deploy/git-push.sh` で配布。
-- `npm run full` … collect → validate → build → deploy。
+- `npm run collect` … フェイルセーフ収集。候補の検証まで通し、ローカルで昇格 (プッシュしない)。`.devops/db/cli.js collect`。
+- `npm run collect:dry-run` … 収集 → 候補検証。昇格・デプロイしない (経路の確認用)。
+- `npm run deploy` … 最後に昇格した世代をコミット & プッシュ。プッシュ失敗は `validated_not_deployed` として再デプロイ用に保持。
+- `npm run full` … collect → 昇格 → deploy を一括。
+- `npm run validate` … 現行の公開スナップショットを検証 (auto-fix + 問題オファーの除外)。
+- `npm run build` … 現行の公開スナップショットから index.html / OG 画像を生成。
+- `npm run db:status` … SQLite スキーマ・実行状態を表示。`db:migrate` / `db:bootstrap` / `db:restore` / `db:cleanup` 等の副コマンドあり。
+- `npm test` … コレクタのフィクスチャテスト (`node --test .devops/db/*.test.js`)。
 
 ## Architecture — collection pipeline
 
-`.devops/batch/run-skill.sh` が並列・fail-safe の収集バッチを回す。役割を細かく分け、各 LLM 呼び出しを軽く保つ (ローカルモデル前提)。
+`.devops/db/collect.js` がフェイルセーフのパイプラインを回す。SQLite (`.agents/skills/llm-deals-intelligence-skill/state/collector.sqlite`) が唯一の運用状態。既知オファーの確認 (known lane) と新規探索 (discovery lane) を分け、失敗した収集が前回の公開を壊さない。機械的な作業はコード、LLM は事実抽出と分類・執筆だけ (ローカルモデル前提、各呼び出しは軽い)。
 
-1. **Discovery / Refresh / Crawl ワーカー** (LLM, 並列, `GLOBAL_CONCURRENCY` でスロットル)
-   - 公式ドキュメント/公式 API から**生の事実 (facts) のみ**を抽出する。`schemas/crawl-facts.schema.json` (enum 一切なし) に従い `json_output` で出力。
-   - 判断しない、enum を書かない。`classification` / `delivery_type` / `free_allowance_rank` / `tier` はワーカーの管轄外。
-2. **Merger** (決定的, LLM/ネットワーク不要, `.devops/batch/reduce-crawl.js`)
-   - facts から enum を**決定的に導出**: `delivery_type` は `provider-registry.json` から、`free_allowance_rank` / `total_parameters_b` / `tier` は引用テキストとベンチマークから。代表スコアは tier 判定と同じ Terminal-Bench 2.1 を優先 (異なるベンチマーク間の比較を避ける)。
-   - 品質ゲート (paid-API / app-only / 30B 未満 / tier) を適用し、ベンチマーク state をマージし、`page_cache.json` を更新する。
-3. **Classifier** (LLM, `schemas/classifications.schema.json` で enum 強制)
-   - 正規化済み candidate の `classification` と confidence を最終判定する。
-4. **Editor** (LLM, `daily_report.schema.json` で強制)
-   - candidate と classifier の結果から日本語レポートを組み、`json_output` で `report.json` を出す。fetch/検索はしない。
+1. **catalog** (決定的, `.devops/db/catalog.js`) … `api_catalog_url` を持つプロバイダー (例: OpenRouter `GET /api/v1/models`) を公式 API から直接列挙。LLM フォールバックなし。失敗時は前回オファーを保持。
+2. **known_refresh / discovery ワーカー** (LLM, 並列, `GLOBAL_CONCURRENCY` でスロットル) … 公式ドキュメントから**生の事実のみ**を抽出し `schemas/crawl-facts.schema.json` で `json_output`。enum は書かない。discovery の失敗は既知オファーに影響しない。
+3. **lane reduce** (決定的, `.devops/db/lanes.js`) … facts からライブネス (`verified` / `stale` / `confirmed_removed`) と enum を導出。検証失敗は前回事実を `stale` として持ち越し、4 連続失敗で caution。既知 verified ゼロは昇格をブロック。
+4. **benchmark_scout** (LLM) + **benchmark reduce** (決定的, `.devops/db/benchmarks.js`) … ゲートスコア不足モデルのみ日次調査。LLM の結果は**提案**であり、証拠検証 (テキストは本文確認、画像は HIGH confidence) を通ったものだけ不変の事実行になる。
+5. **classifier / editor** (LLM) … classifier は `classification` の最終判定、editor は日本語本文のみを `editorial.json` に書く。データ状態は一切書かない。
+6. **assemble / validate / promote / deploy** (決定的, `.devops/db/assemble.js` + `publication.js`) … SQLite の候補ビューと本文から `report.json` を決定論的に組み、候補ディレクトリで検証・ビルド。全チェック通過後にのみ昇格し、コミット & プッシュ。プッシュ失敗は `validated_not_deployed` で保持。
 
-**核心原則**: enum は LLM に書かせない。機械的に導出できるものは merger が決定的に出し、LLM は事実抽出と判断 (classification) だけ担う。全 LLM 呼び出しは `--json-schema` / `--json-output` で縛り、スキーマ違反の実行は失敗させて前回レポートを生存させる。
+**核心原則**: enum とランキングは LLM に書かせない。機械的に導出できるものはコードが決定的に出す。全 LLM 呼び出しは `--json-schema` / `--json-output` で縛り、スキーマ違反の実行は失敗させて前回レポートを生存させる。ベンチマークの提案は事実ではない。既存の検証済みベンチマーク行は不変。
 
-**page cache + API 優先**: `state/page_cache.json` が fetch 成功 URL を実行をまたいで蓄積し、manifest が新鮮な URL を `cached_urls` としてワーカーに渡す (継続してあれば再利用、dead/stale なら web_search/browser で代替)。API カタログで取得できるプロバイダー (registry の `api_catalog_url`、例: OpenRouter `GET /api/v1/models`) はスクレイピングより API を優先する。
+**API 優先**: API カタログで取得できるプロバイダーはスクレイピングより API を優先。`source_cache` は実際に fetch 成功した URL だけを記録する (生成・推測 URL は成功として記録しない)。
 
 ## Data flow
 
@@ -54,7 +53,7 @@
 - ダークモードは `localStorage["theme"]` に保存し、描画前のインラインスクリプトが `prefers-color-scheme` をフォールバックに dark クラスを付与 (ちらつき防止)。
 - ランキングは `ranked_offers` の `ranking_eligible === true` かつティア S/A/B のみ入門。並びは ティア (S>A>B) → 無料枠の余裕度 (`free_allowance_rank`: AMPLE>NORMAL>TIGHT>TINY) → ベンチマークスコア降順 → `last_verified` 降順 → 名前。生のベンチマークスコアを異なるベンチマーク間で比較しない。
 - `ranked_offers` に入れるオファーは必ず `ranking_eligible: true`。対象外は `excluded_offers` へ (ranked に `ranking_eligible: false` で置く矛盾は禁止。ビルドがフィルタして消える)。
-- ベンチマークスコアは `state/benchmarks.json` に永続化し、再生成で失わない。バリデータが退行と未永続化をハードフェイルで防ぐ。
+- ベンチマークスコアは SQLite の `benchmarks` テーブルに永続化し、再生成で失わない。検証済み行は不変 (より高いスコアでも安易に上書きしない)。
 - 総パラメータ 30B 未満はローカル実行領域なのでランキングしない (MoE は active ではなく総数で判定。例外: ティア S/A の競争力を持つ小型モデル)。
 - ティア S/A は Terminal-Bench 2.1 の 50% 以上が必須。未公表・未満はティア B まで。バリデータが強制する。
 - report.json のスキーマは `.agents/skills/llm-deals-intelligence-skill/schemas/daily_report.schema.json` (draft-07)。`last_verified` は ranking eligible で必須、`free_model_names` は router で必須かつ非空。
@@ -64,8 +63,8 @@
 
 ## State and git tracking
 
-- **永続状態 (git で追跡)**: `report.json`, `index.html`, `og-image.png`, `build/provider-registry.json`, `state/benchmarks.json`, `state/known_offers.json`, `state/page_cache.json`。配布に必須、または実行をまたぐ収集の知識。
-- **中間成果物 (git で追跡しない、.gitignore)**: `state/crawl/` (1 実行の一時データ — manifest / artifacts / snapshots / reduced / logs)、`.devops/batch/.crawl.lock`。再生成で失ってよい。
+- **公開物 (git で追跡)**: `report.json`, `index.html`, `og-image.png`, `build/provider-registry.json` (人間が管理するレジストリ)。これだけが配布物であり、昇格時にのみ書き換わる。
+- **運用状態 (git で追跡しない)**: SQLite (`.agents/skills/llm-deals-intelligence-skill/state/collector.sqlite`) が唯一の運用状態。旧来の `known_offers.json` / `benchmarks.json` / `page_cache.json` は廃止済み。DB と実行ディレクトリ (manifest / artifacts / candidate / DB コピー / promotion manifest / logs) はすべてローカルのみ・`.gitignore` 対象。検証済み DB コピーが通常の復旧入力。`report.json` は非常時の bootstrap 源にすぎない。
 
 ## Notes for agents
 

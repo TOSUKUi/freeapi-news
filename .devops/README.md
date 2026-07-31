@@ -1,78 +1,110 @@
 # .devops
 
-Automation for the **free-api-news** pipeline: collecting free/discounted LLM API information, building a single HTML page, and deploying to GitHub Pages.
+Automation for the **free-api-news** pipeline: collecting free/discounted LLM
+API information into a fail safe SQLite backed collector, building a single
+HTML page, and deploying to GitHub Pages.
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│  .devops/                                        │
-│  ├── config/env.sh          ← Environment vars   │
-│  ├── batch/                 ← Collection         │
-│  │   ├── run-skill.sh       ← Runs LLM Deals Skill│
-│  │   ├── collect-fallback.js ← Fallback collector │
-│  │   └── install-cron.sh    ← Local scheduler     │
-│  ├── deploy/                ← Deployment          │
-│  │   ├── build-html.sh      ← JSON → HTML        │
-│  │   └── git-push.sh        ← Commit & push       │
-│  └── README.md              ← This file           │
-│                                                    │
-│  build/                                        │
-│  ├── build-html.js          ← HTML generator     │
-│  └── validate-report.js     ← Schema validator   │
-│                                                    │
-│  ├── .agents/skills/llm-deals-intelligence-skill/   │
-│  ├── SKILL.md              ← Skill instructions   │
-│  ├── config/               ← Sources & queries    │
-│  ├── prompts/              ← Subagent prompts     │
-│  ├── schemas/              ← JSON schema          │
-│  └── state/                ← Previous state       │
-│                                                    │
-│  index.html                ← Generated page       │
-│  report.json               ← Generated report     │
-└─────────────────────────────────────────────────┘
+.devops/
+├── config/env.sh            ← Environment vars (PI_MODEL, concurrency, cron)
+├── db/                      ← Fail safe collector (spec 0003)
+│   ├── cli.js               ← Command entry point (npm scripts call this)
+│   ├── collect.js           ← End to end orchestrator (collect / dry-run / full)
+│   ├── collector-db.js      ← node:sqlite state store, migrations, finalize
+│   ├── lanes.js             ← known / discovery / catalog lanes, reduction gate
+│   ├── catalog.js           ← deterministic provider catalog fetch (no LLM)
+│   ├── benchmarks.js        ← benchmark queue, proposal validation, tier gate
+│   ├── assemble.js          ← deterministic report assembly from SQLite + prose
+│   ├── publication.js       ← candidate validation, promotion, deploy, recovery
+│   ├── import-legacy.js     ← one time cutover import of the old JSON state
+│   ├── migrations/          ← numbered SQL migrations
+│   └── *.test.js            ← fixture tests (npm test)
+├── batch/install-cron.sh    ← Local scheduler registration
+└── README.md                ← This file
+
+build/
+├── build-html.js            ← report.json → index.html
+├── build-og-image.js        ← report.json → og-image.png
+├── validate-report.js       ← schema validator + live citation re-fetch
+└── provider-registry.json   ← human managed endpoint registry (tracked)
+
+.agents/skills/llm-deals-intelligence-skill/
+├── prompts/                 ← worker role contracts (facts, scout, classifier, editor)
+├── schemas/                 ← JSON schemas enforced on every LLM call
+└── state/                   ← SQLite operational state (local only, git ignored)
 ```
 
-## Data Flow
+## Data flow
 
-1. **Batch** (`run-skill.sh`) runs the LLM Deals Intelligence Skill via pi
-   - pi uses `web_search` and `browser` tools
-   - Follows the 10-phase workflow (discovery → editor)
-   - Produces `report.json` (validated against JSON schema)
+`npm run collect` drives the whole pipeline through `.devops/db/cli.js`:
 
-2. **Build** (`build-html.sh`) converts `report.json` → `index.html`
-   - Single self-contained HTML file
-   - Uses Tailwind CSS CDN with shadcn/ui styling
-   - Includes dark mode toggle
+1. **Migrate + recover** — apply migrations; restore or flag any promotion
+   interrupted mid phase on a previous run.
+2. **Pre run DB copy** — copy the closed SQLite file into the ignored run
+   directory before any mutation (normal recovery input).
+3. **Manifest + start run** — build the lane manifest from current state and
+   the registry; create the run and task rows.
+4. **Catalog** — deterministic `GET /api/v1/models` style fetch for providers
+   with an `api_catalog_url`. No LLM. Failure preserves prior offers.
+5. **Lane workers** (LLM, parallel) — `known_refresh` re-verifies known offers;
+   `discovery` searches for new models and never mutates known offers.
+6. **Lane reduction** (deterministic) — liveness (`verified` / `stale` /
+   `confirmed_removed`), enums, and the promotion gate. Zero verified known
+   offers blocks promotion; the previous report stays live.
+7. **Benchmark scout** (LLM) + reduction (deterministic) — only models missing
+   the gate score are searched; proposals become immutable facts only after
+   evidence validation.
+8. **Classifier + editor** (LLM) — final classification and Japanese prose only.
+9. **Assembly + validation + promotion** (deterministic) — build the candidate
+   under the run directory, validate and build HTML/OG there, then promote the
+   canonical files only after every check passes. `--push` also commits and
+   pushes; a push failure keeps the run `validated_not_deployed` for retry.
 
-3. **Deploy** (`git-push.sh`) commits the artifacts and pushes the current branch
-   - Runs locally as the last step of `npm run full`
-   - GitHub Pages serves directly from that branch (no CI)
-
-## Quick Start
-
-### Local Development
+## Commands
 
 ```bash
-# 1. Run the skill (requires pi CLI)
-.devops/batch/run-skill.sh
-
-# 2. Build the HTML page
-.devops/deploy/build-html.sh
-
-# 3. Preview
-python3 -m http.server 8000
-# Open http://localhost:8000
+npm run collect          # collect → validate candidate → promote locally (no push)
+npm run collect:dry-run  # collect → validate candidate (no promote, no deploy)
+npm run deploy           # commit and push the newest promoted generation
+npm run full             # collect → promote → deploy
+npm run db:status        # schema version, active run, last promoted run, DB copies
+npm run db:migrate       # apply numbered migrations
+npm run db:bootstrap     # emergency one time import from report.json
+npm run db:import-legacy # one time cutover import of known_offers/benchmarks JSON
+npm run db:restore       # restore the newest validated DB copy
+npm run db:cleanup       # remove run directories older than seven days
+npm test                 # fixture tests for the collector
 ```
 
-### GitHub Pages Setup
+The lower level steps are also callable directly:
 
-1. Push to GitHub
-2. Go to Settings → Pages
-3. Source: **Deploy from a branch** → `master` / root
-4. The local cron runs `npm run full` daily at 11:00 JST and pushes here
+```bash
+node .devops/db/cli.js manifest <run_dir>
+node .devops/db/cli.js ingest <run_id> <run_dir>
+node .devops/db/cli.js reduce <run_id> <run_dir>
+node .devops/db/cli.js bench-queue <run_dir>
+node .devops/db/cli.js bench-reduce <run_id> <run_dir>
+node .devops/db/cli.js candidate-view <run_dir>
+node .devops/db/cli.js assemble <run_id> <run_dir>
+node .devops/db/cli.js validate-candidate <run_id> <run_dir>
+node .devops/db/cli.js promote <run_id> <run_dir>
+node .devops/db/cli.js recover
+```
 
-### Local scheduling
+## Fail safe guarantees
+
+- Current tracked files (`report.json`, `index.html`, `og-image.png`,
+  `build/provider-registry.json`) change only after a candidate passes every
+  check, via a phased promotion manifest with backups and hash verification.
+- A failed run leaves the previous published generation and durable state
+  intact. A failed provider makes an offer `stale`, never `confirmed_removed`.
+- A git push failure records `validated_not_deployed` and preserves the
+  generation for `npm run deploy` retry; the remote Pages revision is unchanged.
+- An interrupted promotion is recovered on the next mutating command.
+
+## Local scheduling
 
 The batch runs on this machine (pi + camofox browser + web_search), not in CI.
 
@@ -81,91 +113,23 @@ The batch runs on this machine (pi + camofox browser + web_search), not in CI.
 .devops/batch/install-cron.sh --install  # add it to crontab (idempotent)
 ```
 
-## Scripts
-
-### `.devops/batch/run-skill.sh`
-
-Runs the LLM Deals Intelligence Skill.
-
-```bash
-.devops/batch/run-skill.sh           # Full run
-.devops/batch/run-skill.sh --dry-run # Validate existing report only
-```
-
-**Requires:** pi CLI with `web_search` and `browser` tools.
-
-If pi is not available, falls back to `collect-fallback.js` (manual collection).
-
-### `.devops/deploy/build-html.sh`
-
-Converts `report.json` to `index.html`.
-
-```bash
-.devops/deploy/build-html.sh [input.json] [output.html]
-```
-
-### `.devops/deploy/git-push.sh`
-
-Commits and pushes the HTML page.
-
-```bash
-.devops/deploy/git-push.sh "Custom commit message"
-```
-
-### `.devops/batch/install-cron.sh`
-
-Registers the daily local batch with cron.
-
-```bash
-.devops/batch/install-cron.sh            # print the cron line
-.devops/batch/install-cron.sh --install  # add to crontab (idempotent)
-```
-
 The schedule (`SCHEDULE_CRON`) is in the machine's local time; keep the machine
-in `Asia/Tokyo` for 11:00 JST. Runs through a login shell so nodenv/nvm PATH is loaded.
+in `Asia/Tokyo` for 11:00 JST. It runs `npm run full` through a login shell so
+nodenv/nvm PATH is loaded.
 
-## Environment Variables
+## Environment variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `PROJECT_ROOT` | Auto-detected | Project root directory |
-| `SKILL_DIR` | `$PROJECT_ROOT/.agents/skills/llm-deals-intelligence-skill` | Skill directory |
-| `REPORT_FILE` | `$PROJECT_ROOT/report.json` | Output report path |
-| `HTML_FILE` | `$PROJECT_ROOT/index.html` | Output HTML path |
-| `SCHEDULE_CRON` | `0 11 * * *` | Local cron schedule (machine local time) |
-| `TIMEZONE` | `Asia/Tokyo` | Intended machine timezone |
-| `GIT_COMMIT_USER` | unset | Optional commit author override |
-| `PI_MODEL` | `litellm/qwen3.8-max-preview` | pi model for the local batch |
-| `PI_TIMEOUT` | `1800` | pi timeout in seconds |
+| `PI_MODEL` | `litellm/free` | pi model for the LLM workers |
+| `PI_TIMEOUT` | `1800` | pi worker timeout in seconds |
+| `GLOBAL_CONCURRENCY` | `2` | parallel LLM worker count |
+| `SKIP_CITATION_CHECK` | unset | set to `1` to skip live citation re-fetch |
+| `SCHEDULE_CRON` | `0 11 * * *` | local cron schedule (machine local time) |
+| `TIMEZONE` | `Asia/Tokyo` | intended machine timezone |
 
 ## Secrets
 
-None. The batch runs locally and pushes with your own git credentials, so there
-are no CI secrets to configure (`PI_API_KEY` / `GITHUB_TOKEN` are not used).
-
-## Skill Workflow
-
-The LLM Deals Intelligence Skill follows a 10-phase workflow:
-
-| Phase | Description | Tools |
-|---|---|---|
-| 0 | Discover new models | web_search (24h/72h/30d) |
-| 1 | Search for offers | web_search (EN/JA/ZH) |
-| 2 | Check providers | browser |
-| 3 | Community scan | web_search (Reddit/GitHub/HN) |
-| 4 | Verify offers | browser |
-| 5 | Normalize pricing | — |
-| 6 | Classify offers | — |
-| 7 | Score risk | — |
-| 8 | Compare state | file I/O |
-| 9 | Write report | file I/O |
-
-## Output
-
-The generated `index.html` includes:
-
-1. **Ranked offers** — Verified free/discounted APIs with links
-2. **Conditional credits** — Student/startup/research credits
-3. **Setup instructions** — pi, Claude Code, OpenCode, Codex config
-4. **Registration steps** — 4-step signup guide
-5. **Usage examples** — Copy-paste curl commands
+None. API keys stay in the environment and are never written to SQLite, task
+JSON, logs, reports, or the source cache. The batch pushes with your own git
+credentials.

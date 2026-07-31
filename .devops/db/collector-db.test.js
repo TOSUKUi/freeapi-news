@@ -116,8 +116,8 @@ test('migrations create the seven tables and are idempotent', (t) => {
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
 
   const first = db.applyMigrations(ctx.options);
-  assert.deepEqual(first.applied, [1]);
-  assert.equal(first.schemaVersion, 1);
+  assert.deepEqual(first.applied, [1, 2]);
+  assert.equal(first.schemaVersion, 2);
 
   const raw = openRaw(ctx);
   let names;
@@ -137,7 +137,7 @@ test('migrations create the seven tables and are idempotent', (t) => {
 
   const second = db.applyMigrations(ctx.options);
   assert.deepEqual(second.applied, []);
-  assert.equal(second.schemaVersion, 1);
+  assert.equal(second.schemaVersion, 2);
 });
 
 test('missing DB with no copy stops until bootstrap (AC-1)', (t) => {
@@ -537,7 +537,7 @@ test('getStatus reports schema, runs, and copies', (t) => {
   const mid = db.getStatus(ctx.options);
   assert.equal(mid.dbExists, true);
   assert.equal(mid.integrityOk, true);
-  assert.equal(mid.schemaVersion, 1);
+  assert.equal(mid.schemaVersion, 2);
   assert.equal(mid.currentRun.run_id, 'run-1');
   assert.equal(mid.lastPromotedRun, null);
   assert.equal(mid.copies.length, 1);

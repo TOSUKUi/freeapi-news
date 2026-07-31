@@ -30,44 +30,50 @@ free-api-news/
 │   └── validate-report.js        # JSON スキーマバリデータ
 ├── .devops/
 │   ├── config/env.sh             # 環境設定
-│   ├── batch/run-skill.sh        # スキル実行バッチ
-│   ├── batch/collect-fallback.js # フォールバックコレクタ
+│   ├── db/cli.js                 # SQLite コレクタ CLI (収集〜公開の入口)
+│   ├── db/collect.js             # フェイルセーフ収集オーケストレータ
+│   ├── db/collector-db.js        # node:sqlite ステートストア
+│   ├── db/lanes.js / benchmarks.js / assemble.js / catalog.js / publication.js
 │   ├── batch/install-cron.sh     # ローカル cron 登録
-│   ├── deploy/build-html.sh      # HTML ビルド
-│   ├── deploy/git-push.sh        # Git プッシュ
 │   └── README.md                 # .devops ドキュメント
 ├── .agents/skills/llm-deals-intelligence-skill/  # LLM Deals Intelligence Skill
 │   ├── SKILL.md                  # スキル仕様書
-│   ├── config/                   # 設定ファイル
-│   ├── prompts/                  # サブエージェントプロンプト
+│   ├── prompts/                  # ワーカー役割プロンプト
 │   ├── schemas/                  # JSON スキーマ
-│   └── state/                    # 前回状態
+│   └── state/                    # SQLite 運用状態 (ローカルのみ・git 管理外)
 └── .gitignore
 ```
 
 ## クイックスタート
 
 ```bash
-# 1. スキルを実行 (pi CLI が必要)
-.devops/batch/run-skill.sh
+# 1. 収集 → 検証 → ローカル昇格 (プッシュしない。pi CLI が必要)
+npm run collect
 
-# 2. HTML をビルド
-.devops/deploy/build-html.sh
-
-# 3. プレビュー
+# 2. プレビュー
 python3 -m http.server 8000
 # http://localhost:8000 を開く
+
+# 3. 公開 (昇格済み世代をコミット & プッシュ)
+npm run deploy
 ```
 
 ### npm スクリプト
 
 ```bash
-npm run collect   # スキル実行
-npm run validate  # レポート検証
-npm run build     # HTML 生成
-npm run deploy    # Git プッシュ
-npm run full      # 全工程実行
+npm run collect          # 収集 → 候補検証 → ローカル昇格 (プッシュしない)
+npm run collect:dry-run  # 収集 → 候補検証 (昇格・デプロイしない。経路の確認用)
+npm run deploy           # 最後に昇格した世代をコミット & プッシュ
+npm run full             # 収集 → 昇格 → デプロイを一括
+npm run validate         # 現行の公開スナップショットを検証
+npm run build            # 現行の公開スナップショットから HTML/OG 生成
+npm run db:status        # SQLite スキーマ・実行状態を表示
+npm test                 # コレクタのフィクスチャテスト
 ```
+
+収集は SQLite (`.agents/skills/llm-deals-intelligence-skill/state/collector.sqlite`) を
+唯一の運用状態として使います。この DB と実行ディレクトリは git 管理外です。
+失敗した実行は前回公開を壊さず、昇格は全チェック通過後に初めて現行ファイルを書き換えます。
 
 ## ローカル定期実行 (cron)
 
@@ -97,22 +103,21 @@ GitHub Actions は使いません。生成物 (`report.json` + `index.html`) は
 2. Settings → Pages → Source: **Deploy from a branch** → `master` / `/ (root)`
 3. ローカル cron が毎日 11:00 JST に `npm run full` を実行し `master` へプッシュ → Pages 反映
 
-## スキル仕様
+## 収集パイプライン
 
-[LLM Deals Intelligence Skill](.agents/skills/llm-deals-intelligence-skill/SKILL.md) は以下の10フェーズで無料API情報を収集します：
+[LLM Deals Intelligence Skill](.agents/skills/llm-deals-intelligence-skill/SKILL.md) と
+`.devops/db/` の決定論的コードが役割を分担します。機械的な作業 (カタログ取得・状態管理・
+ランキング組み立て) はコードが担い、LLM は事実の抽出と分類・日本語執筆だけを行います。
 
-| フェーズ | 内容 | ツール |
+| 段階 | 内容 | 担当 |
 |---|---|---|
-| 0 | 新モデル発見 | web_search (24h/72h/30d) |
-| 1 | 無料・割引検索 | web_search (EN/JA/ZH) |
-| 2 | プロバイダ確認 | browser |
-| 3 | コミュニティスキャン | web_search (Reddit/GitHub/HN) |
-| 4 | 運用検証 | browser |
-| 5 | 価格正規化 | — |
-| 6 | 分類 | — |
-| 7 | リスクスコア | — |
-| 8 | 前回比較 | file I/O |
-| 9 | レポート生成 | file I/O |
+| catalog | OpenRouter 等の公式カタログを API から決定論的に取得 | コード |
+| known_refresh | 既知オファーの公式ページを再取得して検証 | LLM ワーカー |
+| discovery | 新規発表モデルの探索 (失敗しても既知オファーに影響しない) | LLM ワーカー |
+| benchmark_scout | ゲートスコア不足モデルのベンチマーク調査 (提案は検証後にのみ事実化) | LLM ワーカー |
+| reduce / assemble | ライブネス・ティア・ランキングを決定論的に導出しレポートを組み立て | コード |
+| classifier / editor | 分類の最終判定と日本語本文の執筆 | LLM ワーカー |
+| validate / promote / deploy | 候補検証 → 昇格 → コミット & プッシュ (失敗時は前回公開を維持) | コード |
 
 ## ライセンス
 
