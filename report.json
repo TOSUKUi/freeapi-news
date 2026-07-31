@@ -1,143 +1,18 @@
 {
-  "generated_at": "2026-07-31T19:20:00.869Z",
+  "generated_at": "2026-07-31T19:55:57.090Z",
   "timezone": "Asia/Tokyo",
-  "summary": "無料・割引 LLM API の日次ランキング。今回ランクイン 6 件（S 0、A 4、B 2）、注意 0 件、対象外 13 件。",
-  "new_models": [
-    {
-      "canonical_name": "Claude Opus 5",
-      "aliases": [],
-      "vendor": "anthropic",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://platform.claude.com/docs/en/api/overview",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "anthropic"
-      ]
-    },
-    {
-      "canonical_name": "Kimi K3",
-      "aliases": [],
-      "vendor": "moonshot",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://platform.kimi.ai/docs/guide/kimi-k3-quickstart",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "moonshot"
-      ]
-    },
-    {
-      "canonical_name": "Gemini 3.6 Flash",
-      "aliases": [],
-      "vendor": "google",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://ai.google.dev/gemini-api/docs/openai",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "google"
-      ]
-    }
-  ],
+  "summary": "無料・割引 LLM API の日次ランキング。今回ランクイン 4 件（S 0、A 4、B 0）、注意 0 件、対象外 15 件。",
+  "new_models": [],
   "changes": [
     {
       "offer_name": "Gemini 2.5 Pro",
-      "change_type": "price_change",
-      "summary": "Gemini 2.5 Pro の無料枠・価格条件が変わりました。"
+      "change_type": "availability_change",
+      "summary": "Gemini 2.5 Pro の提供状況が変わりました。"
     },
     {
       "offer_name": "Nemotron 3 Ultra",
-      "change_type": "price_change",
-      "summary": "Nemotron 3 Ultra の無料枠・価格条件が変わりました。"
-    },
-    {
-      "offer_name": "Cohere: North Mini Code",
-      "change_type": "new",
-      "summary": "Cohere: North Mini Code が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "Google: Gemma 4 26B A4B",
-      "change_type": "new",
-      "summary": "Google: Gemma 4 26B A4B が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "Google: Gemma 4 31B",
-      "change_type": "new",
-      "summary": "Google: Gemma 4 31B が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "Google: Lyria 3 Clip Preview",
-      "change_type": "new",
-      "summary": "Google: Lyria 3 Clip Preview が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "Google: Lyria 3 Pro Preview",
-      "change_type": "new",
-      "summary": "Google: Lyria 3 Pro Preview が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "Ling-3.0-flash",
-      "change_type": "new",
-      "summary": "Ling-3.0-flash が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "NVIDIA: Nemotron 3 Nano 30B A3B",
-      "change_type": "new",
-      "summary": "NVIDIA: Nemotron 3 Nano 30B A3B が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "NVIDIA: Nemotron 3 Nano Omni",
-      "change_type": "new",
-      "summary": "NVIDIA: Nemotron 3 Nano Omni が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "NVIDIA: Nemotron 3 Super",
-      "change_type": "new",
-      "summary": "NVIDIA: Nemotron 3 Super が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "NVIDIA: Nemotron 3 Ultra",
-      "change_type": "new",
-      "summary": "NVIDIA: Nemotron 3 Ultra が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "NVIDIA: Nemotron 3.5 Content Safety",
-      "change_type": "new",
-      "summary": "NVIDIA: Nemotron 3.5 Content Safety が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "NVIDIA: Nemotron Nano 12B 2 VL",
-      "change_type": "new",
-      "summary": "NVIDIA: Nemotron Nano 12B 2 VL が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "NVIDIA: Nemotron Nano 9B V2",
-      "change_type": "new",
-      "summary": "NVIDIA: Nemotron Nano 9B V2 が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "OpenAI: gpt-oss-20b",
-      "change_type": "new",
-      "summary": "OpenAI: gpt-oss-20b が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "Free Models Router",
-      "change_type": "new",
-      "summary": "Free Models Router が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "Poolside: Laguna S 2.1",
-      "change_type": "new",
-      "summary": "Poolside: Laguna S 2.1 が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "Poolside: Laguna XS 2.1",
-      "change_type": "new",
-      "summary": "Poolside: Laguna XS 2.1 が新たにランキング対象になりました。"
+      "change_type": "availability_change",
+      "summary": "Nemotron 3 Ultra の提供状況が変わりました。"
     }
   ],
   "ranked_offers": [
@@ -178,7 +53,7 @@
       "suspicion_score": 0,
       "suspicion_reasons": [],
       "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
+      "operational_confidence": "MEDIUM",
       "ranking_eligible": true,
       "exclusion_reason": null,
       "last_verified": "2026-07-31T19:03:53.178Z",
@@ -275,7 +150,7 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-07-31T19:03:53.178Z",
+      "last_verified": "2026-07-31T19:52:54.950Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "free_allowance_rank": "NORMAL",
       "total_parameters_b": null,
@@ -363,70 +238,6 @@
     },
     {
       "rank": 3,
-      "name": "Nemotron 3 Ultra",
-      "model_name": "NVIDIA Nemotron 3 Ultra 550B-A55B",
-      "provider": "NVIDIA NIM",
-      "model_vendor": "nvidia",
-      "delivery_type": "official",
-      "classification": "B_PERMANENT_FREE_TIER",
-      "start_at": null,
-      "end_at": null,
-      "end_timezone_known": false,
-      "regions": [],
-      "registration_conditions": [],
-      "card_required": null,
-      "minimum_deposit": null,
-      "kyc_required": null,
-      "auto_renewal": null,
-      "refund_policy": null,
-      "free_limits": "NVIDIA Developer Program members get free access to NIM API endpoints for prototyping, plus a license to download and self-host NIM microservices for research, application development, and experimentation on up to 16 GPUs on any infrastructure. That access runs through build.nvidia.com and is tied to development/test use, not production. The hosted catalog at build.nvidia.com is free for prototyping through the NVIDIA Developer Program, capped by a community-acknowledged baseline of around 40 requests per minute (model- and traffic-dependent, not a published SLA).",
-      "rate_limits": null,
-      "context_tokens": null,
-      "max_output_tokens": null,
-      "tool_calling": null,
-      "structured_output": null,
-      "image_input": null,
-      "base_url": "https://integrate.api.nvidia.com/v1",
-      "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
-      "provider_count": null,
-      "recent_activity": null,
-      "normal_price_per_million": null,
-      "effective_price_per_million": null,
-      "effective_discount_percent": null,
-      "data_retention": null,
-      "training_use": null,
-      "suspicion_score": 0,
-      "suspicion_reasons": [],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-07-31T19:03:53.178Z",
-      "endpoint_source": "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-ultra-550b-a55b",
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 550,
-      "active_parameters_b": null,
-      "free_model_names": [
-        "nvidia/nemotron-3-ultra-550b-a55b"
-      ],
-      "sources": [
-        "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-ultra-550b-a55b",
-        "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard"
-      ],
-      "benchmark": {
-        "score": 56.4,
-        "benchmark_name": "Terminal-Bench 2.1",
-        "tier": "A"
-      },
-      "benchmarks": [
-        {
-          "name": "Terminal-Bench 2.1",
-          "score": 56.4
-        }
-      ]
-    },
-    {
-      "rank": 4,
       "name": "NVIDIA: Nemotron 3 Ultra",
       "model_name": "NVIDIA: Nemotron 3 Ultra",
       "provider": "OpenRouter",
@@ -465,7 +276,7 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-07-31T19:03:53.178Z",
+      "last_verified": "2026-07-31T19:52:54.950Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "free_allowance_rank": "NORMAL",
       "total_parameters_b": null,
@@ -492,6 +303,70 @@
       "sources": [
         "https://openrouter.ai/docs/quickstart",
         "https://openrouter.ai/api/v1/models",
+        "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard"
+      ],
+      "benchmark": {
+        "score": 56.4,
+        "benchmark_name": "Terminal-Bench 2.1",
+        "tier": "A"
+      },
+      "benchmarks": [
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 56.4
+        }
+      ]
+    },
+    {
+      "rank": 4,
+      "name": "Nemotron 3 Ultra",
+      "model_name": "NVIDIA Nemotron 3 Ultra 550B-A55B",
+      "provider": "NVIDIA NIM",
+      "model_vendor": "nvidia",
+      "delivery_type": "official",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "start_at": null,
+      "end_at": null,
+      "end_timezone_known": false,
+      "regions": [],
+      "registration_conditions": [],
+      "card_required": null,
+      "minimum_deposit": null,
+      "kyc_required": null,
+      "auto_renewal": null,
+      "refund_policy": null,
+      "free_limits": "NVIDIA Developer Program members get free access to NIM API endpoints for prototyping, plus a license to download and self-host NIM microservices for research, application development, and experimentation on up to 16 GPUs on any infrastructure. That access runs through build.nvidia.com and is tied to development/test use, not production. The hosted catalog at build.nvidia.com is free for prototyping through the NVIDIA Developer Program, capped by a community-acknowledged baseline of around 40 requests per minute (model- and traffic-dependent, not a published SLA).",
+      "rate_limits": null,
+      "context_tokens": null,
+      "max_output_tokens": null,
+      "tool_calling": null,
+      "structured_output": null,
+      "image_input": null,
+      "base_url": "https://integrate.api.nvidia.com/v1",
+      "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
+      "provider_count": null,
+      "recent_activity": null,
+      "normal_price_per_million": null,
+      "effective_price_per_million": null,
+      "effective_discount_percent": null,
+      "data_retention": null,
+      "training_use": null,
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
+      "information_confidence": "HIGH",
+      "operational_confidence": "MEDIUM",
+      "ranking_eligible": true,
+      "exclusion_reason": null,
+      "last_verified": "2026-07-31T19:03:53.178Z",
+      "endpoint_source": "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-ultra-550b-a55b",
+      "free_allowance_rank": "NORMAL",
+      "total_parameters_b": 550,
+      "active_parameters_b": null,
+      "free_model_names": [
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
+      "sources": [
+        "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-ultra-550b-a55b",
         "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard"
       ],
       "benchmark": {
@@ -619,37 +494,37 @@
     {
       "url": "https://openrouter.ai/docs/quickstart",
       "source_type": "official",
-      "accessed_at": "2026-07-31T19:03:53.178Z"
+      "accessed_at": "2026-07-31T19:52:54.950Z"
     },
     {
       "url": "https://openrouter.ai/api/v1/models",
       "source_type": "official",
-      "accessed_at": "2026-07-31T19:03:53.178Z"
+      "accessed_at": "2026-07-31T19:52:54.950Z"
     },
     {
       "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
       "source_type": "official",
-      "accessed_at": "2026-07-31T19:03:53.178Z"
+      "accessed_at": "2026-07-31T19:52:54.950Z"
     },
     {
       "url": "https://x.com/AntLingAGI/status/2080351022028095681",
       "source_type": "official",
-      "accessed_at": "2026-07-31T19:03:53.178Z"
+      "accessed_at": "2026-07-31T19:52:54.950Z"
     },
     {
       "url": "https://docs.api.nvidia.com/nim/reference/llm-apis",
       "source_type": "official",
-      "accessed_at": "2026-07-31T19:03:53.178Z"
+      "accessed_at": "2026-07-31T19:52:54.950Z"
     },
     {
       "url": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
       "source_type": "official",
-      "accessed_at": "2026-07-31T19:03:53.178Z"
+      "accessed_at": "2026-07-31T19:52:54.950Z"
     },
     {
       "url": "https://poolside.ai/blog/introducing-laguna-xs-2-1",
       "source_type": "official",
-      "accessed_at": "2026-07-31T19:03:53.178Z"
+      "accessed_at": "2026-07-31T19:52:54.950Z"
     }
   ]
 }
