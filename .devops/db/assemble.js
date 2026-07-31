@@ -143,6 +143,12 @@ function deriveOperationalConfidence(offer) {
   return 'HIGH';
 }
 
+function normalizeFreeModelNames(value) {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((modelId) =>
+    typeof modelId === 'string' && modelId.length > 0))].sort();
+}
+
 // ---------------------------------------------------------------------------
 // Candidate view (deterministic facts for the Editor and the assembler)
 // ---------------------------------------------------------------------------
@@ -178,8 +184,19 @@ function buildCandidateView(options = {}) {
     const name = facts.name || facts.model_name || offer.canonical_model_id;
     const modelVendor = facts.model_vendor ||
       (offer.canonical_model_id.includes('/') ? offer.canonical_model_id.split('/')[0] : null);
-    const endpointSource = facts.endpoint_source || reg.docs_url || null;
+    const deliveryType = deriveDeliveryType(offer.provider_key, regByKey);
+    // Catalog pricing/liveness evidence is not endpoint evidence. A catalog
+    // task that could not fetch the provider docs leaves endpoint_source null;
+    // do not manufacture it from the registry docs URL. Legacy, bootstrap
+    // report, and official-page rows may still use the registry fallback
+    // during the transition.
+    const canUseRegistryDocsFallback = ['official_page', 'legacy', 'report']
+      .includes(offer.source_kind);
+    const endpointSource = facts.endpoint_source ||
+      (canUseRegistryDocsFallback ? reg.docs_url : null);
+    const catalogSource = typeof facts.catalog_url === 'string' ? facts.catalog_url : null;
     const freeLimits = facts.free_quota_text || facts.free_limits || null;
+    const freeModelNames = normalizeFreeModelNames(facts.free_model_names);
     const inCaution = offer.status === 'stale' && (offer.consecutive_failures || 0) >= CAUTION_FAILURES;
 
     candidates.push({
@@ -191,7 +208,7 @@ function buildCandidateView(options = {}) {
       model_vendor: modelVendor,
       name,
       model_name: facts.model_name || name,
-      delivery_type: deriveDeliveryType(offer.provider_key, regByKey),
+      delivery_type: deliveryType,
       base_url: reg.base_url || null,
       endpoint_source: endpointSource,
       free_limits: freeLimits,
@@ -213,7 +230,8 @@ function buildCandidateView(options = {}) {
       last_verified: offer.last_verified_at || null,
       pricing_hash: offer.pricing_hash || null,
       suspicion_score: 0,
-      sources: [endpointSource, ...benchmarkRows.map((row) => row.source_url)]
+      free_model_names: freeModelNames,
+      sources: [endpointSource, catalogSource, ...benchmarkRows.map((row) => row.source_url)]
         .filter((url) => typeof url === 'string' && /^https?:\/\//.test(url)),
       facts,
     });
@@ -425,7 +443,7 @@ function toPublicOffer(candidate, classification, prose, rank) {
     free_allowance_rank: candidate.free_allowance_rank,
     total_parameters_b: candidate.total_parameters_b,
     active_parameters_b: candidate.active_parameters_b,
-    free_model_names: [candidate.exact_model_id],
+    free_model_names: candidate.free_model_names,
     sources: candidate.sources,
     benchmark: candidate.benchmark,
     benchmarks: candidate.benchmarks,

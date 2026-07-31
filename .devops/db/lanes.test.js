@@ -422,15 +422,52 @@ test('a valid catalog verifies present free offers and removes omitted exact ids
   assert.equal(reduce.coverage.known.removed, 1);
   assert.deepEqual(reduce.coverage.catalog.available, ['openrouter']);
 
-  // New free catalog id is a discovery candidate, not an offers row.
+  // New free catalog ids are admitted as verified catalog offers while the
+  // discovery output retains their first-seen provenance.
   const delta = reduce.discoveryCandidates.find((c) => c.exact_model_id === 'acme/new:free');
   assert.ok(delta);
   assert.equal(delta.source, 'catalog_delta');
-  assert.equal(offerRow(ctx, 'openrouter', 'acme/new:free'), null);
+  const newlyAdmitted = offerRow(ctx, 'openrouter', 'acme/new:free');
+  assert.equal(newlyAdmitted.status, 'verified');
+  assert.equal(newlyAdmitted.source_kind, 'catalog');
+  assert.equal(newlyAdmitted.canonical_model_id, 'acme/new');
+  assert.equal(newlyAdmitted.first_seen_at, '2026-07-31T00:00:00.000Z');
+  assert.equal(newlyAdmitted.last_attempted_at, '2026-07-31T00:00:00.000Z');
+  assert.equal(newlyAdmitted.last_verified_at, '2026-07-31T00:00:00.000Z');
+  assert.equal(newlyAdmitted.pricing_hash, 'f'.repeat(64));
+  assert.equal(newlyAdmitted.facts_json.model_id, 'acme/new:free');
+  assert.deepEqual(newlyAdmitted.facts_json.free_model_names, ['acme/a:free', 'acme/new:free']);
+  assert.equal(newlyAdmitted.facts_json.endpoint_source, 'https://openrouter.ai/docs/quickstart');
+  assert.equal(newlyAdmitted.facts_json.rate_limits, undefined);
 
   // The successful catalog fetch became cache evidence (AC-16).
   assert.equal(reduce.sourceCache.length, 1);
   assert.equal(reduce.sourceCache[0].subject_key, 'catalog:openrouter');
+});
+
+test('a successful catalog persists the complete sorted free ID list on every admitted offer', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+
+  runCycle(ctx, 'run-full-list', {
+    'catalog:openrouter': catalogArtifact({ models: [
+      catalogModel('zeta/model:free'),
+      catalogModel('openrouter/free'),
+      catalogModel('alpha/model:free'),
+      catalogModel('zeta/model:free'),
+    ] }),
+    discovery: { task_id: 'discovery', status: 'complete', models: [] },
+  });
+
+  const expected = ['alpha/model:free', 'openrouter/free', 'zeta/model:free'];
+  for (const exactModelId of expected) {
+    const row = offerRow(ctx, 'openrouter', exactModelId);
+    assert.equal(row.status, 'verified');
+    assert.equal(row.source_kind, 'catalog');
+    assert.equal(row.canonical_model_id, db.canonicalModelId(exactModelId));
+    assert.deepEqual(row.facts_json.free_model_names, expected);
+  }
 });
 
 test('an exact id that became paid is confirmed removed with pricing evidence (AC-5)', (t) => {
@@ -511,6 +548,7 @@ test('an unavailable catalog preserves prior offers as stale and never removes (
   assert.equal(row.removal_evidence_json, null, 'catalog failure never confirms removal');
   assert.equal(reduce.coverage.catalog.unavailable.length, 1);
   assert.match(reduce.coverage.catalog.unavailable[0].reason, /timeout/);
+  assert.equal(offerRow(ctx, 'openrouter', 'acme/new:free'), null, 'unavailable catalog cannot admit unseen ids');
   assert.equal(reduce.canPromote, false, 'zero verified blocks promotion');
 });
 

@@ -235,7 +235,11 @@ function validateCandidate(runId, runDir, options = {}) {
     candidate_hash: candidateHash,
     db_backup: null,
     files,
+    // Validation creates a prepared manifest before promotion starts. Keep an
+    // explicit marker so startup recovery does not mistake a validate-only
+    // dry-run manifest with no canonical backups for a partial promotion.
     backups: {},
+    promotion_started: false,
   };
 
   // Include DB backup hash if a pre run copy exists.
@@ -343,7 +347,7 @@ function promoteGeneration(runId, runDir, options = {}) {
       backups[rel] = { path: dest, sha256: sha256File(dest) };
     }
   }
-  advanceManifest(runDir, 'prepared', { backups });
+  advanceManifest(runDir, 'prepared', { backups, promotion_started: true });
 
   // 2. Copy candidate files to temporary names, verify hashes, rename.
   try {
@@ -387,14 +391,7 @@ function promoteGeneration(runId, runDir, options = {}) {
       fs.renameSync(tmpPath, canonicalPath);
     }
   } catch (err) {
-    // Restore all canonical files from backup.
-    restoreCanonicalFiles(paths, backups);
-    db.finalizeRun(runId, {
-      runStatus: 'failed',
-      error: `promotion file copy failed: ${err.message}`,
-    }, options);
-    advanceManifest(runDir, 'restored', { restore_reason: err.message });
-    throw err;
+    throw failPromotion(runId, runDir, options, err, backups, 'promotion file copy failed');
   }
 
   advanceManifest(runDir, 'files_promoted');
@@ -409,34 +406,35 @@ function finalizePromotion(runId, runDir, options) {
   const paths = db.resolvePaths(options);
   const manifest = readManifest(runDir);
 
-  // Verify promoted file hashes match the manifest.
-  for (const name of CANDIDATE_FILES) {
-    const canonicalRel = name === 'provider-registry.json'
-      ? 'build/provider-registry.json'
-      : name;
-    const canonicalPath = path.join(paths.projectRoot, canonicalRel);
-    const fileEntry = manifest.files[name];
+  try {
+    // Verify promoted file hashes match the manifest.
+    for (const name of CANDIDATE_FILES) {
+      const canonicalRel = name === 'provider-registry.json'
+        ? 'build/provider-registry.json'
+        : name;
+      const canonicalPath = path.join(paths.projectRoot, canonicalRel);
+      const fileEntry = manifest.files[name];
 
-    if (!fs.existsSync(canonicalPath)) {
-      if (name === 'og-image.png' && (!fileEntry || !fileEntry.sha256)) continue;
-      throw new Error(`promoted file missing after copy: ${canonicalRel}`);
-    }
-    if (fileEntry && fileEntry.sha256) {
-      const actual = sha256File(canonicalPath);
-      if (actual !== fileEntry.sha256) {
-        // Restore backups and fail.
-        restoreCanonicalFiles(paths, manifest.backups || {});
-        db.finalizeRun(runId, {
-          runStatus: 'failed',
-          error: `post promotion hash mismatch for ${name}`,
-        }, options);
-        advanceManifest(runDir, 'restored', { restore_reason: `hash mismatch: ${name}` });
-        throw new Error(`post promotion hash mismatch for ${name}`);
+      if (!fs.existsSync(canonicalPath)) {
+        if (name === 'og-image.png' && (!fileEntry || !fileEntry.sha256)) continue;
+        throw new Error(`promoted file missing after copy: ${canonicalRel}`);
+      }
+      if (fileEntry && fileEntry.sha256) {
+        const actual = sha256File(canonicalPath);
+        if (actual !== fileEntry.sha256) {
+          throw new Error(`post promotion hash mismatch for ${name}`);
+        }
       }
     }
+  } catch (err) {
+    throw failPromotion(runId, runDir, options, err, manifest.backups || {}, 'post promotion verification failed');
   }
 
-  advanceManifest(runDir, 'db_finalized');
+  try {
+    advanceManifest(runDir, 'db_finalized');
+  } catch (err) {
+    throw failPromotion(runId, runDir, options, err, manifest.backups || {}, 'promotion finalization failed');
+  }
   return { runId, phase: 'db_finalized' };
 }
 
@@ -453,16 +451,73 @@ function resumePromotion(runId, runDir, manifest, options) {
   return { runId, phase: manifest.phase, resumed: true };
 }
 
-// Restores canonical files from backup entries.
-function restoreCanonicalFiles(paths, backups) {
-  for (const [rel, entry] of Object.entries(backups)) {
-    if (!entry || !entry.path) continue;
+// Restores canonical files from backup entries. A missing backup entry means
+// the canonical file did not exist before this promotion, so remove any file
+// that the failed promotion may have created. Errors are returned together so
+// callers can preserve the original promotion failure.
+function restoreCanonicalFiles(paths, backups = {}, options = {}) {
+  const errors = [];
+  const backupEntries = backups && typeof backups === 'object' ? backups : {};
+  for (const rel of CANONICAL_FILES) {
     const dest = path.join(paths.projectRoot, rel);
-    if (fs.existsSync(entry.path)) {
-      fs.mkdirSync(path.dirname(dest), { recursive: true });
-      fs.copyFileSync(entry.path, dest);
+    const entry = backupEntries[rel];
+    try {
+      if (entry && entry.path) {
+        if (!fs.existsSync(entry.path)) {
+          throw new Error(`backup file is missing: ${entry.path}`);
+        }
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        fs.copyFileSync(entry.path, dest);
+      } else {
+        fs.rmSync(dest, { force: true });
+      }
+    } catch (err) {
+      errors.push(new Error(`canonical ${rel} cleanup failed: ${err.message}`, { cause: err }));
+    }
+
+    if (options.runId) {
+      try {
+        fs.rmSync(`${dest}.promoting-${options.runId}`, { force: true });
+      } catch (err) {
+        errors.push(new Error(`temporary canonical ${rel} cleanup failed: ${err.message}`, { cause: err }));
+      }
     }
   }
+  return errors;
+}
+
+function aggregatePromotionFailure(original, cleanupErrors, context) {
+  if (!cleanupErrors || cleanupErrors.length === 0) return original;
+  const details = cleanupErrors.map((error) => error.message).join('; ');
+  const aggregate = new AggregateError(
+    [original, ...cleanupErrors],
+    `${context}: ${original.message}; cleanup errors: ${details}`
+  );
+  aggregate.cause = original;
+  aggregate.cleanupErrors = cleanupErrors;
+  return aggregate;
+}
+
+// Attempt every rollback/status update, then throw the original failure unless
+// cleanup itself also failed. AggregateError keeps the promotion failure as
+// the first error and reports all cleanup failures without masking it.
+function failPromotion(runId, runDir, options, original, backups, context) {
+  const paths = db.resolvePaths(options);
+  const cleanupErrors = restoreCanonicalFiles(paths, backups, { runId });
+  try {
+    db.finalizeRun(runId, {
+      runStatus: 'failed',
+      error: `${context}: ${original.message}`,
+    }, options);
+  } catch (err) {
+    cleanupErrors.push(new Error(`failed to record promotion failure: ${err.message}`, { cause: err }));
+  }
+  try {
+    advanceManifest(runDir, 'restored', { restore_reason: original.message });
+  } catch (err) {
+    cleanupErrors.push(new Error(`failed to mark promotion restored: ${err.message}`, { cause: err }));
+  }
+  return aggregatePromotionFailure(original, cleanupErrors, context);
 }
 
 // ---------------------------------------------------------------------------
@@ -672,9 +727,9 @@ function findDeployTarget(options = {}) {
 // Checks for interrupted promotions and recovers. Only mutating commands
 // call this; read only commands (db:status, migrate) never restore files.
 //
-// Before db_finalized: restore canonical backups, mark run failed.
-// After db_finalized: verify hashes match, allow resume. Mismatch stops for
-// manual inspection.
+// Before db_finalized: restore canonical backups and the exact pre-run DB
+// snapshot when one exists. After db_finalized: verify hashes and allow resume;
+// never roll back a finalized or deploy-retry generation.
 function recoverInterruptedPromotion(options = {}) {
   const paths = db.resolvePaths(options);
   const crawlDir = path.join(paths.stateDir, 'crawl');
@@ -695,23 +750,92 @@ function recoverInterruptedPromotion(options = {}) {
     if (phaseIdx < 0) continue;
 
     if (phaseIdx < MANIFEST_PHASES.indexOf('db_finalized')) {
-      // Interrupted before DB finalization: restore backups, mark failed.
-      restoreCanonicalFiles(paths, manifest.backups || {});
+      // A validated_not_deployed/promoted status is a safe generation even if
+      // its manifest marker is stale; never restore its pre-run DB copy.
+      let runStatus = null;
       try {
-        db.finalizeRun(runId, {
-          runStatus: 'failed',
-          error: `interrupted promotion at phase ${phase}; restored backups`,
-        }, options);
+        runStatus = db.loadRunCandidate(runId, options).run.status;
       } catch {
-        // Run may already be terminal.
+        // An exact DB restore may already have removed this run row.
       }
-      advanceManifest(runDir, 'restored', {
-        restore_reason: `startup recovery from phase ${phase}`,
-      });
-      results.push({ runId, action: 'restored', fromPhase: phase });
+      if (runStatus === 'validated_not_deployed' || runStatus === 'promoted') {
+        results.push({ runId, action: 'preserved', fromPhase: phase, status: runStatus });
+        continue;
+      }
+
+      // validateCandidate writes a prepared manifest before promotion begins.
+      // Such a dry-run has no canonical backups and must leave the current
+      // publication untouched. Once promotion starts, the explicit marker is
+      // set even when the first-run backup map is legitimately empty.
+      const promotionStarted = manifest.promotion_started === true ||
+        phaseIdx >= MANIFEST_PHASES.indexOf('files_promoted') ||
+        Object.keys(manifest.backups || {}).length > 0;
+      const canonicalErrors = promotionStarted
+        ? restoreCanonicalFiles(paths, manifest.backups || {}, { runId })
+        : [];
+      const exactBackup = db.exactRunDatabaseBackup(runId, options);
+      if (exactBackup) {
+        let restored;
+        try {
+          restored = db.restoreExactRunDatabase(exactBackup, options);
+        } catch (err) {
+          const original = new Error(
+            `startup recovery from phase ${phase} could not restore the exact pre-run database`
+          );
+          throw aggregatePromotionFailure(
+            original,
+            [...canonicalErrors, err],
+            'interrupted promotion recovery failed'
+          );
+        }
+        if (canonicalErrors.length > 0) {
+          const original = new Error(
+            `startup recovery from phase ${phase} could not restore all canonical files`
+          );
+          throw aggregatePromotionFailure(
+            original,
+            canonicalErrors,
+            'interrupted promotion recovery failed'
+          );
+        }
+        advanceManifest(runDir, 'restored', {
+          restore_reason: `startup recovery from phase ${phase}; exact pre-run DB restored`,
+        });
+        results.push({
+          runId,
+          action: 'restored_exact_database',
+          fromPhase: phase,
+          restoredFrom: restored.restoredFrom,
+          sha256: restored.sha256,
+        });
+      } else {
+        // Legacy/manual fixtures may not have an exact DB copy. Preserve the
+        // old terminal marking behavior, but still aggregate cleanup errors.
+        const cleanupErrors = [...canonicalErrors];
+        try {
+          db.finalizeRun(runId, {
+            runStatus: 'failed',
+            error: `interrupted promotion at phase ${phase}; restored backups`,
+          }, options);
+        } catch {
+          // Run may already be terminal or absent.
+        }
+        try {
+          advanceManifest(runDir, 'restored', {
+            restore_reason: `startup recovery from phase ${phase}`,
+          });
+        } catch (err) {
+          cleanupErrors.push(new Error(`failed to mark promotion restored: ${err.message}`, { cause: err }));
+        }
+        if (cleanupErrors.length > 0) {
+          const original = new Error(`interrupted promotion at phase ${phase}; restored backups`);
+          throw aggregatePromotionFailure(original, cleanupErrors, 'interrupted promotion recovery failed');
+        }
+        results.push({ runId, action: 'restored', fromPhase: phase });
+      }
     } else if (phaseIdx >= MANIFEST_PHASES.indexOf('db_finalized') &&
                phaseIdx < MANIFEST_PHASES.indexOf('pushed')) {
-      // After DB finalization: verify hashes, report resumable.
+      // After DB finalization: verify hashes, report resumable. No DB restore.
       try {
         verifyCanonicalHashes(paths, manifest);
         results.push({ runId, action: 'resumable', phase, manifest: manifestPath(runDir) });

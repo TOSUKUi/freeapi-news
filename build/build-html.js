@@ -334,6 +334,28 @@ function benchmarkDetailsBlock(o) {
     </details>`;
 }
 
+// OpenRouter (router type) free model names, full list, no truncation (AC-5).
+// The reducer already persists a sorted list; normalize again at the render
+// boundary so hand-built reports cannot duplicate or reorder the inventory.
+function freeModelNamesBlock(o) {
+  if (o.delivery_type !== 'router') return '';
+  const names = Array.isArray(o.free_model_names)
+    ? [...new Set(o.free_model_names.filter((name) =>
+      typeof name === 'string' && name.length > 0))].sort()
+    : [];
+  if (names.length === 0) {
+    return `<div class="models-block">
+        <div class="stat-label">無料モデル一覧</div>
+        <p class="models-missing">モデル一覧未取得</p>
+      </div>`;
+  }
+  const badges = names.map((name) => `<span class="model-chip">${esc(name)}</span>`).join('');
+  return `<div class="models-block">
+      <div class="stat-label">無料モデル一覧 <span class="models-count">${names.length}</span></div>
+      <div class="models-list">${badges}</div>
+    </div>`;
+}
+
 // Per model connection accordion (AC-6): one details/summary per card with
 // four agent subsections from the versioned template registry.
 function connectionAccordion(o) {
@@ -389,6 +411,9 @@ function offerCard(o, index, generatedAt, tz) {
   const price = priceDisplay(o);
   const pos = String(index + 1).padStart(2, '0');
   const tierCls = o.benchmark ? ` tier-accent-${o.benchmark.tier.toLowerCase()}` : '';
+  const cardDetails = [freeModelNamesBlock(o), benchmarkDetailsBlock(o), connectionAccordion(o)]
+    .filter(Boolean)
+    .join('\n        ');
   return `<article class="offer-card reveal${tierCls}" aria-labelledby="offer-${index}">
     <div class="card-accent" aria-hidden="true"></div>
     <span class="rank-watermark" aria-hidden="true">${pos}</span>
@@ -421,8 +446,7 @@ function offerCard(o, index, generatedAt, tz) {
           ${o.training_use ? `<div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain ${/なし|no/i.test(o.training_use) ? 'train-no' : 'train-yes'}">${esc(o.training_use)}</span></div>` : ''}
         </div>
 
-        ${benchmarkDetailsBlock(o)}
-        ${connectionAccordion(o)}
+        ${cardDetails}
 
         <div class="offer-links">
           ${(() => {
@@ -714,6 +738,25 @@ header::after {
 .id-val-plain { font-size: 0.8rem; }
 .train-no { color: hsl(var(--success)); font-weight: 600; }
 .train-yes { color: hsl(var(--warning)); font-weight: 600; }
+
+/* OpenRouter free model names. */
+.models-block { margin-top: 1.1rem; }
+.models-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.4rem; height: 1.4rem; padding: 0 0.3rem;
+  border-radius: 999px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+  font-family: "Space Grotesk", sans-serif; font-size: 0.7rem; font-weight: 700;
+}
+.models-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.model-chip {
+  font-family: "JetBrains Mono", monospace; font-size: 0.7rem;
+  background: hsl(var(--accent)); color: hsl(var(--accent-foreground));
+  border: 1px solid hsl(var(--border));
+  padding: 0.18rem 0.5rem; border-radius: calc(var(--radius) - 4px);
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.model-chip:hover { background: hsl(var(--accent) / 0.6); border-color: hsl(var(--ring) / 0.4); }
+.models-missing { color: hsl(var(--warning)); font-weight: 600; font-size: 0.85rem; margin-top: 0.4rem; }
 
 /* Expandable benchmark details. */
 .bench-details { margin-top: 1.15rem; border-top: 1px solid hsl(var(--border)); padding-top: 0.9rem; }

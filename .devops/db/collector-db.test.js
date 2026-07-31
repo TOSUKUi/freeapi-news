@@ -177,6 +177,36 @@ test('pre run DB copy lands in the run backup directory with a hash (AC-1)', (t)
   assert.throws(() => db.copyDatabaseForRun('../escape', ctx.options), /invalid run_id/);
 });
 
+test('exact run restore uses only the named backup and verifies it (AC-1)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  db.applyMigrations(ctx.options);
+  db.startRun('seed', [], ctx.options);
+  db.finalizeRun('seed', { offers: [seedOfferChange()], runStatus: 'promoted' }, ctx.options);
+
+  const exact = db.copyDatabaseForRun('exact-old', ctx.options);
+  assert.ok(exact);
+  db.startRun('mutation', [], ctx.options);
+  db.finalizeRun('mutation', {
+    offers: [seedOfferChange({ exact_model_id: 'acme/model-b:free', canonical_model_id: 'acme/model-b' })],
+  }, ctx.options);
+  const newer = db.copyDatabaseForRun('exact-new', ctx.options);
+  assert.ok(newer);
+
+  const descriptor = db.exactRunDatabaseBackup('exact-old', ctx.options);
+  assert.deepEqual(descriptor, { runId: 'exact-old', backupPath: exact.backupPath, sha256: exact.sha256 });
+  const restored = db.restoreExactRunDatabase(descriptor, ctx.options);
+  assert.equal(restored.runId, 'exact-old');
+  assert.equal(restored.sha256, exact.sha256);
+  assert.equal(db.sha256File(dbPathFor(ctx)), exact.sha256);
+  assert.equal(countRows(ctx, 'offers'), 1, 'the exact older snapshot was restored, not the newer copy');
+
+  assert.throws(
+    () => db.restoreExactRunDatabase({ ...descriptor, backupPath: newer.backupPath }, ctx.options),
+    /does not match run exact-old/
+  );
+});
+
 test('missing DB restores from the newest validated copy (AC-1)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
@@ -298,6 +328,32 @@ test('finalizeRun rolls back every write on error (AC-15)', (t) => {
   assert.equal(run2.status, 'collecting', 'run status unchanged after rollback');
   const run1 = runs.find((r) => r.run_id === 'run-1');
   assert.equal(run1.status, 'candidate_ready', 'prior run untouched');
+});
+
+test('an empty benchmark version rolls back preceding writes (AC-15)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  db.applyMigrations(ctx.options);
+  db.startRun('run-empty-version', [], ctx.options);
+
+  assert.throws(
+    () => db.finalizeRun('run-empty-version', {
+      offers: [seedOfferChange()],
+      benchmarks: [{
+        canonical_model_id: 'acme/model-a',
+        benchmark_key: 'terminal_bench_2_1',
+        display_name: 'Terminal-Bench 2.1',
+        version: '   ',
+        score: 70,
+        source_url: 'https://example.test/tb',
+        source_hash: 'hash',
+        verified_at: '2026-07-31T00:00:00.000Z',
+      }],
+    }, ctx.options),
+    /non empty string field version/
+  );
+  assert.equal(countRows(ctx, 'offers'), 0, 'preceding offer write was rolled back');
+  assert.equal(countRows(ctx, 'benchmarks'), 0, 'empty-version benchmark was never inserted');
 });
 
 test('one exact offer ID mapping to two canonical IDs aborts finalization', (t) => {

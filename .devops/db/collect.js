@@ -5,7 +5,7 @@
 // modules directly and shelling out only for the pi LLM workers.
 //
 // Order (index.md "Task kinds and order"):
-//   migrate, startup recovery, pre run DB copy, manifest, start run,
+//   DB recovery preflight, migrate, startup recovery, pre run DB copy,
 //   catalog (deterministic) + known refresh + discovery (LLM), ingest,
 //   deterministic lane reduction, benchmark queue + scout (LLM), ingest,
 //   benchmark reduction, candidate view, classifier (LLM) + editor (LLM),
@@ -254,6 +254,79 @@ async function runCatalogInProcess(manifest, runDir, baseOpts, log) {
 }
 
 // ---------------------------------------------------------------------------
+// Startup and pipeline recovery
+// ---------------------------------------------------------------------------
+
+const SAFELY_FINALIZED_PHASES = new Set(['db_finalized', 'committed', 'pushed']);
+const ABANDONED_PREPUBLICATION_STATUSES = new Set(['collecting', 'candidate_ready', 'validated']);
+
+function hasSafelyFinalizedPromotion(runDir, runId = null, options = {}) {
+  const manifest = publication.readManifest(runDir);
+  if (manifest && SAFELY_FINALIZED_PHASES.has(manifest.phase)) return true;
+  // A deploy push failure is explicitly resumable even if a caller reaches
+  // this guard after the manifest write but before it can be reread.
+  if (runId) {
+    try {
+      const { run } = db.loadRunCandidate(runId, options);
+      return !!run && ['validated_not_deployed', 'promoted'].includes(run.status);
+    } catch {
+      // An absent/failed run is not evidence of safe finalization.
+    }
+  }
+  return false;
+}
+
+// A process can terminate after a lane transaction but before a promotion
+// manifest exists. Recover the oldest nonterminal pre-publication run from
+// its own persisted backup before building a new manifest. This deliberately
+// does not inspect or choose the newest backup: the run id and sidecar hash
+// identify one exact pre-run snapshot.
+function recoverAbandonedRuns(baseOpts, log = () => {}) {
+  const paths = db.resolvePaths(baseOpts);
+  if (!fs.existsSync(paths.dbPath) || !db.checkIntegrity(paths.dbPath)) return null;
+
+  const database = db.openCollectorDb(baseOpts);
+  let candidates;
+  try {
+    candidates = database.prepare(
+      'SELECT run_id, status, started_at FROM runs ' +
+      "WHERE status IN ('collecting', 'candidate_ready', 'validated') " +
+      'ORDER BY started_at ASC, run_id ASC'
+    ).all();
+  } finally {
+    database.close();
+  }
+
+  const abandoned = candidates.filter((run) => {
+    if (!ABANDONED_PREPUBLICATION_STATUSES.has(run.status)) return false;
+    const runDir = path.join(paths.stateDir, 'crawl', run.run_id);
+    return !hasSafelyFinalizedPromotion(runDir);
+  });
+  if (abandoned.length === 0) return null;
+
+  // Collection is lock-serialized, so normally there is one candidate. If a
+  // prior hard termination left more than one, the oldest backup predates all
+  // later mutations and is the only safe rollback target.
+  const run = abandoned[0];
+  const runDir = path.join(paths.stateDir, 'crawl', run.run_id);
+  const backup = db.exactRunDatabaseBackup(run.run_id, baseOpts);
+  if (!backup) {
+    throw new Error(
+      `abandoned run ${run.run_id} has no exact pre-run database backup and cannot be recovered safely`
+    );
+  }
+  const restored = db.restoreExactRunDatabase(backup, baseOpts);
+  log(`  restored abandoned run ${run.run_id} from its exact pre-run DB backup`);
+  return [{
+    runId: run.run_id,
+    action: 'restored_exact_database',
+    fromStatus: run.status,
+    runDir,
+    ...restored,
+  }];
+}
+
+// ---------------------------------------------------------------------------
 // Pipeline
 // ---------------------------------------------------------------------------
 
@@ -278,6 +351,11 @@ async function runPipeline(options = {}) {
   const baseOpts = { projectRoot: opts.projectRoot, stateDir: opts.stateDir };
 
   db.assertRuntime();
+  // AC-1: openCollectorDb must restore the newest valid copy before
+  // migrations can create/initialize a missing database. Migrations then
+  // upgrade that recovered file in place.
+  const recoveredDb = db.openCollectorDb(baseOpts);
+  recoveredDb.close();
   db.applyMigrations(baseOpts);
 
   const dirs = skillDirs(baseOpts);
@@ -286,13 +364,6 @@ async function runPipeline(options = {}) {
   const runCatalog = opts.runCatalog
     || ((manifest, runDir) => runCatalogInProcess(manifest, runDir, baseOpts, log));
 
-  // Startup recovery: restore or flag any promotion interrupted mid phase.
-  const recovered = publication.recoverInterruptedPromotion(baseOpts);
-  if (recovered) {
-    log(`[recover] ${recovered.length} interrupted promotion(s): `
-      + recovered.map((r) => `${r.runId} (${r.action})`).join(', '));
-  }
-
   const lockPath = path.join(dirs.projectRoot, '.devops', 'batch', '.crawl.lock');
   if (!acquireLock(lockPath, log)) {
     throw new Error('another collection is already running (lock held)');
@@ -300,10 +371,43 @@ async function runPipeline(options = {}) {
 
   const runId = opts.runId || defaultRunId();
   const runDir = path.join(paths.stateDir, 'crawl', runId);
-  fs.mkdirSync(path.join(runDir, 'artifacts'), { recursive: true });
-  fs.mkdirSync(path.join(runDir, 'logs'), { recursive: true });
+  let preRunBackup = null;
+  let mutationStarted = false;
+  let restoreAttempted = false;
+  let restoreFailure = null;
+
+  const restoreExactPreRun = () => {
+    restoreAttempted = true;
+    if (!preRunBackup) {
+      const error = new Error(`run ${runId} has no exact pre-run database backup`);
+      restoreFailure = error;
+      throw error;
+    }
+    try {
+      return db.restoreExactRunDatabase(preRunBackup, baseOpts);
+    } catch (err) {
+      restoreFailure = err;
+      throw err;
+    }
+  };
 
   try {
+    fs.mkdirSync(path.join(runDir, 'artifacts'), { recursive: true });
+    fs.mkdirSync(path.join(runDir, 'logs'), { recursive: true });
+
+    // Startup recovery: restore or flag any promotion interrupted mid phase,
+    // then restore an abandoned pre-publication run from its exact backup.
+    const recovered = publication.recoverInterruptedPromotion(baseOpts);
+    if (recovered) {
+      log(`[recover] ${recovered.length} interrupted promotion(s): `
+        + recovered.map((r) => `${r.runId} (${r.action})`).join(', '));
+    }
+    const abandoned = recoverAbandonedRuns(baseOpts, log);
+    if (abandoned) {
+      log(`[recover] ${abandoned.length} abandoned pre-publication run(s): `
+        + abandoned.map((r) => `${r.runId} (${r.action})`).join(', '));
+    }
+
     log('============================================');
     log('  Fail safe collection (spec 0003)');
     log(`  Run: ${runId}`);
@@ -313,15 +417,16 @@ async function runPipeline(options = {}) {
 
     // AC-1: copy the closed database into the ignored run directory before
     // any mutation. This copy is the normal recovery input.
-    const copy = db.copyDatabaseForRun(runId, baseOpts);
-    log(copy
-      ? `[1/9] pre run DB copy → ${path.relative(dirs.projectRoot, copy.backupPath)}`
+    preRunBackup = db.copyDatabaseForRun(runId, baseOpts);
+    log(preRunBackup
+      ? `[1/9] pre run DB copy → ${path.relative(dirs.projectRoot, preRunBackup.backupPath)}`
       : '[1/9] pre run DB copy: no database yet (first run)');
 
     // Lane manifest from current SQLite state + registry.
     const manifest = lanes.buildLaneManifest({ ...baseOpts, runId });
     fs.writeFileSync(path.join(runDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
     db.startRun(runId, lanes.toStartRunTasks(manifest), baseOpts);
+    mutationStarted = true;
     const kindCounts = manifest.tasks.reduce((acc, t) => {
       acc[t.kind] = (acc[t.kind] || 0) + 1;
       return acc;
@@ -376,6 +481,7 @@ async function runPipeline(options = {}) {
       + ` stale=${reduce.coverage.known.stale} removed=${reduce.coverage.known.removed}`);
     if (!reduce.canPromote) {
       log(`  gate blocked promotion; previous report stays live (run ${runId} failed)`);
+      if (opts.dryRun) restoreExactPreRun();
       return {
         runId, runDir, promoted: false, deployed: false,
         canPromote: false, gateReason: reduce.gateReason, coverage: reduce.coverage,
@@ -476,7 +582,12 @@ async function runPipeline(options = {}) {
       + `(og: ${validated.ogProvenance})`);
 
     if (opts.dryRun) {
-      log('  dry run: candidate validated, not promoted. Inspect:');
+      // A dry run validates and leaves all candidate artifacts for inspection,
+      // but its successful state writes are not durable. Restore the exact
+      // snapshot taken before startRun; the run directory remains available,
+      // and its validated candidate is intentionally not promotable later.
+      restoreExactPreRun();
+      log('  dry run: candidate validated, DB restored to the exact pre-run state. Inspect:');
       log(`    ${path.join(runDir, 'candidate', 'report.json')}`);
       return {
         runId, runDir, dryRun: true, promoted: false, deployed: false,
@@ -504,6 +615,27 @@ async function runPipeline(options = {}) {
       candidateHash: validated.candidateHash, counts: assembled.counts,
       coverage: reduce.coverage,
     };
+  } catch (err) {
+    // A thrown failure before the publication manifest reaches db_finalized
+    // may follow one or more committed SQLite reductions. Roll back the
+    // whole current state to this run's exact pre-run snapshot, never to a
+    // different run's newest copy. Once DB finalization is safely recorded,
+    // leave the generation intact for deploy retry.
+    const safeFinalized = hasSafelyFinalizedPromotion(runDir, runId, baseOpts);
+    if (mutationStarted && !safeFinalized && !restoreAttempted) {
+      try {
+        restoreExactPreRun();
+      } catch {
+        // The combined error below reports both the pipeline and restore
+        // failures; no later publication or recovery is attempted here.
+      }
+    }
+    if (mutationStarted && !safeFinalized && restoreFailure) {
+      throw new Error(
+        `collection failed: ${err.message}; exact pre-run DB restore failed: ${restoreFailure.message}`
+      );
+    }
+    throw err;
   } finally {
     releaseLock(lockPath);
   }
@@ -517,6 +649,8 @@ module.exports = {
   acquireLock,
   releaseLock,
   runCatalogInProcess,
+  recoverAbandonedRuns,
+  hasSafelyFinalizedPromotion,
 };
 
 if (require.main === module) {

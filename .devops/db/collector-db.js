@@ -318,7 +318,113 @@ function copyDatabaseForRun(runId, options = {}) {
   fs.mkdirSync(backupDir, { recursive: true });
   const backupPath = path.join(backupDir, DB_FILE_NAME);
   fs.copyFileSync(paths.dbPath, backupPath);
-  return { runId, backupPath, sha256: sha256File(backupPath), copiedAt: nowIso() };
+  const sha256 = sha256File(backupPath);
+  // Persist the hash beside the copy so a process that dies before a
+  // promotion manifest exists can still identify and verify this exact
+  // pre-run snapshot on the next startup.
+  const hashPath = `${backupPath}.sha256`;
+  const hashTmp = `${hashPath}.tmp-${process.pid}-${crypto.randomBytes(6).toString('hex')}`;
+  try {
+    fs.writeFileSync(hashTmp, `${sha256}\n`, { encoding: 'utf8', flag: 'wx' });
+    fs.renameSync(hashTmp, hashPath);
+  } finally {
+    try { fs.rmSync(hashTmp, { force: true }); } catch { /* best effort */ }
+  }
+  return { runId, backupPath, sha256, copiedAt: nowIso() };
+}
+
+// Returns the persisted descriptor for one run's exact pre-run copy. This
+// deliberately does not search or sort other run directories.
+function exactRunDatabaseBackup(runId, options = {}) {
+  assertRunId(runId);
+  const paths = resolvePaths(options);
+  const backupPath = path.join(crawlDirFor(paths), runId, 'backup', DB_FILE_NAME);
+  const hashPath = `${backupPath}.sha256`;
+  if (!fs.existsSync(backupPath) || !fs.existsSync(hashPath)) return null;
+  const sha256 = fs.readFileSync(hashPath, 'utf8').trim();
+  return { runId, backupPath, sha256 };
+}
+
+// Restores one exact run backup. The caller must provide the run id, the
+// canonical backup path for that run, and its expected hash. No other run's
+// copy is considered. Both the source and a same-directory temporary copy are
+// checked for the expected SHA-256 and SQLite integrity before the temporary
+// file atomically replaces the live database.
+function restoreExactRunDatabase(backup, options = {}) {
+  if (!backup || typeof backup !== 'object') {
+    throw new Error('exact database restore requires a backup descriptor');
+  }
+  assertRunId(backup.runId);
+  const paths = resolvePaths(options);
+  const expectedPath = path.resolve(
+    path.join(crawlDirFor(paths), backup.runId, 'backup', DB_FILE_NAME)
+  );
+  const backupPath = path.resolve(backup.backupPath || '');
+  if (backupPath !== expectedPath) {
+    throw new Error(
+      `exact database restore path does not match run ${backup.runId}: ${backup.backupPath}`
+    );
+  }
+  if (typeof backup.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(backup.sha256)) {
+    throw new Error(`exact database restore requires a valid expected SHA-256 for run ${backup.runId}`);
+  }
+  if (!fs.existsSync(backupPath)) {
+    throw new Error(`exact database backup is missing for run ${backup.runId}: ${backupPath}`);
+  }
+  let stat;
+  try { stat = fs.lstatSync(backupPath); } catch (err) {
+    throw new Error(`cannot inspect exact database backup for run ${backup.runId}: ${err.message}`);
+  }
+  if (!stat.isFile()) {
+    throw new Error(`exact database backup is not a regular file for run ${backup.runId}`);
+  }
+  const sourceHash = sha256File(backupPath);
+  if (sourceHash !== backup.sha256) {
+    throw new Error(
+      `exact database backup hash mismatch for run ${backup.runId}: ` +
+      `expected ${backup.sha256}, got ${sourceHash}`
+    );
+  }
+  if (!checkIntegrity(backupPath)) {
+    throw new Error(`exact database backup fails integrity_check for run ${backup.runId}`);
+  }
+
+  if (options.db && typeof options.db.close === 'function') {
+    try { options.db.close(); } catch { /* already closed */ }
+  }
+  const liveDir = path.dirname(paths.dbPath);
+  fs.mkdirSync(liveDir, { recursive: true });
+  const tempPath = path.join(
+    liveDir,
+    `.${DB_FILE_NAME}.restore-${backup.runId}-${process.pid}-` +
+      crypto.randomBytes(8).toString('hex')
+  );
+  try {
+    fs.copyFileSync(backupPath, tempPath, fs.constants.COPYFILE_EXCL);
+    const tempHash = sha256File(tempPath);
+    if (tempHash !== backup.sha256) {
+      throw new Error(
+        `temporary exact database copy hash mismatch for run ${backup.runId}: ` +
+        `expected ${backup.sha256}, got ${tempHash}`
+      );
+    }
+    if (!checkIntegrity(tempPath)) {
+      throw new Error(`temporary exact database copy fails integrity_check for run ${backup.runId}`);
+    }
+    // Both paths are in the live database directory's filesystem, so this is
+    // an atomic replacement rather than a delete-then-copy window.
+    fs.renameSync(tempPath, paths.dbPath);
+    if (sha256File(paths.dbPath) !== backup.sha256 || !checkIntegrity(paths.dbPath)) {
+      throw new Error(`live database verification failed after exact restore for run ${backup.runId}`);
+    }
+    return {
+      runId: backup.runId,
+      restoredFrom: backupPath,
+      sha256: backup.sha256,
+    };
+  } finally {
+    try { fs.rmSync(tempPath, { force: true }); } catch { /* best effort */ }
+  }
 }
 
 // Restores the newest copy whose hash (when a promotion manifest records one)
@@ -557,7 +663,8 @@ function validateBenchmarkChange(benchmark) {
     'source_url', 'source_hash', 'verified_at',
   ];
   for (const field of required) {
-    if (typeof benchmark[field] !== 'string' || benchmark[field].length === 0) {
+    if (typeof benchmark[field] !== 'string' || benchmark[field].length === 0 ||
+        (field === 'version' && benchmark[field].trim().length === 0)) {
       throw new Error(`benchmark change requires non empty string field ${field}`);
     }
   }
@@ -1097,6 +1204,8 @@ module.exports = {
   applyMigrations,
   currentSchemaVersion,
   copyDatabaseForRun,
+  exactRunDatabaseBackup,
+  restoreExactRunDatabase,
   listDatabaseCopies,
   restoreLatestDatabase,
   sha256File,

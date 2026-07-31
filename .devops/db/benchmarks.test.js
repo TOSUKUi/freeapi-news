@@ -203,6 +203,70 @@ test('the queue holds only current free models missing terminal_bench_2_1 (AC-7)
   assert.ok(!queued.includes('acme/c'), 'confirmed_removed model is not queued');
 });
 
+test('a newly admitted catalog model is queued while an existing gate score is reused', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [
+    offerSeed({ exact_model_id: 'acme/new:free', canonical_model_id: 'acme/new', first_seen_at: '2026-07-31T00:00:00.000Z' }),
+    offerSeed({ exact_model_id: 'acme/scored:free', canonical_model_id: 'acme/scored' }),
+  ]);
+  seedBenchmarks(ctx, [benchRow({ canonical_model_id: 'acme/scored', score: 57 })]);
+
+  const queue = benchmarks.buildBenchmarkQueue(ctx.options);
+  assert.deepEqual(queue.queue.map((entry) => entry.canonical_model_id), ['acme/new']);
+  assert.equal(queue.queue[0].newly_discovered, true);
+  assert.equal(queue.queue.some((entry) => entry.canonical_model_id === 'acme/scored'), false,
+    'the existing terminal_bench_2_1 fact is reused instead of queued');
+});
+
+test('legacy empty or unknown benchmark versions do not satisfy queue reuse or tier eligibility', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [
+    offerSeed({ exact_model_id: 'acme/empty:free', canonical_model_id: 'acme/empty' }),
+    offerSeed({ exact_model_id: 'acme/unknown:free', canonical_model_id: 'acme/unknown' }),
+  ]);
+
+  const database = db.openCollectorDb(ctx.options);
+  try {
+    database.exec('BEGIN IMMEDIATE');
+    const insert = database.prepare(
+      'INSERT INTO benchmarks (' +
+      'canonical_model_id, benchmark_key, display_name, version, score, ' +
+      'source_url, source_hash, verified_at, facts_json) ' +
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+    insert.run(
+      'acme/empty', 'terminal_bench_2_1', 'Terminal-Bench 2.1', '', 90,
+      'https://leaderboard.example/terminal-bench', 'legacy-empty',
+      '2026-07-30T00:00:00.000Z', null
+    );
+    insert.run(
+      'acme/unknown', 'terminal_bench_2_1', 'Terminal-Bench 2.1', 'unknown', 90,
+      'https://leaderboard.example/terminal-bench', 'legacy-unknown',
+      '2026-07-30T00:00:00.000Z', null
+    );
+    database.exec('COMMIT');
+  } finally {
+    database.close();
+  }
+
+  const queue = benchmarks.buildBenchmarkQueue(ctx.options);
+  assert.deepEqual(
+    queue.queue.map((entry) => entry.canonical_model_id).sort(),
+    ['acme/empty', 'acme/unknown'],
+    'legacy invalid versions must not suppress daily queueing'
+  );
+
+  for (const canonical of ['acme/empty', 'acme/unknown']) {
+    const tier = benchmarks.deriveTier(benchmarkRowsFor(ctx, canonical));
+    assert.equal(tier.tier, null, `${canonical} must not receive a tier from an invalid version`);
+    assert.equal(tier.benchmark_pending, true);
+  }
+});
+
 test('the queue splits into chunks of at most four models (AC-7)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
@@ -248,6 +312,116 @@ test('newly discovered models sort before previously searched ones (AC-7)', (t) 
 });
 
 // ── Proposal validation (AC-8, AC-9) ─────────────────────────────
+
+test('unknown and malformed benchmark versions stay pending (AC-8, AC-9)', () => {
+  for (const displayName of ['SWE-Bench (OpenHands)', 'OSWorld']) {
+    for (const version of [undefined, null, '', '   ']) {
+      const shape = benchmarks.validateProposalShape({
+        ...textFind(), display_name: displayName, version,
+      });
+      assert.equal(shape.ok, false, `${displayName} version ${JSON.stringify(version)}`);
+      assert.match(shape.reason, /version|unknown/i);
+    }
+  }
+
+  for (const version of [2.1, 0, false, {}, []]) {
+    const shape = benchmarks.validateProposalShape({ ...textFind(), version });
+    assert.equal(shape.ok, false, `malformed version ${JSON.stringify(version)}`);
+    assert.match(shape.reason, /version.*string/i);
+  }
+});
+
+test('a known display-name version is deterministically normalized (AC-8)', () => {
+  const shape = benchmarks.validateProposalShape({ ...textFind(), version: null });
+  assert.equal(shape.ok, true);
+  assert.equal(shape.version, '2.1');
+
+  assert.equal(
+    benchmarks.bodyConfirmsBenchmark('SWE-Bench (OpenHands): acme/a scored 40', {
+      key: 'swe_bench_openhands', displayName: 'SWE-Bench (OpenHands)', version: '',
+    }),
+    false,
+    'evidence validation fails closed for an unknown version'
+  );
+});
+
+test('an explicit text version conflicting with the display name is rejected (AC-8)', () => {
+  const result = benchmarks.evaluateProposal({
+    ...textFind(),
+    model_id: 'acme/a:free',
+    version: '1.0',
+    body: 'Terminal-Bench 2.1 leaderboard: acme/a scored 72.0 percent.',
+  }, {
+    canonical_model_id: 'acme/a',
+    model_ids: ['acme/a:free'],
+  });
+  assert.equal(result.accepted, false);
+  assert.match(result.reason, /conflicts.*2\.1/);
+});
+
+test('an official image version must match the accepted proposal version (AC-9)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [offerSeed({ exact_model_id: 'acme/a:free', canonical_model_id: 'acme/a' })]);
+  startScoutRun(ctx, 'run-image-version-mismatch');
+
+  const imageFind = {
+    display_name: 'Terminal-Bench 2.1',
+    version: '2.1',
+    score: 68,
+    source_url: 'https://x.com/vendor/status/123',
+    source_hash: 'i'.repeat(64),
+    extraction_method: 'official_image',
+    confidence: 'HIGH',
+    image_facts: { model: 'acme/a', benchmark: 'Terminal-Bench', version: '1.0', score: 68 },
+  };
+  const { reduce } = scoutCycle(ctx, 'run-image-version-mismatch', {
+    'benchmark_scout:chunk-0': scoutArtifact('benchmark_scout:chunk-0', [
+      { model_id: 'acme/a:free', canonical_model_id: 'acme/a', model_name: 'Acme A', benchmark_finds: [imageFind] },
+    ]),
+  }, { visionCapable: true });
+
+  assert.equal(reduce.coverage.accepted, 0);
+  assert.ok(reduce.rejected.some((entry) => /version.*match proposal version/.test(entry.reason)));
+  assert.equal(benchmarkRowsFor(ctx, 'acme/a').length, 0);
+});
+
+test('a malformed proposal does not abort a valid proposal in the same task (AC-8)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [offerSeed({ exact_model_id: 'acme/a:free', canonical_model_id: 'acme/a' })]);
+  startScoutRun(ctx, 'run-mixed-version');
+
+  const unknown = {
+    display_name: 'SWE-Bench (OpenHands)',
+    version: null,
+    score: 40,
+    source_url: 'https://leaderboard.example/swe-bench',
+    body: 'SWE-Bench (OpenHands): acme/a scored 40.0 percent.',
+  };
+  const { reduce } = scoutCycle(ctx, 'run-mixed-version', {
+    'benchmark_scout:chunk-0': scoutArtifact('benchmark_scout:chunk-0', [{
+      model_id: 'acme/a:free', canonical_model_id: 'acme/a', model_name: 'Acme A',
+      benchmark_finds: [unknown, textFind()],
+    }]),
+  });
+
+  assert.equal(reduce.coverage.accepted, 1);
+  assert.ok(reduce.rejected.some((entry) => /version|unknown/i.test(entry.reason)));
+  assert.equal(reduce.benchmarkChanges.length, 1);
+  assert.ok(reduce.benchmarkChanges.every((change) => change.version.trim().length > 0));
+  assert.equal(benchmarkRowsFor(ctx, 'acme/a').length, 1);
+  const database = db.openCollectorDb(ctx.options);
+  try {
+    assert.ok(database.prepare(
+      'SELECT * FROM benchmark_searches WHERE canonical_model_id = ?'
+    ).get('acme/a'));
+  } finally {
+    database.close();
+  }
+});
 
 test('a text proposal confirmed by the fetched body is accepted (AC-8, AC-9)', (t) => {
   const ctx = tmpProject();

@@ -20,7 +20,7 @@
     "db:deploy": "node .devops/db/cli.js deploy",
     "db:recover": "node .devops/db/cli.js recover",
     "db:cleanup": "node .devops/db/cli.js cleanup",
-    "test": "node --test '.devops/db/*.test.js'"
+    "test": "node --test '.devops/db/*.test.js' 'build/*.test.js'"
   },
   "devDependencies": {
     "ajv": "^8.20.0",

@@ -53,6 +53,9 @@ const QUEUE_CHUNK_SIZE = 4;
 
 const EXTRACTION_METHODS = ['text', 'official_image'];
 const CONFIDENCE_LEVELS = ['HIGH', 'MEDIUM', 'LOW'];
+const UNKNOWN_VERSION_VALUES = new Set([
+  'unknown', 'n/a', 'na', 'none', 'null', 'undefined', 'undetermined',
+]);
 
 function nowIso() {
   return new Date().toISOString();
@@ -64,6 +67,15 @@ function nowIso() {
 // identity (identity is exact).
 function fold(text) {
   return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+// Legacy rows may have been imported before version validation existed. Keep
+// those immutable rows in SQLite, but never let an empty or sentinel version
+// satisfy a queue gate or tier derivation.
+function isUsableBenchmarkVersion(version) {
+  if (typeof version !== 'string') return false;
+  const normalized = version.trim().toLowerCase();
+  return normalized.length > 0 && !UNKNOWN_VERSION_VALUES.has(normalized);
 }
 
 // ---------------------------------------------------------------------------
@@ -130,7 +142,7 @@ function buildBenchmarkQueue(options = {}) {
       'ORDER BY provider_key, exact_model_id'
     ).all().map((row) => db.parseRow('offers', row));
     benchmarkRows = database.prepare(
-      'SELECT canonical_model_id, benchmark_key FROM benchmarks'
+      'SELECT canonical_model_id, benchmark_key, version FROM benchmarks'
     ).all();
     searches = database.prepare(
       'SELECT canonical_model_id, last_searched_at, result, metadata_hash FROM benchmark_searches'
@@ -141,7 +153,8 @@ function buildBenchmarkQueue(options = {}) {
 
   const hasRankingKey = new Set(
     benchmarkRows
-      .filter((row) => row.benchmark_key === RANKING_BENCHMARK_KEY)
+      .filter((row) => row.benchmark_key === RANKING_BENCHMARK_KEY &&
+        isUsableBenchmarkVersion(row.version))
       .map((row) => row.canonical_model_id)
   );
   const searchByModel = new Map(searches.map((row) => [row.canonical_model_id, row]));
@@ -260,9 +273,28 @@ function validateProposalShape(find) {
     return { ok: false, reason: 'find is missing a benchmark display_name' };
   }
   const key = db.benchmarkKey(displayName);
-  const version = find.version !== undefined && find.version !== null && String(find.version).trim() !== ''
-    ? String(find.version).trim()
-    : db.benchmarkVersion(displayName);
+  const displayVersion = db.benchmarkVersion(displayName).trim();
+  let version;
+  if (find.version !== undefined && find.version !== null) {
+    if (typeof find.version !== 'string') {
+      return { ok: false, reason: 'benchmark version must be a non-empty string or a nullable unknown value' };
+    }
+    const explicitVersion = find.version.trim();
+    if (explicitVersion) {
+      if (!isUsableBenchmarkVersion(explicitVersion)) {
+        return { ok: false, reason: 'benchmark version is unknown; unknown version remains pending' };
+      }
+      if (displayVersion && explicitVersion !== displayVersion) {
+        return {
+          ok: false,
+          reason: `benchmark version ${JSON.stringify(explicitVersion)} conflicts with ` +
+            `display_name version ${JSON.stringify(displayVersion)}`,
+        };
+      }
+      version = explicitVersion;
+    }
+  }
+  if (!version) version = displayVersion;
   if (!key || key === 'unknown_benchmark') {
     return { ok: false, reason: `benchmark display_name ${JSON.stringify(displayName)} does not resolve to a key` };
   }
@@ -276,6 +308,9 @@ function validateProposalShape(find) {
   const method = find.extraction_method || 'text';
   if (!EXTRACTION_METHODS.includes(method)) {
     return { ok: false, reason: `extraction_method must be one of ${EXTRACTION_METHODS.join(', ')}` };
+  }
+  if (!version) {
+    return { ok: false, reason: 'benchmark version is required; unknown version remains pending' };
   }
   const confidence = find.confidence || 'HIGH';
   if (!CONFIDENCE_LEVELS.includes(confidence)) {
@@ -300,8 +335,11 @@ function bodyConfirmsModel(body, model) {
 
 function bodyConfirmsBenchmark(body, shape) {
   const folded = fold(body);
-  // The benchmark family must appear (terminal bench), and when a version is
-  // known the version digits must appear too. Unknown versions stay pending.
+  // Evidence validation is fail closed too: an unknown version is a pending
+  // observation, never a fact accepted merely because its family is present.
+  if (!shape || typeof shape.version !== 'string' || !shape.version.trim()) return false;
+  // The benchmark family must appear (terminal bench), and the version must
+  // appear too.
   const keyFold = fold(shape.key.replace(/_/g, ' ')); // terminalbench21
   const familyFold = keyFold.replace(/[0-9.]+$/g, ''); // terminalbench
   if (familyFold && !folded.includes(familyFold)) {
@@ -309,10 +347,8 @@ function bodyConfirmsBenchmark(body, shape) {
     const displayFamily = fold(shape.displayName).replace(/[0-9.]+$/g, '');
     if (!displayFamily || !folded.includes(displayFamily)) return false;
   }
-  if (shape.version) {
-    const versionFold = fold(shape.version);
-    if (versionFold && !folded.includes(versionFold)) return false;
-  }
+  const versionFold = fold(shape.version);
+  if (!versionFold || !folded.includes(versionFold)) return false;
   return true;
 }
 
@@ -362,13 +398,20 @@ function validateImageEvidence(find, shape, model, options = {}) {
   const imageFacts = find.image_facts && typeof find.image_facts === 'object' ? find.image_facts : {};
   const hasAllFour = typeof imageFacts.model === 'string' && imageFacts.model.trim() &&
     typeof imageFacts.benchmark === 'string' && imageFacts.benchmark.trim() &&
-    imageFacts.version !== undefined && imageFacts.version !== null && String(imageFacts.version).trim() &&
+    typeof imageFacts.version === 'string' && imageFacts.version.trim() &&
     imageFacts.score !== undefined && imageFacts.score !== null && Number.isFinite(Number(imageFacts.score));
   if (!hasAllFour) {
     return { ok: false, reason: 'official image source rejected: worker did not return all four values (model, benchmark, version, score)' };
   }
   if (!bodyConfirmsModel(JSON.stringify(imageFacts), model)) {
     return { ok: false, reason: 'official image extraction does not confirm the model' };
+  }
+  if (imageFacts.version.trim() !== shape.version) {
+    return {
+      ok: false,
+      reason: `official image extraction version ${JSON.stringify(imageFacts.version.trim())} ` +
+        `does not match proposal version ${JSON.stringify(shape.version)}`,
+    };
   }
   return { ok: true, imageFacts };
 }
@@ -445,7 +488,7 @@ function buildBenchmarkChange(model, shape, find, sourceHash, factsExtra) {
     canonical_model_id: model.canonical_model_id,
     benchmark_key: shape.key,
     display_name: shape.displayName,
-    version: shape.version || '',
+    version: shape.version,
     score: shape.score,
     source_url: find.source_url,
     source_hash: sourceHash || 'unverified',
@@ -647,7 +690,8 @@ function reduceBenchmarkTasks(runId, runDir, options = {}) {
 // The representative score comes from the same benchmark that sets the tier so
 // raw scores from different benchmarks are never compared (AGENTS.md).
 function deriveTier(benchmarkRows) {
-  const rows = Array.isArray(benchmarkRows) ? benchmarkRows : [];
+  const rows = (Array.isArray(benchmarkRows) ? benchmarkRows : [])
+    .filter((row) => row && isUsableBenchmarkVersion(row.version));
   const terminal = rows.find((row) => row.benchmark_key === RANKING_BENCHMARK_KEY);
   if (terminal) {
     let tier = 'B';
@@ -694,6 +738,7 @@ module.exports = {
   EXTRACTION_METHODS,
   CONFIDENCE_LEVELS,
   fold,
+  isUsableBenchmarkVersion,
   modelMetadataHash,
   loadCurrentBenchmarks,
   buildBenchmarkQueue,

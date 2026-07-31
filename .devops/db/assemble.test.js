@@ -82,6 +82,8 @@ function offerSeed(overrides = {}) {
       model_name: 'Acme A',
       free_quota_text: 'free tier, 100 requests per day',
       endpoint_source: 'https://openrouter.ai/docs/quickstart',
+      catalog_url: 'https://openrouter.ai/api/v1/models',
+      free_model_names: ['acme/a:free'],
     },
     ...overrides,
   };
@@ -259,6 +261,87 @@ test('benchmark_pending offers are excluded, not ranked (AC-10)', (t) => {
   const { report } = assemble.assembleReport('run-pending', runDir, ctx.options);
   assert.deepEqual(report.ranked_offers.map((o) => o.model_id), ['acme/a:free']);
   assert.ok(report.excluded_offers.some((e) => e.name === 'Pending' && /benchmark-pending/.test(e.reason)));
+});
+
+test('router assembly emits the complete catalog list while benchmark-pending aggregate routes stay excluded', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  const catalogNames = ['zeta/model:free', 'alpha/model:free', 'openrouter/free', 'alpha/model:free'];
+  seed(ctx, {
+    offers: [
+      offerSeed({
+        exact_model_id: 'alpha/model:free',
+        canonical_model_id: 'alpha/model',
+        facts_json: {
+          model_name: 'Alpha Model',
+          endpoint_source: 'https://openrouter.ai/docs/quickstart',
+          catalog_url: 'https://openrouter.ai/api/v1/models',
+          free_model_names: catalogNames,
+        },
+      }),
+      offerSeed({
+        exact_model_id: 'openrouter/free',
+        canonical_model_id: 'openrouter/free',
+        facts_json: {
+          model_name: 'Free Models Router',
+          endpoint_source: 'https://openrouter.ai/docs/quickstart',
+          catalog_url: 'https://openrouter.ai/api/v1/models',
+          free_model_names: catalogNames,
+        },
+      }),
+    ],
+    benchmarks: [benchRow('alpha/model', 57)],
+  });
+  const runDir = runDirFor(ctx, 'run-router-list');
+  const { report } = assemble.assembleReport('run-router-list', runDir, ctx.options);
+
+  assert.equal(report.ranked_offers.length, 1);
+  assert.equal(report.ranked_offers[0].delivery_type, 'router');
+  assert.deepEqual(report.ranked_offers[0].free_model_names, [
+    'alpha/model:free', 'openrouter/free', 'zeta/model:free',
+  ]);
+  assert.ok(report.excluded_offers.some((entry) =>
+    entry.name === 'Free Models Router' && /benchmark-pending/.test(entry.reason)
+  ));
+});
+
+test('catalog offers need fetched endpoint evidence instead of registry docs fallback', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [
+      offerSeed({
+        exact_model_id: 'acme/no-docs:free',
+        canonical_model_id: 'acme/no-docs',
+        facts_json: {
+          model_name: 'No Docs Evidence',
+          catalog_url: 'https://openrouter.ai/api/v1/models',
+          free_model_names: ['acme/no-docs:free'],
+        },
+      }),
+      offerSeed({
+        exact_model_id: 'acme/with-docs:free',
+        canonical_model_id: 'acme/with-docs',
+        facts_json: {
+          model_name: 'Fetched Docs Evidence',
+          catalog_url: 'https://openrouter.ai/api/v1/models',
+          endpoint_source: 'https://openrouter.ai/docs/quickstart',
+          free_model_names: ['acme/with-docs:free'],
+        },
+      }),
+    ],
+    benchmarks: [benchRow('acme/no-docs', 57), benchRow('acme/with-docs', 57)],
+  });
+  const runDir = runDirFor(ctx, 'run-endpoint-evidence');
+  const { report } = assemble.assembleReport('run-endpoint-evidence', runDir, ctx.options);
+
+  assert.deepEqual(report.ranked_offers.map((offer) => offer.model_id), ['acme/with-docs:free']);
+  assert.equal(report.ranked_offers[0].endpoint_source, 'https://openrouter.ai/docs/quickstart');
+  assert.ok(report.excluded_offers.some((entry) =>
+    entry.name === 'No Docs Evidence' && /missing endpoint_source/.test(entry.reason)
+  ));
 });
 
 test('the local model gate excludes sub 30B offers unless tier S or A (AGENTS.md)', (t) => {

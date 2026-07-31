@@ -43,6 +43,18 @@ async function main() {
   const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
   const fixLog = []; // what we did, for the LLM
 
+  // A router card without its deterministic catalog inventory is not safely
+  // renderable. Unlike ordinary offer-level schema errors, do not move it to
+  // excluded_offers: failing the candidate keeps the prior public generation
+  // live instead of silently deleting the router card.
+  const routerInventoryErrors = findEmptyRouterCatalogOffers(report);
+  if (routerInventoryErrors.length > 0) {
+    console.error('❌ Router catalog validation error (cannot auto-fix):');
+    for (const error of routerInventoryErrors) console.error(`   ${error}`);
+    process.exitCode = 1;
+    return;
+  }
+
   // ── 1. Schema check (top-level = hard fail, offer-level = fix/exclude) ──
   checkSchema(report, schema, fixLog);
 
@@ -86,6 +98,30 @@ async function main() {
 // ══════════════════════════════════════════════════════════════════
 // Schema
 // ══════════════════════════════════════════════════════════════════
+
+function findEmptyRouterCatalogOffers(report) {
+  const errors = [];
+  for (const arrayName of ['ranked_offers', 'conditional_credits', 'caution_offers']) {
+    const offers = Array.isArray(report && report[arrayName]) ? report[arrayName] : [];
+    offers.forEach((offer, index) => {
+      if (!offer || offer.delivery_type !== 'router') return;
+      if (!Array.isArray(offer.free_model_names) || offer.free_model_names.length === 0) {
+        errors.push(`${arrayName}[${index}] ${offer.name || '?'} has no free_model_names`);
+        return;
+      }
+      const invalidIndex = offer.free_model_names.findIndex((modelId) =>
+        typeof modelId !== 'string' || modelId.trim().length === 0
+      );
+      if (invalidIndex >= 0) {
+        errors.push(
+          `${arrayName}[${index}] ${offer.name || '?'} has an invalid free_model_names[${invalidIndex}] ` +
+          '(each inventory entry must be a non-empty trimmed string)'
+        );
+      }
+    });
+  }
+  return errors;
+}
 
 function checkSchema(report, schema, fixLog) {
   let valid = true;
@@ -473,4 +509,13 @@ function basicValidate(report, schema) {
   return true;
 }
 
-main();
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(`❌ Report validation failed: ${error.message}`);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = {
+  findEmptyRouterCatalogOffers,
+};

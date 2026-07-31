@@ -211,6 +211,34 @@ describe('publication', () => {
       assert.equal(run.status, 'failed');
     });
 
+    it('marks validate-only prepared manifests without deleting canonical files', () => {
+      seedDb(ctx);
+      const runDir = path.join(ctx.stateDir, 'crawl', 'test-run-1');
+      seedCandidate(ctx, runDir);
+      const liveReport = '{"live": true}\n';
+      fs.writeFileSync(path.join(ctx.root, 'report.json'), liveReport);
+      db.copyDatabaseForRun('test-run-1', ctx.options);
+
+      publication.validateCandidate('test-run-1', runDir, {
+        ...ctx.options,
+        skipCitationCheck: true,
+      });
+      const before = publication.readManifest(runDir);
+      assert.equal(before.phase, 'prepared');
+      assert.equal(before.promotion_started, false);
+      assert.deepEqual(before.backups, {});
+
+      const results = publication.recoverInterruptedPromotion(ctx.options);
+      assert.ok(results);
+      assert.equal(results[0].action, 'restored_exact_database');
+      assert.equal(
+        fs.readFileSync(path.join(ctx.root, 'report.json'), 'utf8'),
+        liveReport,
+        'validate-only recovery must preserve the existing publication'
+      );
+      assert.equal(publication.readManifest(runDir).phase, 'restored');
+    });
+
     it('carries forward OG image when Chrome is unavailable', () => {
       seedDb(ctx);
       const runDir = path.join(ctx.stateDir, 'crawl', 'test-run-1');
@@ -302,6 +330,40 @@ describe('publication', () => {
       const { run } = db.loadRunCandidate('test-run-1', ctx.options);
       assert.equal(run.status, 'failed');
     });
+
+    it('removes newly copied canonical files on a first-run rollback', () => {
+      seedDb(ctx);
+      const runDir = path.join(ctx.stateDir, 'crawl', 'test-run-1');
+      seedCandidate(ctx, runDir);
+
+      // Simulate a first publication: none of the canonical files existed.
+      fs.rmSync(path.join(ctx.root, 'build', 'provider-registry.json'), { force: true });
+      publication.validateCandidate('test-run-1', runDir, {
+        ...ctx.options,
+        skipCitationCheck: true,
+      });
+
+      // The first file copies successfully, then the next one fails its
+      // manifest hash. Rollback must remove the newly created first file.
+      const manifest = publication.readManifest(runDir);
+      manifest.files['index.html'].sha256 = 'deadbeef'.repeat(8);
+      publication.writeManifest(runDir, manifest);
+
+      assert.throws(
+        () => publication.promoteGeneration('test-run-1', runDir, ctx.options),
+        /hash mismatch/
+      );
+
+      for (const rel of publication.CANONICAL_FILES) {
+        assert.equal(
+          fs.existsSync(path.join(ctx.root, rel)),
+          false,
+          `first-run rollback must remove ${rel}`
+        );
+      }
+      const { run } = db.loadRunCandidate('test-run-1', ctx.options);
+      assert.equal(run.status, 'failed');
+    });
   });
 
   describe('recoverInterruptedPromotion', () => {
@@ -390,6 +452,44 @@ describe('publication', () => {
       const results = publication.recoverInterruptedPromotion(ctx.options);
       assert.ok(results);
       assert.equal(results[0].action, 'manual_inspection');
+    });
+
+    it('does not restore an exact DB backup after db_finalized', () => {
+      db.applyMigrations(ctx.options);
+      db.copyDatabaseForRun('safe-db-finalized', ctx.options);
+      db.startRun('safe-db-finalized', [], ctx.options);
+      db.finalizeRun('safe-db-finalized', {
+        offers: [{
+          provider_key: 'openrouter',
+          exact_model_id: 'acme/a:free',
+          canonical_model_id: 'acme/a',
+          source_kind: 'catalog',
+          status: 'verified',
+          first_seen_at: '2026-07-30T00:00:00.000Z',
+          facts_json: { mutated: true },
+        }],
+        runStatus: 'validated',
+      }, ctx.options);
+      const runDir = path.join(ctx.stateDir, 'crawl', 'safe-db-finalized');
+      publication.writeManifest(runDir, {
+        run_id: 'safe-db-finalized',
+        phase: 'db_finalized',
+        phase_at: {},
+        files: {},
+        backups: {},
+      });
+
+      const results = publication.recoverInterruptedPromotion(ctx.options);
+      assert.ok(results);
+      assert.equal(results[0].action, 'resumable');
+      const database = db.openCollectorDb(ctx.options);
+      try {
+        assert.ok(database.prepare(
+          "SELECT 1 FROM offers WHERE exact_model_id = 'acme/a:free'"
+        ).get(), 'finalized generation state must remain live');
+      } finally {
+        database.close();
+      }
     });
   });
 

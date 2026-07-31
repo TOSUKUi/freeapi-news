@@ -3,10 +3,11 @@
 // Collection lanes. Spec 0003 fail safe collection pipeline, child 0002
 // (AC-2 through AC-6, AC-11).
 //
-// Known offer verification and new offer discovery are separate lanes with
-// separate coverage. A failed known check makes an offer stale, not ended.
-// Catalogs stay deterministic code paths (catalog.js owns the fetch; this
-// module owns the liveness consequences).
+// Known offer verification and general new-offer discovery are separate lanes
+// with separate coverage. Deterministic catalogs also admit newly observed free
+// exact IDs into SQLite offers. A failed known check makes an offer stale, not
+// ended. Catalogs stay deterministic code paths (catalog.js owns the fetch;
+// this module owns admission and liveness consequences).
 //
 // Lane rules:
 //   * AC-2  Each run records separate coverage for the known lane and the
@@ -322,6 +323,36 @@ function offerChangeKey(providerKey, exactModelId) {
   return `${providerKey}\u0000${exactModelId}`;
 }
 
+// Catalog identity is exact. This list is the authoritative, deterministic
+// router inventory persisted with every live catalog offer.
+function sortedUniqueModelIds(models) {
+  return [...new Set((models || [])
+    .map((model) => model && model.model_id)
+    .filter((modelId) => typeof modelId === 'string' && modelId.length > 0))]
+    .sort();
+}
+
+function isHttpUrl(value) {
+  return typeof value === 'string' && /^https?:\/\//.test(value);
+}
+
+// Keep catalog offer facts limited to values in the deterministic artifact.
+// In particular, do not create quota or rate-limit claims from a zero price.
+function catalogModelFacts(result, entry, freeModelNames, catalogUrl) {
+  const facts = {
+    ...(entry || {}),
+    free_model_names: freeModelNames,
+  };
+  const observedCatalogUrl = result && isHttpUrl(result.catalog_url)
+    ? result.catalog_url
+    : (isHttpUrl(catalogUrl) ? catalogUrl : null);
+  if (observedCatalogUrl) facts.catalog_url = observedCatalogUrl;
+  if (result && isHttpUrl(result.endpoint_source)) {
+    facts.endpoint_source = result.endpoint_source;
+  }
+  return facts;
+}
+
 // Reduces one run's staged task results against current offers, then applies
 // everything in one finalizeRun transaction. Returns the coverage report,
 // the promotion gate decision, the offer changes, and discovery candidates.
@@ -430,6 +461,9 @@ function reduceLanes(runId, runDir, options = {}) {
       const catalogUrl = result.catalog_url ||
         (regByKey[providerKey] && regByKey[providerKey].api_catalog_url) || null;
       const entriesById = new Map(result.models.map((m) => [m.model_id, m]));
+      const freeModelNames = sortedUniqueModelIds(
+        result.models.filter((model) => model && model.is_free === true)
+      );
 
       // Every prior offer for this provider takes part, not just the
       // assigned (verified and stale) ones: a reappearing exact id returns
@@ -440,7 +474,11 @@ function reduceLanes(runId, runDir, options = {}) {
         if (prior.status === 'confirmed_removed') {
           if (entry && entry.is_free === true) {
             const change = changeFor(prior);
-            markVerified(change, entry, 'catalog');
+            markVerified(
+              change,
+              catalogModelFacts(result, entry, freeModelNames, catalogUrl),
+              'catalog'
+            );
             if (entry.pricing_hash) change.pricing_hash = entry.pricing_hash;
             coverage.known.verified += 1;
           }
@@ -460,7 +498,11 @@ function reduceLanes(runId, runDir, options = {}) {
         } else if (entry.is_free === true) {
           // A reappearing exact id returns to verified (AC-5), including
           // offers previously confirmed_removed.
-          markVerified(change, entry, 'catalog');
+          markVerified(
+            change,
+            catalogModelFacts(result, entry, freeModelNames, catalogUrl),
+            'catalog'
+          );
           if (prior.pricing_hash && entry.pricing_hash &&
               prior.pricing_hash !== entry.pricing_hash) {
             discoveryCandidates.push({
@@ -487,11 +529,34 @@ function reduceLanes(runId, runDir, options = {}) {
         }
       }
 
-      // Catalog delta discovery: new free ids enter the candidate set (build
-      // task 5). They are research input for later stages, never offers rows.
+      // A valid catalog is also the deterministic admission path for every
+      // previously unseen free exact ID. Keep a discovery record for audit
+      // visibility, but persist the offer change in the same finalizeRun
+      // transaction as existing liveness changes.
       for (const entry of result.models) {
         if (entry.is_free !== true) continue;
-        if (offerByKey.has(offerChangeKey(providerKey, entry.model_id))) continue;
+        const identity = offerChangeKey(providerKey, entry.model_id);
+        if (offerByKey.has(identity) || changes.has(identity)) continue;
+        const facts = catalogModelFacts(result, entry, freeModelNames, catalogUrl);
+        const change = {
+          provider_key: providerKey,
+          exact_model_id: entry.model_id,
+          canonical_model_id: db.canonicalModelId(entry.model_id),
+          source_kind: 'catalog',
+          status: 'verified',
+          consecutive_failures: 0,
+          first_seen_at: now,
+          last_attempted_at: now,
+          last_verified_at: now,
+          last_seen_run_id: runId,
+          pricing_hash: entry.pricing_hash || null,
+          removal_evidence_json: null,
+          facts_json: facts,
+        };
+        changes.set(identity, change);
+        offerByKey.set(identity, change);
+        // Discovery output can still explain where the row first appeared;
+        // it is no longer the only representation of a catalog delta.
         discoveryCandidates.push({
           provider_key: providerKey,
           exact_model_id: entry.model_id,

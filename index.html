@@ -317,6 +317,25 @@ header::after {
 .train-no { color: hsl(var(--success)); font-weight: 600; }
 .train-yes { color: hsl(var(--warning)); font-weight: 600; }
 
+/* OpenRouter free model names. */
+.models-block { margin-top: 1.1rem; }
+.models-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.4rem; height: 1.4rem; padding: 0 0.3rem;
+  border-radius: 999px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+  font-family: "Space Grotesk", sans-serif; font-size: 0.7rem; font-weight: 700;
+}
+.models-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.model-chip {
+  font-family: "JetBrains Mono", monospace; font-size: 0.7rem;
+  background: hsl(var(--accent)); color: hsl(var(--accent-foreground));
+  border: 1px solid hsl(var(--border));
+  padding: 0.18rem 0.5rem; border-radius: calc(var(--radius) - 4px);
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.model-chip:hover { background: hsl(var(--accent) / 0.6); border-color: hsl(var(--ring) / 0.4); }
+.models-missing { color: hsl(var(--warning)); font-weight: 600; font-size: 0.85rem; margin-top: 0.4rem; }
+
 /* Expandable benchmark details. */
 .bench-details { margin-top: 1.15rem; border-top: 1px solid hsl(var(--border)); padding-top: 0.9rem; }
 .bench-summary {

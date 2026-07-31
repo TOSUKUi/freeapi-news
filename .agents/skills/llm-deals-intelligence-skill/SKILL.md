@@ -301,7 +301,7 @@ A free API is only valuable if the model itself is worth using. Do not rank offe
 
 ### Individual model cards (routers included)
 
-Emit each noteworthy free model as its own offer card, including models accessed through routers like OpenRouter. Do not aggregate a router's free models into one card. For each router-hosted card set `delivery_type: "router"`, the router as `provider`, the router endpoint as `base_url`, the specific model's `model_id`/`benchmark`/`benchmarks`, and `free_model_names: [model_id]`. Put the router's per-model page (e.g. `https://openrouter.ai/{model_id}`) as `sources[0]` — the card's primary link must open the exact model's page, not a generic docs page. Only create cards for models that pass the quality gate.
+Emit each noteworthy free model as its own offer card, including models accessed through routers like OpenRouter. Do not aggregate a router's free models into one card. For each router-hosted card set `delivery_type: "router"`, the router as `provider`, the router endpoint as `base_url`, the specific model's `model_id`/`benchmark`/`benchmarks`, and the complete sorted unique `free_model_names` list from the authoritative catalog. Put the router's per-model page (e.g. `https://openrouter.ai/{model_id}`) as `sources[0]` — the card's primary link must open the exact model's page, not a generic docs page. Only create cards for models that pass the quality gate.
 
 ### End dates
 
