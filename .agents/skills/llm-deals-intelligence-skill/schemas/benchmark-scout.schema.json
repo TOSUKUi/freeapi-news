@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "benchmark scout ワーカーの出力。生のベンチマーク所見 (facts) だけ。model_id はキューからそのまま写す。ベンチマークキー・tier・classification は書かない (merger が導出)。extraction_method と confidence は worker が自分の抽出方法について自己報告する事実なので enum で縛る。検証 (AC-8, AC-9) がこれを gates する。",
+  "type": "object",
+  "required": ["schema_version", "task_id", "status", "crawled_at", "models", "errors"],
+  "properties": {
+    "schema_version": { "type": "number" },
+    "task_id": { "type": "string" },
+    "kind": { "type": "string" },
+    "status": { "enum": ["complete", "partial", "failed"] },
+    "crawled_at": { "type": "string" },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["model_id"],
+        "properties": {
+          "model_id": { "type": "string" },
+          "canonical_model_id": { "type": "string" },
+          "model_name": { "type": "string" },
+          "benchmark_finds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["display_name", "score", "source_url", "extraction_method", "confidence"],
+              "properties": {
+                "display_name": { "type": "string" },
+                "version": { "type": ["string", "null"] },
+                "score": { "type": "number" },
+                "source_url": { "type": "string" },
+                "source_hash": { "type": ["string", "null"] },
+                "extraction_method": { "enum": ["text", "official_image"] },
+                "confidence": { "enum": ["HIGH", "MEDIUM", "LOW"] },
+                "body_excerpt": { "type": ["string", "null"] },
+                "image_hash": { "type": ["string", "null"] },
+                "row_description": { "type": ["string", "null"] },
+                "image_facts": {
+                  "type": ["object", "null"],
+                  "properties": {
+                    "model": { "type": ["string", "null"] },
+                    "benchmark": { "type": ["string", "null"] },
+                    "version": { "type": ["string", "null"] },
+                    "score": { "type": ["number", "null"] }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "errors": { "type": "array", "items": { "type": "string" } }
+  }
+}

@@ -40,3 +40,10 @@ og-image.html
 # benchmarks.json / known_offers.json, so it IS tracked.)
 .agents/skills/llm-deals-intelligence-skill/state/crawl/
 .devops/batch/.crawl.lock
+
+# Collector SQLite operational state (spec 0003): local only, never tracked.
+# The database, its journal sidecars, corrupt file quarantine copies, and the
+# ignored run directory DB copies are the sole operational state after
+# cutover. Git keeps public report.json, generated assets, and the registry.
+.agents/skills/llm-deals-intelligence-skill/state/collector.sqlite
+.agents/skills/llm-deals-intelligence-skill/state/collector.sqlite-*

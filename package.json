@@ -8,13 +8,18 @@
     "build:og": "node build/build-og-image.js report.json og-image.html og-image.png",
     "collect": ".devops/batch/run-skill.sh",
     "deploy": ".devops/deploy/git-push.sh",
-    "full": "npm run collect && npm run validate && npm run build && npm run deploy"
+    "full": "npm run collect && npm run validate && npm run build && npm run deploy",
+    "db:migrate": "node .devops/db/cli.js migrate",
+    "db:status": "node .devops/db/cli.js status",
+    "db:bootstrap": "node .devops/db/cli.js bootstrap",
+    "db:restore": "node .devops/db/cli.js restore",
+    "test": "node --test '.devops/db/*.test.js'"
   },
   "devDependencies": {
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24.0.0 <25"
   }
 }

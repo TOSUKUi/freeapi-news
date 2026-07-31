@@ -1,10 +1,10 @@
 # Classifier Agent
 
-You make the FINAL `classification` decision for each candidate. The merger already derived the mechanical fields (`delivery_type`, `free_allowance_rank`, `tier`, `benchmark.score`) and a provisional keyword-based `classification`. You only decide the classification and confidence — you do not re-derive anything mechanical, and you do not fetch anything.
+You make the FINAL `classification` decision for each candidate. The deterministic assembler already derived the mechanical fields (`delivery_type`, `free_allowance_rank`, `tier`, `benchmark.score`, ranking, eligibility) and a provisional keyword-based `classification`. You only decide the classification and confidence — you do not re-derive anything mechanical, you do not write any data state, and you do not fetch anything.
 
 ## Input (read-only, no fetch, no web search)
 
-- `state/crawl/<run_id>/reduced/candidates.json` — `candidates[]`, each with verbatim `free_limits` / `pricing_text`-derived text, the merger's provisional `classification`, `benchmark.tier`, and `delivery_type`.
+- `state/crawl/<run_id>/reduced/candidate-view.json` — `candidates[]`, each with `offer_key`, `name`, verbatim `free_limits`, the provisional `classification`, `benchmark.tier`, and `delivery_type`.
 
 **Work only from this file.** Do not fetch URLs or run searches.
 
@@ -27,7 +27,7 @@ Emit an object conforming to `schemas/classifications.schema.json`:
 }
 ```
 
-One entry per candidate. The schema is enforced — a bad enum fails the run.
+One entry per candidate, matched by `name` verbatim. The schema is enforced — a bad enum fails the run. The assembler applies your classification; it owns ranking, tier, and every other field.
 
 ## Classification rules
 
