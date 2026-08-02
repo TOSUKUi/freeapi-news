@@ -1,290 +1,168 @@
 {
-  "generated_at": "2026-08-02T02:43:28.014Z",
+  "generated_at": "2026-08-02T16:16:22.169Z",
   "timezone": "Asia/Tokyo",
-  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 5 件（S 2、A 3、B 0）、無料 3 件、激安 2 件、注意 0 件、対象外 72 件。",
-  "new_models": [
-    {
-      "canonical_name": "Thinking Machines Inkling Small",
-      "aliases": [],
-      "vendor": "thinkingmachines",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "thinkingmachines"
-      ]
-    },
-    {
-      "canonical_name": "Thinking Machines Inkling",
-      "aliases": [],
-      "vendor": "thinkingmachines",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "thinkingmachines"
-      ]
-    },
-    {
-      "canonical_name": "AionLabs Aion-3.0",
-      "aliases": [],
-      "vendor": "aion-labs",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "aion-labs"
-      ]
-    },
-    {
-      "canonical_name": "AionLabs Aion-3.0-Mini",
-      "aliases": [],
-      "vendor": "aion-labs",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "aion-labs"
-      ]
-    },
-    {
-      "canonical_name": "xAI Grok 4.5",
-      "aliases": [],
-      "vendor": "x-ai",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "x-ai"
-      ]
-    },
-    {
-      "canonical_name": "OpenAI GPT-5.6 Luna",
-      "aliases": [],
-      "vendor": "openai",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "openai"
-      ]
-    },
-    {
-      "canonical_name": "OpenAI GPT-5.6 Sol",
-      "aliases": [],
-      "vendor": "openai",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "openai"
-      ]
-    },
-    {
-      "canonical_name": "OpenAI GPT-5.6 Terra",
-      "aliases": [],
-      "vendor": "openai",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "openai"
-      ]
-    },
-    {
-      "canonical_name": "Anthropic Claude Opus 5",
-      "aliases": [],
-      "vendor": "anthropic",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "anthropic"
-      ]
-    },
-    {
-      "canonical_name": "Anthropic Claude Opus 5 Fast",
-      "aliases": [],
-      "vendor": "anthropic",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "anthropic"
-      ]
-    },
-    {
-      "canonical_name": "Google Gemini 3.6 Flash",
-      "aliases": [],
-      "vendor": "google",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "google"
-      ]
-    },
-    {
-      "canonical_name": "Google Gemini 3.5 Flash Lite",
-      "aliases": [],
-      "vendor": "google",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "google"
-      ]
-    },
-    {
-      "canonical_name": "Meituan LongCat 2.0",
-      "aliases": [],
-      "vendor": "meituan",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "meituan"
-      ]
-    },
-    {
-      "canonical_name": "Kwaipilot KAT-Coder-Pro V2.5",
-      "aliases": [],
-      "vendor": "kwaipilot",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "kwaipilot"
-      ]
-    },
-    {
-      "canonical_name": "Kwaipilot KAT-Coder-Air V2.5",
-      "aliases": [],
-      "vendor": "kwaipilot",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "kwaipilot"
-      ]
-    },
-    {
-      "canonical_name": "MoonshotAI Kimi K3",
-      "aliases": [],
-      "vendor": "moonshotai",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "moonshotai"
-      ]
-    },
-    {
-      "canonical_name": "Meta Muse Spark 1.1",
-      "aliases": [],
-      "vendor": "meta",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "meta"
-      ]
-    },
-    {
-      "canonical_name": "Tencent Hy3",
-      "aliases": [],
-      "vendor": "tencent",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "tencent"
-      ]
-    },
-    {
-      "canonical_name": "InclusionAI Ling-3.0-flash (free)",
-      "aliases": [],
-      "vendor": "inclusionai",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "inclusionai"
-      ]
-    },
-    {
-      "canonical_name": "OpenRouter Auto Router (Beta)",
-      "aliases": [],
-      "vendor": "openrouter",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://openrouter.ai/models",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "openrouter"
-      ]
-    }
-  ],
+  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 6 件（S 3、A 3、B 0）、無料 2 件、激安 4 件、注意 0 件、対象外 71 件。",
+  "new_models": [],
   "changes": [
     {
-      "offer_name": "Gemini 2.5 Pro",
-      "change_type": "price_change",
-      "summary": "Gemini 2.5 Pro の無料枠・価格条件が変わりました。"
-    },
-    {
       "offer_name": "Nemotron 3 Ultra",
-      "change_type": "limit_change",
-      "summary": "Nemotron 3 Ultra の無料枠の条件が変わりました。"
+      "change_type": "price_change",
+      "summary": "Nemotron 3 Ultra の無料枠・価格条件が変わりました。"
     }
   ],
   "ranked_offers": [
     {
       "rank": 1,
+      "name": "DeepSeek: DeepSeek V4 Flash 0731",
+      "model_name": "DeepSeek: DeepSeek V4 Flash 0731",
+      "provider": "OpenRouter",
+      "model_vendor": "deepseek",
+      "delivery_type": "router",
+      "classification": "E_DISCOUNT",
+      "start_at": null,
+      "end_at": null,
+      "end_timezone_known": false,
+      "regions": [],
+      "registration_conditions": [],
+      "card_required": null,
+      "minimum_deposit": null,
+      "kyc_required": null,
+      "auto_renewal": null,
+      "refund_policy": null,
+      "free_limits": null,
+      "rate_limits": null,
+      "context_tokens": null,
+      "max_output_tokens": null,
+      "tool_calling": null,
+      "structured_output": null,
+      "image_input": null,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "deepseek/deepseek-v4-flash-0731",
+      "provider_count": null,
+      "recent_activity": "DeepSeek V4 Flash の最新チェックポイント（0731）。Terminal Bench 2.1 で 82.7 という突出したスコア。百万トークン当たり入力が 0.09ドル、出力が 0.18ドルという超低価格で、実質的にフロンティア級の実力を手頃なコストで使える。",
+      "normal_price_per_million": {
+        "input": 0.09,
+        "output": 0.18
+      },
+      "effective_price_per_million": {
+        "input": 0.09,
+        "output": 0.18
+      },
+      "effective_discount_percent": null,
+      "data_retention": null,
+      "training_use": null,
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "exclusion_reason": null,
+      "last_verified": "2026-08-02T16:12:54.082Z",
+      "endpoint_source": "https://openrouter.ai/docs/quickstart",
+      "provider_key": "openrouter",
+      "canonical_model_id": "deepseek/deepseek-v4-flash-0731",
+      "access_kind": "ULTRA_LOW",
+      "price_source": "https://openrouter.ai/api/v1/models",
+      "price_verified_at": "2026-08-02T16:12:54.082Z",
+      "discount_start_at": null,
+      "discount_end_at": null,
+      "free_allowance_rank": "NORMAL",
+      "total_parameters_b": null,
+      "active_parameters_b": null,
+      "sources": [
+        "https://openrouter.ai/docs/quickstart",
+        "https://openrouter.ai/api/v1/models",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md"
+      ],
+      "benchmark": {
+        "score": 82.7,
+        "benchmark_name": "Terminal-Bench 2.1",
+        "version": "2.1",
+        "tier": "S"
+      },
+      "benchmarks": [
+        {
+          "name": "Agents' Last Exam",
+          "score": 25.2,
+          "version": "",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
+        },
+        {
+          "name": "AutomationBench Public",
+          "score": 25.1,
+          "version": "",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
+        },
+        {
+          "name": "Cybergym",
+          "score": 76.7,
+          "version": "",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
+        },
+        {
+          "name": "DeepSWE",
+          "score": 54.4,
+          "version": "",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
+        },
+        {
+          "name": "DSBench-FullStack",
+          "score": 68.7,
+          "version": "",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
+        },
+        {
+          "name": "DSBench-Hard",
+          "score": 59.6,
+          "version": "",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
+        },
+        {
+          "name": "NL2Repo",
+          "score": 54.2,
+          "version": "",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
+        },
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 82.7,
+          "version": "2.1",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
+        },
+        {
+          "name": "Toolathlon-Verified",
+          "score": 70.3,
+          "version": "",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
+        }
+      ],
+      "benchmark_key": "terminal_bench_2_1"
+    },
+    {
+      "rank": 2,
       "name": "Xiaomi: MiMo-V2.5",
       "model_name": "Xiaomi: MiMo-V2.5",
       "provider": "OpenRouter",
       "model_vendor": "xiaomi",
       "delivery_type": "router",
-      "classification": "G_FREE_LIKE",
+      "classification": "E_DISCOUNT",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -305,7 +183,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "xiaomi/mimo-v2.5",
       "provider_count": null,
-      "recent_activity": null,
+      "recent_activity": "Xiaomi の MiMo-V2.5。Terminal Bench 2.0 で 65.8 のスコア。超低価格帯ながら高いコーディング・エージェント能力を持つ。OpenRouter 経由で手軽に利用可能。",
       "normal_price_per_million": {
         "input": 0.14,
         "output": 0.28
@@ -323,13 +201,13 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-02T02:05:30.388Z",
+      "last_verified": "2026-08-02T16:12:54.082Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "xiaomi/mimo-v2.5",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-02T02:05:30.388Z",
+      "price_verified_at": "2026-08-02T16:12:54.082Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -358,13 +236,13 @@
       "benchmark_key": "terminal_bench_2_0"
     },
     {
-      "rank": 2,
+      "rank": 3,
       "name": "DeepSeek V4 Flash Latest",
       "model_name": "DeepSeek V4 Flash Latest",
       "provider": "OpenRouter",
       "model_vendor": "~deepseek",
       "delivery_type": "router",
-      "classification": "G_FREE_LIKE",
+      "classification": "E_DISCOUNT",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -385,7 +263,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "~deepseek/deepseek-v4-flash-latest",
       "provider_count": null,
-      "recent_activity": null,
+      "recent_activity": "DeepSeek V4 Flash の自動最新ルーティング。Terminal Bench 2.0 で 65.4。常に最新のチェックポイントが返ってくるので、手動でバージョンを追う必要がない。",
       "normal_price_per_million": {
         "input": 0.09,
         "output": 0.18
@@ -403,13 +281,13 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-02T02:05:30.388Z",
+      "last_verified": "2026-08-02T16:12:54.082Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "~deepseek/deepseek-v4-flash-latest",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-02T02:05:30.388Z",
+      "price_verified_at": "2026-08-02T16:12:54.082Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -438,13 +316,13 @@
       "benchmark_key": "terminal_bench_2_0"
     },
     {
-      "rank": 4,
+      "rank": 5,
       "name": "Ling-3.0-flash",
       "model_name": "Ling-3.0-flash",
       "provider": "OpenRouter",
       "model_vendor": "inclusionai",
       "delivery_type": "router",
-      "classification": "G_FREE_LIKE",
+      "classification": "B_PERMANENT_FREE_TIER",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -465,7 +343,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "inclusionai/ling-3.0-flash:free",
       "provider_count": null,
-      "recent_activity": null,
+      "recent_activity": "inclusionAI の Ling-3.0-flash を OpenRouter 経由で完全無料で利用可能。Terminal Bench 2.1 で 57 のスコア。多言語対応が強く、日本語を含むアジア圏言語でのパフォーマンスが高いのが特徴。",
       "normal_price_per_million": {
         "input": 0,
         "output": 0
@@ -483,13 +361,13 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-02T02:05:30.388Z",
+      "last_verified": "2026-08-02T16:12:54.082Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "inclusionai/ling-3.0-flash",
       "access_kind": "FREE",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-02T02:05:30.388Z",
+      "price_verified_at": "2026-08-02T16:12:54.082Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -590,13 +468,13 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 5,
+      "rank": 6,
       "name": "NVIDIA: Nemotron 3 Ultra",
       "model_name": "NVIDIA: Nemotron 3 Ultra",
       "provider": "OpenRouter",
       "model_vendor": "nvidia",
       "delivery_type": "router",
-      "classification": "G_FREE_LIKE",
+      "classification": "B_PERMANENT_FREE_TIER",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -617,7 +495,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
       "provider_count": null,
-      "recent_activity": null,
+      "recent_activity": "NVIDIA Nemotron 3 Ultra の OpenRouter 無料エンドポイント。550Bパラメータの巨大モデルを無料で試せる。Terminal Bench 2.1 で 56.4 のスコア。",
       "normal_price_per_million": {
         "input": 0,
         "output": 0
@@ -635,13 +513,13 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-02T02:05:30.388Z",
+      "last_verified": "2026-08-02T16:12:54.082Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "nvidia/nemotron-3-ultra-550b-a55b",
       "access_kind": "FREE",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-02T02:05:30.388Z",
+      "price_verified_at": "2026-08-02T16:12:54.082Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -670,13 +548,13 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 6,
-      "name": "Nemotron 3 Ultra",
-      "model_name": "NVIDIA Nemotron 3 Ultra 550B A55B BF16",
-      "provider": "NVIDIA NIM",
-      "model_vendor": "nvidia",
-      "delivery_type": "official",
-      "classification": "D_TRIAL_CREDIT",
+      "rank": 8,
+      "name": "DeepSeek: DeepSeek V4 Flash",
+      "model_name": "DeepSeek: DeepSeek V4 Flash",
+      "provider": "OpenRouter",
+      "model_vendor": "deepseek",
+      "delivery_type": "router",
+      "classification": "E_DISCOUNT",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -687,24 +565,24 @@
       "kyc_required": null,
       "auto_renewal": null,
       "refund_policy": null,
-      "free_limits": "Governing Terms: The trial service is governed by the NVIDIA API Trial Terms of Service.",
+      "free_limits": null,
       "rate_limits": null,
       "context_tokens": null,
       "max_output_tokens": null,
       "tool_calling": null,
       "structured_output": null,
       "image_input": null,
-      "base_url": "https://integrate.api.nvidia.com/v1",
-      "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "deepseek/deepseek-v4-flash",
       "provider_count": null,
-      "recent_activity": null,
+      "recent_activity": "DeepSeek V4 Flash ベース版。Terminal Bench 2.0 で 56.9 のスコア。0731 チェックポイントより少し前のバージョンだが、依然として高い性能を超低コストで提供。",
       "normal_price_per_million": {
-        "input": 0.5,
-        "output": 2.2
+        "input": 0.14,
+        "output": 0.28
       },
       "effective_price_per_million": {
-        "input": 0,
-        "output": 0
+        "input": 0.14,
+        "output": 0.28
       },
       "effective_discount_percent": null,
       "data_retention": null,
@@ -715,38 +593,63 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-02T02:05:30.388Z",
-      "endpoint_source": "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-ultra-550b-a55b",
-      "provider_key": "nvidia",
-      "canonical_model_id": "nvidia/nemotron-3-ultra-550b-a55b",
-      "access_kind": "FREE",
-      "price_source": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b",
-      "price_verified_at": "2026-08-01T10:42:21.502Z",
+      "last_verified": "2026-08-02T16:12:54.082Z",
+      "endpoint_source": "https://openrouter.ai/docs/quickstart",
+      "provider_key": "openrouter",
+      "canonical_model_id": "deepseek/deepseek-v4-flash",
+      "access_kind": "ULTRA_LOW",
+      "price_source": "https://openrouter.ai/api/v1/models",
+      "price_verified_at": "2026-08-02T16:12:54.082Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
-      "total_parameters_b": 550,
+      "total_parameters_b": null,
       "active_parameters_b": null,
       "sources": [
-        "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-ultra-550b-a55b",
-        "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard"
+        "https://openrouter.ai/docs/quickstart",
+        "https://openrouter.ai/api/v1/models",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md"
       ],
       "benchmark": {
-        "score": 56.4,
-        "benchmark_name": "Terminal-Bench 2.1",
-        "version": "2.1",
+        "score": 56.9,
+        "benchmark_name": "Terminal-Bench 2.0",
+        "version": "2.0",
         "tier": "A"
       },
       "benchmarks": [
         {
-          "name": "Terminal-Bench 2.1",
-          "score": 56.4,
-          "version": "2.1",
-          "source_url": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard",
-          "verified_at": "2026-07-31T13:00:40.455Z"
+          "name": "GPQA Diamond",
+          "score": 88.1,
+          "version": "",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
+        },
+        {
+          "name": "LiveCodeBench",
+          "score": 91.6,
+          "version": "",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
+        },
+        {
+          "name": "MMLU Pro",
+          "score": 86.2,
+          "version": "",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
+        },
+        {
+          "name": "Terminal-Bench 2.0",
+          "score": 56.9,
+          "version": "2.0",
+          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
+          "verified_at": "2026-08-03T00:00:00.000Z"
         }
       ],
-      "benchmark_key": "terminal_bench_2_1"
+      "benchmark_key": "terminal_bench_2_0"
     }
   ],
   "conditional_credits": [],
@@ -784,16 +687,6 @@
     },
     {
       "name": "Cohere: North Mini Code",
-      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
-      "last_known_status": "verified"
-    },
-    {
-      "name": "DeepSeek: DeepSeek V4 Flash",
-      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
-      "last_known_status": "verified"
-    },
-    {
-      "name": "DeepSeek: DeepSeek V4 Flash 0731",
       "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
       "last_known_status": "verified"
     },
@@ -1110,6 +1003,10 @@
     {
       "name": "Gemini 2.5 Pro",
       "reason": "[citation] https://ai.google.dev/gemini-api/docs/pricing does not document base_url \"https://generativelanguage.googleapis.com/v1beta\""
+    },
+    {
+      "name": "Nemotron 3 Ultra",
+      "reason": "[citation] https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b does not document base_url \"https://integrate.api.nvidia.com/v1\""
     }
   ],
   "new_seed_candidates": [],
@@ -1130,84 +1027,94 @@
       "accessed_at": "2026-08-02T02:05:30.388Z"
     },
     {
-      "url": "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-ultra-550b-a55b",
+      "url": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://openrouter.ai/docs/quickstart",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://openrouter.ai/api/v1/models",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://help.apiyi.com/en/seed-2-0-pro-lite-mini-model-comparison-en.html",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
+    },
+    {
+      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
+      "source_type": "official",
+      "accessed_at": "2026-08-02T16:12:54.082Z"
+    },
+    {
+      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
+      "source_type": "official",
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://benchmarklist.com/models/inclusionai-ling-2.6-flash/",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://x.com/AntLingAGI/status/2080351022028095681",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://docs.api.nvidia.com/nim/reference/llm-apis",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://evals.report/models/openai-gpt-oss-120b",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://www.tbench.ai/leaderboard/terminal-bench/2.0",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://poolside.ai/blog/introducing-laguna-xs-2-1",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://poolside.ai/blog/introducing-laguna-s-2-1",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://huggingface.co/XiaomiMiMo/MiMo-V2.5",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
       "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash",
       "source_type": "official",
-      "accessed_at": "2026-08-02T02:05:30.388Z"
+      "accessed_at": "2026-08-02T16:12:54.082Z"
     }
   ]
 }
