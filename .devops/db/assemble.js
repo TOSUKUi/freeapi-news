@@ -15,22 +15,24 @@
 //
 // Deterministic derivations follow the spec's value sourcing table:
 // delivery_type from the registry, free_allowance_rank from the quota parser,
-// total_parameters_b from official facts (MoE uses total), tier from
-// terminal_bench_2_1 (AC-10), the local model gate (sub 30B needs S or A),
-// and the ranking order (tier, allowance, same key score, last_verified, name).
+// total_parameters_b from official facts (MoE uses total), tier from an
+// accepted Terminal Bench 2.0 or 2.1 row (AC-10), the local model gate
+// (sub 30B needs S or A),
+// and the ranking order (tier, access kind, same key score,
+// price_verified_at, name).
 
 const fs = require('node:fs');
 const path = require('node:path');
 
 const db = require('./collector-db');
 const benchmarks = require('./benchmarks');
+const rankingPolicy = require('../../build/ranking-policy');
 const { buildReportSummary } = require('../../build/summary-text');
 
-// Ranking order weights (AGENTS.md): tier S>A>B, then free allowance
-// AMPLE>NORMAL>TIGHT>TINY, then same key benchmark score descending, then
-// last_verified descending, then name.
+// Ranking order (AGENTS.md): tier S>A>B, then access kind FREE>ULTRA_LOW,
+// same key benchmark score descending, then price confirmation date descending,
+// then name. Free allowance is display only.
 const TIER_ORDER = { S: 0, A: 1, B: 2 };
-const ALLOWANCE_ORDER = { AMPLE: 0, NORMAL: 1, TIGHT: 2, TINY: 3 };
 
 // Local model gate (AGENTS.md): total parameters below 30B are local run
 // territory and are not ranked unless the model proves tier S or A
@@ -127,6 +129,15 @@ function deriveClassificationProvisional(facts) {
   return 'G_FREE_LIKE';
 }
 
+// Access kind (spec 0004 AC-4): FREE when effective input and output are both
+// positive zero; ULTRA_LOW when effective input is at most 0.2 USD and output
+// at most 0.4 USD per million tokens. When either effective price is unknown
+// (null/undefined/non finite), access kind is null and the offer cannot rank.
+// Shared with the validator and the builder via build/ranking-policy.js.
+function deriveAccessKind(effectiveInputUsd, effectiveOutputUsd) {
+  return rankingPolicy.deriveAccessKind(effectiveInputUsd, effectiveOutputUsd);
+}
+
 // Information confidence (spec deterministic derivations): HIGH for fetched
 // official text or an accepted official image, otherwise MEDIUM.
 function deriveInformationConfidence(candidate) {
@@ -142,12 +153,6 @@ function deriveOperationalConfidence(offer) {
     return (offer.consecutive_failures || 0) >= CAUTION_FAILURES ? 'LOW' : 'MEDIUM';
   }
   return 'HIGH';
-}
-
-function normalizeFreeModelNames(value) {
-  if (!Array.isArray(value)) return [];
-  return [...new Set(value.filter((modelId) =>
-    typeof modelId === 'string' && modelId.length > 0))].sort();
 }
 
 // ---------------------------------------------------------------------------
@@ -176,6 +181,10 @@ function buildCandidateView(options = {}) {
   const candidates = [];
   for (const offer of offers) {
     if (offer.status === 'confirmed_removed') continue;
+    // Hidden is an operator controlled publication override. Keep the offer
+    // in SQLite for audit and explicit unhide, but never build it into a
+    // candidate report.
+    if (offer.hidden === 1) continue;
     const reg = regByKey[offer.provider_key] || {};
     const facts = offer.facts_json && typeof offer.facts_json === 'object' && !Array.isArray(offer.facts_json)
       ? offer.facts_json
@@ -197,8 +206,23 @@ function buildCandidateView(options = {}) {
       (canUseRegistryDocsFallback ? reg.docs_url : null);
     const catalogSource = typeof facts.catalog_url === 'string' ? facts.catalog_url : null;
     const freeLimits = facts.free_quota_text || facts.free_limits || null;
-    const freeModelNames = normalizeFreeModelNames(facts.free_model_names);
     const inCaution = offer.status === 'stale' && (offer.consecutive_failures || 0) >= CAUTION_FAILURES;
+
+    // Spec 0004 AC-3: core prices live in typed columns. Price evidence is
+    // carried forward when a fresh fetch fails (AC-8: the last verified price
+    // and date stay). Access kind derives only from the effective prices
+    // (AC-4).
+    const normalPrice = priceObject(
+      offer.normal_input_price_usd, offer.normal_output_price_usd,
+      offer.normal_cache_read_price_usd, offer.normal_cache_write_price_usd
+    );
+    const effectivePrice = priceObject(
+      offer.effective_input_price_usd, offer.effective_output_price_usd,
+      offer.effective_cache_read_price_usd, offer.effective_cache_write_price_usd
+    );
+    const accessKind = deriveAccessKind(
+      offer.effective_input_price_usd, offer.effective_output_price_usd
+    );
 
     candidates.push({
       offer_key: offerKey(offer.provider_key, offer.exact_model_id),
@@ -218,20 +242,29 @@ function buildCandidateView(options = {}) {
       total_parameters_b: deriveParamsB(facts),
       active_parameters_b: typeof facts.active_parameters_b === 'number' ? facts.active_parameters_b : null,
       classification: deriveClassificationProvisional(facts),
-      benchmarks: benchmarkRows.map((row) => ({ name: row.display_name, score: row.score })),
+      benchmarks: benchmarkRows.map((row) => ({
+        name: row.display_name, score: row.score, version: row.version,
+        source_url: row.source_url, verified_at: row.verified_at,
+      })),
       benchmark: tier.benchmark_pending
         ? null
-        : { score: tier.score, benchmark_name: tier.benchmark_name, tier: tier.tier },
+        : { score: tier.score, benchmark_name: tier.benchmark_name, version: tier.version, tier: tier.tier },
       benchmark_key: tier.benchmark_key,
       tier: tier.tier,
       benchmark_pending: tier.benchmark_pending,
+      normal_price_per_million: normalPrice,
+      effective_price_per_million: effectivePrice,
+      access_kind: accessKind,
+      price_source: offer.price_source_url || null,
+      price_verified_at: offer.price_verified_at || null,
+      discount_start_at: offer.discount_start_at || null,
+      discount_end_at: offer.discount_end_at || null,
       status: offer.status,
       consecutive_failures: offer.consecutive_failures || 0,
       in_caution: inCaution,
       last_verified: offer.last_verified_at || null,
       pricing_hash: offer.pricing_hash || null,
       suspicion_score: 0,
-      free_model_names: freeModelNames,
       sources: [endpointSource, catalogSource, ...benchmarkRows.map((row) => row.source_url)]
         .filter((url) => typeof url === 'string' && /^https?:\/\//.test(url)),
       facts,
@@ -240,20 +273,58 @@ function buildCandidateView(options = {}) {
   return { generatedAt: nowIso(), candidates };
 }
 
+// Builds the price object from typed USD columns. Only finite numbers are
+// emitted; cache prices may be absent (null) while input and output are kept.
+function priceObject(input, output, cacheRead, cacheWrite) {
+  const out = {};
+  const put = (key, value) => {
+    if (typeof value === 'number' && Number.isFinite(value)) out[key] = value;
+  };
+  put('input', input);
+  put('output', output);
+  put('cache_read', cacheRead);
+  put('cache_write', cacheWrite);
+  return out;
+}
+
 // ---------------------------------------------------------------------------
-// Ranking eligibility and ordering (AC-10, AGENTS.md)
+// Ranking eligibility and ordering (spec 0004 AC-4, AC-5, AC-7, AGENTS.md)
 // ---------------------------------------------------------------------------
 
 // Decides ranking eligibility deterministically. Returns { eligible, reason }.
-// An offer ranks only when it has a verified benchmark tier (S, A, or B),
-// passes the local model gate, and carries the endpoint evidence the
-// validator will re-check (base_url and endpoint_source).
+// An offer ranks only when it has a verified accepted Terminal Bench (2.0 or
+// 2.1) score at or above 50 (spec 0004 AC-5, AC-6), a derived access kind
+// (FREE or ULTRA_LOW) from typed effective prices, a price source and
+// confirmation date, passes the local model gate, and carries the endpoint
+// evidence the validator will re-check.
 function decideEligibility(candidate) {
   if (candidate.benchmark_pending || !candidate.tier) {
-    return { eligible: false, reason: '[benchmark-pending] no verified benchmark on record; not ranked (AC-10)' };
+    return { eligible: false, reason: '[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)' };
+  }
+  // Shared ranking policy gate: only verified Terminal Bench 2.0/2.1 at or
+  // above 50 admits. A score below 50 is never rankable (not even tier B).
+  if (!rankingPolicy.qualifiesTerminalBench(candidate.benchmark_key, candidate.benchmark && candidate.benchmark.score)) {
+    return { eligible: false, reason: '[benchmark-gate] only verified Terminal Bench 2.0/2.1 at or above 50 admits; other benchmarks and lower scores do not substitute (AC-5, AC-6)' };
   }
   if (!TIER_ORDER.hasOwnProperty(candidate.tier)) {
     return { eligible: false, reason: `[tier] tier ${candidate.tier} is not rankable` };
+  }
+  if (!candidate.access_kind) {
+    return { eligible: false, reason: '[access] effective input and output must both be known and free or ultra low (AC-4)' };
+  }
+  // Ranked effective prices must be a non null finite non-negative input /
+  // output object matching the derived access kind (AC-4, AC-14).
+  const eff = candidate.effective_price_per_million || {};
+  if (!rankingPolicy.accessKindMatches(
+    candidate.access_kind, eff.input, eff.output
+  )) {
+    return { eligible: false, reason: `[access] effective prices ${JSON.stringify(eff)} do not match access_kind ${candidate.access_kind} (AC-4)` };
+  }
+  if (!candidate.price_source) {
+    return { eligible: false, reason: '[price-source] no fetched price source on record' };
+  }
+  if (!candidate.price_verified_at) {
+    return { eligible: false, reason: '[price-date] no price confirmation date on record' };
   }
   if (typeof candidate.total_parameters_b === 'number' &&
       candidate.total_parameters_b < LOCAL_MODEL_GATE_B &&
@@ -269,21 +340,25 @@ function decideEligibility(candidate) {
   return { eligible: true, reason: null };
 }
 
-// Ranking comparator (AGENTS.md). Raw benchmark scores compare only when the
-// representative benchmark key matches; different keys skip the score step.
+// Ranking comparator (spec 0004 AC-7). Tier first (S>A>B), then access kind
+// (FREE before ULTRA_LOW), then the same Terminal Bench version score
+// descending only when the representative benchmark key matches, then price
+// confirmation date descending, then name ascending. Different benchmark keys
+// skip the score step. Free allowance is displayed but is not an ordering axis.
+const ACCESS_ORDER = { FREE: 0, ULTRA_LOW: 1 };
+
 function compareRanked(a, b) {
   const tierDiff = TIER_ORDER[a.tier] - TIER_ORDER[b.tier];
   if (tierDiff !== 0) return tierDiff;
-  const allowanceDiff = (ALLOWANCE_ORDER[a.free_allowance_rank] ?? 99) -
-    (ALLOWANCE_ORDER[b.free_allowance_rank] ?? 99);
-  if (allowanceDiff !== 0) return allowanceDiff;
+  const accessDiff = (ACCESS_ORDER[a.access_kind] ?? 99) - (ACCESS_ORDER[b.access_kind] ?? 99);
+  if (accessDiff !== 0) return accessDiff;
   if (a.benchmark_key && a.benchmark_key === b.benchmark_key &&
       typeof a.benchmark.score === 'number' && typeof b.benchmark.score === 'number') {
     const scoreDiff = b.benchmark.score - a.benchmark.score;
     if (scoreDiff !== 0) return scoreDiff;
   }
-  const aTime = a.last_verified || '';
-  const bTime = b.last_verified || '';
+  const aTime = a.price_verified_at || a.last_verified || '';
+  const bTime = b.price_verified_at || b.last_verified || '';
   if (aTime !== bTime) return aTime < bTime ? 1 : -1;
   return String(a.name).localeCompare(String(b.name));
 }
@@ -346,6 +421,17 @@ function computeChanges(currentOffers, priorOffers) {
     }
     if (prior.pricing_hash && current.pricing_hash && prior.pricing_hash !== current.pricing_hash) {
       diffs.push('pricing_hash changed');
+      if (!changeType) changeType = 'price_change';
+    }
+    // Typed effective price change detection (spec 0004 AC-3). A change in
+    // either effective price is a price change regardless of the hash.
+    const priorEffIn = prior.effective_input_price_usd;
+    const curEffIn = current.effective_input_price_usd;
+    const priorEffOut = prior.effective_output_price_usd;
+    const curEffOut = current.effective_output_price_usd;
+    if ((priorEffIn !== undefined && curEffIn !== undefined && priorEffIn !== curEffIn) ||
+        (priorEffOut !== undefined && curEffOut !== undefined && priorEffOut !== curEffOut)) {
+      diffs.push(`effective price: ${priorEffIn}/${priorEffOut} -> ${curEffIn}/${curEffOut}`);
       if (!changeType) changeType = 'price_change';
     }
     const priorFacts = prior.facts_json && typeof prior.facts_json === 'object' ? prior.facts_json : {};
@@ -428,8 +514,8 @@ function toPublicOffer(candidate, classification, prose, rank) {
     model_id: candidate.exact_model_id,
     provider_count: null,
     recent_activity: (prose && prose.summary) || null,
-    normal_price_per_million: null,
-    effective_price_per_million: null,
+    normal_price_per_million: candidate.normal_price_per_million || null,
+    effective_price_per_million: candidate.effective_price_per_million || null,
     effective_discount_percent: null,
     data_retention: null,
     training_use: null,
@@ -441,13 +527,20 @@ function toPublicOffer(candidate, classification, prose, rank) {
     exclusion_reason: null,
     last_verified: candidate.last_verified,
     endpoint_source: candidate.endpoint_source,
+    provider_key: candidate.provider_key,
+    canonical_model_id: candidate.canonical_model_id,
+    access_kind: candidate.access_kind,
+    price_source: candidate.price_source || null,
+    price_verified_at: candidate.price_verified_at || null,
+    discount_start_at: candidate.discount_start_at || null,
+    discount_end_at: candidate.discount_end_at || null,
     free_allowance_rank: candidate.free_allowance_rank,
     total_parameters_b: candidate.total_parameters_b,
     active_parameters_b: candidate.active_parameters_b,
-    free_model_names: candidate.free_model_names,
     sources: candidate.sources,
     benchmark: candidate.benchmark,
     benchmarks: candidate.benchmarks,
+    benchmark_key: candidate.benchmark_key,
   };
   return offer;
 }
@@ -572,6 +665,28 @@ function assembleReport(runId, runDir, options = {}) {
     }
   }
 
+  // Accepted provider registration candidates (spec 0004 AC-11) become part
+  // of the candidate Registry (validated by publication before promotion) and
+  // are reported as new seed candidates. Rejected candidates are not
+  // Registry changes; they surface in the reduced provider-candidates.json
+  // for the operator.
+  const providerCandidateEntries = [];
+  const seedCandidates = [];
+  const providerCandidates = readJsonIfPresent(runDir && path.join(runDir, 'reduced', 'provider-candidates.json'));
+  if (providerCandidates && Array.isArray(providerCandidates.candidates)) {
+    for (const candidate of providerCandidates.candidates) {
+      if (candidate && candidate.accepted === true && candidate.entry && candidate.entry.key) {
+        providerCandidateEntries.push(candidate.entry);
+        seedCandidates.push({
+          name: candidate.entry.label,
+          type: 'provider',
+          recommend_add: true,
+          reason: `registered from ${candidate.entry.added_from}`,
+        });
+      }
+    }
+  }
+
   // Summary counts are code-owned; staged editorial.summary is intentionally
   // ignored so LLM-authored counts cannot reach the public report.
   const summary = buildReportSummary({
@@ -590,7 +705,7 @@ function assembleReport(runId, runDir, options = {}) {
     conditional_credits: conditional,
     caution_offers: caution,
     excluded_offers: excluded,
-    new_seed_candidates: [],
+    new_seed_candidates: seedCandidates,
     sources: [...sourceSet.values()],
   };
 
@@ -599,9 +714,10 @@ function assembleReport(runId, runDir, options = {}) {
   const candidateDir = path.join(runDir, 'candidate');
   fs.mkdirSync(candidateDir, { recursive: true });
   fs.writeFileSync(path.join(candidateDir, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
+  const candidateProviders = providers.concat(providerCandidateEntries);
   fs.writeFileSync(
     path.join(candidateDir, 'provider-registry.json'),
-    `${JSON.stringify({ version: 'candidate', providers }, null, 2)}\n`
+    `${JSON.stringify({ version: 'candidate', providers: candidateProviders }, null, 2)}\n`
   );
 
   return {
@@ -643,7 +759,9 @@ function buildNewModels(runDir) {
         ? candidate.canonical_model_id.split('/')[0]
         : candidate.provider_key) || 'unknown',
       status: 'announced',
-      release_date: null,
+      release_date: typeof facts.release_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(facts.release_date.trim())
+        ? facts.release_date.trim()
+        : null,
       official_source: officialSource,
       api_available: true,
       open_weight: null,
@@ -655,13 +773,15 @@ function buildNewModels(runDir) {
 
 module.exports = {
   TIER_ORDER,
-  ALLOWANCE_ORDER,
+  ACCESS_ORDER,
   LOCAL_MODEL_GATE_B,
   CAUTION_FAILURES,
   offerKey,
   deriveDeliveryType,
   deriveAllowance,
   deriveParamsB,
+  deriveAccessKind,
+  priceObject,
   deriveClassificationProvisional,
   deriveInformationConfidence,
   deriveOperationalConfidence,

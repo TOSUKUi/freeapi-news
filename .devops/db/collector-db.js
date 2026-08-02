@@ -29,7 +29,7 @@ const RUN_STATUSES = [
   'collecting', 'candidate_ready', 'validated',
   'validated_not_deployed', 'promoted', 'superseded', 'failed',
 ];
-const RUN_TERMINAL_STATUSES = ['promoted', 'failed'];
+const RUN_TERMINAL_STATUSES = ['promoted', 'superseded', 'failed'];
 const TASK_KINDS = [
   'catalog', 'known_refresh', 'discovery',
   'benchmark_scout', 'classifier', 'editorial',
@@ -38,6 +38,27 @@ const TASK_STATUSES = ['pending', 'complete', 'partial', 'failed'];
 const TASK_RESULT_STATUSES = ['complete', 'partial', 'failed'];
 const OFFER_STATUSES = ['verified', 'stale', 'confirmed_removed'];
 
+// Offer price columns carried by finalizeRun, bootstrap, and import legacy.
+// Spec 0004 AC-3: core prices live in typed columns, never in facts_json.
+// All prices are USD per million tokens (source_amount_* are in the source
+// currency and unit) and nullable with a database check of zero or greater.
+// This list is the single source of truth for the offer write paths.
+const OFFER_PRICE_COLUMNS = [
+  'normal_input_price_usd', 'normal_output_price_usd',
+  'normal_cache_read_price_usd', 'normal_cache_write_price_usd',
+  'effective_input_price_usd', 'effective_output_price_usd',
+  'effective_cache_read_price_usd', 'effective_cache_write_price_usd',
+  'source_amount_input', 'source_amount_output',
+  'normal_source_amount_input', 'normal_source_amount_output',
+  'normal_source_amount_cache_read', 'normal_source_amount_cache_write',
+  'effective_source_amount_input', 'effective_source_amount_output',
+  'effective_source_amount_cache_read', 'effective_source_amount_cache_write',
+  'source_currency', 'source_unit',
+  'conversion_rate', 'conversion_source', 'conversion_confirmed_at',
+  'price_source_url', 'price_verified_at',
+  'discount_start_at', 'discount_end_at',
+];
+
 // Known transport suffixes removed from an exact model ID to form the
 // canonical model ID. Nothing else is stripped.
 const TRANSPORT_SUFFIXES = [':free'];
@@ -45,6 +66,7 @@ const TRANSPORT_SUFFIXES = [':free'];
 // Explicit benchmark alias map. Display variants collapse to one internal
 // key. Names without an alias fall back to a deterministic slug.
 const BENCHMARK_ALIASES = [
+  { key: 'terminal_bench_2_0', pattern: /^terminal[\s._/-]*bench[\s._/-]*2[\s._/-]*0\b/i },
   { key: 'terminal_bench_2_1', pattern: /^terminal[\s._/-]*bench[\s._/-]*2[\s._/-]*1\b/i },
 ];
 
@@ -461,7 +483,7 @@ function getRunRow(db, runId) {
 
 // Inserts a collecting run and its manifest tasks (all pending) in one
 // transaction. manifestTasks items: { task_id, kind, provider_key?,
-// assigned_model_ids? }.
+// assigned_model_ids?, assigned_json? }.
 function startRun(runId, manifestTasks, options = {}) {
   assertRunId(runId);
   const db = openCollectorDb(options);
@@ -489,9 +511,11 @@ function startRun(runId, manifestTasks, options = {}) {
           task.task_id,
           task.kind,
           task.provider_key ?? null,
-          Array.isArray(task.assigned_model_ids) && task.assigned_model_ids.length > 0
-            ? JSON.stringify(task.assigned_model_ids)
-            : null,
+          task.assigned_json !== undefined
+            ? JSON.stringify(task.assigned_json)
+            : (Array.isArray(task.assigned_model_ids) && task.assigned_model_ids.length > 0
+              ? JSON.stringify(task.assigned_model_ids)
+              : null),
           'pending'
         );
       }
@@ -622,6 +646,28 @@ function recordTaskResult(runId, taskId, outcome, options = {}) {
   }
 }
 
+// Replaces a previously ingested task result after deterministic evidence
+// auditing. Network work has completed before this short SQLite transaction.
+function updateTaskResult(runId, taskId, result, options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    database.exec('BEGIN IMMEDIATE');
+    try {
+      const task = database.prepare('SELECT * FROM tasks WHERE run_id = ? AND task_id = ?').get(runId, taskId);
+      if (!task) throw new Error(`unknown task ${taskId} in run ${runId}`);
+      if (!TASK_RESULT_STATUSES.includes(task.status)) throw new Error(`task ${taskId} has no recorded result`);
+      database.prepare('UPDATE tasks SET result_json = ? WHERE run_id = ? AND task_id = ?')
+        .run(result === undefined || result === null ? null : JSON.stringify(result), runId, taskId);
+      database.exec('COMMIT');
+    } catch (err) {
+      try { database.exec('ROLLBACK'); } catch { /* already rolled back */ }
+      throw err;
+    }
+  } finally {
+    database.close();
+  }
+}
+
 // Returns the run row and its tasks with parsed JSON, the input for
 // deterministic reduction and report assembly.
 function loadRunCandidate(runId, options = {}) {
@@ -640,6 +686,23 @@ function loadRunCandidate(runId, options = {}) {
 // ---------------------------------------------------------------------------
 // Finalization (the one short mutating transaction)
 // ---------------------------------------------------------------------------
+
+const DISCOVERY_SOURCE_CATEGORIES = new Set([
+  'vendor', 'router', 'host', 'product', 'discovery', 'community', 'benchmark', 'watchlist', 'other',
+]);
+
+function validateDiscoverySourceChange(source) {
+  if (!source || typeof source !== 'object') throw new Error('discovery source change must be an object');
+  if (typeof source.source_key !== 'string' || !source.source_key) throw new Error('discovery source requires source_key');
+  if (!DISCOVERY_SOURCE_CATEGORIES.has(source.category)) {
+    throw new Error(`discovery source ${source.source_key} has invalid category ${JSON.stringify(source.category)}`);
+  }
+  if (typeof source.label !== 'string' || !source.label.trim()) throw new Error(`discovery source ${source.source_key} requires label`);
+  if (source.source_url !== null && source.source_url !== undefined &&
+      (typeof source.source_url !== 'string' || !/^https?:\/\//.test(source.source_url))) {
+    throw new Error(`discovery source ${source.source_key} has invalid source_url`);
+  }
+}
 
 function validateOfferChange(offer) {
   const required = ['provider_key', 'exact_model_id', 'canonical_model_id', 'source_kind'];
@@ -663,8 +726,12 @@ function validateBenchmarkChange(benchmark) {
     'source_url', 'source_hash', 'verified_at',
   ];
   for (const field of required) {
-    if (typeof benchmark[field] !== 'string' || benchmark[field].length === 0 ||
-        (field === 'version' && benchmark[field].trim().length === 0)) {
+    const versionRequired = field === 'version' &&
+      ['terminal_bench_2_0', 'terminal_bench_2_1'].includes(benchmark.benchmark_key);
+    const nonEmptyRequired = field !== 'version' || versionRequired;
+    if (typeof benchmark[field] !== 'string' ||
+        (nonEmptyRequired && benchmark[field].length === 0) ||
+        (versionRequired && benchmark[field].trim().length === 0)) {
       throw new Error(`benchmark change requires non empty string field ${field}`);
     }
   }
@@ -694,6 +761,93 @@ function validateSourceCacheChange(entry) {
   }
 }
 
+// SQL fragments for the typed offer price columns (spec 0004 AC-3). The base
+// offer columns plus OFFER_PRICE_COLUMNS form the full write surface. The
+// update clause sets every column from excluded except first_seen_at (and
+// removal_evidence_json which is replaced wholesale).
+function buildOfferUpsertSql(extraUpdate = '') {
+  const columns = [
+    'provider_key', 'exact_model_id', 'canonical_model_id', 'source_kind', 'status',
+    'consecutive_failures', 'first_seen_at', 'last_attempted_at', 'last_verified_at',
+    'last_seen_run_id', 'pricing_hash', 'removal_evidence_json', 'facts_json',
+    ...OFFER_PRICE_COLUMNS,
+  ];
+  const placeholders = columns.map(() => '?').join(', ');
+  const update = columns
+    .filter((column) => column !== 'first_seen_at')
+    .map((column) => `${column} = excluded.${column}`)
+    .join(', ');
+  return `INSERT INTO offers (${columns.join(', ')})
+    VALUES (${placeholders})
+    ON CONFLICT(provider_key, exact_model_id) DO UPDATE SET ${update}${extraUpdate}`;
+}
+
+function offerUpsertParams(offer, now, runId) {
+  return [
+    offer.provider_key,
+    offer.exact_model_id,
+    offer.canonical_model_id,
+    offer.source_kind,
+    offer.status,
+    offer.consecutive_failures ?? 0,
+    offer.first_seen_at || now,
+    offer.last_attempted_at ?? null,
+    offer.last_verified_at ?? null,
+    offer.last_seen_run_id ?? runId,
+    offer.pricing_hash ?? null,
+    offer.removal_evidence_json === undefined || offer.removal_evidence_json === null
+      ? null
+      : JSON.stringify(offer.removal_evidence_json),
+    offer.facts_json === undefined || offer.facts_json === null
+      ? null
+      : JSON.stringify(sanitizeOfferFacts(offer.facts_json)),
+    ...OFFER_PRICE_COLUMNS.map((column) => {
+      const value = offer[column];
+      return value === undefined || value === null ? null : value;
+    }),
+  ];
+}
+
+// Changes the operator controlled visibility flag without allowing a catalog
+// or worker upsert to clear it. Hidden offers remain in SQLite for audit and
+// can be made visible again explicitly.
+function setOfferHidden(providerKey, exactModelId, hidden, options = {}) {
+  if (typeof providerKey !== 'string' || !providerKey.trim()) {
+    throw new Error('provider_key is required');
+  }
+  if (typeof exactModelId !== 'string' || !exactModelId.trim()) {
+    throw new Error('exact_model_id is required');
+  }
+  if (hidden !== true && hidden !== false && hidden !== 0 && hidden !== 1) {
+    throw new Error('hidden must be a boolean or 0/1');
+  }
+  applyMigrations(options);
+  const database = openCollectorDb(options);
+  try {
+    database.exec('BEGIN IMMEDIATE');
+    try {
+      const existing = database.prepare(
+        'SELECT provider_key, exact_model_id, hidden FROM offers ' +
+        'WHERE provider_key = ? AND exact_model_id = ?'
+      ).get(providerKey, exactModelId);
+      if (!existing) {
+        throw new Error(`unknown offer: ${providerKey} ${exactModelId}`);
+      }
+      const value = hidden === true || hidden === 1 ? 1 : 0;
+      database.prepare(
+        'UPDATE offers SET hidden = ? WHERE provider_key = ? AND exact_model_id = ?'
+      ).run(value, providerKey, exactModelId);
+      database.exec('COMMIT');
+      return { ...existing, hidden: value };
+    } catch (err) {
+      try { database.exec('ROLLBACK'); } catch { /* ok */ }
+      throw err;
+    }
+  } finally {
+    database.close();
+  }
+}
+
 // Applies current offer, benchmark, cache, search, and run changes in one
 // BEGIN IMMEDIATE transaction. Any error rolls back and leaves current rows
 // unchanged (AC-15). Existing benchmark rows are immutable: a benchmark
@@ -712,25 +866,7 @@ function finalizeRun(runId, changes = {}, options = {}) {
       }
 
       const canonicalByIdentity = new Map();
-      const upsertOffer = db.prepare(
-        'INSERT INTO offers (' +
-        '  provider_key, exact_model_id, canonical_model_id, source_kind, status,' +
-        '  consecutive_failures, first_seen_at, last_attempted_at, last_verified_at,' +
-        '  last_seen_run_id, pricing_hash, removal_evidence_json, facts_json' +
-        ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ' +
-        'ON CONFLICT(provider_key, exact_model_id) DO UPDATE SET' +
-        '  canonical_model_id = excluded.canonical_model_id,' +
-        '  source_kind = excluded.source_kind,' +
-        '  status = excluded.status,' +
-        '  consecutive_failures = excluded.consecutive_failures,' +
-        '  last_attempted_at = excluded.last_attempted_at,' +
-        '  last_verified_at = excluded.last_verified_at,' +
-        '  last_seen_run_id = excluded.last_seen_run_id,' +
-        '  pricing_hash = excluded.pricing_hash,' +
-        '  removal_evidence_json = excluded.removal_evidence_json,' +
-        '  facts_json = excluded.facts_json'
-        // first_seen_at is deliberately preserved on conflict.
-      );
+      const upsertOffer = db.prepare(buildOfferUpsertSql());
       for (const offer of changes.offers || []) {
         validateOfferChange(offer);
         const identityKey = `${offer.provider_key}\u0000${offer.exact_model_id}`;
@@ -752,25 +888,7 @@ function finalizeRun(runId, changes = {}, options = {}) {
           );
         }
         const now = nowIso();
-        upsertOffer.run(
-          offer.provider_key,
-          offer.exact_model_id,
-          offer.canonical_model_id,
-          offer.source_kind,
-          offer.status,
-          offer.consecutive_failures ?? 0,
-          offer.first_seen_at || now,
-          offer.last_attempted_at ?? null,
-          offer.last_verified_at ?? null,
-          offer.last_seen_run_id ?? runId,
-          offer.pricing_hash ?? null,
-          offer.removal_evidence_json === undefined || offer.removal_evidence_json === null
-            ? null
-            : JSON.stringify(offer.removal_evidence_json),
-          offer.facts_json === undefined || offer.facts_json === null
-            ? null
-            : JSON.stringify(offer.facts_json)
-        );
+        upsertOffer.run(...offerUpsertParams(offer, now, runId));
       }
 
       // Insert only. Existing verified benchmark rows are immutable.
@@ -818,6 +936,115 @@ function finalizeRun(runId, changes = {}, options = {}) {
         );
       }
 
+      // Discovery source growth (spec 0004 AC-10): new validated sources are
+      // inserted idempotently; existing rows and their priority are never
+      // removed. Successful use resets the failure count and improves
+      // priority within a bounded range.
+      const upsertSource = db.prepare(
+        'INSERT INTO discovery_sources (' +
+        '  source_key, category, label, source_url, parent_label, active, priority,' +
+        '  added_from, created_at, last_attempted_at, last_success_at, consecutive_failures' +
+        ') VALUES (?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, 0) ' +
+        'ON CONFLICT(source_key) DO UPDATE SET' +
+        '  last_success_at = COALESCE(excluded.last_success_at, discovery_sources.last_success_at),' +
+        '  consecutive_failures = 0,' +
+        '  priority = MIN(discovery_sources.priority, 10)'
+      );
+      for (const source of changes.discoverySources || []) {
+        validateDiscoverySourceChange(source);
+        const created = nowIso();
+        upsertSource.run(
+          source.source_key,
+          source.category,
+          source.label,
+          source.source_url ?? null,
+          source.parent_label ?? null,
+          source.added_from ?? null,
+          created,
+          null
+        );
+      }
+
+      // Every assigned source is attempted, including rows with no URL. The
+      // health updates are part of this same finalization transaction; an
+      // irrelevant 2xx is a failed attempt and never becomes cache evidence.
+      const assignment = changes.discoveryAssignments || {};
+      const healthByKey = new Map((assignment.health || []).map((h) => [h.source_key, h]));
+      const assignedSources = Array.isArray(assignment.sources) ? assignment.sources : [];
+      const touchAssignedSource = db.prepare(
+        'UPDATE discovery_sources SET last_attempted_at = ?, ' +
+        'last_success_at = CASE WHEN ? = 1 THEN COALESCE(?, last_success_at) ELSE last_success_at END, ' +
+        'consecutive_failures = CASE WHEN ? = 1 THEN 0 ELSE MIN(consecutive_failures + 1, 2147483647) END, ' +
+        'priority = CASE WHEN ? = 1 THEN MAX(priority - 1, 0) ELSE MIN(priority + 1, 1000) END ' +
+        'WHERE source_key = ? AND active = 1'
+      );
+      for (const source of assignedSources) {
+        if (!source || typeof source.source_key !== 'string') continue;
+        const health = healthByKey.get(source.source_key);
+        const attemptedAt = (health && health.attempted_at) || assignment.attempted_at || nowIso();
+        const successAt = health && health.success_at ? health.success_at : attemptedAt;
+        const verified = health && health.verified === true ? 1 : 0;
+        touchAssignedSource.run(attemptedAt, verified, verified ? successAt : null, verified, verified, source.source_key);
+      }
+      const touchTerm = db.prepare(
+        'UPDATE search_terms SET last_used_at = ? WHERE category = ? AND locale = ? AND term = ? AND active = 1'
+      );
+      for (const term of Array.isArray(assignment.terms) ? assignment.terms : []) {
+        if (!term || typeof term.category !== 'string' || typeof term.locale !== 'string' || typeof term.term !== 'string') continue;
+        touchTerm.run(term._attempted_at || assignment.attempted_at || nowIso(), term.category, term.locale, term.term);
+      }
+
+      // Repeated source failures lower priority without deleting the row
+      // (AC-10): a failed fetch of a known source URL increments its failure
+      // count and raises the priority number so it runs later. Success resets
+      // the count.
+      const touchSourceFailure = db.prepare(
+        'UPDATE discovery_sources SET ' +
+        '  last_attempted_at = COALESCE(?, last_attempted_at),' +
+        '  consecutive_failures = consecutive_failures + 1,' +
+        '  priority = MIN(priority + 1, 1000) ' +
+        'WHERE source_url = ? AND active = 1'
+      );
+      const touchSourceSuccess = db.prepare(
+        'UPDATE discovery_sources SET ' +
+        '  last_attempted_at = COALESCE(?, last_attempted_at),' +
+        '  last_success_at = COALESCE(?, last_success_at),' +
+        '  consecutive_failures = 0,' +
+        '  priority = MAX(priority - 1, 0) ' +
+        'WHERE source_url = ? AND active = 1'
+      );
+      // A fetch is source_cache evidence only when the attempt returned an
+      // integer 2xx status and carried a url, subject_key, content_hash, and
+      // fetched_at (AC-16). Invalid and non-2xx entries are filtered before
+      // source health success handling and before the source_cache upsert, so
+      // they never insert or overwrite a cache row and a failed later attempt
+      // leaves the previous successful row unchanged. A non-2xx attempt may
+      // still count as a source failure when its URL is tied to an existing
+      // discovery source (AC-10); the failure UPDATE matches source_url.
+      const sourceCacheFetches = changes.sourceCache || [];
+      const assignedSourceUrls = new Set((Array.isArray((changes.discoveryAssignments || {}).sources)
+        ? changes.discoveryAssignments.sources : [])
+        .map((source) => source && source.source_url)
+        .filter((url) => typeof url === 'string'));
+      const evidence = [];
+      for (const fetch of sourceCacheFetches) {
+        if (typeof fetch.url !== 'string' || !fetch.url) continue;
+        const hasStatus = Number.isInteger(fetch.http_status);
+        const is2xx = hasStatus && fetch.http_status >= 200 && fetch.http_status <= 299;
+        const isEvidence = is2xx &&
+          typeof fetch.subject_key === 'string' && fetch.subject_key.length > 0 &&
+          typeof fetch.content_hash === 'string' && fetch.content_hash.length > 0 &&
+          typeof fetch.fetched_at === 'string' && fetch.fetched_at.length > 0;
+        if (isEvidence) {
+          evidence.push(fetch);
+          if (!assignedSourceUrls.has(fetch.url)) {
+            touchSourceSuccess.run(fetch.fetched_at, fetch.fetched_at, fetch.url);
+          }
+        } else if (hasStatus && !is2xx && !assignedSourceUrls.has(fetch.url)) {
+          touchSourceFailure.run(fetch.fetched_at || null, fetch.url);
+        }
+      }
+
       const upsertCache = db.prepare(
         'INSERT INTO source_cache (' +
         '  url, subject_key, provider_key, exact_model_id, fetched_at, http_status, content_hash' +
@@ -829,7 +1056,7 @@ function finalizeRun(runId, changes = {}, options = {}) {
         '  http_status = excluded.http_status,' +
         '  content_hash = excluded.content_hash'
       );
-      for (const entry of changes.sourceCache || []) {
+      for (const entry of evidence) {
         validateSourceCacheChange(entry);
         upsertCache.run(
           entry.url,
@@ -909,7 +1136,7 @@ function getStatus(options = {}) {
     try {
       schemaVersion = currentSchemaVersion(db);
       currentRun = db.prepare(
-        "SELECT * FROM runs WHERE status NOT IN ('promoted', 'failed') " +
+        "SELECT * FROM runs WHERE status NOT IN ('promoted', 'superseded', 'failed') " +
         'ORDER BY started_at DESC LIMIT 1'
       ).get() || null;
       lastPromotedRun = db.prepare(
@@ -1000,6 +1227,89 @@ function artifactPathFor(runDir, taskId) {
   return path.join(runDir, 'artifacts', `${sanitizeTaskId(taskId)}.json`);
 }
 
+// Source currency / unit / conversion defaults for prices found in report
+// offers or worker facts. Returns a normalized price column object with only
+// the keys whose values are known (all null values are dropped so an
+// undefined normal price never masks a later real price).
+function extractOfferPriceColumns(offer) {
+  const out = {};
+  const priceKeys = [
+    ['input', 'normal_input_price_usd'],
+    ['output', 'normal_output_price_usd'],
+    ['cache_read', 'normal_cache_read_price_usd'],
+    ['cache_write', 'normal_cache_write_price_usd'],
+  ];
+  const effectiveKeys = [
+    ['input', 'effective_input_price_usd'],
+    ['output', 'effective_output_price_usd'],
+    ['cache_read', 'effective_cache_read_price_usd'],
+    ['cache_write', 'effective_cache_write_price_usd'],
+  ];
+  const setPrice = (obj, key, value) => {
+    if (value !== undefined && value !== null && Number.isFinite(Number(value))) {
+      obj[key] = Number(value);
+    }
+  };
+  const normal = offer && offer.normal_price_per_million && typeof offer.normal_price_per_million === 'object'
+    ? offer.normal_price_per_million
+    : {};
+  const effective = offer && offer.effective_price_per_million && typeof offer.effective_price_per_million === 'object'
+    ? offer.effective_price_per_million
+    : {};
+  for (const [field, column] of priceKeys) setPrice(out, column, normal[field]);
+  for (const [field, column] of effectiveKeys) setPrice(out, column, effective[field]);
+  for (const [key, column] of [
+    ['price_source', 'price_source_url'],
+    ['price_verified_at', 'price_verified_at'],
+    ['discount_start_at', 'discount_start_at'],
+    ['discount_end_at', 'discount_end_at'],
+  ]) {
+    const value = offer && offer[key];
+    if (typeof value === 'string' && value.length > 0) out[column] = value;
+  }
+  return out;
+}
+
+// Sanitizes offer facts_json so typed price values never leak into the JSON
+// blob (spec 0004 AC-3). Prose evidence such as pricing_text is preserved.
+// Removed keys: every typed *_price_usd column name, legacy
+// normal_price_per_million / effective_price_per_million objects, pricing
+// hashes, is_free signals, source amount / currency / unit, conversion
+// evidence, price source / dates, discount prices, and prompt/completion
+// price keys.
+const SANITIZED_FACT_KEYS = new Set([
+  'pricing', 'prompt_price', 'completion_price', 'pricing_hash', 'is_free', 'free_model_names',
+  'normal_price_per_million', 'effective_price_per_million',
+  'normal_input_price_usd', 'normal_output_price_usd',
+  'normal_cache_read_price_usd', 'normal_cache_write_price_usd',
+  'effective_input_price_usd', 'effective_output_price_usd',
+  'effective_cache_read_price_usd', 'effective_cache_write_price_usd',
+  'source_amount_input', 'source_amount_output',
+  'normal_source_amount_input', 'normal_source_amount_output',
+  'normal_source_amount_cache_read', 'normal_source_amount_cache_write',
+  'effective_source_amount_input', 'effective_source_amount_output',
+  'effective_source_amount_cache_read', 'effective_source_amount_cache_write',
+  'source_currency', 'source_unit',
+  'conversion_rate', 'conversion_source', 'conversion_confirmed_at',
+  'price_source_url', 'price_verified_at',
+  'discount_start_at', 'discount_end_at',
+]);
+
+function sanitizeOfferFacts(facts) {
+  if (!facts || typeof facts !== 'object' || Array.isArray(facts)) return facts;
+  const sanitize = (value) => {
+    if (Array.isArray(value)) return value.map(sanitize);
+    if (!value || typeof value !== 'object') return value;
+    const out = {};
+    for (const [key, child] of Object.entries(value)) {
+      if (SANITIZED_FACT_KEYS.has(key) || /_price_usd$/.test(key) || key === 'fact_type' || key === 'classification' || key === 'delivery_type' || key === 'tier' || key === 'access_kind' || key === 'free_allowance_rank') continue;
+      out[key] = sanitize(child);
+    }
+    return out;
+  };
+  return sanitize(facts);
+}
+
 // ---------------------------------------------------------------------------
 // Explicit one time bootstrap from report.json
 // ---------------------------------------------------------------------------
@@ -1079,19 +1389,16 @@ function bootstrapFromReport(options = {}) {
       benchmarksInvalid: 0,
     };
 
-    const upsertOffer = db.prepare(
-      'INSERT INTO offers (' +
-      '  provider_key, exact_model_id, canonical_model_id, source_kind, status,' +
-      '  consecutive_failures, first_seen_at, last_attempted_at, last_verified_at,' +
-      '  last_seen_run_id, pricing_hash, removal_evidence_json, facts_json' +
-      ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ' +
-      'ON CONFLICT(provider_key, exact_model_id) DO UPDATE SET' +
-      '  status = excluded.status,' +
-      '  consecutive_failures = excluded.consecutive_failures,' +
-      '  last_attempted_at = excluded.last_attempted_at,' +
-      '  last_verified_at = excluded.last_verified_at,' +
-      '  facts_json = excluded.facts_json'
-    );
+    const upsertOffer = db.prepare(buildOfferUpsertSql(
+      // Bootstrap refreshes status and prices but deliberately keeps legacy
+      // canonical/source_kind/first_seen values untouched on a forced rerun.
+      ', ' +
+      '  canonical_model_id = excluded.canonical_model_id,' +
+      '  source_kind = excluded.source_kind,' +
+      '  last_seen_run_id = excluded.last_seen_run_id,' +
+      '  pricing_hash = excluded.pricing_hash,' +
+      '  removal_evidence_json = excluded.removal_evidence_json'
+    ));
     const insertBenchmark = db.prepare(
       'INSERT INTO benchmarks (' +
       '  canonical_model_id, benchmark_key, display_name, version, score,' +
@@ -1110,21 +1417,22 @@ function bootstrapFromReport(options = {}) {
           continue;
         }
         const verifiedAt = offer.last_verified || fallbackTime;
-        upsertOffer.run(
-          providerKey,
-          exactModelId,
-          canonicalModelId(exactModelId),
-          'report',
-          'verified',
-          0,
-          verifiedAt,
-          verifiedAt,
-          verifiedAt,
-          null,
-          null,
-          null,
-          JSON.stringify(offer)
-        );
+        const priceFacts = extractOfferPriceColumns(offer);
+        upsertOffer.run(...offerUpsertParams({
+          provider_key: providerKey,
+          exact_model_id: exactModelId,
+          canonical_model_id: canonicalModelId(exactModelId),
+          source_kind: 'report',
+          status: 'verified',
+          consecutive_failures: 0,
+          first_seen_at: verifiedAt,
+          last_attempted_at: verifiedAt,
+          last_verified_at: verifiedAt,
+          pricing_hash: null,
+          removal_evidence_json: null,
+          facts_json: offer,
+          ...priceFacts,
+        }, verifiedAt, null));
         summary.offersImported += 1;
 
         const seenKeys = new Set();
@@ -1191,6 +1499,12 @@ module.exports = {
   OFFER_STATUSES,
   TRANSPORT_SUFFIXES,
   BENCHMARK_ALIASES,
+  OFFER_PRICE_COLUMNS,
+  buildOfferUpsertSql,
+  offerUpsertParams,
+  setOfferHidden,
+  extractOfferPriceColumns,
+  sanitizeOfferFacts,
   // errors
   BootstrapRequiredError,
   IdentityConflictError,
@@ -1213,6 +1527,7 @@ module.exports = {
   startRun,
   addRunTasks,
   recordTaskResult,
+  updateTaskResult,
   loadRunCandidate,
   finalizeRun,
   // report state and status

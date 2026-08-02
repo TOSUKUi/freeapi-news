@@ -6,11 +6,11 @@
 
 ## 概要
 
-このプロジェクトは、[LLM Deals Intelligence Skill](.agents/skills/llm-deals-intelligence-skill/) を使用して毎日無料・割引LLM API 情報を収集し、**1枚のHTMLページ**として GitHub Pages にデプロイします。
+このプロジェクトは、[LLM Deals Intelligence Skill](.agents/skills/llm-deals-intelligence-skill/) を使用して毎日無料・激安LLM API 情報を収集し、**1枚のHTMLページ**として GitHub Pages にデプロイします。
 
 ### 特徴
 
-- ✅ **無料API情報** — 完全無料、恒久無料枠、試用クレジットを分類・ランキング
+- ✅ **無料・激安API情報** — 完全無料、恒久無料枠、試用クレジット、激安 API を分類・ランキング
 - ✅ **リンク付き** — すべてのAPIに公式ページへのリンク
 - ✅ **5分で使える** — pi / Claude Code / OpenCode / Codex の設定方法を記載
 - ✅ **登録手順** — アカウント作成からテスト呼び出しまで4ステップ

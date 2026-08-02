@@ -195,10 +195,22 @@ function validateCandidate(runId, runDir, options = {}) {
   try { fs.rmSync(candidateOgHtml, { force: true }); } catch { /* ok */ }
 
   // 4. Copy candidate provider-registry.json (assemble already wrote it).
-  //    Verify it exists.
+  //    Verify it exists and validate the candidate Registry structure so a
+  //    malformed provider candidate can never reach the canonical Registry
+  //    (spec 0004 AC-11).
   const candidateRegistry = path.join(candidateDir, 'provider-registry.json');
   if (!fs.existsSync(candidateRegistry)) {
     throw new Error(`candidate provider-registry.json not found at ${candidateRegistry}`);
+  }
+  const registryProblems = validateCandidateRegistry(candidateRegistry);
+  if (registryProblems.length > 0) {
+    db.finalizeRun(runId, {
+      runStatus: 'failed',
+      error: `candidate registry validation failed: ${registryProblems.join('; ')}`,
+    }, options);
+    throw new Error(
+      `candidate registry validation failed for run ${runId}: ${registryProblems.join('; ')}`
+    );
   }
 
   // 5. Compute candidate hash: SHA-256 of canonical JSON containing run
@@ -276,9 +288,64 @@ function carryForwardOgImage(paths, candidatePng) {
   // records provenance missing and promotion skips it.
 }
 
-// Deterministic candidate identity hash (spec value sourcing): SHA-256 of
+// Deterministic candidate Registry validation (spec 0004 AC-11): every
+// provider must have a unique key, an http(s) base_url, a compilable
+// base_url_pattern, and (when present) a compilable model_page template and
+// catalog URL. Returns a list of problems; an empty list means the Registry
+// is structurally valid.
+function validateCandidateRegistry(registryPath) {
+  const problems = [];
+  let raw;
+  try {
+    raw = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+  } catch (err) {
+    return [`provider registry is not valid JSON: ${err.message}`];
+  }
+  const providers = Array.isArray(raw) ? raw : raw.providers;
+  if (!Array.isArray(providers)) {
+    return ['provider registry has no providers array'];
+  }
+  const seen = new Set();
+  providers.forEach((entry, index) => {
+    if (!entry || typeof entry !== 'object') {
+      problems.push(`providers[${index}] is not an object`);
+      return;
+    }
+    if (typeof entry.key !== 'string' || !/^[a-z][a-z0-9_]*$/.test(entry.key)) {
+      problems.push(`providers[${index}].key must be a lowercase identifier`);
+      return;
+    }
+    if (seen.has(entry.key)) {
+      problems.push(`duplicate provider key ${entry.key}`);
+    }
+    seen.add(entry.key);
+    if (typeof entry.base_url !== 'string' || !/^https?:\/\//.test(entry.base_url)) {
+      problems.push(`provider ${entry.key} base_url must be http(s)`);
+    }
+    if (entry.base_url_pattern !== null && entry.base_url_pattern !== undefined) {
+      if (typeof entry.base_url_pattern !== 'string') {
+        problems.push(`provider ${entry.key} base_url_pattern must be a string or null`);
+      } else {
+        try {
+          new RegExp(entry.base_url_pattern);
+        } catch {
+          problems.push(`provider ${entry.key} base_url_pattern is not a valid regex`);
+        }
+      }
+    }
+    if (entry.model_page_template !== undefined && entry.model_page_template !== null) {
+      if (typeof entry.model_page_template !== 'string' ||
+          !entry.model_page_template.includes('{model_id}')) {
+        problems.push(`provider ${entry.key} model_page_template must contain {model_id}`);
+      }
+    }
+  });
+  return problems;
+}
+
+// Computes a deterministic candidate identity hash (spec value sourcing): SHA-256 of
 // canonical JSON containing run candidate identity, liveness, pricing,
-// benchmark, and classification facts, excluding prose.
+// benchmark, access kind, and classification facts, excluding prose.
 function computeCandidateHash(runId, report) {
   const identity = {
     run_id: runId,
@@ -286,11 +353,17 @@ function computeCandidateHash(runId, report) {
       name: o.name,
       model_id: o.model_id,
       provider: o.provider,
+      provider_key: o.provider_key,
+      canonical_model_id: o.canonical_model_id,
+      access_kind: o.access_kind,
       base_url: o.base_url,
       ranking_eligible: o.ranking_eligible,
       tier: o.benchmark && o.benchmark.tier,
       score: o.benchmark && o.benchmark.score,
-      free_allowance_rank: o.free_allowance_rank,
+      benchmark_version: o.benchmark && o.benchmark.version,
+      effective_input: o.effective_price_per_million && o.effective_price_per_million.input,
+      effective_output: o.effective_price_per_million && o.effective_price_per_million.output,
+      price_verified_at: o.price_verified_at,
       last_verified: o.last_verified,
     })),
     caution: (report.caution_offers || []).map((o) => ({
@@ -636,7 +709,9 @@ function verifyCanonicalHashes(paths, manifest) {
   }
 }
 
-// Marks every older validated_not_deployed run as superseded (AC-14).
+// Marks every older undeployed validated generation as superseded (AC-14).
+// A successfully promoted generation replaces both local validated candidates
+// and failed deploy retries, while already deployed promoted history remains.
 function supersedeOlderRuns(promotedRunId, options = {}) {
   const database = db.openCollectorDb(options);
   try {
@@ -644,7 +719,7 @@ function supersedeOlderRuns(promotedRunId, options = {}) {
     try {
       database.prepare(
         "UPDATE runs SET status = 'superseded', finished_at = ? " +
-        "WHERE status = 'validated_not_deployed' AND run_id != ?"
+        "WHERE status IN ('validated', 'validated_not_deployed') AND run_id != ?"
       ).run(nowIso(), promotedRunId);
       database.exec('COMMIT');
     } catch (err) {
@@ -710,7 +785,7 @@ function findDeployTarget(options = {}) {
     if (phaseIdx < MANIFEST_PHASES.indexOf('db_finalized')) continue;
     if (phaseIdx >= MANIFEST_PHASES.indexOf('pushed')) continue;
     const status = statusByRun.get(runId);
-    if (status === 'superseded' || status === 'failed') continue;
+    if (!status || db.RUN_TERMINAL_STATUSES.includes(status)) continue;
     const sortKey = sortByRun.get(runId) || '';
     if (!best || sortKey > best.sortKey) {
       best = { run_id: runId, run_dir: runDir, phase: manifest.phase, status, sortKey };
@@ -724,6 +799,73 @@ function findDeployTarget(options = {}) {
 // Startup recovery (AC-14)
 // ---------------------------------------------------------------------------
 
+// Returns promotion manifests that require canonical hash verification. This
+// read-only preflight is intentionally separate from recovery so a mismatch
+// can abort collection before database recovery or a new run starts.
+function listPostFinalizationManifests(options = {}) {
+  const paths = db.resolvePaths(options);
+  const crawlDir = path.join(paths.stateDir, 'crawl');
+  if (!fs.existsSync(crawlDir)) return [];
+
+  // A finalized manifest is a historical record, not automatically the
+  // current recovery target. Only the newest active deploy target owns the
+  // canonical files. Older validated generations are normal after local
+  // promotion and must not be compared with the newer canonical output.
+  let byId;
+  if (fs.existsSync(paths.dbPath)) {
+    const database = db.openDatabaseFile(paths.dbPath, { readOnly: true });
+    let runs;
+    try {
+      runs = database.prepare(
+        "SELECT run_id, status, started_at, finished_at FROM runs " +
+        "WHERE status IN ('candidate_ready', 'validated', 'validated_not_deployed')"
+      ).all();
+    } finally {
+      database.close();
+    }
+    byId = new Map(runs.map((row) => [row.run_id, row]));
+  } else {
+    // Before SQLite exists there is no status/order authority. Preserve the
+    // conservative legacy behavior and require inspection of the manifest.
+    byId = new Map();
+  }
+  const candidates = [];
+  for (const runId of fs.readdirSync(crawlDir)) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(runId)) continue;
+    const runDir = path.join(crawlDir, runId);
+    if (!fs.statSync(runDir).isDirectory()) continue;
+    const manifest = readManifest(runDir);
+    const row = byId.get(runId) || (!fs.existsSync(paths.dbPath)
+      ? { run_id: runId, status: 'unknown', started_at: runId, finished_at: null }
+      : null);
+    if (!manifest || manifest.run_id !== runId || !row) continue;
+    const phaseIdx = MANIFEST_PHASES.indexOf(manifest.phase);
+    if (phaseIdx >= MANIFEST_PHASES.indexOf('db_finalized') &&
+        phaseIdx < MANIFEST_PHASES.indexOf('pushed')) {
+      candidates.push({ runId, runDir, manifest, row });
+    }
+  }
+  candidates.sort((a, b) => {
+    const aKey = a.row.finished_at || a.row.started_at || '';
+    const bKey = b.row.finished_at || b.row.started_at || '';
+    return bKey.localeCompare(aKey) || b.runId.localeCompare(a.runId);
+  });
+  return candidates.slice(0, 1).map(({ runId, runDir, manifest }) => ({ runId, runDir, manifest }));
+}
+
+function assertNoManualInspectionRequired(options = {}) {
+  for (const { runId, manifest } of listPostFinalizationManifests(options)) {
+    try {
+      verifyCanonicalHashes(db.resolvePaths(options), manifest);
+    } catch (err) {
+      throw new Error(
+        `run ${runId} requires manual inspection: ${err.message}`,
+        { cause: err }
+      );
+    }
+  }
+}
+
 // Checks for interrupted promotions and recovers. Only mutating commands
 // call this; read only commands (db:status, migrate) never restore files.
 //
@@ -734,6 +876,11 @@ function recoverInterruptedPromotion(options = {}) {
   const paths = db.resolvePaths(options);
   const crawlDir = path.join(paths.stateDir, 'crawl');
   if (!fs.existsSync(crawlDir)) return null;
+
+  // Preflight only the current finalized recovery target before changing any
+  // files or the DB. Historical finalized generations are never candidates.
+  assertNoManualInspectionRequired(options);
+  const finalizedTargets = new Set(listPostFinalizationManifests(options).map((entry) => entry.runId));
 
   const results = [];
   for (const runId of fs.readdirSync(crawlDir)) {
@@ -835,15 +982,16 @@ function recoverInterruptedPromotion(options = {}) {
       }
     } else if (phaseIdx >= MANIFEST_PHASES.indexOf('db_finalized') &&
                phaseIdx < MANIFEST_PHASES.indexOf('pushed')) {
+      if (!finalizedTargets.has(runId)) continue;
       // After DB finalization: verify hashes, report resumable. No DB restore.
       try {
         verifyCanonicalHashes(paths, manifest);
         results.push({ runId, action: 'resumable', phase, manifest: manifestPath(runDir) });
       } catch (err) {
-        results.push({
-          runId, action: 'manual_inspection', phase,
-          error: err.message,
-        });
+        throw new Error(
+          `run ${runId} requires manual inspection: ${err.message}`,
+          { cause: err }
+        );
       }
     }
   }
@@ -854,12 +1002,32 @@ function recoverInterruptedPromotion(options = {}) {
 // Run directory cleanup (AC-17)
 // ---------------------------------------------------------------------------
 
-// Removes ignored run directories older than seven days after a successful
-// promotion.
+// Removes only old, safe terminal run directories. Unknown directories and
+// every nonterminal/retry state are retained for recovery and forensics. This
+// function never deletes rows from runs, tasks, or source_cache.
 function cleanupOldRuns(options = {}) {
   const paths = db.resolvePaths(options);
   const crawlDir = path.join(paths.stateDir, 'crawl');
   if (!fs.existsSync(crawlDir)) return 0;
+
+  const statuses = new Map();
+  let newestPromotedRunId = null;
+  if (fs.existsSync(paths.dbPath) && db.checkIntegrity(paths.dbPath)) {
+    const database = db.openDatabaseFile(paths.dbPath, { readOnly: true });
+    try {
+      const rows = database.prepare(
+        'SELECT run_id, status, started_at, finished_at FROM runs'
+      ).all();
+      for (const row of rows) statuses.set(row.run_id, row);
+      const newest = database.prepare(
+        "SELECT run_id FROM runs WHERE status = 'promoted' " +
+        'ORDER BY COALESCE(finished_at, started_at) DESC, run_id DESC LIMIT 1'
+      ).get();
+      newestPromotedRunId = newest ? newest.run_id : null;
+    } finally {
+      database.close();
+    }
+  }
 
   const cutoff = Date.now() - RUN_RETENTION_DAYS * 24 * 60 * 60 * 1000;
   let cleaned = 0;
@@ -867,19 +1035,24 @@ function cleanupOldRuns(options = {}) {
     if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(runId)) continue;
     const runDir = path.join(crawlDir, runId);
     const stat = fs.statSync(runDir);
-    if (stat.mtimeMs > cutoff) continue;
+    if (!stat.isDirectory() || stat.mtimeMs > cutoff) continue;
 
-    // Never remove a run that is the latest promoted (its DB copy is the
-    // recovery source).
-    const manifest = readManifest(runDir);
-    if (manifest && manifest.phase === 'pushed') {
-      // Check if this is the newest promoted run.
-      const status = db.getStatus(options);
-      if (status.lastPromotedRun && status.lastPromotedRun.run_id === runId) continue;
+    const row = statuses.get(runId);
+    if (!row) continue;
+    if (row.status === 'failed' || row.status === 'superseded') {
+      fs.rmSync(runDir, { recursive: true, force: true });
+      cleaned += 1;
+      continue;
     }
-
-    fs.rmSync(runDir, { recursive: true, force: true });
-    cleaned += 1;
+    // A promoted run is removable only after its manifest records a
+    // successful push. A locally promoted generation remains a deploy target.
+    if (row.status === 'promoted' && runId !== newestPromotedRunId) {
+      const manifest = readManifest(runDir);
+      if (manifest && manifest.phase === 'pushed') {
+        fs.rmSync(runDir, { recursive: true, force: true });
+        cleaned += 1;
+      }
+    }
   }
   return cleaned;
 }
@@ -911,6 +1084,7 @@ module.exports = {
   RUN_RETENTION_DAYS,
   // candidate validation
   validateCandidate,
+  validateCandidateRegistry,
   computeCandidateHash,
   // promotion
   promoteGeneration,
@@ -920,6 +1094,7 @@ module.exports = {
   findDeployTarget,
   // recovery
   recoverInterruptedPromotion,
+  assertNoManualInspectionRequired,
   // cleanup
   cleanupOldRuns,
   // manifest helpers (exported for tests)

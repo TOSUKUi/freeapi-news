@@ -69,13 +69,19 @@ npm run collect          # collect → validate candidate → promote locally (n
 npm run collect:dry-run  # collect → validate candidate (no promote, no deploy)
 npm run deploy           # commit and push the newest promoted generation
 npm run full             # collect → promote → deploy
+npm run validate-candidate # validate a candidate report / HTML / OGP
+npm run promote          # promote a validated candidate (atomic canonical files)
+npm run recover          # recover an interrupted promotion/deploy state
+npm run cleanup          # remove run directories older than seven days
+npm test                 # fixture tests for the collector
+
+DB administration (SQLite state only, never deployed):
+
 npm run db:status        # schema version, active run, last promoted run, DB copies
 npm run db:migrate       # apply numbered migrations
 npm run db:bootstrap     # emergency one time import from report.json
 npm run db:import-legacy # one time cutover import of known_offers/benchmarks JSON
 npm run db:restore       # restore the newest validated DB copy
-npm run db:cleanup       # remove run directories older than seven days
-npm test                 # fixture tests for the collector
 ```
 
 The lower level steps are also callable directly:

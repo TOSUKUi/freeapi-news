@@ -103,7 +103,7 @@ function validateCatalogResponse(json) {
       errors.push(`data[${index}] (${item.id}) completion price is not a parseable decimal string: ${JSON.stringify(pricing.completion)}`);
     }
     if (prompt === null || completion === null) return;
-    entries.push({
+    const entry = {
       exact_model_id: item.id,
       model_name: typeof item.name === 'string' && item.name ? item.name : item.id,
       prompt,
@@ -112,7 +112,14 @@ function validateCatalogResponse(json) {
       completion_raw: pricing.completion,
       is_free: isPositiveZero(prompt) && isPositiveZero(completion),
       pricing_hash: db.pricingHash(prompt, completion),
-    });
+    };
+    // Some official catalogs publish a release date. Preserve it as raw
+    // evidence when present; missing dates remain unknown and are handled by
+    // the benchmark queue's fail-safe policy.
+    if (typeof item.release_date === 'string' && item.release_date.trim()) {
+      entry.release_date = item.release_date.trim();
+    }
+    entries.push(entry);
   });
   if (errors.length > 0) {
     return { ok: false, errors, entries: [] };

@@ -18,11 +18,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const rankingPolicy = require('./ranking-policy');
 
 // ── Paths ─────────────────────────────────────────────────────────
 const ROOT = path.resolve(__dirname, '..');
 const DEFAULT_INPUT = path.join(ROOT, 'report.json');
-const INPUT_FALLBACK = path.join(ROOT, '.agents', 'skills', 'llm-deals-intelligence-skill', 'state', 'known_offers.json');
 const DEFAULT_OUTPUT = path.join(ROOT, 'index.html');
 
 // Pinned Tailwind build (spec 0002 AC-2: fixed version, not the floating CDN script).
@@ -36,29 +36,12 @@ const CLASS_BADGE = {
   D_TRIAL_CREDIT:         { label: 'D. 試用クレジット', cls: 'badge-d' },
   E_DISCOUNT:             { label: 'E. 割引',          cls: 'badge-e' },
   F_CONDITIONAL:          { label: 'F. 条件付き',      cls: 'badge-f' },
-  G_FREE_LIKE:            { label: 'G. 無料っぽい',    cls: 'badge-g' },
 };
 
 // Performance tier is the admission gate (S, A, B). Raw scores from different
 // benchmarks are never compared; the tier is the normalized bucket.
 const TIER_RANK = { S: 0, A: 1, B: 2 };
 const ADMITTED_TIERS = ['S', 'A', 'B'];
-
-// Ranking admission gate: a Terminal-Bench-ish score must exist and be >= 48%.
-// Loose match (hyphen / space / version variants) because the exact 2.1 version
-// is not always determinable. Fail-safe mirror of the validator gate so a
-// hand-edited or unvalidated report.json still cannot render non-qualifiers.
-const TB_GATE_SCORE = 48;
-const TB_GATE_PAT = /terminal[\s-]?bench/i;
-function terminalBenchBest(o) {
-  let best = null;
-  const consider = (name, score) => {
-    if (name && TB_GATE_PAT.test(name) && score != null && (best == null || score > best)) best = score;
-  };
-  for (const b of o.benchmarks || []) consider(b && b.name, b && b.score);
-  if (o.benchmark) consider(o.benchmark.benchmark_name, o.benchmark.score);
-  return best;
-}
 
 // ── Provider capability registry ──────────────────────────────────
 // Loaded from build/provider-registry.json — the single source of truth
@@ -226,59 +209,99 @@ function freshnessLabel(lastVerified, generatedAt, tz) {
 
 function fmtPrice(v) {
   if (v == null) return '—';
-  return v === 0 ? '$0' : `$${v}`;
+  if (v === 0) return '$0';
+  // Spec 0004 AC-14: prices are USD per million tokens and must be readable.
+  // Tiny catalog prices arrive as small decimals with occasional float
+  // artifacts (e.g. OpenRouter returns 0.0000006000000000000001, parsed as
+  // 6.000000000000001e-7). Plain `${v}` would render '1e-7' or
+  // '6.000000000000001e-7'. Format with up to 12 significant digits and no
+  // grouping so real values stay exact and artifacts round to the readable
+  // intended decimal ($0.0000006).
+  const s = new Intl.NumberFormat('en-US', {
+    useGrouping: false,
+    maximumSignificantDigits: 12,
+  }).format(v);
+  return `$${s}`;
 }
 
 function priceDisplay(o) {
   const price = o.effective_price_per_million || o.normal_price_per_million || {};
   const inP = fmtPrice(price.input);
   const outP = fmtPrice(price.output);
-  const isFree = price.input === 0 && price.output === 0;
+  const isFree = o.access_kind === 'FREE' || (price.input === 0 && price.output === 0);
   const text = isFree ? '$0' : `${inP} / ${outP}`;
   return { text, isFree };
 }
 
-// ── Ranking (AC-3, AC-4) ──────────────────────────────────────────
-// Admission gate: ranked_offers only, ranking_eligible === true, a valid
-// benchmark (non null tier and score), tier in S/A/B. Conditional credits
-// and offers without a benchmark never appear. No fixed card cap.
-// Ordering: tier (S>A>B) → free allowance (AMPLE>NORMAL>TIGHT>TINY) →
-// benchmark score DESC → freshness DESC → name. The tier is the primary
-// performance axis; within a tier, a prototype-only quota sinks below
-// offers that are actually usable at scale, then the raw score orders the
-// rest. Never compare raw scores across different benchmarks.
-const ALLOWANCE_RANK = { AMPLE: 0, NORMAL: 1, TIGHT: 2, TINY: 3 };
+// ── Ranking (spec 0004 AC-4, AC-5, AC-7) ─────────────────────────
+// Admission gate: ranked_offers only, ranking_eligible === true, a
+// qualifying shared-policy Terminal Bench 2.0/2.1 at or above 50, tier in
+// S/A/B, and a derived access kind of FREE or ULTRA_LOW whose effective
+// prices match. No fixed card cap.
+// Ordering mirrors assemble.js compareRanked: tier (S>A>B) → access kind
+// (FREE before ULTRA_LOW) → same Terminal Bench version score DESC → price
+// confirmation date DESC → name. Raw scores from different benchmark
+// versions are never compared.
+const ACCESS_RANK = { FREE: 0, ULTRA_LOW: 1 };
 
 function selectRankedOffers(report) {
   const eligible = (report.ranked_offers || []).filter(o =>
     o.ranking_eligible === true &&
+    rankingPolicy.qualifiesTerminalBench(
+      o.benchmark_key,
+      o.benchmark && o.benchmark.score
+    ) &&
     o.benchmark &&
     o.benchmark.tier != null &&
-    o.benchmark.score != null &&
     ADMITTED_TIERS.includes(o.benchmark.tier) &&
-    (terminalBenchBest(o) ?? -1) >= TB_GATE_SCORE
+    (o.access_kind === 'FREE' || o.access_kind === 'ULTRA_LOW') &&
+    rankingPolicy.accessKindMatches(
+      o.access_kind,
+      o.effective_price_per_million && o.effective_price_per_million.input,
+      o.effective_price_per_million && o.effective_price_per_million.output
+    )
   );
   return eligible.sort((a, b) => {
     const at = TIER_RANK[a.benchmark.tier];
     const bt = TIER_RANK[b.benchmark.tier];
     if (at !== bt) return at - bt; // S before A before B
-    const aa = ALLOWANCE_RANK[a.free_allowance_rank] ?? ALLOWANCE_RANK.NORMAL;
-    const ba = ALLOWANCE_RANK[b.free_allowance_rank] ?? ALLOWANCE_RANK.NORMAL;
-    if (aa !== ba) return aa - ba; // generous allowance first within a tier
-    const as = a.benchmark.score ?? 0;
-    const bs = b.benchmark.score ?? 0;
-    if (bs !== as) return bs - as; // higher score first
-    const av = validTimestamp(a.last_verified) ? Date.parse(a.last_verified) : Number.NEGATIVE_INFINITY;
-    const bv = validTimestamp(b.last_verified) ? Date.parse(b.last_verified) : Number.NEGATIVE_INFINITY;
-    if (bv !== av) return bv - av; // freshness DESC, missing sorts last
+    const aa = ACCESS_RANK[a.access_kind] ?? ACCESS_RANK.ULTRA_LOW;
+    const ba = ACCESS_RANK[b.access_kind] ?? ACCESS_RANK.ULTRA_LOW;
+    if (aa !== ba) return aa - ba; // FREE before ULTRA_LOW
+    if (a.benchmark.version && b.benchmark.version && a.benchmark.version === b.benchmark.version) {
+      const as = a.benchmark.score ?? 0;
+      const bs = b.benchmark.score ?? 0;
+      if (bs !== as) return bs - as; // higher same-version score first
+    }
+    const av = validTimestamp(a.price_verified_at) ? Date.parse(a.price_verified_at) : Number.NEGATIVE_INFINITY;
+    const bv = validTimestamp(b.price_verified_at) ? Date.parse(b.price_verified_at) : Number.NEGATIVE_INFINITY;
+    if (bv !== av) return bv - av; // price confirmation date DESC, missing sorts last
     return String(a.name || '').localeCompare(String(b.name || ''));
   });
 }
 
 // ── Component builders ────────────────────────────────────────────
 function classBadge(o) {
-  const b = CLASS_BADGE[o.classification] || { label: o.classification || '—', cls: 'badge-g' };
+  // G_FREE_LIKE is the classifier's fallback when no more specific offer
+  // mechanism is proven. It adds no useful information beside the
+  // deterministic FREE / ULTRA_LOW access badge, so do not present it as if
+  // it described the current price.
+  if (o.classification === 'G_FREE_LIKE') return '<!-- no offer-mechanism badge -->';
+  const b = CLASS_BADGE[o.classification];
+  if (!b) return '<!-- no offer-mechanism badge -->';
   return `<span class="badge ${b.cls}">${esc(b.label)}</span>`;
+}
+
+// Access kind badge (spec 0004 AC-14): deterministic, token backed, and
+// displayed in plain Japanese rather than exposing the internal enum.
+function accessBadge(o) {
+  if (o.access_kind === 'FREE') {
+    return `<span class="badge badge-a" title="実効入力・出力価格が 0ドル / 百万トークン">無料</span>`;
+  }
+  if (o.access_kind === 'ULTRA_LOW') {
+    return `<span class="badge badge-c" title="入力 0.2ドル以下 ・ 出力 0.4ドル以下 / 百万トークン">激安</span>`;
+  }
+  return '';
 }
 
 function tierBadge(tier) {
@@ -299,10 +322,11 @@ function benchmarkBlock(o) {
   if (!o.benchmark) return '';
   const tier = o.benchmark.tier;
   const cls = tier === 'S' ? 'tier-s' : tier === 'A' ? 'tier-a' : 'tier-b';
+  const version = o.benchmark.version ? ` (${esc(o.benchmark.version)})` : '';
   return `<div class="stat">
       <div class="stat-label">ベンチマーク</div>
       <div class="stat-value"><span class="bench-tier ${cls}">${esc(tier)}</span><span class="bench-score">${esc(o.benchmark.score)}%</span></div>
-      <div class="stat-sub">${esc(o.benchmark.benchmark_name)}</div>
+      <div class="stat-sub">${esc(o.benchmark.benchmark_name)}${version}</div>
     </div>`;
 }
 
@@ -322,7 +346,7 @@ function benchmarkDetailsBlock(o) {
   const list = Array.isArray(o.benchmarks) ? o.benchmarks : [];
   if (list.length === 0) return '';
   const rows = list.map(b =>
-    `<div class="bench-row"><span class="bench-name">${esc(b.name)}</span><span class="bench-val">${esc(b.score)}%</span></div>`
+    `<div class="bench-row"><span class="bench-name">${esc(b.name)}${b.version ? ` (${esc(b.version)})` : ''}</span><span class="bench-val">${esc(b.score)}%</span></div>`
   ).join('');
   return `<details class="bench-details">
       <summary class="bench-summary">
@@ -332,28 +356,6 @@ function benchmarkDetailsBlock(o) {
       </summary>
       <div class="bench-list">${rows}</div>
     </details>`;
-}
-
-// OpenRouter (router type) free model names, full list, no truncation (AC-5).
-// The reducer already persists a sorted list; normalize again at the render
-// boundary so hand-built reports cannot duplicate or reorder the inventory.
-function freeModelNamesBlock(o) {
-  if (o.delivery_type !== 'router') return '';
-  const names = Array.isArray(o.free_model_names)
-    ? [...new Set(o.free_model_names.filter((name) =>
-      typeof name === 'string' && name.length > 0))].sort()
-    : [];
-  if (names.length === 0) {
-    return `<div class="models-block">
-        <div class="stat-label">無料モデル一覧</div>
-        <p class="models-missing">モデル一覧未取得</p>
-      </div>`;
-  }
-  const badges = names.map((name) => `<span class="model-chip">${esc(name)}</span>`).join('');
-  return `<div class="models-block">
-      <div class="stat-label">無料モデル一覧 <span class="models-count">${names.length}</span></div>
-      <div class="models-list">${badges}</div>
-    </div>`;
 }
 
 // Per model connection accordion (AC-6): one details/summary per card with
@@ -407,11 +409,31 @@ function connectionAccordion(o) {
     </details>`;
 }
 
+// Identity rows for one card (spec 0004 AC-14). Rows render only when the
+// value exists; absent rows emit nothing so the generated HTML has no
+// whitespace only lines.
+function offerIdRows(o, tz) {
+  const rows = [
+    ['Base URL', o.base_url ? `<code class="id-val">${esc(o.base_url)}</code>` : null],
+    ['Model ID', o.model_id ? `<code class="id-val">${esc(o.model_id)}</code>` : null],
+    ['価格確認日', o.price_verified_at ? `<span class="id-val-plain">${fmtDate(o.price_verified_at, tz)}</span>` : null],
+    ['割引期限', o.discount_end_at ? `<span class="id-val-plain train-yes">⏳ ${fmtDate(o.discount_end_at, tz)}まで</span>` : null],
+    ['リミット', o.free_limits ? `<span class="id-val-plain">${esc(o.free_limits)}</span>` : null],
+    ['期限', o.end_at ? `<span class="id-val-plain train-yes">⏳ ${fmtDate(o.end_at, tz)}まで${o.end_timezone_known ? '' : ' (タイムゾーン不明)'}</span>` : null],
+    ['レート', o.rate_limits ? `<span class="id-val-plain">${esc(o.rate_limits)}</span>` : null],
+    ['データ利用', o.training_use ? `<span class="id-val-plain ${/なし|no/i.test(o.training_use) ? 'train-no' : 'train-yes'}">${esc(o.training_use)}</span>` : null],
+  ];
+  return rows
+    .filter((row) => row[1] !== null)
+    .map((row) => `<div class="id-row"><span class="id-key">${row[0]}</span>${row[1]}</div>`)
+    .join('\n          ');
+}
+
 function offerCard(o, index, generatedAt, tz) {
   const price = priceDisplay(o);
   const pos = String(index + 1).padStart(2, '0');
   const tierCls = o.benchmark ? ` tier-accent-${o.benchmark.tier.toLowerCase()}` : '';
-  const cardDetails = [freeModelNamesBlock(o), benchmarkDetailsBlock(o), connectionAccordion(o)]
+  const cardDetails = [benchmarkDetailsBlock(o), connectionAccordion(o)]
     .filter(Boolean)
     .join('\n        ');
   return `<article class="offer-card reveal${tierCls}" aria-labelledby="offer-${index}">
@@ -421,6 +443,7 @@ function offerCard(o, index, generatedAt, tz) {
       <div class="offer-main">
         <div class="offer-badges">
           ${classBadge(o)}
+          ${accessBadge(o)}
           ${o.benchmark ? tierBadge(o.benchmark.tier) : ''}
           ${freshnessBadge(o, generatedAt, tz)}
         </div>
@@ -438,12 +461,7 @@ function offerCard(o, index, generatedAt, tz) {
         </div>
 
         <div class="offer-ids">
-          ${o.base_url ? `<div class="id-row"><span class="id-key">Base URL</span><code class="id-val">${esc(o.base_url)}</code></div>` : ''}
-          ${o.model_id ? `<div class="id-row"><span class="id-key">Model ID</span><code class="id-val">${esc(o.model_id)}</code></div>` : ''}
-          ${o.free_limits ? `<div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">${esc(o.free_limits)}</span></div>` : ''}
-          ${o.end_at ? `<div class="id-row"><span class="id-key">期限</span><span class="id-val-plain train-yes">⏳ ${fmtDate(o.end_at, tz)}まで${o.end_timezone_known ? '' : ' (タイムゾーン不明)'}</span></div>` : ''}
-          ${o.rate_limits ? `<div class="id-row"><span class="id-key">レート</span><span class="id-val-plain">${esc(o.rate_limits)}</span></div>` : ''}
-          ${o.training_use ? `<div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain ${/なし|no/i.test(o.training_use) ? 'train-no' : 'train-yes'}">${esc(o.training_use)}</span></div>` : ''}
+          ${offerIdRows(o, tz)}
         </div>
 
         ${cardDetails}
@@ -472,11 +490,9 @@ function computeSnapshot(report, offers) {
   const total = offers.length;
   const sCount = offers.filter(o => o.benchmark && o.benchmark.tier === 'S').length;
   const aCount = offers.filter(o => o.benchmark && o.benchmark.tier === 'A').length;
-  const freeCount = offers.filter(o => {
-    const p = o.effective_price_per_million || {};
-    return p.input === 0 && p.output === 0;
-  }).length;
-  const limitedCount = offers.filter(o => o.end_at).length;
+  const freeCount = offers.filter(o => o.access_kind === 'FREE' ||
+    (!o.access_kind && o.effective_price_per_million && o.effective_price_per_million.input === 0 && o.effective_price_per_million.output === 0)).length;
+  const limitedCount = offers.filter(o => o.end_at || o.discount_end_at).length;
   return { total, sCount, aCount, freeCount, limitedCount };
 }
 
@@ -537,7 +553,6 @@ const TOKEN_CSS = `
   --badge-d: 262 83% 44%;
   --badge-e: 24 95% 38%;
   --badge-f: 180 70% 26%;
-  --badge-g: 0 72% 42%;
   --tier-s: 38 92% 36%;
   --tier-a: 217 91% 40%;
   --tier-b: 142 71% 32%;
@@ -572,7 +587,6 @@ const TOKEN_CSS = `
   --badge-d: 262 83% 52%;
   --badge-e: 25 95% 44%;
   --badge-f: 180 70% 32%;
-  --badge-g: 0 72% 48%;
   --tier-s: 43 96% 62%;
   --tier-a: 217 91% 66%;
   --tier-b: 142 71% 56%;
@@ -632,7 +646,6 @@ header::after {
 .badge-d { background-color: hsl(var(--badge-d)); }
 .badge-e { background-color: hsl(var(--badge-e)); }
 .badge-f { background-color: hsl(var(--badge-f)); }
-.badge-g { background-color: hsl(var(--badge-g)); }
 
 /* Performance tier: soft square badge, colored letter. */
 .tier {
@@ -738,25 +751,6 @@ header::after {
 .id-val-plain { font-size: 0.8rem; }
 .train-no { color: hsl(var(--success)); font-weight: 600; }
 .train-yes { color: hsl(var(--warning)); font-weight: 600; }
-
-/* OpenRouter free model names. */
-.models-block { margin-top: 1.1rem; }
-.models-count {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 1.4rem; height: 1.4rem; padding: 0 0.3rem;
-  border-radius: 999px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
-  font-family: "Space Grotesk", sans-serif; font-size: 0.7rem; font-weight: 700;
-}
-.models-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
-.model-chip {
-  font-family: "JetBrains Mono", monospace; font-size: 0.7rem;
-  background: hsl(var(--accent)); color: hsl(var(--accent-foreground));
-  border: 1px solid hsl(var(--border));
-  padding: 0.18rem 0.5rem; border-radius: calc(var(--radius) - 4px);
-  transition: background-color .15s ease, border-color .15s ease;
-}
-.model-chip:hover { background: hsl(var(--accent) / 0.6); border-color: hsl(var(--ring) / 0.4); }
-.models-missing { color: hsl(var(--warning)); font-weight: 600; font-size: 0.85rem; margin-top: 0.4rem; }
 
 /* Expandable benchmark details. */
 .bench-details { margin-top: 1.15rem; border-top: 1px solid hsl(var(--border)); padding-top: 0.9rem; }
@@ -1030,7 +1024,7 @@ function generateHTML(report) {
         <h2 id="ranked-h" class="font-display text-2xl sm:text-3xl font-bold">無料・激安APIランキング</h2>
         <span class="font-display text-sm text-muted-foreground whitespace-nowrap">${offers.length} 件</span>
       </div>
-      <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">性能ティア</strong> → 無料枠の余裕度 → スコア → 情報の鮮度順。</p>
+      <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">ティア</strong> → アクセス区分 (FREE/ULTRA_LOW) → 同じ Terminal Bench 版のスコア → 価格確認日 → 名前の順。無料枠の余裕度は表示のみです。</p>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">${cards}</div>
     </section>
 
@@ -1042,6 +1036,7 @@ function generateHTML(report) {
         <span aria-hidden="true">·</span>
         <a href="https://github.com/TOSUKUi/freeapi-news/issues" target="_blank" rel="noopener noreferrer" class="underline hover:text-foreground transition-colors">フィードバック</a>
       </p>
+      <p class="mb-2 text-xs">このサイトの情報は AI による自動収集に基づきます。誤りや遅延が含まれる可能性があります。利用前に必ず公式情報で確認してください。掲載内容の正確性や結果についての保証はありません。最終的な判断はご自身で行ってください。免責表示があっても、未検証の値は掲載しません。</p>
       <p class="text-xs">© 2026 free-api-news. このサイトの情報は参考用途にお使いください。リンク先の利用規約に従ってください。</p>
     </footer>
 
@@ -1097,38 +1092,19 @@ function main() {
   try {
     raw = fs.readFileSync(inputPath, 'utf8');
   } catch (e) {
-    console.error(`⚠️  入力ファイルが見つかりません: ${inputPath}`);
-    console.error(`   フォールバック: ${INPUT_FALLBACK}`);
-    try {
-      raw = fs.readFileSync(INPUT_FALLBACK, 'utf8');
-    } catch (e2) {
-      console.error('   フォールバックも失敗しました。ダミーデータで生成します。');
-      raw = JSON.stringify({
-        generated_at: new Date().toISOString(),
-        timezone: 'Asia/Tokyo',
-        new_models: [],
-        changes: [],
-        ranked_offers: [],
-        excluded_offers: [],
-        sources: [],
-      });
-    }
+    // Spec 0004 / AGENTS.md: missing or invalid report input must fail
+    // instead of generating dummy public HTML. There is no legacy
+    // known_offers.json fallback and no dummy generation.
+    console.error(`❌ 入力ファイルが見つかりません: ${inputPath}`);
+    process.exit(1);
   }
 
   let report;
   try {
     report = JSON.parse(raw);
   } catch (e) {
-    console.error('⚠️  JSONの解析に失敗しました。ダミーデータで生成します。');
-    report = {
-      generated_at: new Date().toISOString(),
-      timezone: 'Asia/Tokyo',
-      new_models: [],
-      changes: [],
-      ranked_offers: [],
-      excluded_offers: [],
-      sources: [],
-    };
+    console.error(`❌ JSONの解析に失敗しました: ${inputPath}: ${e.message}`);
+    process.exit(1);
   }
 
   const html = generateHTML(report);
@@ -1137,7 +1113,7 @@ function main() {
   console.log(`✅ HTMLを生成しました: ${outputPath}`);
   console.log(`   入力: ${inputPath}`);
   console.log(`   レポート日時: ${report.generated_at || '不明'}`);
-  console.log(`   掲載オファー: ${ranked.length} 件 (S/A/B ・ ティア→余裕度→スコア→鮮度)`);
+  console.log(`   掲載オファー: ${ranked.length} 件 (ティア→アクセス区分→同じTerminal Bench版のスコア→価格確認日→名前)`);
 }
 
 // Only auto-run when executed directly (`node build-html.js`), so other build
@@ -1150,5 +1126,6 @@ module.exports = {
   computeSnapshot,
   dayKeyInTz,
   fmtDate,
+  fmtPrice,
   TOKEN_CSS,
 };

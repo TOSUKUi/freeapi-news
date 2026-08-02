@@ -13,9 +13,11 @@
 //           internal benchmark key and copy into the run candidate without
 //           replacement. Source display variants collapse to one internal
 //           key (Terminal Bench 2.1 / Terminal-Bench 2.1 -> terminal_bench_2_1).
-//           Only current free models missing terminal_bench_2_1 are searched
-//           each day, in deterministic priority order, in chunks of at most
-//           four models.
+//           Only current free models without an accepted benchmark fact or a
+//           completed not_found search are searched each day. Known releases
+//           at least six months old are excluded; unknown release dates remain
+//           eligible. The queue remains deterministic and is split into chunks
+//           of at most four models.
 //   * AC-8  A proposal enters current benchmarks only after matching an exact
 //           queued model ID, canonical benchmark key and version, a score from
 //           0 through 100, and accepted source evidence. A higher proposed
@@ -27,10 +29,10 @@
 //           unknown version, and MEDIUM or LOW confidence remain pending. The
 //           source URL and source hash live in benchmark columns; image hash,
 //           extraction time, method, and confidence live in benchmarks.facts_json.
-//   * AC-10 terminal_bench_2_1 at 65 or higher is tier S, 50 through 64.999 is
-//           tier A. Without that key another verified official benchmark
-//           supports tier B at most. No verified benchmark is benchmark_pending
-//           and is never ranked.
+//   * AC-10 an accepted Terminal Bench 2.0 or 2.1 row at 65 or higher is tier
+//           S, 50 through 64.999 is tier A. Without either gate row another
+//           verified official benchmark supports tier B at most. No verified
+//           benchmark is benchmark_pending and is never ranked.
 //   * AC-11 A benchmark scout artifact must match its manifest task id and the
 //           exact queued model ids; unqueued models are rejected.
 
@@ -38,18 +40,25 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const db = require('./collector-db');
+const rankingPolicy = require('../../build/ranking-policy');
 
-// The ranking admission benchmark. A model missing this key is queued for
-// daily research (AC-7) and, with no verified benchmark at all, stays
-// benchmark_pending (AC-10).
-const RANKING_BENCHMARK_KEY = 'terminal_bench_2_1';
+// The ranking admission benchmarks (spec 0004 AC-5, child 0002): a model must
+// carry a verified Terminal Bench 2.0 or 2.1 score at or above 50. When both
+// exist, 2.1 is the representative row. A future version stays pending until
+// its key, display name, thresholds, and precedence are added in code and
+// tests (spec 0004 follow-up). The keys and threshold are the shared
+// ranking-policy module so assembler, validator, and builder never drift.
+const RANKING_BENCHMARK_KEYS = rankingPolicy.RANKING_BENCHMARK_KEYS;
+const RANKING_BENCHMARK_KEY = rankingPolicy.RANKING_BENCHMARK_KEY;
+const RANKING_MIN_SCORE = rankingPolicy.RANKING_MIN_SCORE;
 
-// Tier thresholds for the ranking benchmark (AC-10).
+// Tier thresholds for the ranking benchmarks (AC-10 / spec 0004 child 0002).
 const TIER_S_SCORE = 65;
 const TIER_A_SCORE = 50;
 
 // Search queue chunks hold at most four models (AC-7).
 const QUEUE_CHUNK_SIZE = 4;
+const BENCHMARK_RESEARCH_MAX_AGE_MONTHS = 6;
 
 const EXTRACTION_METHODS = ['text', 'official_image'];
 const CONFIDENCE_LEVELS = ['HIGH', 'MEDIUM', 'LOW'];
@@ -76,6 +85,40 @@ function isUsableBenchmarkVersion(version) {
   if (typeof version !== 'string') return false;
   const normalized = version.trim().toLowerCase();
   return normalized.length > 0 && !UNKNOWN_VERSION_VALUES.has(normalized);
+}
+
+function parseReleaseDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) return null;
+  const normalized = value.trim();
+  const parsed = new Date(`${normalized}T00:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== normalized) return null;
+  return parsed;
+}
+
+function benchmarkResearchCutoff(now) {
+  const current = new Date(now);
+  if (Number.isNaN(current.getTime())) return null;
+  const day = current.getUTCDate();
+  const cutoff = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), 1));
+  cutoff.setUTCMonth(cutoff.getUTCMonth() - BENCHMARK_RESEARCH_MAX_AGE_MONTHS);
+  const lastDay = new Date(Date.UTC(cutoff.getUTCFullYear(), cutoff.getUTCMonth() + 1, 0)).getUTCDate();
+  cutoff.setUTCDate(Math.min(day, lastDay));
+  cutoff.setUTCHours(current.getUTCHours(), current.getUTCMinutes(), current.getUTCSeconds(), current.getUTCMilliseconds());
+  return cutoff;
+}
+
+function isTooOldForBenchmarkResearch(releaseDate, now) {
+  const released = parseReleaseDate(releaseDate);
+  const cutoff = benchmarkResearchCutoff(now);
+  return !!released && !!cutoff && released <= cutoff;
+}
+
+function canonicalForceModelIds(options = {}) {
+  const values = Array.isArray(options.forceModelIds) ? options.forceModelIds : [];
+  return new Set(values.flatMap((value) => {
+    if (typeof value !== 'string' || !value.trim()) return [];
+    return [value.trim(), db.canonicalModelId(value.trim())];
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -121,15 +164,14 @@ function modelMetadataHash(facts) {
   return require('node:crypto').createHash('sha256').update(canonical).digest('hex');
 }
 
-// Builds the deterministic daily search queue: every current free canonical
-// model missing terminal_bench_2_1. "Current free" means an offer that is
-// verified or stale (confirmed_removed offers are never searched). One entry
-// per canonical model ID (an offer identity is finer than a model, but the
-// benchmark is keyed on the model).
-//
-// Priority order (AC-7): newly discovered models, metadata changed models,
-// oldest successful or failed search, then canonical model ID. The queue is
-// split into chunks of at most four models.
+// Builds the deterministic daily search queue. Normal research considers
+// current free canonical models with no accepted benchmark fact, no terminal
+// not-found result, and no known release date at least six months old. Unknown
+// release dates remain eligible. A force model or benchmark bypasses those
+// automatic exclusions for explicit manual re-search. "Current free" means an
+// offer that is verified or stale (confirmed_removed offers are never searched).
+// One entry per canonical model ID. The queue is split into chunks of at most
+// four models.
 function buildBenchmarkQueue(options = {}) {
   const now = options.now || nowIso();
   const database = db.openCollectorDb(options);
@@ -138,7 +180,7 @@ function buildBenchmarkQueue(options = {}) {
   let searches;
   try {
     offers = database.prepare(
-      "SELECT * FROM offers WHERE status IN ('verified', 'stale') " +
+      "SELECT * FROM offers WHERE status IN ('verified', 'stale') AND hidden = 0 " +
       'ORDER BY provider_key, exact_model_id'
     ).all().map((row) => db.parseRow('offers', row));
     benchmarkRows = database.prepare(
@@ -151,12 +193,26 @@ function buildBenchmarkQueue(options = {}) {
     database.close();
   }
 
-  const hasRankingKey = new Set(
+  const hasStoppingBenchmark = new Set(
     benchmarkRows
-      .filter((row) => row.benchmark_key === RANKING_BENCHMARK_KEY &&
-        isUsableBenchmarkVersion(row.version))
+      .filter((row) => {
+        if (!row || typeof row.canonical_model_id !== 'string') return false;
+        if (RANKING_BENCHMARK_KEYS.includes(row.benchmark_key)) {
+          return isUsableBenchmarkVersion(row.version);
+        }
+        return typeof row.benchmark_key === 'string' &&
+          row.benchmark_key.trim().length > 0 &&
+          row.benchmark_key !== 'unknown_benchmark';
+      })
       .map((row) => row.canonical_model_id)
   );
+  const hasTerminalNotFound = new Set(
+    searches
+      .filter((row) => row && row.result === 'not_found')
+      .map((row) => row.canonical_model_id)
+  );
+  const forceIds = canonicalForceModelIds(options);
+  const forceBenchmark = Array.isArray(options.forceBenchmarkKeys) && options.forceBenchmarkKeys.length > 0;
   const searchByModel = new Map(searches.map((row) => [row.canonical_model_id, row]));
 
   // Collapse offers to canonical models, keeping the richest facts and the
@@ -164,7 +220,6 @@ function buildBenchmarkQueue(options = {}) {
   const models = new Map();
   for (const offer of offers) {
     const canonical = offer.canonical_model_id;
-    if (hasRankingKey.has(canonical)) continue; // already has the gate benchmark
     const existing = models.get(canonical);
     const facts = offer.facts_json && typeof offer.facts_json === 'object' && !Array.isArray(offer.facts_json)
       ? offer.facts_json
@@ -174,6 +229,7 @@ function buildBenchmarkQueue(options = {}) {
         canonical_model_id: canonical,
         first_seen_at: offer.first_seen_at,
         facts,
+        release_dates: parseReleaseDate(facts.release_date) ? [facts.release_date.trim()] : [],
         offer_ids: [{ provider_key: offer.provider_key, exact_model_id: offer.exact_model_id }],
       });
     } else {
@@ -185,12 +241,18 @@ function buildBenchmarkQueue(options = {}) {
         existing.first_seen_at = offer.first_seen_at;
       }
       existing.facts = { ...existing.facts, ...facts };
+      if (parseReleaseDate(facts.release_date)) existing.release_dates.push(facts.release_date.trim());
     }
   }
 
   const queue = [];
   for (const model of models.values()) {
     const search = searchByModel.get(model.canonical_model_id) || null;
+    const forced = forceBenchmark || forceIds.has(model.canonical_model_id) ||
+      model.offer_ids.some((id) => forceIds.has(id.exact_model_id));
+    const tooOld = model.release_dates.some((date) => isTooOldForBenchmarkResearch(date, now));
+    if (!forced && (hasStoppingBenchmark.has(model.canonical_model_id) ||
+      hasTerminalNotFound.has(model.canonical_model_id) || tooOld)) continue;
     const metadataHash = modelMetadataHash({ ...model.facts, canonical_model_id: model.canonical_model_id });
     const neverSearched = !search;
     const metadataChanged = !!search && !!search.metadata_hash && search.metadata_hash !== metadataHash;
@@ -261,8 +323,10 @@ function writeBenchmarkQueue(runDir, queueResult, options = {}) {
 // Proposal validation (AC-8 shape, AC-9 evidence)
 // ---------------------------------------------------------------------------
 
-// Mechanical shape check (AC-8): canonical key and version resolve, the score
-// is a finite number from 0 through 100, and the source URL is http(s).
+// Mechanical shape check (AC-8): canonical key resolves, the score is finite
+// and from 0 through 100, and the source URL is http(s). Ranking benchmarks
+// require a known version. Supplemental benchmarks may omit a version when
+// the source does not publish one, because they still provide useful evidence.
 // Returns { ok, key, version, reason }.
 function validateProposalShape(find) {
   if (!find || typeof find !== 'object') {
@@ -309,8 +373,8 @@ function validateProposalShape(find) {
   if (!EXTRACTION_METHODS.includes(method)) {
     return { ok: false, reason: `extraction_method must be one of ${EXTRACTION_METHODS.join(', ')}` };
   }
-  if (!version) {
-    return { ok: false, reason: 'benchmark version is required; unknown version remains pending' };
+  if (RANKING_BENCHMARK_KEYS.includes(key) && !version) {
+    return { ok: false, reason: 'Terminal Bench benchmark version is required; unknown version remains pending' };
   }
   const confidence = find.confidence || 'HIGH';
   if (!CONFIDENCE_LEVELS.includes(confidence)) {
@@ -326,30 +390,42 @@ function validateProposalShape(find) {
 // model cards while still requiring every three facts to be present.
 function bodyConfirmsModel(body, model) {
   const folded = fold(body);
-  const candidates = [model.canonical_model_id, model.exact_model_id, model.model_name]
-    .filter((value) => typeof value === 'string' && value.trim().length > 0)
-    .map(fold);
-  if (candidates.length === 0) return false;
-  return candidates.some((candidate) => folded.includes(candidate));
+  const rawCandidates = [
+    model.canonical_model_id,
+    model.exact_model_id,
+    model.model_name,
+    ...(Array.isArray(model.model_ids) ? model.model_ids : []),
+  ].filter((value) => typeof value === 'string' && value.trim().length > 0);
+  const candidates = new Set();
+  for (const value of rawCandidates) {
+    candidates.add(fold(value));
+    const basename = value.split('/').pop();
+    if (basename) {
+      const shortId = fold(db.canonicalModelId(basename));
+      if (shortId.length >= 4) candidates.add(shortId);
+    }
+  }
+  if (candidates.size === 0) return false;
+  return [...candidates].some((candidate) => folded.includes(candidate));
 }
 
 function bodyConfirmsBenchmark(body, shape) {
   const folded = fold(body);
-  // Evidence validation is fail closed too: an unknown version is a pending
-  // observation, never a fact accepted merely because its family is present.
-  if (!shape || typeof shape.version !== 'string' || !shape.version.trim()) return false;
-  // The benchmark family must appear (terminal bench), and the version must
-  // appear too.
-  const keyFold = fold(shape.key.replace(/_/g, ' ')); // terminalbench21
-  const familyFold = keyFold.replace(/[0-9.]+$/g, ''); // terminalbench
+  if (!shape || typeof shape.key !== 'string') return false;
+  // The benchmark family must appear. Ranking benchmarks also require their
+  // version in the body. Supplemental benchmarks may have no published
+  // version, so family plus score is sufficient for those rows.
+  const keyFold = fold(shape.key.replace(/_/g, ' '));
+  const familyFold = keyFold.replace(/[0-9.]+$/g, '');
   if (familyFold && !folded.includes(familyFold)) {
-    // Fall back to the display name family (e.g. "Terminal Bench").
     const displayFamily = fold(shape.displayName).replace(/[0-9.]+$/g, '');
     if (!displayFamily || !folded.includes(displayFamily)) return false;
   }
+  if (!shape.version) {
+    return !RANKING_BENCHMARK_KEYS.includes(shape.key);
+  }
   const versionFold = fold(shape.version);
-  if (!versionFold || !folded.includes(versionFold)) return false;
-  return true;
+  return !!versionFold && folded.includes(versionFold);
 }
 
 function bodyConfirmsScore(body, score) {
@@ -416,13 +492,78 @@ function validateImageEvidence(find, shape, model, options = {}) {
   return { ok: true, imageFacts };
 }
 
+// Fetch every proposed text source once before deterministic reduction. The
+// worker excerpt is only a locator; production acceptance uses the page body
+// fetched by this process. Network work stays outside SQLite transactions.
+async function fetchBenchmarkSourceBodies(tasks, options = {}) {
+  const { fetchEvidence } = require('./evidence');
+  const sourceBodies = options.sourceBodies instanceof Map ? options.sourceBodies : new Map();
+  const sourceHashes = options.sourceHashes instanceof Map ? options.sourceHashes : new Map();
+  const fetchCache = options.fetchCache instanceof Map ? options.fetchCache : new Map();
+  const fetches = [];
+  const urls = new Set();
+  for (const task of tasks || []) {
+    if (!task || task.kind !== 'benchmark_scout') continue;
+    const result = task.result_json;
+    for (const model of (result && Array.isArray(result.models) ? result.models : [])) {
+      for (const find of (model && Array.isArray(model.benchmark_finds) ? model.benchmark_finds : [])) {
+        if (find && find.extraction_method !== 'official_image' && typeof find.source_url === 'string') {
+          urls.add(find.source_url);
+        }
+      }
+    }
+  }
+  for (const url of urls) {
+    // A scout may have already audited this URL while reporting incremental
+    // progress. Reuse that bounded full-body result in the final reduction.
+    if (sourceBodies.has(url) || fetchCache.has(url)) {
+      if (!sourceBodies.has(url) && fetchCache.has(url)) {
+        const cached = await fetchCache.get(url);
+        if (cached.ok) {
+          sourceBodies.set(url, cached.body);
+          sourceHashes.set(url, cached.body_hash);
+        }
+      }
+      continue;
+    }
+    const pending = fetchEvidence(url, {
+      fetchImpl: options.fetchImpl,
+      timeoutMs: options.timeoutMs,
+      attempts: options.attempts,
+      maxRedirects: options.maxRedirects,
+      maxBodyBytes: options.maxBodyBytes,
+    });
+    fetchCache.set(url, pending);
+    const fetched = await pending;
+    fetches.push({ url, ok: fetched.ok, final_url: fetched.final_url, status: fetched.status, body_hash: fetched.body_hash, error: fetched.error || null });
+    if (fetched.ok) {
+      sourceBodies.set(url, fetched.body);
+      sourceHashes.set(url, fetched.body_hash);
+    }
+  }
+  // Keep failed fetches reusable too: the final reduction must see exactly the
+  // same failed bounded audit, rather than silently retrying a source.
+  for (const url of urls) {
+    if (sourceBodies.has(url)) continue;
+    const pending = fetchCache.get(url);
+    if (!pending) continue;
+    const fetched = await pending;
+    if (!fetched.ok) {
+      // No body is intentionally stored for a failed fetch. The cache promise
+      // is the durable handoff that prevents a second network attempt.
+      continue;
+    }
+  }
+  return { sourceBodies, sourceHashes, fetches };
+}
+
 // Evaluates one proposal find against the queue allowlist and source policy.
 // Returns { accepted, reason, change? } where change is the benchmarks row to
 // insert at finalization (insert only; an existing row is never replaced).
 //
 // model: the queued model entry { canonical_model_id, model_ids, offer_ids }.
-// body: the fetched text for text sources (full body or excerpt). Optional
-// fetchImpl resolves the body from source_url when not supplied.
+// Production passes requireFetchedEvidence and sourceBodies from the bounded
+// HTTP audit. Tests may still supply a body directly for focused validation.
 function evaluateProposal(find, model, options = {}) {
   const queuedIds = new Set(model.model_ids || []);
   queuedIds.add(model.canonical_model_id);
@@ -436,7 +577,7 @@ function evaluateProposal(find, model, options = {}) {
     return { accepted: false, reason: shape.reason };
   }
 
-  const sourceHash = typeof find.source_hash === 'string' && find.source_hash ? find.source_hash : null;
+  const workerSourceHash = typeof find.source_hash === 'string' && find.source_hash ? find.source_hash : null;
 
   if (shape.method === 'official_image') {
     const check = validateImageEvidence(find, shape, model, options);
@@ -444,7 +585,7 @@ function evaluateProposal(find, model, options = {}) {
     return {
       accepted: true,
       reason: 'official image accepted (HIGH confidence, all four values)',
-      change: buildBenchmarkChange(model, shape, find, sourceHash, {
+      change: buildBenchmarkChange(model, shape, find, workerSourceHash, {
         extraction_method: 'official_image',
         confidence: shape.confidence,
         image_hash: find.image_hash || null,
@@ -455,9 +596,19 @@ function evaluateProposal(find, model, options = {}) {
     };
   }
 
-  // Text source: confirm against the fetched body.
-  let body = typeof find.body === 'string' && find.body ? find.body
-    : (typeof find.body_excerpt === 'string' && find.body_excerpt ? find.body_excerpt : null);
+  // Text source: confirm against the body fetched by the deterministic audit.
+  const auditedBody = options.sourceBodies instanceof Map
+    ? options.sourceBodies.get(find.source_url)
+    : null;
+  const sourceHash = options.sourceHashes instanceof Map
+    ? (options.sourceHashes.get(find.source_url) || workerSourceHash)
+    : workerSourceHash;
+  if (options.requireFetchedEvidence && typeof auditedBody !== 'string') {
+    return { accepted: false, reason: 'text source was not fetched successfully by the evidence audit' };
+  }
+  let body = typeof auditedBody === 'string' ? auditedBody
+    : typeof find.body === 'string' && find.body ? find.body
+      : (typeof find.body_excerpt === 'string' && find.body_excerpt ? find.body_excerpt : null);
   if (body === null && typeof options.fetchImpl === 'function') {
     try {
       const res = options.fetchImpl(find.source_url);
@@ -476,6 +627,46 @@ function evaluateProposal(find, model, options = {}) {
       confidence: shape.confidence,
       extracted_at: options.now || nowIso(),
     }),
+  };
+}
+
+// Deterministically classifies one queued model after its artifact has been
+// ingested and its evidence bodies audited. This is also the exact evaluator
+// used by final reduction, so progress never reports a worker claim as a fact.
+function evaluateBenchmarkModelProgress(task, queuedEntry, options = {}) {
+  if (!task || task.status === 'failed') return { outcome: 'failed', verified: 0 };
+  const result = task.result_json;
+  if (!result || !Array.isArray(result.models)) return { outcome: 'failed', verified: 0 };
+  const models = result.models.filter((model) => model && typeof model === 'object');
+  const model = models.find((candidate) =>
+    candidate.canonical_model_id === queuedEntry.canonical_model_id ||
+    queuedEntry.offer_ids.some((id) => id.exact_model_id === candidate.model_id)
+  );
+  if (!model) return { outcome: 'not_found', verified: 0 };
+  if (model.canonical_model_id && model.canonical_model_id !== queuedEntry.canonical_model_id &&
+      !queuedEntry.offer_ids.some((id) => id.exact_model_id === model.model_id)) {
+    return { outcome: 'rejected', verified: 0 };
+  }
+  const evalModel = {
+    canonical_model_id: queuedEntry.canonical_model_id,
+    model_ids: queuedEntry.offer_ids.map((id) => id.exact_model_id),
+    offer_ids: queuedEntry.offer_ids,
+    model_name: model.model_name || queuedEntry.canonical_model_id,
+  };
+  let verified = 0;
+  for (const find of Array.isArray(model.benchmark_finds) ? model.benchmark_finds : []) {
+    const evaluation = evaluateProposal(
+      { ...find, model_id: find.model_id || model.model_id },
+      evalModel,
+      options
+    );
+    if (evaluation.accepted) verified += 1;
+  }
+  if (verified > 0) return { outcome: 'verified', verified };
+  return {
+    outcome: Array.isArray(model.benchmark_finds) && model.benchmark_finds.length > 0
+      ? 'rejected' : 'not_found',
+    verified: 0,
   };
 }
 
@@ -535,8 +726,8 @@ function validateBenchmarkArtifact(task, artifact, queuedIdsForTask) {
 // Reduces one run's benchmark scout task results against the search queue.
 // Accepted proposals become benchmark changes (applied later in the single
 // finalizeRun transaction); rejected and pending proposals stay only in the
-// task record. Also produces benchmark_searches updates (every queued model
-// that had a task is marked searched this run).
+// task record. Also produces benchmark_searches updates for completed scout
+// artifacts; failed and partial workers remain retryable.
 //
 // Returns { accepted, rejected, benchmarkChanges, searchChanges, coverage }.
 function reduceBenchmarkTasks(runId, runDir, options = {}) {
@@ -550,6 +741,7 @@ function reduceBenchmarkTasks(runId, runDir, options = {}) {
   // so they are the authoritative allowlist for this run.
   const queueResult = buildBenchmarkQueue({ ...options, now });
   const queuedByTask = new Map();
+  const queuedCanonicalsByTask = new Map();
   const queuedModelByCanonical = new Map(queueResult.queue.map((entry) => [entry.canonical_model_id, entry]));
   for (const chunk of queueResult.chunks) {
     const ids = new Set();
@@ -558,6 +750,25 @@ function reduceBenchmarkTasks(runId, runDir, options = {}) {
       for (const exactId of model.model_ids) ids.add(exactId);
     }
     queuedByTask.set(chunk.task_id, ids);
+    queuedCanonicalsByTask.set(chunk.task_id, chunk.models.map((model) => model.canonical_model_id));
+  }
+  // The live collector may split chunks into one task per model for progress
+  // granularity. Resolve those task IDs from the exact assigned model IDs while
+  // retaining compatibility with older chunk artifacts.
+  for (const task of scoutTasks) {
+    if (queuedByTask.has(task.task_id)) continue;
+    const assignedIds = Array.isArray(task.assigned_json)
+      ? task.assigned_json
+      : Array.isArray(task.assigned_model_ids) ? task.assigned_model_ids : [];
+    const assigned = new Set(assignedIds);
+    const matches = queueResult.queue.filter((entry) =>
+      entry.offer_ids.some((id) => assigned.has(id.exact_model_id))
+    );
+    if (matches.length === 1) {
+      const ids = new Set([matches[0].canonical_model_id, ...matches[0].offer_ids.map((id) => id.exact_model_id)]);
+      queuedByTask.set(task.task_id, ids);
+      queuedCanonicalsByTask.set(task.task_id, [matches[0].canonical_model_id]);
+    }
   }
 
   const accepted = [];
@@ -565,6 +776,7 @@ function reduceBenchmarkTasks(runId, runDir, options = {}) {
   const benchmarkChanges = [];
   const seenInsert = new Set(); // one insert per canonical+key this run
   const searchedModels = new Set();
+  const coveredModels = new Set();
   const coverage = { tasks: 0, complete: 0, partial: 0, failed: 0, accepted: 0, rejected: 0 };
 
   for (const task of scoutTasks) {
@@ -575,7 +787,15 @@ function reduceBenchmarkTasks(runId, runDir, options = {}) {
 
     const queuedIdsForTask = queuedByTask.get(task.task_id) || null;
     const result = task.result_json;
+    // Only a completed artifact that contains a models array proves that all
+    // allowed sources were checked. A failed/partial worker result must not
+    // become a terminal not_found search record (429 and connection errors
+    // remain retryable). Partial artifacts may still contribute individually
+    // validated proposals.
     if (task.status === 'failed' || !result || !Array.isArray(result.models)) continue;
+    if (task.status === 'complete') {
+      for (const canonical of queuedCanonicalsByTask.get(task.task_id) || []) coveredModels.add(canonical);
+    }
 
     for (const model of result.models) {
       if (!model || typeof model !== 'object') continue;
@@ -647,20 +867,18 @@ function reduceBenchmarkTasks(runId, runDir, options = {}) {
     }
   }
 
-  // Every queued model that a task covered is marked searched this run, with
-  // its current metadata hash, so the next queue orders by oldest search.
+  // Every model covered by a completed scout artifact is marked searched this
+  // run. A complete artifact with no model findings is a terminal not_found;
+  // failed and partial artifacts produce no terminal search record.
   const searchChanges = [];
-  for (const chunk of queueResult.chunks) {
-    const taskPresent = scoutTasks.some((t) => t.task_id === chunk.task_id);
-    if (!taskPresent) continue;
-    for (const model of chunk.models) {
-      searchChanges.push({
-        canonical_model_id: model.canonical_model_id,
-        last_searched_at: now,
-        result: searchedModels.has(model.canonical_model_id) ? 'found' : 'not_found',
-        metadata_hash: model.metadata_hash,
-      });
-    }
+  for (const model of queueResult.queue) {
+    if (!coveredModels.has(model.canonical_model_id)) continue;
+    searchChanges.push({
+      canonical_model_id: model.canonical_model_id,
+      last_searched_at: now,
+      result: searchedModels.has(model.canonical_model_id) ? 'found' : 'not_found',
+      metadata_hash: model.metadata_hash,
+    });
   }
 
   // Run local outputs for inspection and the assembly stage.
@@ -684,22 +902,43 @@ function reduceBenchmarkTasks(runId, runDir, options = {}) {
 // ---------------------------------------------------------------------------
 
 // Derives the tier and representative benchmark for one model from its
-// accepted benchmark rows. terminal_bench_2_1 at 65+ is S, 50 through 64.999
-// is A. Without that key, another verified official benchmark supports tier B
-// at most. No verified benchmark is benchmark_pending (tier null, not ranked).
-// The representative score comes from the same benchmark that sets the tier so
-// raw scores from different benchmarks are never compared (AGENTS.md).
+// accepted benchmark rows. Terminal Bench 2.0 and 2.1 both use 65+ for S and
+// 50 through 64.999 for A (spec 0004 child 0002). When both rows exist 2.1 is
+// the representative row. Without either gate row another verified official
+// benchmark supports tier B at most. No verified benchmark is benchmark_pending
+// (tier null, not ranked). The representative score comes from the same
+// benchmark that sets the tier so raw scores from different benchmarks are
+// never compared (AGENTS.md).
 function deriveTier(benchmarkRows) {
   const rows = (Array.isArray(benchmarkRows) ? benchmarkRows : [])
     .filter((row) => row && isUsableBenchmarkVersion(row.version));
-  const terminal = rows.find((row) => row.benchmark_key === RANKING_BENCHMARK_KEY);
+  const terminal =
+    rows.find((row) => row.benchmark_key === 'terminal_bench_2_1') ||
+    rows.find((row) => row.benchmark_key === 'terminal_bench_2_0') ||
+    null;
   if (terminal) {
+    // Spec 0004 AC-5: only a verified Terminal Bench 2.0/2.1 score at or
+    // above the shared 50 gate admits to the ranking. A score below 50 is
+    // benchmark_pending (never a rankable tier B). This uses the shared
+    // ranking policy gate so assembler, validator, and builder agree.
+    if (!rankingPolicy.qualifiesTerminalBench(terminal.benchmark_key, terminal.score)) {
+      return {
+        tier: null,
+        score: terminal.score,
+        version: terminal.version,
+        benchmark_key: terminal.benchmark_key,
+        benchmark_name: terminal.display_name,
+        terminal_bench: terminal.score,
+        benchmark_pending: true,
+      };
+    }
     let tier = 'B';
     if (terminal.score >= TIER_S_SCORE) tier = 'S';
     else if (terminal.score >= TIER_A_SCORE) tier = 'A';
     return {
       tier,
       score: terminal.score,
+      version: terminal.version,
       benchmark_key: terminal.benchmark_key,
       benchmark_name: terminal.display_name,
       terminal_bench: terminal.score,
@@ -714,6 +953,7 @@ function deriveTier(benchmarkRows) {
     return {
       tier: 'B',
       score: best.score,
+      version: best.version,
       benchmark_key: best.benchmark_key,
       benchmark_name: best.display_name,
       terminal_bench: null,
@@ -723,6 +963,7 @@ function deriveTier(benchmarkRows) {
   return {
     tier: null,
     score: null,
+    version: null,
     benchmark_key: null,
     benchmark_name: null,
     terminal_bench: null,
@@ -731,14 +972,19 @@ function deriveTier(benchmarkRows) {
 }
 
 module.exports = {
+  RANKING_BENCHMARK_KEYS,
   RANKING_BENCHMARK_KEY,
   TIER_S_SCORE,
   TIER_A_SCORE,
   QUEUE_CHUNK_SIZE,
+  BENCHMARK_RESEARCH_MAX_AGE_MONTHS,
   EXTRACTION_METHODS,
   CONFIDENCE_LEVELS,
   fold,
   isUsableBenchmarkVersion,
+  parseReleaseDate,
+  benchmarkResearchCutoff,
+  isTooOldForBenchmarkResearch,
   modelMetadataHash,
   loadCurrentBenchmarks,
   buildBenchmarkQueue,
@@ -750,6 +996,8 @@ module.exports = {
   bodyConfirmsBenchmark,
   bodyConfirmsScore,
   evaluateProposal,
+  evaluateBenchmarkModelProgress,
+  fetchBenchmarkSourceBodies,
   validateBenchmarkArtifact,
   reduceBenchmarkTasks,
   deriveTier,

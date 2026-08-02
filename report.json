@@ -1,15 +1,9 @@
 {
-  "generated_at": "2026-08-02T16:16:22.169Z",
+  "generated_at": "2026-08-02T17:27:57.121Z",
   "timezone": "Asia/Tokyo",
-  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 6 件（S 3、A 3、B 0）、無料 2 件、激安 4 件、注意 0 件、対象外 71 件。",
+  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 4 件（S 2、A 2、B 0）、無料 2 件、激安 2 件、注意 0 件、対象外 71 件。",
   "new_models": [],
-  "changes": [
-    {
-      "offer_name": "Nemotron 3 Ultra",
-      "change_type": "price_change",
-      "summary": "Nemotron 3 Ultra の無料枠・価格条件が変わりました。"
-    }
-  ],
+  "changes": [],
   "ranked_offers": [
     {
       "rank": 1,
@@ -236,87 +230,7 @@
       "benchmark_key": "terminal_bench_2_0"
     },
     {
-      "rank": 3,
-      "name": "DeepSeek V4 Flash Latest",
-      "model_name": "DeepSeek V4 Flash Latest",
-      "provider": "OpenRouter",
-      "model_vendor": "~deepseek",
-      "delivery_type": "router",
-      "classification": "E_DISCOUNT",
-      "start_at": null,
-      "end_at": null,
-      "end_timezone_known": false,
-      "regions": [],
-      "registration_conditions": [],
-      "card_required": null,
-      "minimum_deposit": null,
-      "kyc_required": null,
-      "auto_renewal": null,
-      "refund_policy": null,
-      "free_limits": null,
-      "rate_limits": null,
-      "context_tokens": null,
-      "max_output_tokens": null,
-      "tool_calling": null,
-      "structured_output": null,
-      "image_input": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "~deepseek/deepseek-v4-flash-latest",
-      "provider_count": null,
-      "recent_activity": "DeepSeek V4 Flash の自動最新ルーティング。Terminal Bench 2.0 で 65.4。常に最新のチェックポイントが返ってくるので、手動でバージョンを追う必要がない。",
-      "normal_price_per_million": {
-        "input": 0.09,
-        "output": 0.18
-      },
-      "effective_price_per_million": {
-        "input": 0.09,
-        "output": 0.18
-      },
-      "effective_discount_percent": null,
-      "data_retention": null,
-      "training_use": null,
-      "suspicion_score": 0,
-      "suspicion_reasons": [],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-08-02T16:12:54.082Z",
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "provider_key": "openrouter",
-      "canonical_model_id": "~deepseek/deepseek-v4-flash-latest",
-      "access_kind": "ULTRA_LOW",
-      "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-02T16:12:54.082Z",
-      "discount_start_at": null,
-      "discount_end_at": null,
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "sources": [
-        "https://openrouter.ai/docs/quickstart",
-        "https://openrouter.ai/api/v1/models",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash"
-      ],
-      "benchmark": {
-        "score": 65.4,
-        "benchmark_name": "Terminal-Bench 2.0",
-        "version": "2.0",
-        "tier": "S"
-      },
-      "benchmarks": [
-        {
-          "name": "Terminal-Bench 2.0",
-          "score": 65.4,
-          "version": "2.0",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash",
-          "verified_at": "2026-08-02T02:42:52.918Z"
-        }
-      ],
-      "benchmark_key": "terminal_bench_2_0"
-    },
-    {
-      "rank": 5,
+      "rank": 4,
       "name": "Ling-3.0-flash",
       "model_name": "Ling-3.0-flash",
       "provider": "OpenRouter",
@@ -468,7 +382,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 6,
+      "rank": 5,
       "name": "NVIDIA: Nemotron 3 Ultra",
       "model_name": "NVIDIA: Nemotron 3 Ultra",
       "provider": "OpenRouter",
@@ -546,110 +460,6 @@
         }
       ],
       "benchmark_key": "terminal_bench_2_1"
-    },
-    {
-      "rank": 8,
-      "name": "DeepSeek: DeepSeek V4 Flash",
-      "model_name": "DeepSeek: DeepSeek V4 Flash",
-      "provider": "OpenRouter",
-      "model_vendor": "deepseek",
-      "delivery_type": "router",
-      "classification": "E_DISCOUNT",
-      "start_at": null,
-      "end_at": null,
-      "end_timezone_known": false,
-      "regions": [],
-      "registration_conditions": [],
-      "card_required": null,
-      "minimum_deposit": null,
-      "kyc_required": null,
-      "auto_renewal": null,
-      "refund_policy": null,
-      "free_limits": null,
-      "rate_limits": null,
-      "context_tokens": null,
-      "max_output_tokens": null,
-      "tool_calling": null,
-      "structured_output": null,
-      "image_input": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "deepseek/deepseek-v4-flash",
-      "provider_count": null,
-      "recent_activity": "DeepSeek V4 Flash ベース版。Terminal Bench 2.0 で 56.9 のスコア。0731 チェックポイントより少し前のバージョンだが、依然として高い性能を超低コストで提供。",
-      "normal_price_per_million": {
-        "input": 0.14,
-        "output": 0.28
-      },
-      "effective_price_per_million": {
-        "input": 0.14,
-        "output": 0.28
-      },
-      "effective_discount_percent": null,
-      "data_retention": null,
-      "training_use": null,
-      "suspicion_score": 0,
-      "suspicion_reasons": [],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-08-02T16:12:54.082Z",
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "provider_key": "openrouter",
-      "canonical_model_id": "deepseek/deepseek-v4-flash",
-      "access_kind": "ULTRA_LOW",
-      "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-02T16:12:54.082Z",
-      "discount_start_at": null,
-      "discount_end_at": null,
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "sources": [
-        "https://openrouter.ai/docs/quickstart",
-        "https://openrouter.ai/api/v1/models",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md"
-      ],
-      "benchmark": {
-        "score": 56.9,
-        "benchmark_name": "Terminal-Bench 2.0",
-        "version": "2.0",
-        "tier": "A"
-      },
-      "benchmarks": [
-        {
-          "name": "GPQA Diamond",
-          "score": 88.1,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
-          "verified_at": "2026-08-03T00:00:00.000Z"
-        },
-        {
-          "name": "LiveCodeBench",
-          "score": 91.6,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
-          "verified_at": "2026-08-03T00:00:00.000Z"
-        },
-        {
-          "name": "MMLU Pro",
-          "score": 86.2,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
-          "verified_at": "2026-08-03T00:00:00.000Z"
-        },
-        {
-          "name": "Terminal-Bench 2.0",
-          "score": 56.9,
-          "version": "2.0",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
-          "verified_at": "2026-08-03T00:00:00.000Z"
-        }
-      ],
-      "benchmark_key": "terminal_bench_2_0"
     }
   ],
   "conditional_credits": [],
@@ -1052,11 +862,6 @@
       "accessed_at": "2026-08-02T16:12:54.082Z"
     },
     {
-      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
-      "source_type": "official",
-      "accessed_at": "2026-08-02T16:12:54.082Z"
-    },
-    {
       "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
       "source_type": "official",
       "accessed_at": "2026-08-02T16:12:54.082Z"
@@ -1108,11 +913,6 @@
     },
     {
       "url": "https://huggingface.co/XiaomiMiMo/MiMo-V2.5",
-      "source_type": "official",
-      "accessed_at": "2026-08-02T16:12:54.082Z"
-    },
-    {
-      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash",
       "source_type": "official",
       "accessed_at": "2026-08-02T16:12:54.082Z"
     }

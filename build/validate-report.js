@@ -4,10 +4,15 @@
  *
  * Makes report.json renderable. Two actions, no "downgrade" concept:
  *
- *   auto-fix  — rewrite the field in place (state merge, tier restore,
- *               allowance default, tier cap to B when TB 2.1 missing/low)
+ *   auto-fix  — rewrite the field in place (allowance default)
  *   exclude   — move the offer to excluded_offers (fake URL, lying
- *               citation, paid API dressed as free, sub-30B without S/A)
+ *               citation, paid API dressed as free, sub-30B without S/A,
+ *               no qualifying Terminal Bench, no derived access kind)
+ *
+ * The legacy state/benchmarks.json and known_offers.json files are no
+ * longer read: SQLite owns benchmark facts and the candidate path validates
+ * before promotion. A missing or invalid report input fails hard instead of
+ * generating dummy output.
  *
  * After all fixes/excludes, report.json is rewritten and the build can
  * proceed. A JSON fix-report is emitted on stderr so the LLM knows what
@@ -25,10 +30,7 @@ const fs = require('fs');
 const path = require('path');
 const { loadRegistry, matchProvider } = require('./provider-registry');
 const { buildReportSummary } = require('./summary-text');
-
-const BENCHMARK_STATE_PATH = path.join(
-  __dirname, '..', '.agents', 'skills', 'llm-deals-intelligence-skill', 'state', 'benchmarks.json'
-);
+const rankingPolicy = require('./ranking-policy');
 
 async function main() {
   const reportPath = process.argv[2];
@@ -44,41 +46,26 @@ async function main() {
   const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
   const fixLog = []; // what we did, for the LLM
 
-  // A router card without its deterministic catalog inventory is not safely
-  // renderable. Unlike ordinary offer-level schema errors, do not move it to
-  // excluded_offers: failing the candidate keeps the prior public generation
-  // live instead of silently deleting the router card.
-  const routerInventoryErrors = findEmptyRouterCatalogOffers(report);
-  if (routerInventoryErrors.length > 0) {
-    console.error('❌ Router catalog validation error (cannot auto-fix):');
-    for (const error of routerInventoryErrors) console.error(`   ${error}`);
-    process.exitCode = 1;
-    return;
-  }
-
   // ── 1. Schema check (top-level = hard fail, offer-level = fix/exclude) ──
   checkSchema(report, schema, fixLog);
 
   // ── 2. Auto-fix what we can ────────────────────────────────────
   const providers = loadRegistry();
-  let models = [];
-  try { models = JSON.parse(fs.readFileSync(BENCHMARK_STATE_PATH, 'utf8')).models || []; } catch {}
 
-  autoFixState(report, models, fixLog);
-  autoFixTier(report, fixLog);
   autoFixAllowance(report, fixLog);
 
   // ── 3. Exclude what we can't fix ───────────────────────────────
   excludeBadEndpoints(report, providers, fixLog);
   await excludeBadCitations(report, fixLog);
-  await excludeOpenRouterGhost(report, fixLog);
   excludePaidApis(report, fixLog);
   excludeTooSmall(report, fixLog);
   excludeNoTerminalBench(report, fixLog);
+  excludeNoAccessKind(report, fixLog);
+  excludeMismatchedPrices(report, fixLog);
 
   // ── 4. Rewrite report.json ─────────────────────────────────────
   // This is the final authority: all auto-fixes and exclusions, including
-  // async citation/OpenRouter gates, have finished before the summary is set.
+  // async citation gates, have finished before the summary is set.
   report.summary = buildReportSummary(report);
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
 
@@ -102,30 +89,6 @@ async function main() {
 // ══════════════════════════════════════════════════════════════════
 // Schema
 // ══════════════════════════════════════════════════════════════════
-
-function findEmptyRouterCatalogOffers(report) {
-  const errors = [];
-  for (const arrayName of ['ranked_offers', 'conditional_credits', 'caution_offers']) {
-    const offers = Array.isArray(report && report[arrayName]) ? report[arrayName] : [];
-    offers.forEach((offer, index) => {
-      if (!offer || offer.delivery_type !== 'router') return;
-      if (!Array.isArray(offer.free_model_names) || offer.free_model_names.length === 0) {
-        errors.push(`${arrayName}[${index}] ${offer.name || '?'} has no free_model_names`);
-        return;
-      }
-      const invalidIndex = offer.free_model_names.findIndex((modelId) =>
-        typeof modelId !== 'string' || modelId.trim().length === 0
-      );
-      if (invalidIndex >= 0) {
-        errors.push(
-          `${arrayName}[${index}] ${offer.name || '?'} has an invalid free_model_names[${invalidIndex}] ` +
-          '(each inventory entry must be a non-empty trimmed string)'
-        );
-      }
-    });
-  }
-  return errors;
-}
 
 function checkSchema(report, schema, fixLog) {
   let valid = true;
@@ -170,60 +133,6 @@ function checkSchema(report, schema, fixLog) {
     const label = o.name || '?';
     const detail = errs.map(e => `${e.instancePath}: ${e.message}`).join('; ');
     moveToExcluded(report, arrName, o, `[schema] ${detail}`, fixLog);
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════
-// Auto-fix: state regression
-// ══════════════════════════════════════════════════════════════════
-
-function autoFixState(report, models, fixLog) {
-  for (const o of report.ranked_offers || []) {
-    if (o.ranking_eligible !== true) continue;
-    const entry = matchBenchmarkEntry(o, models);
-    if (!entry) continue;
-    const stateScores = (entry.benchmarks || []).filter(b => b && b.score != null);
-    if (stateScores.length === 0) continue;
-
-    const offerScore = o.benchmark && o.benchmark.score != null ? o.benchmark.score : null;
-    if (offerScore == null) {
-      // Merge from state: pick the best score as representative.
-      const best = stateScores.reduce((a, b) => b.score > a.score ? b : a);
-      o.benchmark = { score: best.score, benchmark_name: best.name, tier: entry.tier || (o.benchmark && o.benchmark.tier) || 'B' };
-      o.benchmarks = mergeBenchmarks(o.benchmarks, stateScores);
-      fixLog.push({ offer: o.name, action: 'auto-fix', gate: 'state',
-        detail: `benchmark.score was null; merged from state (${stateScores.map(b => `${b.name}=${b.score}`).join(', ')})` });
-    }
-
-    // Also merge any state benchmarks not yet in the offer.
-    const merged = mergeBenchmarks(o.benchmarks, stateScores);
-    if (merged.length > (o.benchmarks || []).length) {
-      o.benchmarks = merged;
-    }
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════
-// Auto-fix: tier (restore from state, cap to B if TB 2.1 missing/low)
-// ══════════════════════════════════════════════════════════════════
-
-function autoFixTier(report, fixLog) {
-  const TB_PAT = /terminal[\s-]*bench[\s-]*v?2(\.1)?/i;
-  for (const o of report.ranked_offers || []) {
-    if (o.ranking_eligible !== true) continue;
-    const tier = o.benchmark && o.benchmark.tier;
-    if (tier !== 'S' && tier !== 'A') continue;
-
-    const tb = (o.benchmarks || []).find(b => b && TB_PAT.test(b.name || ''));
-    if (!tb || tb.score == null) {
-      o.benchmark.tier = 'B';
-      fixLog.push({ offer: o.name, action: 'auto-fix', gate: 'tier',
-        detail: `tier ${tier} → B: no Terminal-Bench 2.1 score on record` });
-    } else if (tb.score < 50) {
-      o.benchmark.tier = 'B';
-      fixLog.push({ offer: o.name, action: 'auto-fix', gate: 'tier',
-        detail: `tier ${tier} → B: Terminal-Bench 2.1 = ${tb.score} < 50%` });
-    }
   }
 }
 
@@ -314,48 +223,6 @@ async function excludeBadCitations(report, fixLog) {
 // Exclude: paid API dressed as free
 // ══════════════════════════════════════════════════════════════════
 
-// ── Exclude: OpenRouter model_id not in live catalog ────────────
-// The /api/v1/models catalog is the ground truth for what OpenRouter
-// actually serves. A :free variant that is absent from the catalog is
-// not served by any provider — never trust the web page's shared FAQ
-// component (it can show the paid base model's provider count).
-// Fail-safe: if the catalog fetch/parse fails, exclude NOTHING.
-async function excludeOpenRouterGhost(report, fixLog) {
-  if (process.env.SKIP_CITATION_CHECK === '1') return;
-  const isOpenRouter = o =>
-    /openrouter\.ai/i.test(o.base_url || '') ||
-    (o.delivery_type === 'router' && /openrouter/i.test(o.provider || ''));
-  const targets = (report.ranked_offers || []).filter(o => o.ranking_eligible === true && isOpenRouter(o));
-  if (targets.length === 0) return;
-
-  let raw;
-  try {
-    raw = await fetchJson('https://openrouter.ai/api/v1/models');
-  } catch (e) {
-    console.warn(`  ⚠️  OpenRouter catalog fetch failed (${e.message}); skipping ghost check.`);
-    return;
-  }
-  let ids;
-  try {
-    ids = new Set((JSON.parse(raw).data || []).map(m => m.id));
-  } catch {
-    console.warn('  ⚠️  OpenRouter catalog parse failed; skipping ghost check.');
-    return;
-  }
-
-  const bad = new Set();
-  for (const o of targets) {
-    if (!o.model_id || !ids.has(o.model_id)) {
-      bad.add(o.name);
-      moveToExcluded(report, 'ranked_offers', o,
-        `[openrouter-ghost] model_id "${o.model_id}" is absent from OpenRouter /api/v1/models — not actually served by any provider`, fixLog);
-    }
-  }
-  if (bad.size > 0) {
-    report.ranked_offers = report.ranked_offers.filter(o => !bad.has(o.name));
-  }
-}
-
 function excludePaidApis(report, fixLog) {
   const paidApi = /\bapi is paid\b|\bpaid api\b|\bapi access is paid\b|\bapi costs \$[1-9]/i;
   const remaining = [];
@@ -398,36 +265,60 @@ function excludeTooSmall(report, fixLog) {
 // Exclude: no qualifying Terminal-Bench (the ranking admission gate)
 // ══════════════════════════════════════════════════════════════════
 
-// Ranking admits an offer only if a Terminal-Bench-ish benchmark exists and
-// scores >= TB_GATE_SCORE (48%). The match is deliberately loose (hyphen /
-// space / version variants) because the exact 2.1 version is not always
-// determinable from a source page. Scores from other benchmarks never
-// substitute — without Terminal-Bench, models are not comparable. Runs after
-// autoFixState so Terminal-Bench scores accumulated in state are considered.
-const TB_GATE_SCORE = 48;
-const TB_GATE_PAT = /terminal[\s-]?bench/i;
-
-function terminalBenchBest(o) {
-  let best = null;
-  const consider = (name, score) => {
-    if (name && TB_GATE_PAT.test(name) && score != null && (best == null || score > best)) best = score;
-  };
-  for (const b of o.benchmarks || []) consider(b && b.name, b && b.score);
-  if (o.benchmark) consider(o.benchmark.benchmark_name, o.benchmark.score);
-  return best;
-}
-
+// Ranking admits an offer only with a verified Terminal Bench 2.0 or 2.1
+// score at or above the shared 50 gate (spec 0004 AC-5). The shared policy
+// is the single source of truth; a score below 50 never becomes rankable
+// tier B, and other benchmarks never substitute. The offer's representative
+// benchmark_key + score must both qualify.
 function excludeNoTerminalBench(report, fixLog) {
   const remaining = [];
   for (const o of report.ranked_offers || []) {
     if (o.ranking_eligible !== true) { remaining.push(o); continue; }
-    const tb = terminalBenchBest(o);
-    if (tb == null) {
+    const key = o.benchmark_key || (o.benchmark && null);
+    const score = o.benchmark && o.benchmark.score != null ? o.benchmark.score : null;
+    if (!rankingPolicy.qualifiesTerminalBench(key, score)) {
       moveToExcluded(report, 'ranked_offers', o,
-        `[no-terminal-bench] no Terminal-Bench score on record — cannot verify competitiveness`, fixLog);
-    } else if (tb < TB_GATE_SCORE) {
+        `[no-terminal-bench] no verified Terminal Bench 2.0/2.1 at or above 50 on record — cannot verify competitiveness (AC-5)`, fixLog);
+    } else {
+      remaining.push(o);
+    }
+  }
+  report.ranked_offers = remaining;
+}
+
+// ── Exclude: no derived access kind (spec 0004 AC-4) ─────────────
+// A ranked offer must have an access_kind of FREE or ULTRA_LOW derived from
+// known effective prices. A missing access_kind (unknown or over-limit
+// prices) cannot rank. The effective price object must be present and
+// non-null with finite non-negative input/output matching the access kind.
+function excludeNoAccessKind(report, fixLog) {
+  const remaining = [];
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) { remaining.push(o); continue; }
+    if (o.access_kind !== 'FREE' && o.access_kind !== 'ULTRA_LOW') {
       moveToExcluded(report, 'ranked_offers', o,
-        `[no-terminal-bench] Terminal-Bench ${tb} < ${TB_GATE_SCORE}% — not ranking-competitive`, fixLog);
+        `[access-kind] access_kind ${JSON.stringify(o.access_kind)} is not FREE or ULTRA_LOW — unknown or over-limit prices (AC-4)`, fixLog);
+    } else {
+      remaining.push(o);
+    }
+  }
+  report.ranked_offers = remaining;
+}
+
+// ── Exclude: effective prices contradict the access kind (AC-4) ──
+// A ranked offer must carry a non-null effective_price_per_million object
+// with finite non-negative input and output that derive exactly to its
+// access_kind. A FREE offer with a non-zero price, or an ULTRA_LOW offer
+// whose prices exceed the 0.2/0.4 limits, cannot rank.
+function excludeMismatchedPrices(report, fixLog) {
+  const remaining = [];
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) { remaining.push(o); continue; }
+    const eff = o.effective_price_per_million;
+    if (!eff || typeof eff !== 'object' ||
+        !rankingPolicy.accessKindMatches(o.access_kind, eff.input, eff.output)) {
+      moveToExcluded(report, 'ranked_offers', o,
+        `[access-prices] effective prices ${JSON.stringify(eff)} do not match access_kind ${JSON.stringify(o.access_kind)} (AC-4)`, fixLog);
     } else {
       remaining.push(o);
     }
@@ -445,44 +336,6 @@ function moveToExcluded(report, arrName, offer, reason, fixLog) {
   report.excluded_offers = report.excluded_offers || [];
   report.excluded_offers.push({ name: offer.name || '?', reason });
   fixLog.push({ offer: offer.name || '?', action: 'exclude', gate: reason.split(']')[0].replace('[', ''), detail: reason });
-}
-
-function mergeBenchmarks(existing, fromState) {
-  const map = new Map();
-  const norm = s => String(s).toLowerCase().replace(/[\s-]/g, '');
-  for (const b of (existing || [])) map.set(norm(b.name), b);
-  for (const b of fromState) {
-    const k = norm(b.name);
-    if (!map.has(k)) map.set(k, { name: b.name, score: b.score });
-  }
-  return [...map.values()];
-}
-
-function matchBenchmarkEntry(o, models) {
-  const mid = String(o.model_id || '').toLowerCase();
-  if (mid) {
-    for (const m of models) {
-      if ((m.model_ids || []).some(id => String(id).toLowerCase() === mid)) return m;
-    }
-  }
-  const name = String(o.model_name || o.name || '').toLowerCase();
-  if (name) {
-    for (const m of models) {
-      const cn = String(m.canonical_name || '').toLowerCase();
-      if (cn && (name.includes(cn) || cn.includes(name))) return m;
-    }
-  }
-  return null;
-}
-
-async function fetchJson(url) {
-  const res = await fetch(url, {
-    redirect: 'follow',
-    signal: AbortSignal.timeout(20000),
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; freeapi-news-validator/1.0)', 'Accept': 'application/json,*/*' },
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.text();
 }
 
 async function fetchText(url) {
@@ -521,5 +374,8 @@ if (require.main === module) {
 }
 
 module.exports = {
-  findEmptyRouterCatalogOffers,
+  rankingPolicy,
+  excludeNoTerminalBench,
+  excludeNoAccessKind,
+  excludeMismatchedPrices,
 };

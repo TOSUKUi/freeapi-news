@@ -3,13 +3,16 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { generateHTML } = require('./build-html');
+const { generateHTML, selectRankedOffers, computeSnapshot, fmtPrice } = require('./build-html');
 
-function routerOffer(freeModelNames) {
+function cardOffer(overrides = {}) {
   return {
-    name: 'Router model',
-    model_name: 'Router model',
+    name: 'Acme Model',
+    model_name: 'Acme Model',
     provider: 'OpenRouter',
+    provider_key: 'openrouter',
+    canonical_model_id: 'acme/model',
+    access_kind: 'FREE',
     delivery_type: 'router',
     classification: 'B_PERMANENT_FREE_TIER',
     ranking_eligible: true,
@@ -18,18 +21,22 @@ function routerOffer(freeModelNames) {
     operational_confidence: 'HIGH',
     last_verified: '2026-07-31T00:00:00.000Z',
     base_url: 'https://openrouter.ai/api/v1',
-    model_id: 'alpha/model:free',
+    model_id: 'acme/model:free',
     endpoint_source: 'https://openrouter.ai/docs/quickstart',
+    price_source: 'https://openrouter.ai/api/v1/models',
+    price_verified_at: '2026-07-31T00:00:00.000Z',
+    effective_price_per_million: { input: 0, output: 0 },
     free_allowance_rank: 'NORMAL',
-    free_model_names: freeModelNames,
     benchmark: {
       score: 57,
       benchmark_name: 'Terminal-Bench 2.1',
+      version: '2.1',
       tier: 'A',
     },
-    benchmarks: [],
-    effective_price_per_million: { input: 0, output: 0 },
+    benchmark_key: 'terminal_bench_2_1',
+    benchmarks: [{ name: 'Terminal-Bench 2.1', version: '2.1', score: 57 }],
     sources: ['https://openrouter.ai/api/v1/models'],
+    ...overrides,
   };
 }
 
@@ -45,21 +52,88 @@ function report(offer) {
   };
 }
 
-test('router HTML renders the sorted unique escaped catalog list', () => {
-  const html = generateHTML(report(routerOffer([
-    'zeta/model:free',
-    '<alpha&model:free',
-    'zeta/model:free',
-  ])));
+test('a card renders access kind, benchmark version, price date, and escaped model id', () => {
+  const html = generateHTML(report(cardOffer()));
 
-  assert.ok(html.indexOf('&lt;alpha&amp;model:free') < html.indexOf('zeta/model:free'));
-  assert.equal((html.match(/class="model-chip"/g) || []).length, 2);
-  assert.ok(!html.includes('<alpha&model:free'));
-  assert.ok(html.includes('無料モデル一覧'));
+  assert.ok(html.includes('>無料</span>'), 'access kind badge renders in plain Japanese');
+  assert.ok(html.includes('Terminal-Bench 2.1'), 'benchmark name renders');
+  assert.ok(html.includes('価格確認日'), 'price confirmation date row renders');
+  assert.ok(html.includes('acme/model:free'), 'exact model id renders');
+  assert.ok(!html.includes('free_model_names'), 'free_model_names is gone');
+  assert.ok(html.includes('AI による自動収集'), 'footer disclaimer renders');
 });
 
-test('router HTML shows an explicit unavailable fallback for an empty list', () => {
-  const html = generateHTML(report(routerOffer([])));
-  assert.ok(html.includes('モデル一覧未取得'));
-  assert.equal((html.match(/class="model-chip"/g) || []).length, 0);
+test('ULTRA_LOW offers render an 激安 badge and real prices', () => {
+  const html = generateHTML(report(cardOffer({
+    access_kind: 'ULTRA_LOW',
+    effective_price_per_million: { input: 0.1, output: 0.2 },
+  })));
+  assert.ok(html.includes('>激安</span>'));
+  assert.ok(!html.includes('>ULTRA_LOW</span>'));
+  assert.ok(html.includes('$0.1 / $0.2'));
+});
+
+test('G_FREE_LIKE is not shown as 無料っぽい over deterministic access badges', () => {
+  const freeHtml = generateHTML(report(cardOffer({ classification: 'G_FREE_LIKE' })));
+  assert.ok(freeHtml.includes('>無料</span>'));
+  assert.ok(!freeHtml.includes('無料っぽい'));
+
+  const cheapHtml = generateHTML(report(cardOffer({
+    classification: 'G_FREE_LIKE',
+    access_kind: 'ULTRA_LOW',
+    effective_price_per_million: { input: 0.1, output: 0.2 },
+  })));
+  assert.ok(cheapHtml.includes('>激安</span>'));
+  assert.ok(!cheapHtml.includes('無料っぽい'));
+});
+
+test('fmtPrice renders tiny decimals readably and hides float artifacts', () => {
+  // Very small USD per million prices must not degrade to exponential
+  // notation or leak IEEE-754 artifacts (spec 0004 AC-14 readability).
+  assert.equal(fmtPrice(1e-7), '$0.0000001');
+  assert.equal(fmtPrice(6.000000000000001e-7), '$0.0000006');
+  assert.equal(fmtPrice(0.0000010000000000000002), '$0.000001');
+  assert.equal(fmtPrice(3e-8), '$0.00000003');
+  assert.equal(fmtPrice(0.00000125), '$0.00000125');
+  assert.equal(fmtPrice(0.1), '$0.1');
+  assert.equal(fmtPrice(0), '$0');
+  assert.equal(fmtPrice(null), '—');
+});
+
+test('cards with tiny catalog prices render readable USD per million', () => {
+  const html = generateHTML(report(cardOffer({
+    access_kind: 'ULTRA_LOW',
+    effective_price_per_million: { input: 1e-7, output: 6.000000000000001e-7 },
+  })));
+  assert.ok(html.includes('$0.0000001 / $0.0000006'));
+  assert.ok(!html.includes('1e-7'), 'exponential price notation is never rendered');
+  assert.ok(!html.includes('6.000000000000001'), 'float artifact never reaches the card');
+});
+
+test('a discount end date renders when present', () => {
+  const html = generateHTML(report(cardOffer({
+    discount_end_at: '2026-09-30T00:00:00.000Z',
+  })));
+  assert.ok(html.includes('割引期限'));
+});
+
+test('selectRankedOffers admits only eligible offers with FREE or ULTRA_LOW', () => {
+  const reportWithMixed = report(cardOffer());
+  reportWithMixed.ranked_offers.push(cardOffer({
+    name: 'No Access',
+    access_kind: null,
+    effective_price_per_million: { input: 5, output: 5 },
+  }));
+  const ranked = selectRankedOffers(reportWithMixed);
+  assert.equal(ranked.length, 1);
+  assert.equal(ranked[0].name, 'Acme Model');
+});
+
+test('computeSnapshot counts FREE via access_kind and limited via discount', () => {
+  const offers = [
+    cardOffer({ access_kind: 'FREE' }),
+    cardOffer({ access_kind: 'ULTRA_LOW', name: 'Cheap', discount_end_at: '2026-09-30T00:00:00.000Z' }),
+  ];
+  const snap = computeSnapshot({}, offers);
+  assert.deepEqual(snap, { total: 2, sCount: 0, aCount: 2, freeCount: 1, limitedCount: 1 });
 });

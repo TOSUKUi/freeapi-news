@@ -70,7 +70,8 @@
           "last_known_status": {
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
     "new_seed_candidates": {
@@ -95,7 +96,8 @@
           "reason": {
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
     "sources": {
@@ -129,7 +131,8 @@
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "additionalProperties": false
       }
     }
   },
@@ -194,7 +197,8 @@
             "type": "string"
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "changeRecord": {
       "type": "object",
@@ -222,7 +226,8 @@
         "summary": {
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "offer": {
       "type": "object",
@@ -255,6 +260,29 @@
           "type": [
             "string",
             "null"
+          ]
+        },
+        "provider_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "canonical_model_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "access_kind": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "FREE",
+            "ULTRA_LOW",
+            null
           ]
         },
         "model_vendor": {
@@ -446,30 +474,32 @@
             "object",
             "null"
           ],
+          "required": [
+            "input",
+            "output"
+          ],
           "properties": {
             "input": {
-              "type": [
-                "number",
-                "null"
-              ]
+              "type": "number",
+              "minimum": 0
             },
             "output": {
-              "type": [
-                "number",
-                "null"
-              ]
+              "type": "number",
+              "minimum": 0
             },
             "cache_read": {
               "type": [
                 "number",
                 "null"
-              ]
+              ],
+              "minimum": 0
             },
             "cache_write": {
               "type": [
                 "number",
                 "null"
-              ]
+              ],
+              "minimum": 0
             }
           }
         },
@@ -564,11 +594,33 @@
             "null"
           ]
         },
-        "free_model_names": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "price_source": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "price_verified_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "discount_start_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "discount_end_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
         },
         "sources": {
           "type": "array",
@@ -582,24 +634,24 @@
             "object",
             "null"
           ],
+          "required": [
+            "score",
+            "benchmark_name",
+            "version",
+            "tier"
+          ],
           "properties": {
             "score": {
-              "type": [
-                "number",
-                "null"
-              ]
+              "type": "number"
             },
             "benchmark_name": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
             },
             "tier": {
-              "type": [
-                "string",
-                "null"
-              ],
+              "type": "string",
               "enum": [
                 "S",
                 "A",
@@ -608,6 +660,13 @@
               ]
             }
           }
+        },
+        "benchmark_key": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Internal key of the representative benchmark (terminal_bench_2_0 / terminal_bench_2_1) used by the shared ranking policy gate (spec 0004 AC-5)."
         },
         "benchmarks": {
           "type": [
@@ -626,8 +685,21 @@
               },
               "score": {
                 "type": "number"
+              },
+              "body_excerpt": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "source_url": {
+                "type": "string"
+              },
+              "verified_at": {
+                "type": "string"
               }
-            }
+            },
+            "additionalProperties": false
           }
         }
       },
@@ -645,43 +717,50 @@
           },
           "then": {
             "required": [
-              "last_verified"
+              "last_verified",
+              "provider_key",
+              "canonical_model_id",
+              "access_kind",
+              "effective_price_per_million",
+              "price_source",
+              "price_verified_at",
+              "endpoint_source"
             ],
             "properties": {
               "last_verified": {
                 "type": "string",
                 "format": "date-time"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "delivery_type": {
-                "const": "router"
-              }
-            },
-            "required": [
-              "delivery_type"
-            ]
-          },
-          "then": {
-            "required": [
-              "free_model_names"
-            ],
-            "properties": {
-              "free_model_names": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "minItems": 1
+              },
+              "provider_key": {
+                "type": "string"
+              },
+              "canonical_model_id": {
+                "type": "string"
+              },
+              "access_kind": {
+                "enum": [
+                  "FREE",
+                  "ULTRA_LOW"
+                ]
+              },
+              "price_source": {
+                "type": "string",
+                "format": "uri"
+              },
+              "price_verified_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "endpoint_source": {
+                "type": "string",
+                "format": "uri"
               }
             }
           }
         }
-      ]
+      ],
+      "additionalProperties": false
     }
-  }
+  },
+  "additionalProperties": false
 }

@@ -116,7 +116,7 @@ Run searches in English, Japanese, and Chinese where relevant.
 
 ### Phase 2 — Search known providers and aggregators
 
-Check the provider and discovery sources in `config/sources.yaml`.
+Check the provider and discovery sources in the collector SQLite tables (`discovery_sources`, `search_terms`, `search_windows`), seeded by migration 0003 from the former `config/sources.yaml` and `config/search_queries.yaml` (spec 0004 AC-13). Use `npm run db:status` or the DB CLI to inspect them; the YAML files are gone.
 
 For routers and marketplaces, inspect:
 
@@ -181,13 +181,13 @@ For each candidate, verify as many of the following as possible:
 
 **Endpoint verification (mandatory, no exceptions):** Never write `base_url` or `model_id` from memory, training data, or a previous report. Every value must be copied from a page fetched during this run.
 
-1. Read `build/provider-registry.json` first. If the provider is listed, use the registry's `base_url` verbatim and set `endpoint_source` to the registry's `docs_url` after fetching that docs page to confirm it is live and still states the same endpoint. If the fetched docs contradict the registry, update the registry entry from the docs in the same run and record the new docs URL — the fetched page is the authority, the registry is the cache.
-2. If the provider is NOT listed, grow the registry: search the provider's official API documentation (vendor's official domain only), fetch the page, and copy the documented base URL, model ID format, and an official request example verbatim. Then add a new entry to `build/provider-registry.json` (`key`, `label`, `match`, `base_url`, `base_url_pattern`, `env`, `openai`, `docs_url`, `added_at`, `added_from`) where `added_from` is the exact docs URL you fetched, and set the offer's `endpoint_source` to the same URL. Only after the entry exists may the offer be ranked. Never add an entry from memory: the validator re-fetches every `endpoint_source` page and hard-fails when the page does not document the claimed `base_url`, so an entry you did not look up will abort the batch.
+1. Read `build/provider-registry.json` first. If the provider is listed, use the registry's `base_url` verbatim and set `endpoint_source` to the registry's `docs_url` after fetching that docs page to confirm it is live and still states the same endpoint. If the fetched docs contradict the registry, emit a worker fact proposal with the fetched URL. The deterministic evidence audit stages a candidate registry change; workers never write the canonical registry directly.
+2. If the provider is NOT listed, search and fetch the vendor's official API documentation and emit a provider candidate containing the documented base URL, model ID format, request example, and exact `added_from` URL. Deterministic evidence audit validates and stages the candidate registry entry. No worker directly edits `build/provider-registry.json`, and the offer cannot rank until the candidate is promoted.
 3. A ranked offer without `endpoint_source`, with a `base_url` that contradicts the registry, from a provider missing from the registry, or with a citation that does not document its endpoint, fails `npm run validate` and aborts the batch. When in doubt about an endpoint, do not rank the offer.
 
 OpenRouter-specific rule:
 
-- **Use the API, not the web page.** `GET https://openrouter.ai/api/v1/models` returns every served model with `pricing`, `context_length`, `created`, and `top_provider` in one call. A `:free` variant is genuinely free and served only when its `id` is present in that catalog AND `pricing.prompt === "0"` and `pricing.completion === "0"`. The model page's "N providers" FAQ text refers to the **paid base model** (a shared component) and is NOT evidence that the `:free` variant is served — the `:free` page can render with an empty Activity chart and no Providers section while the FAQ still shows the base model's count. If the `:free` model_id is absent from the catalog, the variant has no provider and must be excluded. The validator enforces this mechanically via the `openrouter-ghost` gate (it re-fetches the catalog and drops any ranked router offer whose model_id is missing).
+- **Use the API, not the web page.** `GET https://openrouter.ai/api/v1/models` returns every served model with `pricing`, `context_length`, `created`, and `top_provider` in one call. A `:free` variant is genuinely free and served only when its `id` is present in that catalog AND `pricing.prompt === "0"` and `pricing.completion === "0"`. The model page's "N providers" FAQ text refers to the **paid base model** (a shared component) and is NOT evidence that the `:free` variant is served — the `:free` page can render with an empty Activity chart and no Providers section while the FAQ still shows the base model's count. If the `:free` model_id is absent from the catalog, the variant has no provider and must be excluded. The deterministic catalog lane and lane reducer own this mechanically (catalog.js + lanes.js): a successful exhaustive catalog that omits an exact id moves it to `confirmed_removed`; a failed catalog never removes. Report validation does not re-fetch the catalog.
 
 If live operation cannot be verified, mark:
 
@@ -301,7 +301,7 @@ A free API is only valuable if the model itself is worth using. Do not rank offe
 
 ### Individual model cards (routers included)
 
-Emit each noteworthy free model as its own offer card, including models accessed through routers like OpenRouter. Do not aggregate a router's free models into one card. For each router-hosted card set `delivery_type: "router"`, the router as `provider`, the router endpoint as `base_url`, the specific model's `model_id`/`benchmark`/`benchmarks`, and the complete sorted unique `free_model_names` list from the authoritative catalog. Put the router's per-model page (e.g. `https://openrouter.ai/{model_id}`) as `sources[0]` — the card's primary link must open the exact model's page, not a generic docs page. Only create cards for models that pass the quality gate.
+Emit each noteworthy free or ultra low cost model as its own offer card, including models accessed through routers like OpenRouter. Do not aggregate a router's free models into one card. For each router-hosted card set `delivery_type: "router"`, the router as `provider`, the router endpoint as `base_url`, the specific model's `model_id`/`benchmark`/`benchmarks`, and the deterministic price facts (spec 0004: one card per provider and exact model id; the catalog inventory list is gone). Put the router's per-model page (e.g. `https://openrouter.ai/{model_id}`) as `sources[0]` — the card's primary link must open the exact model's page, not a generic docs page. Only create cards for models that pass the quality gate.
 
 ### End dates
 
@@ -309,27 +309,22 @@ If an offer has a known end date, always set `end_at` and `end_timezone_known`. 
 
 ### Tier criteria (S/A)
 
-Tier S/A certifies agentic coding competence and requires **Terminal-Bench 2.1 ≥ 50%** on record. The deterministic assembler derives tier from the verified benchmark rows in SQLite (≥65 S, 50–64.999 A); the benchmark scout searches the model card and leaderboards (`llm-stats.com/benchmarks/terminal-bench-2.1`, `benchlm.ai`, `snorkel.ai`) for missing scores and reports them as proposals. A model scoring under 50%, or with no verified Terminal-Bench 2.1 score, is capped at tier B (or `benchmark_pending` and unranked). The assembler and validator enforce this; workers never assign tier.
+Tier S/A certifies agentic coding competence and requires **Terminal-Bench 2.0 or 2.1 ≥ 50%** on record. The deterministic assembler derives tier from the verified benchmark rows in SQLite (≥65 S, 50–64.999 A) using the shared ranking policy (`build/ranking-policy.js`); the benchmark scout searches allowed official sources only for models with no accepted benchmark fact. Once a supplemental benchmark is accepted, the model is not searched again merely because Terminal-Bench is absent. A model scoring under 50%, or with no verified Terminal-Bench 2.0/2.1 score, is `benchmark_pending` and unranked (never a rankable tier B). The assembler, validator, and builder all enforce the same shared policy; workers never assign tier.
 
-### Free allowance rank (mandatory for ranked offers)
+### Free allowance rank (display only)
 
-A free API with a prototype-only quota is not the same offer as one that is usable at scale. Set `free_allowance_rank` from the documented limits (`free_limits`):
+A free API with a prototype-only quota is not the same offer as one that is usable at scale. Set `free_allowance_rank` from the documented limits (`free_limits`) for display context only. It never affects admission, tier, or ordering:
 
 - `AMPLE`: effectively unrestricted, or large quotas (hundreds of requests/day, or millions of tokens/day)
 - `NORMAL`: a usable everyday quota (roughly 20–100 requests/day)
 - `TIGHT`: only a few requests per day
 - `TINY`: prototype-only quotas (e.g. ≤10 requests/day, or small daily credit pools such as Workers AI's 10,000 neurons/day)
 
-The rank must agree with the `free_limits` text — never label a quota AMPLE or NORMAL when the documented limits show it is tiny. The ranking sorts by allowance after tier and score, so tiny quotas sink below equally performant offers that are actually usable.
+The rank must agree with the `free_limits` text. It is display context only and never affects ranking order.
 
 ### Sort order
 
-Primary: performance tier (S > A > B), then benchmark score descending.
-Secondary: free allowance (`AMPLE` > `NORMAL` > `TIGHT` > `TINY`).
-Tertiary: freshness (`last_verified` descending).
-Quaternary: name ascending.
-
-Performance is the primary axis. A high-score model verified yesterday outranks a low-score model verified today. Within equal performance, a generous free tier outranks a tiny one.
+Order is exactly: tier (S > A > B), access kind (FREE > ULTRA_LOW), score descending only within the same Terminal Bench version, then `price_verified_at` descending, then name ascending. Scores from different Terminal Bench versions are never compared. Free allowance is display only.
 
 ### Benchmark persistence (mandatory)
 
@@ -339,28 +334,7 @@ The SQLite `benchmarks` table is the persistent cache of verified scores across 
 - Verified benchmark rows are immutable: a newly proposed score never replaces an existing verified row merely for being higher. A correction requires separately verified evidence naming the old value and reason.
 - Workers report scores as proposals (`benchmark_finds[]`); the deterministic validator accepts them only when the fetched evidence confirms the model, benchmark version, and score, then persists them to SQLite.
 
-Recommended ranking formula:
-
-```text
-value_score =
-  0.30 * performance_score +
-  0.25 * discount_score +
-  0.15 * operational_confidence_score +
-  0.10 * context_and_tooling_score +
-  0.10 * access_ease_score +
-  0.10 * duration_score -
-  risk_penalty
-```
-
-Where:
-
-- `performance_score`: frontier, near-frontier, or task-specialized quality
-- `discount_score`: effective savings versus normal price
-- `operational_confidence_score`: verified provider and recent activity
-- `context_and_tooling_score`: context length, tool calling, structured output, multimodal support
-- `access_ease_score`: no card, no deposit, simple signup, public API
-- `duration_score`: remaining campaign duration and stability
-- `risk_penalty`: derived from suspicion score and data-use concerns
+The runtime order is deterministic: tier (S > A > B), access kind (FREE > ULTRA_LOW), score descending only within the same Terminal Bench version, then `price_verified_at` descending, then name ascending. Allowance, extra quota details, context, tooling, and other descriptive data are display only and never ranking inputs.
 
 Do not rank a dead endpoint above an active but slightly weaker model.
 
@@ -404,7 +378,7 @@ The daily collection (`.devops/db/collect.js`, driven by `npm run collect` / `fu
 4. Catalog (deterministic)  providers with api_catalog_url fetched from their API
 5. Lane workers (LLM)     known_refresh + discovery, parallel (GLOBAL_CONCURRENCY)
 6. Lane reduction         liveness + enums + promotion gate (zero verified blocks)
-7. Benchmark scout (LLM)  only models missing the gate score; proposals validated
+7. Benchmark scout (LLM)  only models with no accepted benchmark fact; proposals validated
 8. Candidate view         deterministic input for classifier + editor
 9. Classifier + editor    final classification; Japanese prose only
 10. Assembly              deterministic report.json from SQLite + prose
@@ -417,7 +391,7 @@ The daily collection (`.devops/db/collect.js`, driven by `npm run collect` / `fu
 
 1. `crawl-worker` (prompts/crawl-worker.md): per-provider facts. Handles known_refresh (re-verify known offers). Emits `crawl-facts.schema.json` facts.
 2. `discovery-agent` (prompts/discovery-agent.md): finds new models and providers. Emits facts; failure never mutates known offers.
-3. `benchmark-scout` (prompts/benchmark-scout.md): finds benchmark scores for models missing the gate score. Emits proposals (`benchmark-scout.schema.json`), confirmed by evidence before becoming facts.
+3. `benchmark-scout` (prompts/benchmark-scout.md): finds benchmark scores only for models with no accepted benchmark fact. Emits proposals (`benchmark-scout.schema.json`), confirmed by evidence before becoming facts.
 4. `classifier-agent` (prompts/classifier-agent.md): final classification per candidate. Does NOT fetch.
 5. `editor-agent` (prompts/editor-agent.md): writes Japanese prose only (`editorial.json`). Does NOT fetch, does NOT write data.
 
@@ -459,11 +433,11 @@ A run is successful only when:
 - top claims include citations
 - every ranked offer's provider exists in `build/provider-registry.json` and its `base_url` matches the registry pattern
 - every ranked offer has an `endpoint_source` URL fetched during this run, and the fetched page documents the claimed `base_url` (the validator re-checks this online)
-- providers missing from the registry were researched from official docs and added to the registry (with `added_from` provenance) before ranking
+- workers only propose provider facts; deterministic fetched evidence audit stages a candidate registry entry with `added_from` provenance, and no worker writes the canonical registry directly
 - every ranked offer has a `free_allowance_rank` consistent with its documented limits
 - no ranked offer's free quota is app/web-chat-only while its API is paid, and no `effective_price_per_million` was zeroed from an app quota
 - no ranked offer is a sub-30B total-parameter model (local-run territory), and parameter sizes were researched from model cards
-- every tier S/A offer has a verified Terminal-Bench 2.1 score of 50%+ in SQLite
+- every tier S/A offer has a verified Terminal-Bench 2.0 or 2.1 score of 50%+ in SQLite
 - no ranked offer lost a benchmark score that exists in the SQLite `benchmarks` table, and every accepted new score was persisted there
 - no `base_url` or `model_id` was written from memory
 - the final report is in Japanese

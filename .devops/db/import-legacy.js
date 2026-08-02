@@ -59,19 +59,14 @@ function importLegacyState(options = {}) {
       );
     }
 
-    const upsertOffer = database.prepare(
-      'INSERT INTO offers ('
-      + '  provider_key, exact_model_id, canonical_model_id, source_kind, status,'
-      + '  consecutive_failures, first_seen_at, last_attempted_at, last_verified_at,'
-      + '  last_seen_run_id, pricing_hash, removal_evidence_json, facts_json'
-      + ') VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) '
-      + 'ON CONFLICT(provider_key, exact_model_id) DO UPDATE SET'
-      + '  status = excluded.status,'
-      + '  consecutive_failures = excluded.consecutive_failures,'
-      + '  last_attempted_at = excluded.last_attempted_at,'
-      + '  last_verified_at = excluded.last_verified_at,'
-      + '  facts_json = excluded.facts_json'
-    );
+    const upsertOffer = database.prepare(db.buildOfferUpsertSql(
+      ', ' +
+      '  canonical_model_id = excluded.canonical_model_id,' +
+      '  source_kind = excluded.source_kind,' +
+      '  last_seen_run_id = excluded.last_seen_run_id,' +
+      '  pricing_hash = excluded.pricing_hash,' +
+      '  removal_evidence_json = excluded.removal_evidence_json'
+    ));
     const insertBenchmark = database.prepare(
       'INSERT INTO benchmarks ('
       + '  canonical_model_id, benchmark_key, display_name, version, score,'
@@ -94,21 +89,21 @@ function importLegacyState(options = {}) {
             continue;
           }
           const verifiedAt = offer.last_verified || fallbackTime;
-          upsertOffer.run(
-            providerKey,
-            exactModelId,
-            db.canonicalModelId(exactModelId),
-            'legacy',
-            'verified',
-            0,
-            verifiedAt,
-            verifiedAt,
-            verifiedAt,
-            null,
-            null,
-            null,
-            JSON.stringify(offer)
-          );
+          upsertOffer.run(...db.offerUpsertParams({
+            provider_key: providerKey,
+            exact_model_id: exactModelId,
+            canonical_model_id: db.canonicalModelId(exactModelId),
+            source_kind: 'legacy',
+            status: 'verified',
+            consecutive_failures: 0,
+            first_seen_at: verifiedAt,
+            last_attempted_at: verifiedAt,
+            last_verified_at: verifiedAt,
+            pricing_hash: null,
+            removal_evidence_json: null,
+            facts_json: offer,
+            ...db.extractOfferPriceColumns(offer),
+          }, verifiedAt, null));
           summary.offersImported += 1;
         }
       }

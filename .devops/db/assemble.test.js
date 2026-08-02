@@ -78,12 +78,21 @@ function offerSeed(overrides = {}) {
     last_verified_at: '2026-07-30T00:00:00.000Z',
     pricing_hash: null,
     removal_evidence_json: null,
+    // Spec 0004 AC-3 typed prices: free by default so ranked offers pass the
+    // AC-4 access kind gate.
+    effective_input_price_usd: 0,
+    effective_output_price_usd: 0,
+    normal_input_price_usd: 0,
+    normal_output_price_usd: 0,
+    source_currency: 'USD',
+    source_unit: 'per_million_tokens',
+    price_source_url: 'https://openrouter.ai/api/v1/models',
+    price_verified_at: '2026-07-30T00:00:00.000Z',
     facts_json: {
       model_name: 'Acme A',
       free_quota_text: 'free tier, 100 requests per day',
       endpoint_source: 'https://openrouter.ai/docs/quickstart',
       catalog_url: 'https://openrouter.ai/api/v1/models',
-      free_model_names: ['acme/a:free'],
     },
     ...overrides,
   };
@@ -144,6 +153,96 @@ test('provisional classification keeps conditional and trial offers out of true 
   );
 });
 
+// ── Access kind derivation (spec 0004 AC-4) ─────────────────────
+
+test('access kind boundaries: FREE, ULTRA_LOW, and over-limit are derived (AC-4)', () => {
+  assert.equal(assemble.deriveAccessKind(0, 0), 'FREE');
+  assert.equal(assemble.deriveAccessKind(0.2, 0.4), 'ULTRA_LOW');
+  assert.equal(assemble.deriveAccessKind(0.199999, 0.399999), 'ULTRA_LOW');
+  assert.equal(assemble.deriveAccessKind(0.200001, 0.4), null, 'input above 0.2 is excluded');
+  assert.equal(assemble.deriveAccessKind(0.2, 0.400001), null, 'output above 0.4 is excluded');
+  assert.equal(assemble.deriveAccessKind(null, 0), null, 'missing input is unknown');
+  assert.equal(assemble.deriveAccessKind(0, undefined), null, 'missing output is unknown');
+  assert.equal(assemble.deriveAccessKind(Number.NaN, 0), null);
+  assert.equal(assemble.deriveAccessKind(0, -0.1), null, 'negative prices are not free');
+});
+
+test('an offer with unknown or over-limit prices is excluded, not ranked (AC-4)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [
+      // ULTRA_LOW boundary: ranked.
+      offerSeed({ exact_model_id: 'acme/cheap:free', canonical_model_id: 'acme/cheap',
+        effective_input_price_usd: 0.2, effective_output_price_usd: 0.4,
+        normal_input_price_usd: 0.2, normal_output_price_usd: 0.4,
+        facts_json: { model_name: 'Cheap', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+      // Over limit: excluded.
+      offerSeed({ exact_model_id: 'acme/pricey:free', canonical_model_id: 'acme/pricey',
+        effective_input_price_usd: 0.3, effective_output_price_usd: 0.4,
+        normal_input_price_usd: 0.3, normal_output_price_usd: 0.4,
+        facts_json: { model_name: 'Pricey', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+      // Missing output price: excluded.
+      offerSeed({ exact_model_id: 'acme/missing:free', canonical_model_id: 'acme/missing',
+        effective_input_price_usd: 0.1, effective_output_price_usd: null,
+        normal_input_price_usd: 0.1, normal_output_price_usd: null,
+        facts_json: { model_name: 'Missing', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+    ],
+    benchmarks: [
+      benchRow('acme/cheap', 60),
+      benchRow('acme/pricey', 60),
+      benchRow('acme/missing', 60),
+    ],
+  });
+  const runDir = runDirFor(ctx, 'run-access');
+  const { report } = assemble.assembleReport('run-access', runDir, ctx.options);
+  assert.deepEqual(report.ranked_offers.map((o) => o.model_id), ['acme/cheap:free']);
+  assert.equal(report.ranked_offers[0].access_kind, 'ULTRA_LOW');
+  assert.ok(report.excluded_offers.some((e) => e.name === 'Pricey' && /access/.test(e.reason)));
+  assert.ok(report.excluded_offers.some((e) => e.name === 'Missing' && /access/.test(e.reason)));
+});
+
+// ── Shared ranking policy in assembler (AC-5) ─────────────────────
+
+test('a Terminal Bench score below 50 is never ranked even as tier B (AC-5)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [offerSeed({
+      exact_model_id: 'acme/low:free', canonical_model_id: 'acme/low',
+      facts_json: { model_name: 'Low Score', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' },
+    })],
+    benchmarks: [benchRow('acme/low', 49.999, {
+      benchmark_key: 'terminal_bench_2_0', display_name: 'Terminal-Bench 2.0', version: '2.0',
+    })],
+  });
+  const runDir = runDirFor(ctx, 'run-low');
+  const { report } = assemble.assembleReport('run-low', runDir, ctx.options);
+  assert.equal(report.ranked_offers.length, 0, '49.999 never ranks');
+  assert.ok(report.excluded_offers.some((e) => e.name === 'Low Score' && /benchmark/.test(e.reason)));
+});
+
+test('the assembler derives access kind from typed prices, never a stale label (AC-4)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [offerSeed({
+      exact_model_id: 'acme/cheap:free', canonical_model_id: 'acme/cheap',
+      effective_input_price_usd: 0.05, effective_output_price_usd: 0.05,
+      normal_input_price_usd: 0.05, normal_output_price_usd: 0.05,
+      facts_json: { model_name: 'Cheap', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' },
+    })],
+    benchmarks: [benchRow('acme/cheap', 60)],
+  });
+  const runDir = runDirFor(ctx, 'run-cheap');
+  const { report } = assemble.assembleReport('run-cheap', runDir, ctx.options);
+  assert.equal(report.ranked_offers.length, 1);
+  assert.equal(report.ranked_offers[0].access_kind, 'ULTRA_LOW', '0.05 is within the ULTRA_LOW limits');
+});
+
 // ── Candidate view ───────────────────────────────────────────────
 
 test('the candidate view carries tier, allowance, and endpoint facts from state (AC-12)', (t) => {
@@ -182,70 +281,92 @@ test('confirmed_removed offers are not candidates', (t) => {
   assert.deepEqual(view.candidates.map((c) => c.canonical_model_id), ['acme/a']);
 });
 
-// ── Ranking eligibility and ordering ─────────────────────────────
-
-test('ranking orders by tier, then allowance, then same key score (AGENTS.md)', (t) => {
+test('operator hidden offers are not candidates', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
   seed(ctx, {
     offers: [
-      // Tier S, NORMAL allowance, score 70.
-      offerSeed({ exact_model_id: 'acme/s-norm:free', canonical_model_id: 'acme/s-norm',
-        facts_json: { model_name: 'S Norm', free_quota_text: 'free tier', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
-      // Tier S, AMPLE allowance, score 65 -> ranks first (AMPLE beats NORMAL).
-      offerSeed({ exact_model_id: 'acme/s-ample:free', canonical_model_id: 'acme/s-ample',
-        facts_json: { model_name: 'S Ample', free_quota_text: 'unlimited free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
-      // Tier A, AMPLE allowance -> ranks after both S offers.
-      offerSeed({ exact_model_id: 'acme/a-ample:free', canonical_model_id: 'acme/a-ample',
-        facts_json: { model_name: 'A Ample', free_quota_text: 'unlimited free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+      offerSeed({ exact_model_id: 'acme/visible:free', canonical_model_id: 'acme/visible' }),
+      offerSeed({ exact_model_id: 'acme/hidden:free', canonical_model_id: 'acme/hidden' }),
+    ],
+    benchmarks: [benchRow('acme/visible', 70), benchRow('acme/hidden', 70)],
+  });
+  db.setOfferHidden('openrouter', 'acme/hidden:free', true, ctx.options);
+  const view = assemble.buildCandidateView(ctx.options);
+  assert.deepEqual(view.candidates.map((c) => c.canonical_model_id), ['acme/visible']);
+});
+
+// ── Ranking eligibility and ordering ─────────────────────────────
+
+test('ranking orders by tier, then access kind, then same key score (AC-7)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [
+      // Tier S, ULTRA_LOW, score 70.
+      offerSeed({ exact_model_id: 'acme/s-ultra:free', canonical_model_id: 'acme/s-ultra',
+        effective_input_price_usd: 0.1, effective_output_price_usd: 0.2,
+        normal_input_price_usd: 0.1, normal_output_price_usd: 0.2,
+        facts_json: { model_name: 'S Ultra', free_quota_text: 'free tier', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+      // Tier S, FREE, score 65 -> ranks first (FREE before ULTRA_LOW).
+      offerSeed({ exact_model_id: 'acme/s-free:free', canonical_model_id: 'acme/s-free',
+        facts_json: { model_name: 'S Free', free_quota_text: 'unlimited free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+      // Tier A, FREE -> ranks after both S offers.
+      offerSeed({ exact_model_id: 'acme/a-free:free', canonical_model_id: 'acme/a-free',
+        facts_json: { model_name: 'A Free', free_quota_text: 'unlimited free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
     ],
     benchmarks: [
-      benchRow('acme/s-norm', 70),
-      benchRow('acme/s-ample', 65),
-      benchRow('acme/a-ample', 60),
+      benchRow('acme/s-ultra', 70),
+      benchRow('acme/s-free', 65),
+      benchRow('acme/a-free', 60),
     ],
   });
   const runDir = runDirFor(ctx, 'run-order');
   const { report } = assemble.assembleReport('run-order', runDir, ctx.options);
   assert.deepEqual(
-    report.ranked_offers.map((o) => o.canonical_model_id || o.model_id),
-    ['acme/s-ample:free', 'acme/s-norm:free', 'acme/a-ample:free']
+    report.ranked_offers.map((o) => o.model_id),
+    ['acme/s-free:free', 'acme/s-ultra:free', 'acme/a-free:free']
   );
   assert.deepEqual(report.ranked_offers.map((o) => o.rank), [1, 2, 3]);
 });
 
-test('same key scores compare; different keys fall through to last_verified (AGENTS.md)', (t) => {
+test('same key scores compare; different keys fall through to price_verified_at (AC-7)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
   seed(ctx, {
     offers: [
-      // Tier B via SWE-bench score 90, newer verification.
+      // Tier A via Terminal-Bench 2.1 score 90, newer price confirmation.
       offerSeed({ exact_model_id: 'acme/x:free', canonical_model_id: 'acme/x',
         last_verified_at: '2026-07-30T00:00:00.000Z',
+        price_verified_at: '2026-07-30T00:00:00.000Z',
         facts_json: { model_name: 'X', free_quota_text: 'unlimited free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
-      // Tier B via GPQA score 95 (different key), older verification.
+      // Tier A via Terminal-Bench 2.0 score 95 (different key), older price
+      // confirmation.
       offerSeed({ exact_model_id: 'acme/y:free', canonical_model_id: 'acme/y',
         last_verified_at: '2026-07-01T00:00:00.000Z',
+        price_verified_at: '2026-07-01T00:00:00.000Z',
         facts_json: { model_name: 'Y', free_quota_text: 'unlimited free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
     ],
     benchmarks: [
-      benchRow('acme/x', 90, { benchmark_key: 'swe_bench_verified', display_name: 'SWE-bench Verified', version: '1.0' }),
-      benchRow('acme/y', 95, { benchmark_key: 'gpqa_diamond', display_name: 'GPQA Diamond', version: '1.0' }),
+      benchRow('acme/x', 90),
+      benchRow('acme/y', 95, { benchmark_key: 'terminal_bench_2_0', display_name: 'Terminal-Bench 2.0', version: '2.0' }),
     ],
   });
   const runDir = runDirFor(ctx, 'run-diffkey');
   const { report } = assemble.assembleReport('run-diffkey', runDir, ctx.options);
-  // Different benchmark keys: scores are NOT compared; the newer last_verified
-  // (acme/x) ranks first even though its raw score is lower.
+  // Different Terminal Bench versions: raw scores are NOT compared; the newer
+  // price confirmation date (acme/x) ranks first even though its raw score is
+  // lower.
   assert.deepEqual(
     report.ranked_offers.map((o) => o.model_id),
     ['acme/x:free', 'acme/y:free']
   );
 });
 
-test('benchmark_pending offers are excluded, not ranked (AC-10)', (t) => {
+test('benchmark_pending offers are excluded, not ranked (AC-5)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
@@ -263,11 +384,32 @@ test('benchmark_pending offers are excluded, not ranked (AC-10)', (t) => {
   assert.ok(report.excluded_offers.some((e) => e.name === 'Pending' && /benchmark-pending/.test(e.reason)));
 });
 
-test('router assembly emits the complete catalog list while benchmark-pending aggregate routes stay excluded', (t) => {
+test('non Terminal Bench benchmarks never substitute for admission (AC-5, AC-6)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
-  const catalogNames = ['zeta/model:free', 'alpha/model:free', 'openrouter/free', 'alpha/model:free'];
+  seed(ctx, {
+    offers: [
+      offerSeed({ exact_model_id: 'acme/swe:free', canonical_model_id: 'acme/swe',
+        facts_json: { model_name: 'SWE Only', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+      offerSeed({ exact_model_id: 'acme/tb20:free', canonical_model_id: 'acme/tb20',
+        facts_json: { model_name: 'TB 2.0', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+    ],
+    benchmarks: [
+      benchRow('acme/swe', 95, { benchmark_key: 'swe_bench_verified', display_name: 'SWE-bench Verified', version: '1.0' }),
+      benchRow('acme/tb20', 52, { benchmark_key: 'terminal_bench_2_0', display_name: 'Terminal-Bench 2.0', version: '2.0' }),
+    ],
+  });
+  const runDir = runDirFor(ctx, 'run-tb-gate');
+  const { report } = assemble.assembleReport('run-tb-gate', runDir, ctx.options);
+  assert.deepEqual(report.ranked_offers.map((o) => o.model_id), ['acme/tb20:free']);
+  assert.ok(report.excluded_offers.some((e) => e.name === 'SWE Only' && /benchmark-gate/.test(e.reason)));
+});
+
+test('router offers are one card per provider and exact model; aggregate routes stay excluded', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
   seed(ctx, {
     offers: [
       offerSeed({
@@ -277,7 +419,6 @@ test('router assembly emits the complete catalog list while benchmark-pending ag
           model_name: 'Alpha Model',
           endpoint_source: 'https://openrouter.ai/docs/quickstart',
           catalog_url: 'https://openrouter.ai/api/v1/models',
-          free_model_names: catalogNames,
         },
       }),
       offerSeed({
@@ -287,7 +428,6 @@ test('router assembly emits the complete catalog list while benchmark-pending ag
           model_name: 'Free Models Router',
           endpoint_source: 'https://openrouter.ai/docs/quickstart',
           catalog_url: 'https://openrouter.ai/api/v1/models',
-          free_model_names: catalogNames,
         },
       }),
     ],
@@ -298,9 +438,10 @@ test('router assembly emits the complete catalog list while benchmark-pending ag
 
   assert.equal(report.ranked_offers.length, 1);
   assert.equal(report.ranked_offers[0].delivery_type, 'router');
-  assert.deepEqual(report.ranked_offers[0].free_model_names, [
-    'alpha/model:free', 'openrouter/free', 'zeta/model:free',
-  ]);
+  assert.equal(report.ranked_offers[0].model_id, 'alpha/model:free');
+  assert.equal(report.ranked_offers[0].provider_key, 'openrouter');
+  assert.equal(report.ranked_offers[0].canonical_model_id, 'alpha/model');
+  assert.equal('free_model_names' in report.ranked_offers[0], false, 'free_model_names is gone (AC-2)');
   assert.ok(report.excluded_offers.some((entry) =>
     entry.name === 'Free Models Router' && /benchmark-pending/.test(entry.reason)
   ));
@@ -318,7 +459,6 @@ test('catalog offers need fetched endpoint evidence instead of registry docs fal
         facts_json: {
           model_name: 'No Docs Evidence',
           catalog_url: 'https://openrouter.ai/api/v1/models',
-          free_model_names: ['acme/no-docs:free'],
         },
       }),
       offerSeed({
@@ -328,7 +468,6 @@ test('catalog offers need fetched endpoint evidence instead of registry docs fal
           model_name: 'Fetched Docs Evidence',
           catalog_url: 'https://openrouter.ai/api/v1/models',
           endpoint_source: 'https://openrouter.ai/docs/quickstart',
-          free_model_names: ['acme/with-docs:free'],
         },
       }),
     ],
@@ -358,14 +497,17 @@ test('the local model gate excludes sub 30B offers unless tier S or A (AGENTS.md
         facts_json: { model_name: 'Small S', total_parameters_b: 20, free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
     ],
     benchmarks: [
-      benchRow('acme/small-b', 90, { benchmark_key: 'swe_bench_verified', display_name: 'SWE-bench Verified', version: '1.0' }),
+      benchRow('acme/small-b', 49, { benchmark_key: 'terminal_bench_2_0', display_name: 'Terminal-Bench 2.0', version: '2.0' }),
       benchRow('acme/small-s', 70),
     ],
   });
   const runDir = runDirFor(ctx, 'run-small');
   const { report } = assemble.assembleReport('run-small', runDir, ctx.options);
   assert.deepEqual(report.ranked_offers.map((o) => o.model_id), ['acme/small-s:free']);
-  assert.ok(report.excluded_offers.some((e) => e.name === 'Small B' && /local-run/.test(e.reason)));
+  // Small B has only a 49 score on Terminal Bench 2.0: below the shared 50
+  // gate it is benchmark_pending and excluded on the benchmark gate, not the
+  // local-run gate.
+  assert.ok(report.excluded_offers.some((e) => e.name === 'Small B' && /benchmark/.test(e.reason)));
 });
 
 // ── Conditional credits and caution ──────────────────────────────
@@ -429,7 +571,7 @@ test('editorial offer prose is combined; summary and data stay deterministic (AC
   const { report } = assemble.assembleReport('run-editorial', runDir, ctx.options);
   assert.equal(
     report.summary,
-    '無料・割引 LLM API の日次ランキング。今回ランクイン 1 件（S 1、A 0、B 0）、注意 0 件、対象外 0 件。'
+    '無料・激安 LLM API の日次ランキング。今回ランクイン 1 件（S 1、A 0、B 0）、無料 1 件、激安 0 件、注意 0 件、対象外 0 件。'
   );
   assert.equal(report.ranked_offers[0].recent_activity, 'Acme A は高速な無料モデルです。');
   // Deterministic fields are not taken from prose.
@@ -526,4 +668,19 @@ test('the assembled report conforms to the daily report schema (AC-12)', (t) => 
   const validate = ajv.compile(schema);
   const valid = validate(report);
   assert.equal(valid, true, JSON.stringify(validate.errors, null, 2));
+});
+
+test('crawl facts schema rejects unknown fact type and typed price properties', () => {
+  const Ajv = require('ajv');
+  const schema = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', '.agents/skills/llm-deals-intelligence-skill/schemas/crawl-facts.schema.json'), 'utf8'));
+  const validate = new Ajv({ allErrors: true, strict: false }).compile(schema);
+  const fact = { schema_version: 1, task_id: 'known:x', status: 'complete', crawled_at: '2026-08-01T00:00:00Z', provider_key: 'x', models: [{ model_id: 'x/m', fact_type: 'tier', input_price_usd: 1 }], errors: [] };
+  assert.equal(validate(fact), false);
+  assert.ok(validate.errors.some((error) => error.keyword === 'additionalProperties'));
+
+  const omittedEnd = {
+    schema_version: 1, task_id: 'known:x', status: 'complete', crawled_at: '2026-08-01T00:00:00Z',
+    provider_key: 'x', models: [{ model_id: 'x/m', discount_start_at: '2026-08-01T00:00:00Z' }], errors: [],
+  };
+  assert.equal(validate(omittedEnd), false, 'a supplied discount start requires an end');
 });

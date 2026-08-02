@@ -25,6 +25,20 @@ const publication = require('./publication');
 const collect = require('./collect');
 const importLegacy = require('./import-legacy');
 
+function flagValues(flags, name) {
+  const values = [];
+  for (let i = 0; i < flags.length; i += 1) {
+    const flag = flags[i];
+    if (flag === name && typeof flags[i + 1] === 'string' && !flags[i + 1].startsWith('--')) {
+      values.push(flags[++i]);
+    } else if (typeof flag === 'string' && flag.startsWith(`${name}=`)) {
+      const value = flag.slice(name.length + 1);
+      if (value) values.push(value);
+    }
+  }
+  return values;
+}
+
 const USAGE = [
   'usage: node .devops/db/cli.js <command>',
   '',
@@ -37,11 +51,12 @@ const USAGE = [
   '  manifest <run_dir>  build the lane manifest from current state and write <run_dir>/manifest.json',
   '  ingest <run_id> <run_dir>  validate run artifacts and stage them in the tasks table',
   '  reduce <run_id> <run_dir>  reduce staged lane results, apply offer changes, report the gate',
-  '  bench-queue <run_dir>  build the daily benchmark search queue and write needs-lists',
-  '  bench-reduce <run_id> <run_dir>  validate benchmark proposals and apply accepted facts',
+  '  bench-queue <run_dir> [--model <id>] [--benchmark <name>]  build the benchmark search queue',
+  '  bench-reduce <run_id> <run_dir> [--model <id>] [--benchmark <name>]  validate benchmark proposals',
   '  candidate-view <run_dir>  write the deterministic candidate view for the classifier and editor',
   '  assemble <run_id> <run_dir>  assemble the staged report.json from SQLite state and prose',
-  '  collect [--dry-run] [--push] [--skip-citation] [--vision]  run the full fail safe pipeline',
+  '  set-hidden <provider_key> <exact_model_id> <true|false>  change the operator publication flag',
+  '  collect [--dry-run] [--push] [--skip-citation] [--vision] [--model <id>] [--benchmark <name>]  run the full fail safe pipeline',
   '  validate-candidate <run_id> <run_dir>  validate candidate, build HTML and OG, record manifest',
   '  promote <run_id> <run_dir>  promote validated candidate to canonical tracked files',
   '  deploy [run_id] [run_dir]  commit and push the promoted generation (retries validated_not_deployed)',
@@ -156,7 +171,11 @@ function main() {
         process.exitCode = 1;
         return;
       }
-      const queue = benchmarks.buildBenchmarkQueue();
+      const forceModelIds = flagValues(flags.slice(1), '--model');
+      const forceBenchmarkKeys = flagValues(flags.slice(1), '--benchmark')
+        .map((value) => db.benchmarkKey(value))
+        .filter((value) => value && value !== 'unknown_benchmark');
+      const queue = benchmarks.buildBenchmarkQueue({ forceModelIds, forceBenchmarkKeys });
       const written = benchmarks.writeBenchmarkQueue(runDir, queue);
       console.log(JSON.stringify({
         queued: queue.queued,
@@ -172,7 +191,14 @@ function main() {
         process.exitCode = 1;
         return;
       }
-      const result = benchmarks.reduceBenchmarkTasks(runId, runDir);
+      const forceModelIds = flagValues(flags.slice(2), '--model');
+      const forceBenchmarkKeys = flagValues(flags.slice(2), '--benchmark')
+        .map((value) => db.benchmarkKey(value))
+        .filter((value) => value && value !== 'unknown_benchmark');
+      const result = benchmarks.reduceBenchmarkTasks(runId, runDir, {
+        forceModelIds,
+        forceBenchmarkKeys,
+      });
       // Apply accepted facts in one short finalization transaction. Insert
       // only: an existing verified benchmark row is never replaced (AC-8).
       if (result.benchmarkChanges.length > 0 || result.searchChanges.length > 0) {
@@ -221,12 +247,31 @@ function main() {
       }, null, 2));
       return;
     }
+    case 'set-hidden': {
+      const [providerKey, exactModelId, value] = flags;
+      if (!providerKey || !exactModelId || !['true', 'false', '1', '0'].includes(value)) {
+        console.error('set-hidden requires <provider_key> <exact_model_id> <true|false>');
+        process.exitCode = 1;
+        return;
+      }
+      const result = db.setOfferHidden(
+        providerKey,
+        exactModelId,
+        value === 'true' || value === '1'
+      );
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
     case 'collect': {
       const options = {
         dryRun: flags.includes('--dry-run'),
         push: flags.includes('--push'),
         skipCitation: flags.includes('--skip-citation') || process.env.SKIP_CITATION_CHECK === '1',
         visionCapable: flags.includes('--vision'),
+        forceModelIds: flagValues(flags, '--model'),
+        forceBenchmarkKeys: flagValues(flags, '--benchmark')
+          .map((value) => db.benchmarkKey(value))
+          .filter((value) => value && value !== 'unknown_benchmark'),
       };
       collect.runPipeline(options).then((result) => {
         console.log(JSON.stringify({

@@ -35,6 +35,7 @@ const benchmarks = require('./benchmarks');
 const assemble = require('./assemble');
 const publication = require('./publication');
 const catalog = require('./catalog');
+const evidence = require('./evidence');
 
 function skillDirs(baseOpts) {
   const { projectRoot } = db.resolvePaths(baseOpts);
@@ -190,6 +191,30 @@ function factsFailureArtifact(taskId, providerKey) {
   };
 }
 
+function benchmarkScoutModelTasks(queue) {
+  return queue.queue.map((model, index) => ({
+    task_id: `benchmark_scout:model-${index + 1}-${db.sanitizeTaskId(model.canonical_model_id)}`,
+    kind: 'benchmark_scout',
+    model,
+  }));
+}
+
+function writeBenchmarkScoutNeeds(runDir, task) {
+  const file = path.join(runDir, 'benchmarks', `needs-${db.sanitizeTaskId(task.task_id)}.json`);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, `${JSON.stringify({
+    task_id: task.task_id,
+    kind: 'benchmark_scout',
+    models: [{
+      canonical_model_id: task.model.canonical_model_id,
+      model_ids: task.model.offer_ids.map((id) => id.exact_model_id),
+      offer_ids: task.model.offer_ids,
+      metadata_hash: task.model.metadata_hash,
+    }],
+  }, null, 2)}\n`);
+  return file;
+}
+
 function scoutFailureArtifact(taskId) {
   return {
     schema_version: 1,
@@ -200,6 +225,71 @@ function scoutFailureArtifact(taskId) {
     models: [],
     errors: ['worker did not produce conforming output'],
   };
+}
+
+// Runs one worker per queued model while retaining the configured pool
+// concurrency. Ingest, bounded evidence fetch, and proposal validation happen
+// before the model's progress line is printed. The evidence maps are returned
+// for final reduction, avoiding a second network fetch.
+async function runBenchmarkScouts({ runId, runDir, scoutTasks, dirs, opts, baseOpts, log, queue, runWorker }) {
+  const total = scoutTasks.length;
+  const sourceBodies = new Map();
+  const sourceHashes = new Map();
+  const fetchCache = new Map();
+  const fetches = [];
+  let completed = 0;
+  const progress = [];
+
+  await runPool(scoutTasks, opts.concurrency, async (task) => {
+    const needsFile = writeBenchmarkScoutNeeds(runDir, task);
+    try {
+      await runWorker({
+        taskId: task.task_id,
+        roleFile: 'benchmark-scout.md',
+        schemaFile: path.join(dirs.schemasDir, 'benchmark-scout.schema.json'),
+        outputFile: db.artifactPathFor(runDir, task.task_id),
+        logFile: path.join(runDir, 'logs', `${db.sanitizeTaskId(task.task_id)}.log`),
+        runtime: `Needs-list: ${needsFile}. For this one model, search only (1) official Terminal-Bench/Harbor results, `
+          + '(2) the official Hugging Face model card, then (3) official vendor technical documentation/model card; stop after those three sources. '
+          + 'Do not use social, community, GitHub, aggregator, or other fallback sources and do not keep exploring. '
+          + 'Extract every benchmark row present in each allowed page (Terminal-Bench 2.0/2.1 is the ranking gate; others are supplemental), copy model_id verbatim from the list, and emit accepted evidence via json_output.'
+          + (Array.isArray(opts.forceBenchmarkKeys) && opts.forceBenchmarkKeys.length > 0
+            ? ` Focus especially on benchmark(s): ${opts.forceBenchmarkKeys.join(', ')}.`
+            : ''),
+        failureArtifact: scoutFailureArtifact(task.task_id),
+      }, opts, baseOpts);
+    } catch {
+      fs.mkdirSync(path.dirname(db.artifactPathFor(runDir, task.task_id)), { recursive: true });
+      fs.writeFileSync(db.artifactPathFor(runDir, task.task_id), `${JSON.stringify(scoutFailureArtifact(task.task_id), null, 2)}\n`);
+    }
+
+    lanes.ingestTaskArtifacts(runId, runDir, { ...baseOpts, onlyTaskIds: [task.task_id] });
+    const staged = db.loadRunCandidate(runId, baseOpts).tasks.find((entry) => entry.task_id === task.task_id);
+    const evidence = await benchmarks.fetchBenchmarkSourceBodies(staged ? [staged] : [], {
+      fetchImpl: opts.evidenceFetchImpl || undefined,
+      attempts: opts.evidenceAttempts,
+      sourceBodies,
+      sourceHashes,
+      fetchCache,
+    });
+    fetches.push(...evidence.fetches);
+    const result = benchmarks.evaluateBenchmarkModelProgress(staged, task.model, {
+      visionCapable: opts.visionCapable,
+      sourceBodies,
+      sourceHashes,
+      requireFetchedEvidence: true,
+    });
+    completed += 1;
+    const line = `[6/9] benchmark ${completed}/${total} ${task.model.canonical_model_id}: `
+      + (result.outcome === 'verified' ? `verified ${result.verified}` : result.outcome);
+    log(line);
+    progress.push({ ...result, canonical_model_id: task.model.canonical_model_id, line });
+    return evidence;
+  });
+
+  // The pool completion order is intentionally not used for reduction order;
+  // task order remains deterministic and the final reducer stays unchanged.
+  return { queue, progress, sourceBodies, sourceHashes, fetchCache, fetches };
 }
 
 // ---------------------------------------------------------------------------
@@ -339,38 +429,37 @@ async function runPipeline(options = {}) {
     concurrency: Number(process.env.GLOBAL_CONCURRENCY || 2),
     piModel: process.env.PI_MODEL || 'litellm/free',
     piTimeout: Number(process.env.PI_TIMEOUT || 1800),
+    forceModelIds: [],
+    forceBenchmarkKeys: [],
     runId: null,
     projectRoot: undefined,
     stateDir: undefined,
     runWorker: null,    // injectable: async (spec, opts, baseOpts) => void
     runCatalog: null,   // injectable: async (manifest, runDir, baseOpts, log) => void
+    evidenceFetchImpl: null, // injectable bounded HTTP fetch for evidence audit
     log: (...a) => console.log(...a),
     ...options,
   };
   const log = opts.log;
-  const baseOpts = { projectRoot: opts.projectRoot, stateDir: opts.stateDir };
+  const baseOpts = {
+    projectRoot: opts.projectRoot,
+    stateDir: opts.stateDir,
+    forceModelIds: opts.forceModelIds,
+    forceBenchmarkKeys: opts.forceBenchmarkKeys,
+  };
 
   db.assertRuntime();
-  // AC-1: openCollectorDb must restore the newest valid copy before
-  // migrations can create/initialize a missing database. Migrations then
-  // upgrade that recovered file in place.
-  const recoveredDb = db.openCollectorDb(baseOpts);
-  recoveredDb.close();
-  db.applyMigrations(baseOpts);
-
   const dirs = skillDirs(baseOpts);
   const paths = db.resolvePaths(baseOpts);
-  const runWorker = opts.runWorker || ((spec) => runPiWorker(spec, opts, baseOpts));
-  const runCatalog = opts.runCatalog
-    || ((manifest, runDir) => runCatalogInProcess(manifest, runDir, baseOpts, log));
-
   const lockPath = path.join(dirs.projectRoot, '.devops', 'batch', '.crawl.lock');
   if (!acquireLock(lockPath, log)) {
     throw new Error('another collection is already running (lock held)');
   }
 
-  const runId = opts.runId || defaultRunId();
-  const runDir = path.join(paths.stateDir, 'crawl', runId);
+  let runWorker = null;
+  let runCatalog = null;
+  let runId = null;
+  let runDir = null;
   let preRunBackup = null;
   let mutationStarted = false;
   let restoreAttempted = false;
@@ -392,11 +481,23 @@ async function runPipeline(options = {}) {
   };
 
   try {
-    fs.mkdirSync(path.join(runDir, 'artifacts'), { recursive: true });
-    fs.mkdirSync(path.join(runDir, 'logs'), { recursive: true });
+    // Canonical hash mismatches are an operator decision point. Perform this
+    // read-only preflight before opening/recovering SQLite, creating a run
+    // directory, or starting any worker.
+    publication.assertNoManualInspectionRequired(baseOpts);
 
-    // Startup recovery: restore or flag any promotion interrupted mid phase,
-    // then restore an abandoned pre-publication run from its exact backup.
+    // AC-1: openCollectorDb must restore the newest valid copy before
+    // migrations can create/initialize a missing database. Migrations then
+    // upgrade that recovered file in place.
+    const recoveredDb = db.openCollectorDb(baseOpts);
+    recoveredDb.close();
+    db.applyMigrations(baseOpts);
+    runWorker = opts.runWorker || ((spec) => runPiWorker(spec, opts, baseOpts));
+    runCatalog = opts.runCatalog
+      || ((manifest, runDir) => runCatalogInProcess(manifest, runDir, baseOpts, log));
+
+    // Startup recovery runs before this collection obtains a run ID or creates
+    // its directory, so a manual-inspection stop cannot start a new run.
     const recovered = publication.recoverInterruptedPromotion(baseOpts);
     if (recovered) {
       log(`[recover] ${recovered.length} interrupted promotion(s): `
@@ -407,6 +508,11 @@ async function runPipeline(options = {}) {
       log(`[recover] ${abandoned.length} abandoned pre-publication run(s): `
         + abandoned.map((r) => `${r.runId} (${r.action})`).join(', '));
     }
+
+    runId = opts.runId || defaultRunId();
+    runDir = path.join(paths.stateDir, 'crawl', runId);
+    fs.mkdirSync(path.join(runDir, 'artifacts'), { recursive: true });
+    fs.mkdirSync(path.join(runDir, 'logs'), { recursive: true });
 
     log('============================================');
     log('  Fail safe collection (spec 0003)');
@@ -453,8 +559,13 @@ async function runPipeline(options = {}) {
     await runPool(laneTasks, opts.concurrency, (task) => {
       const roleFile = task.kind === 'discovery' ? 'discovery-agent.md' : 'crawl-worker.md';
       const runtime = task.kind === 'discovery'
-        ? `Task: discovery. Manifest: ${path.join(runDir, 'manifest.json')}. `
-          + 'Window: newly announced models and pricing changes from the last 24h, 72h, and 30d.'
+        ? `Task: discovery. Manifest: ${path.join(runDir, 'manifest.json')}.\n`
+          + `Discovery sources (${task.discovery_sources.length}): ${JSON.stringify(task.discovery_sources)}\n`
+          + `Search terms (${task.search_terms.length}): ${JSON.stringify(task.search_terms)}\n`
+          + `Search windows (${task.search_windows.length}): ${JSON.stringify(task.search_windows)}\n`
+          + 'Search exactly these sources, terms, and recency windows from the manifest task snapshot — '
+          + 'do not add or drop any. Look for newly announced models and pricing changes within these windows. '
+          + 'For any unregistered API provider you find, report a provider_candidate with the fetched official base_url, docs_url, and model id form (AC-11).'
         : `Task: ${task.task_id} (kind: known_refresh). Provider: ${task.provider_key}. `
           + `Assigned model_ids: ${(task.assigned_model_ids || []).join(', ') || '(none)'}. `
           + `Manifest: ${path.join(runDir, 'manifest.json')}. Registry: build/provider-registry.json. `
@@ -474,6 +585,18 @@ async function runPipeline(options = {}) {
     // Ingest lane artifacts, then deterministic reduction.
     const ingest = lanes.ingestTaskArtifacts(runId, runDir, baseOpts);
     log(`[5/9] ingest: ${summarizeIngest(ingest)}`);
+    // Worker candidate claims are untrusted. Fetch all candidate URLs with
+    // bounded deterministic HTTP before reduction; only the audited result is
+    // then written back in short SQLite transactions.
+    const auditInput = db.loadRunCandidate(runId, baseOpts).tasks;
+    const audit = await evidence.auditRunEvidence(auditInput, {
+      fetchImpl: opts.evidenceFetchImpl || undefined,
+      registryPath: db.resolvePaths(baseOpts).registryPath,
+      now: nowIso(),
+    });
+    for (const task of audit.tasks) {
+      if (task.result_json) db.updateTaskResult(runId, task.task_id, task.result_json, baseOpts);
+    }
     const reduce = lanes.reduceLanes(runId, runDir, baseOpts);
     log(`[5/9] reduce: can_promote=${reduce.canPromote}`
       + (reduce.gateReason ? ` (${reduce.gateReason})` : '')
@@ -488,39 +611,47 @@ async function runPipeline(options = {}) {
       };
     }
 
-    // Benchmark queue + scout workers (only models missing the gate score).
+    // Benchmark queue + scout workers (only models with no accepted benchmark fact).
     const queue = benchmarks.buildBenchmarkQueue(baseOpts);
     benchmarks.writeBenchmarkQueue(runDir, queue, baseOpts);
-    if (queue.chunks.length > 0) {
-      db.addRunTasks(runId, queue.chunks.map((chunk) => ({
-        task_id: chunk.task_id,
-        kind: 'benchmark_scout',
-        assigned_model_ids: chunk.models.flatMap((m) => m.model_ids || []),
+    let benchmarkEvidence = {
+      sourceBodies: new Map(), sourceHashes: new Map(), fetchCache: new Map(), fetches: [],
+    };
+    if (queue.queued > 0) {
+      const scoutTasks = benchmarkScoutModelTasks(queue);
+      db.addRunTasks(runId, scoutTasks.map((task) => ({
+        task_id: task.task_id,
+        kind: task.kind,
+        assigned_model_ids: task.model.offer_ids.map((id) => id.exact_model_id),
       })), baseOpts);
-      log(`[6/9] benchmark scouts (${queue.chunks.length} chunk(s), ${queue.queued} model(s))...`);
-      await runPool(queue.chunks, opts.concurrency, (chunk) => {
-        const needsFile = path.join(
-          runDir, 'benchmarks', `needs-${db.sanitizeTaskId(chunk.task_id)}.json`
-        );
-        return runWorker({
-          taskId: chunk.task_id,
-          roleFile: 'benchmark-scout.md',
-          schemaFile: path.join(dirs.schemasDir, 'benchmark-scout.schema.json'),
-          outputFile: db.artifactPathFor(runDir, chunk.task_id),
-          logFile: path.join(runDir, 'logs', `${db.sanitizeTaskId(chunk.task_id)}.log`),
-          runtime: `Needs-list: ${needsFile}. For every model in this list find benchmark scores `
-            + '(Terminal-Bench 2.1 first), copy model_id verbatim from the list, and emit them via json_output.',
-          failureArtifact: scoutFailureArtifact(chunk.task_id),
-        }, opts, baseOpts);
+      log(`[6/9] benchmark scouts (${scoutTasks.length} model(s), concurrency ${opts.concurrency})...`);
+      benchmarkEvidence = await runBenchmarkScouts({
+        runId, runDir, scoutTasks, dirs, opts, baseOpts, log, queue, runWorker,
       });
-      const scoutIngest = lanes.ingestTaskArtifacts(runId, runDir, baseOpts);
-      log(`  scout ingest: ${summarizeIngest(scoutIngest)}`);
+      const benchmarkTasks = db.loadRunCandidate(runId, baseOpts).tasks
+        .filter((task) => task.kind === 'benchmark_scout');
+      const finalFetches = await benchmarks.fetchBenchmarkSourceBodies(benchmarkTasks, {
+        fetchImpl: opts.evidenceFetchImpl || undefined,
+        sourceBodies: benchmarkEvidence.sourceBodies,
+        sourceHashes: benchmarkEvidence.sourceHashes,
+        fetchCache: benchmarkEvidence.fetchCache,
+      });
+      benchmarkEvidence.fetches.push(...finalFetches.fetches);
     } else {
-      log('[6/9] benchmark scouts: no models missing the gate score, skipped');
+      log('[6/9] benchmark scouts: no models without accepted benchmark facts, skipped');
+    }
+    const benchmarkTasks = db.loadRunCandidate(runId, baseOpts).tasks
+      .filter((task) => task.kind === 'benchmark_scout');
+    if (benchmarkEvidence.fetches.length > 0) {
+      const ok = benchmarkEvidence.fetches.filter((entry) => entry.ok).length;
+      log(`  benchmark evidence: ${ok}/${benchmarkEvidence.fetches.length} source(s) fetched`);
     }
     const benchReduce = benchmarks.reduceBenchmarkTasks(runId, runDir, {
       ...baseOpts,
       visionCapable: opts.visionCapable,
+      sourceBodies: benchmarkEvidence.sourceBodies,
+      sourceHashes: benchmarkEvidence.sourceHashes,
+      requireFetchedEvidence: true,
     });
     if (benchReduce.benchmarkChanges.length > 0 || benchReduce.searchChanges.length > 0) {
       db.finalizeRun(runId, {
@@ -621,7 +752,7 @@ async function runPipeline(options = {}) {
     // whole current state to this run's exact pre-run snapshot, never to a
     // different run's newest copy. Once DB finalization is safely recorded,
     // leave the generation intact for deploy retry.
-    const safeFinalized = hasSafelyFinalizedPromotion(runDir, runId, baseOpts);
+    const safeFinalized = runDir ? hasSafelyFinalizedPromotion(runDir, runId, baseOpts) : false;
     if (mutationStarted && !safeFinalized && !restoreAttempted) {
       try {
         restoreExactPreRun();
@@ -645,6 +776,8 @@ module.exports = {
   runPipeline,
   // exported for tests
   runPool,
+  runBenchmarkScouts,
+  benchmarkScoutModelTasks,
   defaultRunId,
   acquireLock,
   releaseLock,

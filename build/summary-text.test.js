@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const { buildReportSummary } = require('./summary-text');
 
 const EMPTY_SUMMARY =
-  '無料・割引 LLM API の日次ランキング。今回ランクイン 0 件（S 0、A 0、B 0）、注意 0 件、対象外 0 件。';
+  '無料・激安 LLM API の日次ランキング。今回ランクイン 0 件（S 0、A 0、B 0）、無料 0 件、激安 0 件、注意 0 件、対象外 0 件。';
 
 test('summary helper treats missing and empty arrays as zero counts', () => {
   assert.equal(buildReportSummary(), EMPTY_SUMMARY);
@@ -20,12 +20,12 @@ test('summary helper treats missing and empty arrays as zero counts', () => {
 test('summary helper counts only eligible offers and their final S/A/B tiers', () => {
   assert.equal(buildReportSummary({
     ranked_offers: [
-      { ranking_eligible: true, benchmark: { tier: 'S' } },
-      { ranking_eligible: true, benchmark: { tier: 'A' } },
-      { ranking_eligible: true, benchmark: { tier: 'B' } },
+      { ranking_eligible: true, benchmark: { tier: 'S' }, access_kind: 'FREE' },
+      { ranking_eligible: true, benchmark: { tier: 'A' }, access_kind: 'ULTRA_LOW' },
+      { ranking_eligible: true, benchmark: { tier: 'B' }, access_kind: 'ULTRA_LOW' },
       { ranking_eligible: false, benchmark: { tier: 'S' } },
     ],
     caution_offers: [{}],
     excluded_offers: [{}, {}],
-  }), '無料・割引 LLM API の日次ランキング。今回ランクイン 3 件（S 1、A 1、B 1）、注意 1 件、対象外 2 件。');
+  }), '無料・激安 LLM API の日次ランキング。今回ランクイン 3 件（S 1、A 1、B 1）、無料 1 件、激安 2 件、注意 1 件、対象外 2 件。');
 });

@@ -183,7 +183,7 @@ test('canonical model id removes only the :free transport suffix (AC-7)', () => 
 
 // ── Search queue (AC-7) ──────────────────────────────────────────
 
-test('the queue holds only current free models missing terminal_bench_2_1 (AC-7)', (t) => {
+test('the queue holds only current free models with no accepted benchmark fact (AC-7)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
@@ -192,14 +192,26 @@ test('the queue holds only current free models missing terminal_bench_2_1 (AC-7)
     offerSeed({ exact_model_id: 'acme/b:free', canonical_model_id: 'acme/b' }),
     offerSeed({ exact_model_id: 'acme/c:free', canonical_model_id: 'acme/c', status: 'confirmed_removed' }),
     offerSeed({ exact_model_id: 'acme/d:free', canonical_model_id: 'acme/d' }),
+    offerSeed({ exact_model_id: 'acme/supplemental:free', canonical_model_id: 'acme/supplemental' }),
   ]);
-  // acme/a already has the gate benchmark; acme/c is removed.
-  seedBenchmarks(ctx, [benchRow({ canonical_model_id: 'acme/a' })]);
+  // acme/a has the gate benchmark, acme/supplemental has usable non Terminal
+  // information, and acme/c is removed.
+  seedBenchmarks(ctx, [
+    benchRow({ canonical_model_id: 'acme/a' }),
+    benchRow({
+      canonical_model_id: 'acme/supplemental',
+      benchmark_key: 'mmlu_pro',
+      display_name: 'MMLU Pro',
+      version: '1',
+      score: 82,
+    }),
+  ]);
 
   const queue = benchmarks.buildBenchmarkQueue(ctx.options);
   const queued = queue.queue.map((entry) => entry.canonical_model_id).sort();
   assert.deepEqual(queued, ['acme/b', 'acme/d']);
-  assert.ok(!queued.includes('acme/a'), 'model with terminal_bench_2_1 is not queued');
+  assert.ok(!queued.includes('acme/a'), 'model with an accepted Terminal Bench gate row is not queued');
+  assert.ok(!queued.includes('acme/supplemental'), 'a supplemental benchmark stops further search');
   assert.ok(!queued.includes('acme/c'), 'confirmed_removed model is not queued');
 });
 
@@ -217,7 +229,20 @@ test('a newly admitted catalog model is queued while an existing gate score is r
   assert.deepEqual(queue.queue.map((entry) => entry.canonical_model_id), ['acme/new']);
   assert.equal(queue.queue[0].newly_discovered, true);
   assert.equal(queue.queue.some((entry) => entry.canonical_model_id === 'acme/scored'), false,
-    'the existing terminal_bench_2_1 fact is reused instead of queued');
+    'the existing Terminal Bench gate fact is reused instead of queued');
+});
+
+test('hidden offers are not added to the benchmark research queue', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [
+    offerSeed({ exact_model_id: 'acme/visible:free', canonical_model_id: 'acme/visible' }),
+    offerSeed({ exact_model_id: 'acme/hidden:free', canonical_model_id: 'acme/hidden' }),
+  ]);
+  db.setOfferHidden('openrouter', 'acme/hidden:free', true, ctx.options);
+  const queue = benchmarks.buildBenchmarkQueue(ctx.options);
+  assert.deepEqual(queue.queue.map((entry) => entry.canonical_model_id), ['acme/visible']);
 });
 
 test('legacy empty or unknown benchmark versions do not satisfy queue reuse or tier eligibility', (t) => {
@@ -267,6 +292,64 @@ test('legacy empty or unknown benchmark versions do not satisfy queue reuse or t
   }
 });
 
+test('failed scout workers remain retryable instead of becoming not_found (AC-7)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [offerSeed()]);
+  startScoutRun(ctx, 'run-failed-scout');
+
+  const { reduce } = scoutCycle(ctx, 'run-failed-scout', {
+    'benchmark_scout:chunk-0': scoutArtifact('benchmark_scout:chunk-0', [], {
+      status: 'failed',
+      errors: ['worker did not produce conforming output'],
+    }),
+  });
+  assert.deepEqual(reduce.searchChanges, []);
+  assert.deepEqual(benchmarks.buildBenchmarkQueue(ctx.options).queue.map((entry) => entry.canonical_model_id), ['acme/a']);
+});
+
+test('old models leave the routine queue while unknown release dates remain eligible (AC-7)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [
+    offerSeed({
+      exact_model_id: 'acme/old:free', canonical_model_id: 'acme/old',
+      facts_json: { model_name: 'Old', release_date: '2025-12-31' },
+    }),
+    offerSeed({
+      exact_model_id: 'acme/recent:free', canonical_model_id: 'acme/recent',
+      facts_json: { model_name: 'Recent', release_date: '2026-03-01' },
+    }),
+    offerSeed({
+      exact_model_id: 'acme/unknown:free', canonical_model_id: 'acme/unknown',
+      facts_json: { model_name: 'Unknown', release_date: null },
+    }),
+  ]);
+
+  const queue = benchmarks.buildBenchmarkQueue({
+    ...ctx.options,
+    now: '2026-08-02T00:00:00.000Z',
+  });
+  assert.deepEqual(queue.queue.map((entry) => entry.canonical_model_id).sort(), ['acme/recent', 'acme/unknown']);
+
+  const forcedModel = benchmarks.buildBenchmarkQueue({
+    ...ctx.options,
+    now: '2026-08-02T00:00:00.000Z',
+    forceModelIds: ['acme/old'],
+  });
+  assert.ok(forcedModel.queue.some((entry) => entry.canonical_model_id === 'acme/old'));
+
+  const forcedBenchmark = benchmarks.buildBenchmarkQueue({
+    ...ctx.options,
+    now: '2026-08-02T00:00:00.000Z',
+    forceBenchmarkKeys: ['terminal_bench_2_1'],
+  });
+  assert.deepEqual(forcedBenchmark.queue.map((entry) => entry.canonical_model_id).sort(),
+    ['acme/old', 'acme/recent', 'acme/unknown']);
+});
+
 test('the queue splits into chunks of at most four models (AC-7)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
@@ -285,7 +368,7 @@ test('the queue splits into chunks of at most four models (AC-7)', (t) => {
   }
 });
 
-test('newly discovered models sort before previously searched ones (AC-7)', (t) => {
+test('terminal not_found models are not requeued (AC-7)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
@@ -306,22 +389,21 @@ test('newly discovered models sort before previously searched ones (AC-7)', (t) 
   }, ctx.options);
 
   const queue = benchmarks.buildBenchmarkQueue(ctx.options);
-  assert.equal(queue.queue[0].canonical_model_id, 'acme/new', 'never searched sorts first');
+  assert.deepEqual(queue.queue.map((entry) => entry.canonical_model_id), ['acme/new']);
   assert.equal(queue.queue[0].newly_discovered, true);
-  assert.equal(queue.queue[1].canonical_model_id, 'acme/old');
+  assert.ok(!queue.queue.some((entry) => entry.canonical_model_id === 'acme/old'),
+    'a completed not_found search is terminal until explicitly forced');
 });
 
 // ── Proposal validation (AC-8, AC-9) ─────────────────────────────
 
-test('unknown and malformed benchmark versions stay pending (AC-8, AC-9)', () => {
-  for (const displayName of ['SWE-Bench (OpenHands)', 'OSWorld']) {
-    for (const version of [undefined, null, '', '   ']) {
-      const shape = benchmarks.validateProposalShape({
-        ...textFind(), display_name: displayName, version,
-      });
-      assert.equal(shape.ok, false, `${displayName} version ${JSON.stringify(version)}`);
-      assert.match(shape.reason, /version|unknown/i);
-    }
+test('unknown and malformed Terminal Bench versions stay pending (AC-8, AC-9)', () => {
+  for (const version of ['unknown', 'n/a', 'none', 'undefined']) {
+    const shape = benchmarks.validateProposalShape({
+      ...textFind(), display_name: 'Terminal-Bench 2.1', version,
+    });
+    assert.equal(shape.ok, false, `Terminal Bench version ${JSON.stringify(version)}`);
+    assert.match(shape.reason, /version|unknown/i);
   }
 
   for (const version of [2.1, 0, false, {}, []]) {
@@ -331,17 +413,23 @@ test('unknown and malformed benchmark versions stay pending (AC-8, AC-9)', () =>
   }
 });
 
-test('a known display-name version is deterministically normalized (AC-8)', () => {
-  const shape = benchmarks.validateProposalShape({ ...textFind(), version: null });
+test('benchmark versions are optional for supplemental metrics but not Terminal Bench (AC-8, AC-9)', () => {
+  const shape = benchmarks.validateProposalShape({
+    ...textFind(),
+    display_name: 'MMLU Pro',
+    version: null,
+    score: 82,
+    body: 'MMLU Pro: acme/a scored 82 percent.',
+  });
   assert.equal(shape.ok, true);
-  assert.equal(shape.version, '2.1');
+  assert.equal(shape.version, '');
 
   assert.equal(
-    benchmarks.bodyConfirmsBenchmark('SWE-Bench (OpenHands): acme/a scored 40', {
-      key: 'swe_bench_openhands', displayName: 'SWE-Bench (OpenHands)', version: '',
+    benchmarks.bodyConfirmsBenchmark('MMLU Pro: acme/a scored 82', {
+      key: 'mmlu_pro', displayName: 'MMLU Pro', version: '',
     }),
-    false,
-    'evidence validation fails closed for an unknown version'
+    true,
+    'a supplemental metric without a published version still supplies useful evidence'
   );
 });
 
@@ -395,11 +483,11 @@ test('a malformed proposal does not abort a valid proposal in the same task (AC-
   startScoutRun(ctx, 'run-mixed-version');
 
   const unknown = {
-    display_name: 'SWE-Bench (OpenHands)',
-    version: null,
+    display_name: 'Terminal-Bench 2.1',
+    version: 'unknown',
     score: 40,
-    source_url: 'https://leaderboard.example/swe-bench',
-    body: 'SWE-Bench (OpenHands): acme/a scored 40.0 percent.',
+    source_url: 'https://leaderboard.example/terminal-bench',
+    body: 'Terminal-Bench 2.1: acme/a scored 40.0 percent.',
   };
   const { reduce } = scoutCycle(ctx, 'run-mixed-version', {
     'benchmark_scout:chunk-0': scoutArtifact('benchmark_scout:chunk-0', [{
@@ -445,6 +533,70 @@ test('a text proposal confirmed by the fetched body is accepted (AC-8, AC-9)', (
   assert.equal(rows[0].source_url, 'https://leaderboard.example/terminal-bench');
   assert.equal(rows[0].source_hash, 's'.repeat(64));
   assert.equal(rows[0].facts_json.extraction_method, 'text');
+});
+
+test('DeepSeek score is accepted only from the fetched full Hugging Face body (AC-9)', async () => {
+  const sourceUrl = 'https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731';
+  const find = textFind({
+    model_id: 'deepseek-ai/DeepSeek-V4-Flash-0731:free',
+    score: 82.7,
+    source_url: sourceUrl,
+    body: undefined,
+    body_excerpt: 'Terminal Bench 2.1 82.7 ...',
+  });
+  const supplementalFind = textFind({
+    model_id: 'deepseek-ai/DeepSeek-V4-Flash-0731:free',
+    display_name: 'SWE-bench Verified',
+    version: '1.0',
+    score: 74.3,
+    source_url: sourceUrl,
+    body: undefined,
+    body_excerpt: 'SWE-bench Verified 1.0 74.3 ...',
+  });
+  const model = {
+    canonical_model_id: 'deepseek-ai/DeepSeek-V4-Flash-0731',
+    model_ids: ['deepseek-ai/DeepSeek-V4-Flash-0731:free'],
+  };
+  const artifact = scoutArtifact('benchmark_scout:chunk-0', [{
+    model_id: 'deepseek-ai/DeepSeek-V4-Flash-0731:free',
+    canonical_model_id: model.canonical_model_id,
+    benchmark_finds: [find, supplementalFind],
+  }]);
+  const fullBody = 'DeepSeek-V4-Flash-0731\nTerminal-Bench 2.1\nscore: 82.7\nSWE-bench Verified 1.0: 74.3';
+  const fetched = await benchmarks.fetchBenchmarkSourceBodies([{
+    kind: 'benchmark_scout', result_json: artifact,
+  }], {
+    fetchImpl: async (url) => ({ status: 200, url, body: fullBody }),
+  });
+  const accepted = benchmarks.evaluateProposal(find, model, {
+    requireFetchedEvidence: true,
+    sourceBodies: fetched.sourceBodies,
+    sourceHashes: fetched.sourceHashes,
+  });
+  assert.equal(accepted.accepted, true,
+    'the official full body supplies the model name missing from the artifact excerpt');
+  assert.equal(accepted.change.source_hash, fetched.sourceHashes.get(sourceUrl),
+    'the persisted source hash comes from the fetched body, not the worker claim');
+  const supplemental = benchmarks.evaluateProposal(supplementalFind, model, {
+    requireFetchedEvidence: true,
+    sourceBodies: fetched.sourceBodies,
+  });
+  assert.equal(supplemental.accepted, true,
+    'the same fetched model card also accepts a supplemental benchmark row');
+  assert.notEqual(supplemental.change, undefined);
+  const supplementalWithoutFetchedBody = benchmarks.evaluateProposal(supplementalFind, model, {
+    requireFetchedEvidence: true,
+    sourceBodies: new Map(),
+  });
+  assert.equal(supplementalWithoutFetchedBody.accepted, false,
+    'supplemental rows also require the fetched full body');
+
+  const withoutFetchedBody = benchmarks.evaluateProposal(find, model, {
+    requireFetchedEvidence: true,
+    sourceBodies: new Map(),
+  });
+  assert.equal(withoutFetchedBody.accepted, false,
+    'the excerpt alone must not be accepted when production evidence is required');
 });
 
 test('a proposal for an unqueued model is rejected (AC-8, AC-11)', (t) => {
@@ -624,37 +776,34 @@ test('a MEDIUM confidence image stays pending (AC-9)', (t) => {
 
 // ── Immutability of verified rows (AC-8) ─────────────────────────
 
-test('a higher proposed score never replaces an existing verified score (AC-8)', (t) => {
+test('an accepted supplemental benchmark stops further search and remains immutable (AC-7, AC-8)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
   seedOffers(ctx, [offerSeed({ exact_model_id: 'acme/a:free', canonical_model_id: 'acme/a' })]);
-  // The model has an existing SWE-bench row but no terminal_bench_2_1, so it
-  // is still queued. A higher SWE-bench proposal must not replace the row.
   seedBenchmarks(ctx, [benchRow({
     canonical_model_id: 'acme/a',
     benchmark_key: 'swe_bench_verified',
     display_name: 'SWE-bench Verified',
-    version: '1.0',
+    version: '',
     score: 55,
   })]);
-  startScoutRun(ctx, 'run-overwrite');
 
-  const { reduce } = scoutCycle(ctx, 'run-overwrite', {
-    'benchmark_scout:chunk-0': scoutArtifact('benchmark_scout:chunk-0', [
-      { model_id: 'acme/a:free', canonical_model_id: 'acme/a', benchmark_finds: [
-        textFind({
-          display_name: 'SWE-bench Verified',
-          version: '1.0',
-          score: 95,
-          body: 'SWE-bench Verified 1.0 leaderboard: acme/a solved 95.0 percent of tasks.',
-        }),
-      ] },
-    ]),
-  });
+  const queue = benchmarks.buildBenchmarkQueue(ctx.options);
+  assert.deepEqual(queue.queue, [], 'a model with another accepted benchmark is not searched again');
 
-  assert.equal(reduce.coverage.accepted, 0);
-  assert.ok(reduce.rejected.some((r) => /immutable/.test(r.reason)));
+  db.startRun('run-overwrite', [], ctx.options);
+  db.finalizeRun('run-overwrite', {
+    benchmarks: [benchRow({
+      canonical_model_id: 'acme/a',
+      benchmark_key: 'swe_bench_verified',
+      display_name: 'SWE-bench Verified',
+      version: '',
+      score: 95,
+    })],
+    runStatus: 'promoted',
+  }, ctx.options);
+
   const rows = benchmarkRowsFor(ctx, 'acme/a');
   assert.equal(rows.length, 1);
   assert.equal(rows[0].score, 55, 'existing score is preserved');
@@ -662,7 +811,7 @@ test('a higher proposed score never replaces an existing verified score (AC-8)',
 
 // ── Tier derivation (AC-10) ──────────────────────────────────────
 
-test('tier derives from terminal_bench_2_1 thresholds (AC-10)', () => {
+test('tier derives from either Terminal Bench gate version thresholds (AC-10)', () => {
   const s = benchmarks.deriveTier([benchRow({ score: 65 })]);
   assert.equal(s.tier, 'S');
   assert.equal(s.score, 65);
@@ -674,7 +823,8 @@ test('tier derives from terminal_bench_2_1 thresholds (AC-10)', () => {
   assert.equal(aHigh.tier, 'A');
 
   const b = benchmarks.deriveTier([benchRow({ score: 49.9 })]);
-  assert.equal(b.tier, 'B');
+  assert.equal(b.tier, null, 'below 50 is benchmark_pending and never ranks (AC-5)');
+  assert.equal(b.benchmark_pending, true);
   assert.equal(b.terminal_bench, 49.9);
 });
 
@@ -691,6 +841,58 @@ test('no verified benchmark is benchmark_pending and not ranked (AC-10)', () => 
   const result = benchmarks.deriveTier([]);
   assert.equal(result.tier, null);
   assert.equal(result.benchmark_pending, true);
+});
+
+// ── Spec 0004 dual Terminal Bench versions (AC-5, AC-6) ─────────
+
+test('terminal_bench_2_0 also admits; 2.1 is representative when both exist (AC-5)', () => {
+  const only20 = benchmarks.deriveTier([benchRow({
+    benchmark_key: 'terminal_bench_2_0', display_name: 'Terminal-Bench 2.0', version: '2.0', score: 52,
+  })]);
+  assert.equal(only20.tier, 'A');
+  assert.equal(only20.benchmark_key, 'terminal_bench_2_0');
+  assert.equal(only20.version, '2.0');
+
+  const both = benchmarks.deriveTier([
+    benchRow({ benchmark_key: 'terminal_bench_2_0', display_name: 'Terminal-Bench 2.0', version: '2.0', score: 80 }),
+    benchRow({ benchmark_key: 'terminal_bench_2_1', display_name: 'Terminal-Bench 2.1', version: '2.1', score: 55 }),
+  ]);
+  assert.equal(both.benchmark_key, 'terminal_bench_2_1', '2.1 is the representative row');
+  assert.equal(both.score, 55);
+  assert.equal(both.version, '2.1');
+});
+
+test('a 49.999 score on 2.0 fails admission (AC-5 threshold)', () => {
+  const result = benchmarks.deriveTier([benchRow({
+    benchmark_key: 'terminal_bench_2_0', display_name: 'Terminal-Bench 2.0', version: '2.0', score: 49.999,
+  })]);
+  assert.equal(result.tier, null, 'below 50 is benchmark_pending, never a rankable tier (AC-5)');
+  assert.equal(result.benchmark_pending, true);
+});
+
+test('the display name variant maps to terminal_bench_2_0 (AC-5 identity)', () => {
+  assert.equal(db.benchmarkKey('Terminal-Bench 2.0'), 'terminal_bench_2_0');
+  assert.equal(db.benchmarkKey('Terminal Bench 2.0'), 'terminal_bench_2_0');
+  assert.equal(db.benchmarkVersion('Terminal-Bench 2.0'), '2.0');
+});
+
+test('a model with an accepted 2.0 row already satisfies the current gate', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [
+    offerSeed({ exact_model_id: 'acme/has20:free', canonical_model_id: 'acme/has20' }),
+  ]);
+  seedBenchmarks(ctx, [benchRow({
+    canonical_model_id: 'acme/has20',
+    benchmark_key: 'terminal_bench_2_0',
+    display_name: 'Terminal-Bench 2.0',
+    version: '2.0',
+    score: 55,
+  })]);
+  // Any accepted 2.0 or 2.1 row satisfies admission (AC-5), so the model is not queued.
+  const queue = benchmarks.buildBenchmarkQueue(ctx.options);
+  assert.deepEqual(queue.queue.map((entry) => entry.canonical_model_id), []);
 });
 
 // ── Search state bookkeeping (AC-7) ──────────────────────────────
@@ -719,4 +921,45 @@ test('searched models record a benchmark_searches row with metadata hash (AC-7)'
   } finally {
     database.close();
   }
+});
+
+test('one-model progress tasks still record found and not_found search changes', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [
+    offerSeed({ exact_model_id: 'acme/a:free', canonical_model_id: 'acme/a' }),
+    offerSeed({ exact_model_id: 'acme/b:free', canonical_model_id: 'acme/b' }),
+  ]);
+  const queue = benchmarks.buildBenchmarkQueue(ctx.options);
+  const taskFor = (entry, index) => ({
+    task_id: `benchmark_scout:model-${index + 1}-${entry.canonical_model_id.replace('/', '-')}`,
+    kind: 'benchmark_scout',
+    assigned_model_ids: entry.offer_ids.map((id) => id.exact_model_id),
+  });
+  const tasks = queue.queue.map(taskFor);
+  db.startRun('run-model-progress-search', tasks, ctx.options);
+  const runDir = path.join(ctx.stateDir, 'crawl', 'run-model-progress-search');
+  fs.mkdirSync(path.join(runDir, 'artifacts'), { recursive: true });
+  fs.writeFileSync(db.artifactPathFor(runDir, tasks[0].task_id), JSON.stringify(
+    scoutArtifact(tasks[0].task_id, [{
+      model_id: 'acme/a:free', canonical_model_id: 'acme/a', benchmark_finds: [textFind()],
+    }])
+  ));
+  fs.writeFileSync(db.artifactPathFor(runDir, tasks[1].task_id), JSON.stringify(
+    scoutArtifact(tasks[1].task_id, [])
+  ));
+  require('./lanes').ingestTaskArtifacts('run-model-progress-search', runDir, ctx.options);
+  const reduced = benchmarks.reduceBenchmarkTasks('run-model-progress-search', runDir, {
+    ...ctx.options,
+    requireFetchedEvidence: true,
+    sourceBodies: new Map([[
+      'https://leaderboard.example/terminal-bench',
+      'Terminal-Bench 2.1 leaderboard: acme/a scored 72.0 percent.',
+    ]]),
+  });
+  assert.deepEqual(
+    reduced.searchChanges.map((row) => [row.canonical_model_id, row.result]).sort(),
+    [['acme/a', 'found'], ['acme/b', 'not_found']]
+  );
 });

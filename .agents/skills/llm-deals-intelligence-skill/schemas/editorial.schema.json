@@ -2,46 +2,108 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$comment": "Editor の出力。日本語の散文だけ。offer/model のアイデンティティ、endpoint、無料枠、liveness、ベンチマーク、tier、ランキング、change の種類は全て決定的コード (assemble.js) が所有し、Editor は書かない (AC-12)。Editor は candidate view の各 offer と各 change に日本語の要約・注意・source を添えるだけ。offer_key は candidate view のキー (provider_key/exact_model_id) をそのまま使う。",
   "type": "object",
-  "required": ["schema_version", "summary"],
+  "required": [
+    "schema_version",
+    "summary"
+  ],
   "properties": {
-    "schema_version": { "type": "number" },
-    "summary": { "type": "string" },
+    "schema_version": {
+      "type": "number"
+    },
+    "summary": {
+      "type": "string"
+    },
     "offer_prose": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["offer_key", "summary"],
+        "required": [
+          "offer_key",
+          "summary"
+        ],
         "properties": {
-          "offer_key": { "type": "string" },
-          "summary": { "type": "string" },
-          "caution": { "type": ["string", "null"] },
+          "offer_key": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "caution": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "sources": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["url", "source_type"],
+              "required": [
+                "url",
+                "source_type"
+              ],
               "properties": {
-                "url": { "type": "string", "format": "uri" },
-                "source_type": { "enum": ["official", "provider", "github", "reddit", "news", "community", "other"] },
-                "title": { "type": "string" },
-                "accessed_at": { "type": "string" }
-              }
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "source_type": {
+                  "enum": [
+                    "official",
+                    "provider",
+                    "github",
+                    "reddit",
+                    "news",
+                    "community",
+                    "other"
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "accessed_at": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
             }
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
     "change_prose": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["offer_name", "change_type", "summary"],
+        "required": [
+          "offer_name",
+          "change_type",
+          "summary"
+        ],
         "properties": {
-          "offer_name": { "type": "string" },
-          "change_type": { "enum": ["new", "price_change", "limit_change", "provider_change", "end_date_change", "ended", "revived", "availability_change"] },
-          "summary": { "type": "string" }
-        }
+          "offer_name": {
+            "type": "string"
+          },
+          "change_type": {
+            "enum": [
+              "new",
+              "price_change",
+              "limit_change",
+              "provider_change",
+              "end_date_change",
+              "ended",
+              "revived",
+              "availability_change"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       }
     }
-  }
+  },
+  "additionalProperties": false
 }

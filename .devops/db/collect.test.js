@@ -13,7 +13,9 @@ const path = require('node:path');
 const os = require('node:os');
 
 const db = require('./collector-db');
+const benchmarks = require('./benchmarks');
 const collect = require('./collect');
+const publication = require('./publication');
 
 const FIXTURE_REGISTRY = {
   version: 1,
@@ -104,6 +106,14 @@ function seedKnownOffer(ctx) {
       last_verified_at: '2026-07-30T00:00:00.000Z',
       pricing_hash: null,
       removal_evidence_json: null,
+      effective_input_price_usd: 0,
+      effective_output_price_usd: 0,
+      normal_input_price_usd: 0,
+      normal_output_price_usd: 0,
+      source_currency: 'USD',
+      source_unit: 'per_million_tokens',
+      price_source_url: 'https://ai.google.dev/gemini-api/docs/pricing',
+      price_verified_at: '2026-07-30T00:00:00.000Z',
       facts_json: {
         model_name: 'Gemini 2.5 Pro',
         free_quota_text: 'free tier, 100 requests per day',
@@ -307,6 +317,47 @@ describe('collect orchestrator', () => {
   beforeEach(() => { ctx = tmpProject(); });
   afterEach(() => { fs.rmSync(ctx.root, { recursive: true, force: true }); });
 
+  it('rejects a canonical hash mismatch before startRun or workers and preserves state', async () => {
+    const runDir = path.join(ctx.stateDir, 'crawl', 'stuck-run');
+    fs.mkdirSync(runDir, { recursive: true });
+    fs.writeFileSync(path.join(ctx.root, 'report.json'), '{"before":true}\n');
+    publication.writeManifest(runDir, {
+      run_id: 'stuck-run',
+      phase: 'db_finalized',
+      phase_at: {},
+      files: { 'report.json': { sha256: 'a'.repeat(64) } },
+      backups: {},
+    });
+    const manifestBefore = fs.readFileSync(publication.manifestPath(runDir), 'utf8');
+    const reportBefore = fs.readFileSync(path.join(ctx.root, 'report.json'), 'utf8');
+    let startRunCalled = false;
+    let workerCalled = false;
+    const originalStartRun = db.startRun;
+    db.startRun = (...args) => {
+      startRunCalled = true;
+      return originalStartRun(...args);
+    };
+    try {
+      await assert.rejects(
+        collect.runPipeline({
+          ...ctx.options,
+          runId: 'must-not-start',
+          runWorker: async () => { workerCalled = true; },
+          runCatalog: async () => {},
+          log: silent(),
+        }),
+        /requires manual inspection/
+      );
+    } finally {
+      db.startRun = originalStartRun;
+    }
+    assert.equal(startRunCalled, false);
+    assert.equal(workerCalled, false);
+    assert.equal(fs.readFileSync(publication.manifestPath(runDir), 'utf8'), manifestBefore);
+    assert.equal(fs.readFileSync(path.join(ctx.root, 'report.json'), 'utf8'), reportBefore);
+    assert.ok(!fs.existsSync(path.join(ctx.stateDir, 'crawl', 'must-not-start')));
+  });
+
   it('dry run validates a candidate without changing canonical files or durable state', async () => {
     seedKnownOffer(ctx);
     const before = durableSnapshot(ctx);
@@ -330,7 +381,12 @@ describe('collect orchestrator', () => {
     assert.ok(report.ranked_offers.some((o) => o.name && o.name.includes('Gemini')));
     const router = report.ranked_offers.find((o) => o.delivery_type === 'router');
     assert.ok(router, 'catalog admission reaches a public router offer');
-    assert.deepEqual(router.free_model_names, ['acme/new:free', 'openrouter/free']);
+    assert.equal(router.model_id, 'acme/new:free');
+    assert.equal(router.provider_key, 'openrouter');
+    assert.equal(router.access_kind, 'FREE');
+    assert.equal(router.effective_price_per_million.input, 0);
+    assert.equal(router.price_verified_at !== null, true);
+    assert.equal('free_model_names' in router, false, 'free_model_names removed (AC-2)');
     // Canonical files were NOT created (dry run never promotes).
     assert.ok(!fs.existsSync(path.join(ctx.root, 'report.json')), 'canonical report.json must not exist after dry run');
     // A dry run leaves its candidate and run directory for inspection, but
@@ -563,7 +619,12 @@ describe('collect orchestrator', () => {
     assert.ok(report.ranked_offers.some((o) => o.name && o.name.includes('Gemini')));
     const router = report.ranked_offers.find((o) => o.delivery_type === 'router');
     assert.ok(router, 'catalog admission reaches a public router offer');
-    assert.deepEqual(router.free_model_names, ['acme/new:free', 'openrouter/free']);
+    assert.equal(router.model_id, 'acme/new:free');
+    assert.equal(router.provider_key, 'openrouter');
+    assert.equal(router.access_kind, 'FREE');
+    assert.equal(router.effective_price_per_million.input, 0);
+    assert.equal(router.price_verified_at !== null, true);
+    assert.equal('free_model_names' in router, false, 'free_model_names removed (AC-2)');
     // Promotion manifest reached db_finalized (awaiting a separate deploy).
     const manifest = JSON.parse(fs.readFileSync(
       path.join(ctx.stateDir, 'crawl', 'col-1', 'promotion-manifest.json'), 'utf8'
@@ -611,5 +672,158 @@ describe('collect orchestrator', () => {
     } finally {
       database.close();
     }
+  });
+
+  it('discovery worker input carries the manifest snapshot arrays with inactive rows filtered', async () => {
+    seedKnownOffer(ctx);
+
+    // Seed a discovery assignment with one active and one inactive row per
+    // array. The manifest (buildLaneManifest) filters inactive rows, so the
+    // worker input must never see them.
+    const database = db.openCollectorDb(ctx.options);
+    try {
+      database.exec('DELETE FROM discovery_sources; DELETE FROM search_terms; DELETE FROM search_windows;');
+      const insertSource = database.prepare(
+        'INSERT INTO discovery_sources (source_key, category, label, source_url, parent_label, active, priority, added_from, created_at, last_attempted_at, last_success_at, consecutive_failures) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      );
+      insertSource.run('vendor:active', 'vendor', 'Active Vendor', 'https://example.test/active', null, 1, 1, 'test', '2026-08-01T00:00:00.000Z', null, null, 0);
+      insertSource.run('vendor:inactive', 'vendor', 'Inactive Vendor', 'https://example.test/inactive', null, 0, 0, 'test', '2026-08-01T00:00:00.000Z', null, null, 0);
+      const insertTerm = database.prepare(
+        'INSERT INTO search_terms (category, locale, term, active, priority, added_from, created_at, last_used_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      );
+      insertTerm.run('new_model', 'en', 'launch', 1, 1, 'test', '2026-08-01T00:00:00.000Z', null);
+      insertTerm.run('offer', 'any', 'inactive-offer-term', 0, 0, 'test', '2026-08-01T00:00:00.000Z', null);
+      const insertWindow = database.prepare(
+        'INSERT INTO search_windows (window_key, amount, unit, active, priority) VALUES (?, ?, ?, ?, ?)'
+      );
+      insertWindow.run('48h', 48, 'hour', 1, 1);
+      insertWindow.run('7d', 7, 'day', 0, 0);
+    } finally {
+      database.close();
+    }
+
+    const runId = 'discovery-snapshot-1';
+    const captured = { runtime: null };
+    const capturingWorker = (spec) => {
+      if (spec.taskId === 'discovery') captured.runtime = spec.runtime;
+      return makeWorker('ok')(spec);
+    };
+
+    await collect.runPipeline({
+      ...ctx.options,
+      dryRun: true,
+      runId,
+      runWorker: capturingWorker,
+      runCatalog: fakeCatalog,
+      log: silent(),
+    });
+
+    assert.ok(captured.runtime, 'discovery worker must receive a runtime prompt');
+    // The worker input must carry the manifest's snapshot arrays verbatim
+    // (unchanged from the buildLaneManifest discovery task).
+    const manifest = JSON.parse(fs.readFileSync(
+      path.join(ctx.stateDir, 'crawl', runId, 'manifest.json'), 'utf8'
+    ));
+    const discoveryTask = manifest.tasks.find((t) => t.task_id === 'discovery');
+    for (const [key, label] of [
+      ['discovery_sources', 'Discovery sources'],
+      ['search_terms', 'Search terms'],
+      ['search_windows', 'Search windows'],
+    ]) {
+      const line = captured.runtime.split('\n').find((l) => l.startsWith(`${label} (`));
+      assert.ok(line, `${label} must be present in the discovery runtime`);
+      const json = line.slice(line.indexOf(': ') + 2);
+      assert.deepEqual(
+        JSON.parse(json), discoveryTask[key],
+        `${label} must arrive unchanged from the manifest`
+      );
+    }
+    // Inactive rows were filtered by the manifest, so they cannot appear in
+    // the worker input.
+    assert.doesNotMatch(captured.runtime, /vendor:inactive/);
+    assert.doesNotMatch(captured.runtime, /inactive-offer-term/);
+    assert.doesNotMatch(captured.runtime, /"7d"/);
+    assert.equal(discoveryTask.discovery_sources.length, 1);
+    assert.equal(discoveryTask.search_terms.length, 1);
+    assert.equal(discoveryTask.search_windows.length, 1);
+  });
+
+  it('reports one deterministic benchmark result incrementally in completion order', async () => {
+    const ctx = tmpProject();
+    const runId = 'benchmark-progress';
+    const runDir = path.join(ctx.stateDir, 'crawl', runId);
+    fs.mkdirSync(path.join(runDir, 'logs'), { recursive: true });
+    db.applyMigrations(ctx.options);
+    const entries = ['verified', 'not-found', 'rejected', 'failed'].map((name, index) => ({
+      canonical_model_id: `acme/${name}`,
+      offer_ids: [{ provider_key: 'openrouter', exact_model_id: `acme/${name}:free` }],
+      metadata_hash: `${index}`,
+    }));
+    db.startRun(runId, entries.map((entry, index) => ({
+      task_id: `benchmark_scout:model-${index + 1}-${entry.canonical_model_id.replace('/', '-')}`,
+      kind: 'benchmark_scout',
+      assigned_model_ids: entry.offer_ids.map((id) => id.exact_model_id),
+    })), ctx.options);
+    const queue = { queue: entries };
+    const scoutTasks = collect.benchmarkScoutModelTasks(queue);
+    const delays = { 'acme/verified': 80, 'acme/not-found': 5, 'acme/rejected': 10, 'acme/failed': 1 };
+    const logs = [];
+    let fetchCalls = 0;
+    const result = await collect.runBenchmarkScouts({
+      runId, runDir, scoutTasks,
+      dirs: { schemasDir: ctx.root },
+      opts: {
+        concurrency: 4, visionCapable: false, evidenceAttempts: 1,
+        evidenceFetchImpl: async (url) => {
+          fetchCalls += 1;
+          if (url.includes('rejected')) return { status: 503, url, text: async () => '' };
+          return { status: 200, url, text: async () => 'acme/verified Terminal-Bench 2.1 72 SWE-bench Verified 1.0 80' };
+        },
+      },
+      baseOpts: ctx.options,
+      log: (line) => logs.push(line),
+      queue,
+      runWorker: async (spec) => {
+        const model = JSON.parse(fs.readFileSync(
+          path.join(runDir, 'benchmarks', `needs-${db.sanitizeTaskId(spec.taskId)}.json`), 'utf8'
+        )).models[0];
+        await new Promise((resolve) => setTimeout(resolve, delays[model.canonical_model_id]));
+        fs.mkdirSync(path.dirname(spec.outputFile), { recursive: true });
+        if (model.canonical_model_id === 'acme/failed') throw new Error('worker failure');
+        const artifact = {
+          schema_version: 1, task_id: spec.taskId, kind: 'benchmark_scout', status: 'complete',
+          crawled_at: new Date().toISOString(), models: [], errors: [],
+        };
+        if (model.canonical_model_id === 'acme/rejected') artifact.models = [{
+          model_id: model.model_ids[0], benchmark_finds: [{ display_name: 'Terminal-Bench 2.1', version: '2.1', score: 50,
+            source_url: 'https://evidence/rejected', extraction_method: 'text', confidence: 'HIGH' }],
+        }];
+        else if (model.canonical_model_id === 'acme/verified') artifact.models = [{
+          model_id: model.model_ids[0], canonical_model_id: model.canonical_model_id, benchmark_finds: [
+            { display_name: 'Terminal-Bench 2.1', version: '2.1', score: 72, source_url: 'https://evidence/verified', extraction_method: 'text', confidence: 'HIGH' },
+            { display_name: 'SWE-bench Verified', version: '1.0', score: 80, source_url: 'https://evidence/verified', extraction_method: 'text', confidence: 'HIGH' },
+          ],
+        }];
+        fs.writeFileSync(spec.outputFile, JSON.stringify(artifact));
+      },
+    });
+    assert.deepEqual(logs.map((line) => line.match(/benchmark (\d+\/\d+) (\S+): (\S+)(?: (\d+))?/).slice(1)), [
+      ['1/4', 'acme/failed', 'failed', undefined], ['2/4', 'acme/not-found', 'not_found', undefined],
+      ['3/4', 'acme/rejected', 'rejected', undefined], ['4/4', 'acme/verified', 'verified', '2'],
+    ]);
+    assert.equal(fetchCalls, 2);
+    const staged = db.loadRunCandidate(runId, ctx.options).tasks;
+    const before = fetchCalls;
+    await benchmarks.fetchBenchmarkSourceBodies(staged, {
+      sourceBodies: result.sourceBodies, sourceHashes: result.sourceHashes, fetchCache: result.fetchCache,
+      fetchImpl: async () => { throw new Error('final reduction must not refetch'); },
+    });
+    assert.equal(fetchCalls, before);
+    assert.equal(benchmarks.evaluateBenchmarkModelProgress(
+      staged.find((task) => task.task_id === scoutTasks[0].task_id), entries[0], {
+        sourceBodies: result.sourceBodies, sourceHashes: result.sourceHashes, requireFetchedEvidence: true,
+      }
+    ).verified, 2);
+    fs.rmSync(ctx.root, { recursive: true, force: true });
   });
 });

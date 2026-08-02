@@ -35,7 +35,7 @@ export PROVIDER_REGISTRY="${PROJECT_ROOT}/build/provider-registry.json"
 
 # ── pi agent settings ────────────────────────────────────────────
 # pi model used by the local batch (pi must be installed on this machine).
-export PI_MODEL="${PI_MODEL:-litellm/free}"
+export PI_MODEL="${PI_MODEL:-litellm/local}"
 export PI_TIMEOUT="${PI_TIMEOUT:-1800}"   # seconds per worker
 # Parallel LLM worker count for the collector.
 export GLOBAL_CONCURRENCY="${GLOBAL_CONCURRENCY:-2}"

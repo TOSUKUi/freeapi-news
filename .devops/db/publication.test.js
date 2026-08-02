@@ -111,7 +111,15 @@ function seedCandidate(ctx, runDir) {
   }, null, 2) + '\n');
   fs.writeFileSync(path.join(candidateDir, 'provider-registry.json'), JSON.stringify({
     version: 'candidate',
-    providers: [{ key: 'openrouter', label: 'OpenRouter' }],
+    providers: [{
+      key: 'openrouter',
+      label: 'OpenRouter',
+      base_url: 'https://openrouter.ai/api/v1',
+      base_url_pattern: '^https://openrouter\\.ai/api/v1/?$',
+      delivery_type: 'router',
+      docs_url: 'https://openrouter.ai/docs/quickstart',
+      match: ['openrouter'],
+    }],
   }, null, 2) + '\n');
   return candidateDir;
 }
@@ -432,7 +440,7 @@ describe('publication', () => {
       assert.equal(results[0].action, 'resumable');
     });
 
-    it('flags manual inspection on hash mismatch after db_finalized', () => {
+    it('throws and preserves files and manifest on hash mismatch after db_finalized', () => {
       seedDb(ctx);
       const runDir = path.join(ctx.stateDir, 'crawl', 'test-run-1');
       fs.mkdirSync(runDir, { recursive: true });
@@ -449,9 +457,40 @@ describe('publication', () => {
         backups: {},
       });
 
-      const results = publication.recoverInterruptedPromotion(ctx.options);
-      assert.ok(results);
-      assert.equal(results[0].action, 'manual_inspection');
+      const beforeManifest = fs.readFileSync(publication.manifestPath(runDir), 'utf8');
+      const beforeReport = fs.readFileSync(path.join(ctx.root, 'report.json'), 'utf8');
+      assert.throws(
+        () => publication.recoverInterruptedPromotion(ctx.options),
+        /requires manual inspection/
+      );
+      assert.equal(fs.readFileSync(publication.manifestPath(runDir), 'utf8'), beforeManifest);
+      assert.equal(fs.readFileSync(path.join(ctx.root, 'report.json'), 'utf8'), beforeReport);
+    });
+
+    it('checks only the newest active finalized generation across historical manifests', () => {
+      db.applyMigrations(ctx.options);
+      const database = db.openDatabaseFile(path.join(ctx.stateDir, 'collector.sqlite'));
+      try {
+        database.exec('BEGIN IMMEDIATE');
+        database.prepare("INSERT INTO runs (run_id, status, started_at) VALUES ('old-validated', 'validated', '2026-08-01T00:00:00Z')").run();
+        database.prepare("INSERT INTO runs (run_id, status, started_at) VALUES ('old-superseded', 'superseded', '2026-08-01T01:00:00Z')").run();
+        database.prepare("INSERT INTO runs (run_id, status, started_at) VALUES ('new-validated', 'validated', '2026-08-01T02:00:00Z')").run();
+        database.exec('COMMIT');
+      } finally { database.close(); }
+      const report = path.join(ctx.root, 'report.json');
+      fs.writeFileSync(report, '{"current":true}');
+      const currentHash = db.sha256File(report);
+      for (const [runId, hash] of [['old-validated', 'bad'], ['old-superseded', 'bad'], ['new-validated', currentHash]]) {
+        const runDir = path.join(ctx.stateDir, 'crawl', runId);
+        fs.mkdirSync(runDir, { recursive: true });
+        publication.writeManifest(runDir, {
+          run_id: runId, phase: 'db_finalized', phase_at: {}, backups: {},
+          files: { 'report.json': { sha256: hash } },
+        });
+      }
+      assert.doesNotThrow(() => publication.assertNoManualInspectionRequired(ctx.options));
+      fs.writeFileSync(report, '{"tampered":true}');
+      assert.throws(() => publication.assertNoManualInspectionRequired(ctx.options), /new-validated requires manual inspection/);
     });
 
     it('does not restore an exact DB backup after db_finalized', () => {
@@ -500,6 +539,7 @@ describe('publication', () => {
       try {
         database.exec('BEGIN IMMEDIATE');
         database.prepare("INSERT INTO runs (run_id, status, started_at) VALUES ('old-run', 'validated_not_deployed', '2025-01-01')").run();
+        database.prepare("INSERT INTO runs (run_id, status, started_at) VALUES ('old-validated', 'validated', '2025-01-01T12:00:00Z')").run();
         database.prepare("INSERT INTO runs (run_id, status, started_at) VALUES ('new-run', 'promoted', '2025-01-02')").run();
         database.exec('COMMIT');
       } finally {
@@ -512,12 +552,52 @@ describe('publication', () => {
       try {
         const old = check.prepare("SELECT status FROM runs WHERE run_id = 'old-run'").get();
         assert.equal(old.status, 'superseded');
+        const oldValidated = check.prepare("SELECT status FROM runs WHERE run_id = 'old-validated'").get();
+        assert.equal(oldValidated.status, 'superseded');
         const newer = check.prepare("SELECT status FROM runs WHERE run_id = 'new-run'").get();
         assert.equal(newer.status, 'promoted');
       } finally {
         check.close();
       }
     });
+  });
+
+  it('supersedes old validated generation before next preflight while checking newest active generation', () => {
+    db.applyMigrations(ctx.options);
+    const report = path.join(ctx.root, 'report.json');
+    fs.writeFileSync(report, '{"current":true}');
+    const currentHash = db.sha256File(report);
+    const database = db.openDatabaseFile(path.join(ctx.stateDir, 'collector.sqlite'));
+    try {
+      database.exec('BEGIN IMMEDIATE');
+      database.prepare("INSERT INTO runs (run_id, status, started_at) VALUES ('old-validated', 'validated', '2026-08-01T00:00:00Z')").run();
+      database.prepare("INSERT INTO runs (run_id, status, started_at) VALUES ('new-promoted', 'promoted', '2026-08-01T01:00:00Z')").run();
+      database.exec('COMMIT');
+    } finally { database.close(); }
+    for (const [runId, hash] of [['old-validated', 'bad'], ['new-promoted', currentHash]]) {
+      const runDir = path.join(ctx.stateDir, 'crawl', runId);
+      fs.mkdirSync(runDir, { recursive: true });
+      publication.writeManifest(runDir, {
+        run_id: runId, phase: 'db_finalized', phase_at: {}, backups: {},
+        files: { 'report.json': { sha256: hash } },
+      });
+    }
+
+    publication.supersedeOlderRuns('new-promoted', ctx.options);
+    assert.doesNotThrow(() => publication.assertNoManualInspectionRequired(ctx.options));
+
+    const nextDir = path.join(ctx.stateDir, 'crawl', 'next-validated');
+    fs.mkdirSync(nextDir, { recursive: true });
+    const check = db.openDatabaseFile(path.join(ctx.stateDir, 'collector.sqlite'));
+    try {
+      check.prepare("INSERT INTO runs (run_id, status, started_at) VALUES ('next-validated', 'validated', '2026-08-01T02:00:00Z')").run();
+    } finally { check.close(); }
+    publication.writeManifest(nextDir, {
+      run_id: 'next-validated', phase: 'db_finalized', phase_at: {}, backups: {},
+      files: { 'report.json': { sha256: currentHash } },
+    });
+    fs.writeFileSync(report, '{"tampered":true}');
+    assert.throws(() => publication.assertNoManualInspectionRequired(ctx.options), /next-validated requires manual inspection/);
   });
 
   describe('findDeployRetryTarget', () => {
@@ -546,47 +626,102 @@ describe('publication', () => {
   });
 
   describe('cleanupOldRuns', () => {
-    it('removes run directories older than seven days', () => {
-      const crawlDir = path.join(ctx.stateDir, 'crawl');
-      const oldRunDir = path.join(crawlDir, 'old-run');
-      const newRunDir = path.join(crawlDir, 'new-run');
-      fs.mkdirSync(oldRunDir, { recursive: true });
-      fs.mkdirSync(newRunDir, { recursive: true });
-      fs.writeFileSync(path.join(oldRunDir, 'marker.txt'), 'old');
-      fs.writeFileSync(path.join(newRunDir, 'marker.txt'), 'new');
-
-      // Backdate the old run directory.
-      const eightDaysAgo = (Date.now() - 8 * 24 * 60 * 60 * 1000) / 1000;
-      fs.utimesSync(oldRunDir, eightDaysAgo, eightDaysAgo);
-
-      const cleaned = publication.cleanupOldRuns(ctx.options);
-      assert.equal(cleaned, 1);
-      assert.ok(!fs.existsSync(oldRunDir));
-      assert.ok(fs.existsSync(newRunDir));
-    });
-
-    it('preserves the newest promoted run directory', () => {
+    function insertRuns(rows) {
       db.applyMigrations(ctx.options);
       const database = db.openDatabaseFile(path.join(ctx.stateDir, 'collector.sqlite'));
       try {
         database.exec('BEGIN IMMEDIATE');
-        database.prepare(
-          "INSERT INTO runs (run_id, status, started_at, finished_at) VALUES ('keep-run', 'promoted', '2025-01-01', '2025-01-01')"
-        ).run();
+        for (const row of rows) {
+          database.prepare(
+            'INSERT INTO runs (run_id, status, started_at, finished_at) VALUES (?, ?, ?, ?)'
+          ).run(row.run_id, row.status, row.started_at || '2025-01-01', row.finished_at || '2025-01-01');
+        }
         database.exec('COMMIT');
       } finally {
         database.close();
       }
+    }
 
-      const crawlDir = path.join(ctx.stateDir, 'crawl');
-      const keepDir = path.join(crawlDir, 'keep-run');
-      fs.mkdirSync(keepDir, { recursive: true });
-      publication.writeManifest(keepDir, { run_id: 'keep-run', phase: 'pushed', files: {} });
+    function oldDir(runId, phase = null) {
+      const runDir = path.join(ctx.stateDir, 'crawl', runId);
+      fs.mkdirSync(runDir, { recursive: true });
+      if (phase) publication.writeManifest(runDir, { run_id: runId, phase, files: {} });
+      const old = (Date.now() - 8 * 24 * 60 * 60 * 1000) / 1000;
+      fs.utimesSync(runDir, old, old);
+      return runDir;
+    }
 
-      // Backdate.
-      const eightDaysAgo = (Date.now() - 8 * 24 * 60 * 60 * 1000) / 1000;
-      fs.utimesSync(keepDir, eightDaysAgo, eightDaysAgo);
+    it('preserves unsafe statuses, unknown directories, and retry targets', () => {
+      insertRuns([
+        { run_id: 'collecting-run', status: 'collecting' },
+        { run_id: 'candidate-run', status: 'candidate_ready' },
+        { run_id: 'validated-run', status: 'validated' },
+        { run_id: 'retry-run', status: 'validated_not_deployed' },
+      ]);
+      for (const runId of ['collecting-run', 'candidate-run', 'validated-run', 'retry-run']) {
+        oldDir(runId, runId === 'retry-run' ? 'db_finalized' : null);
+      }
+      const unknownDir = oldDir('unknown-run');
+      const cleaned = publication.cleanupOldRuns(ctx.options);
+      assert.equal(cleaned, 0);
+      for (const runId of ['collecting-run', 'candidate-run', 'validated-run', 'retry-run', 'unknown-run']) {
+        assert.ok(fs.existsSync(path.join(ctx.stateDir, 'crawl', runId)));
+      }
+      assert.equal(publication.findDeployTarget(ctx.options).run_id, 'retry-run');
+      assert.ok(fs.existsSync(unknownDir));
+    });
 
+    it('removes old safe terminal directories without deleting DB records', () => {
+      insertRuns([
+        { run_id: 'failed-run', status: 'failed' },
+        { run_id: 'superseded-run', status: 'superseded' },
+        { run_id: 'deployed-old', status: 'promoted', started_at: '2025-01-01', finished_at: '2025-01-01' },
+        { run_id: 'deployed-new', status: 'promoted', started_at: '2025-01-02', finished_at: '2025-01-02' },
+      ]);
+      oldDir('failed-run');
+      oldDir('superseded-run');
+      oldDir('deployed-old', 'pushed');
+      oldDir('deployed-new', 'pushed');
+      const databaseBefore = db.openDatabaseFile(path.join(ctx.stateDir, 'collector.sqlite'));
+      try {
+        databaseBefore.prepare(
+          "INSERT INTO tasks (run_id, task_id, kind, status) VALUES ('failed-run', 'task', 'known_refresh', 'pending')"
+        ).run();
+        databaseBefore.prepare(
+          "INSERT INTO source_cache (url, subject_key, fetched_at, http_status, content_hash) VALUES ('https://example.test/source', 'shared', '2025-01-01', 200, 'hash')"
+        ).run();
+      } finally {
+        databaseBefore.close();
+      }
+
+      const cleaned = publication.cleanupOldRuns(ctx.options);
+      assert.equal(cleaned, 3);
+      for (const runId of ['failed-run', 'superseded-run', 'deployed-old']) {
+        assert.ok(!fs.existsSync(path.join(ctx.stateDir, 'crawl', runId)));
+      }
+      assert.ok(fs.existsSync(path.join(ctx.stateDir, 'crawl', 'deployed-new')));
+
+      const database = db.openDatabaseFile(path.join(ctx.stateDir, 'collector.sqlite'), { readOnly: true });
+      try {
+        const rows = database.prepare('SELECT run_id, status FROM runs ORDER BY run_id').all();
+        assert.equal(rows.length, 4, 'cleanup must not delete run rows');
+        assert.equal(database.prepare('SELECT COUNT(*) AS count FROM tasks').get().count, 1,
+          'cleanup must not delete task rows');
+        assert.equal(database.prepare('SELECT COUNT(*) AS count FROM source_cache').get().count, 1,
+          'cleanup must not delete source_cache rows');
+        assert.deepEqual(rows.map((row) => row.run_id), [
+          'deployed-new', 'deployed-old', 'failed-run', 'superseded-run',
+        ]);
+      } finally {
+        database.close();
+      }
+    });
+
+    it('preserves the newest promoted run directory', () => {
+      insertRuns([
+        { run_id: 'keep-run', status: 'promoted', started_at: '2025-01-01', finished_at: '2025-01-01' },
+      ]);
+      const keepDir = oldDir('keep-run', 'pushed');
       const cleaned = publication.cleanupOldRuns(ctx.options);
       assert.equal(cleaned, 0);
       assert.ok(fs.existsSync(keepDir));
@@ -623,5 +758,33 @@ describe('publication', () => {
       m = publication.readManifest(runDir);
       assert.equal(m.phase, 'pushed');
     });
+  });
+});
+
+describe('validateCandidateRegistry', () => {
+  it('accepts a structurally valid registry and rejects malformed entries', () => {
+    const valid = { providers: [{
+      key: 'neonstack', label: 'NeonStack', base_url: 'https://api.neonstack.example/v1',
+      base_url_pattern: '^https://api\\.neonstack\\.example/v1/?$', docs_url: 'https://docs.neonstack.example',
+    }] };
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'reg-test-'));
+    const p = path.join(dir, 'registry.json');
+    fs.writeFileSync(p, JSON.stringify(valid));
+    assert.deepEqual(publication.validateCandidateRegistry(p), []);
+
+    fs.writeFileSync(p, JSON.stringify({ providers: [
+      valid.providers[0],
+      { key: 'dupe', label: 'Dup', base_url: 'https://x.example/v1', base_url_pattern: '^https://x\\.example/v1/?$' },
+      { key: 'dupe', label: 'Dup2', base_url: 'https://y.example/v1', base_url_pattern: '^https://y\\.example/v1/?$' },
+      { key: 'badpattern', label: 'Bad', base_url: 'https://z.example/v1', base_url_pattern: '[' },
+      { key: 'nobase', label: 'NoBase', base_url: 'ftp://x.example', base_url_pattern: null },
+      { key: 'page', label: 'Page', base_url: 'https://p.example/v1', base_url_pattern: '^https://p\\.example/v1/?$', model_page_template: 'https://p.example/models' },
+    ] }));
+    const problems = publication.validateCandidateRegistry(p);
+    assert.ok(problems.some((x) => /duplicate provider key dupe/.test(x)));
+    assert.ok(problems.some((x) => /base_url_pattern is not a valid regex/.test(x)));
+    assert.ok(problems.some((x) => /base_url must be http/.test(x)));
+    assert.ok(problems.some((x) => /model_page_template must contain/.test(x)));
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 });

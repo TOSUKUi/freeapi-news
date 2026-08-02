@@ -5,8 +5,6 @@ AIエージェントに、高性能LLMの無料枠・期間限定無料・大幅
 ## Files
 
 - `SKILL.md`: 実行ルールと受入基準
-- `config/sources.yaml`: 常時確認する情報源
-- `config/search_queries.yaml`: 多言語検索語
 - `schemas/`: 構造化出力スキーマ (crawl-facts, benchmark-scout, classifications, editorial, daily_report)
 - `prompts/`: ワーカー役割プロンプト (crawl-worker, discovery-agent, benchmark-scout, classifier-agent, editor-agent)
 - `state/collector.sqlite`: 唯一の運用状態 (ローカルのみ・git 管理外)
