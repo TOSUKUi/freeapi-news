@@ -1108,6 +1108,7 @@ function main() {
   }
 
   const html = generateHTML(report);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, html, 'utf8');
   const ranked = selectRankedOffers(report);
   console.log(`✅ HTMLを生成しました: ${outputPath}`);

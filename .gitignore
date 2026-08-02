@@ -44,3 +44,6 @@ og-image.html
 # managed build/provider-registry.json.
 .agents/skills/llm-deals-intelligence-skill/state/
 .devops/batch/.crawl.lock
+
+# Generated build output (canonical files are tracked, dist/ is not)
+dist/

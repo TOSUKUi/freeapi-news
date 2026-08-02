@@ -24,7 +24,7 @@
 - `npm run deploy` … 最後に昇格した世代をコミット & プッシュ。プッシュ失敗は `validated_not_deployed` として再デプロイ用に保持。
 - `npm run full` … collect → 昇格 → deploy を一括。
 - `npm run validate` … 現行の公開スナップショットを検証 (auto-fix + 問題オファーの除外)。
-- `npm run build` … 現行の公開スナップショットから index.html / OG 画像を生成。
+- `npm run build` … 現行の公開スナップショットから `dist/index.html` / `dist/og-image.png` を生成 (canonical は直接触らない)。`npm run promote:dist` で公開位置へ反映。
 - `npm run db:status` … SQLite スキーマ・実行状態を表示。`db:migrate` / `db:bootstrap` / `db:import-legacy` / `db:restore` 等の副コマンドあり。
 - `npm run set-hidden -- <provider_key> <exact_model_id> <true|false>` … 運用者が特定 offer の公開・非表示を切り替える。カタログ更新では解除されない。
 - `npm run validate-candidate` … 候補ディレクトリの report / HTML / OGP を検証。
@@ -50,7 +50,7 @@
 
 ## Data flow
 
-`report.json` (入力) → `build/build-html.js` → `index.html` (出力)。接続手順のテキストは report.json に持たず、ビルドが `build-html.js` 内の版付きテンプレート (`AGENT_TEMPLATE_VERSION`) から生成する。エンドポイントは `build/provider-registry.json` が唯一の真実源 (公式ドキュメント由来、`delivery_type` / `api_catalog_url` を含む)。バリデータとビルドと収集スキルが共有する。ワーカーは公式ドキュメント由来の候補事実だけを提案し、決定的な取得証拠監査が候補レジストリをステージする。ワーカーが canonical registry を直接書くことはない。
+`report.json` (入力) → `build/build-html.js` → `dist/index.html` (出力)。canonical の `index.html` / `og-image.png` は `npm run build` + `npm run promote:dist` でのみ更新され、手編集しない。接続手順のテキストは report.json に持たず、ビルドが `build-html.js` 内の版付きテンプレート (`AGENT_TEMPLATE_VERSION`) から生成する。エンドポイントは `build/provider-registry.json` が唯一の真実源 (公式ドキュメント由来、`delivery_type` / `api_catalog_url` を含む)。バリデータとビルドと収集スキルが共有する。ワーカーは公式ドキュメント由来の候補事実だけを提案し、決定的な取得証拠監査が候補レジストリをステージする。ワーカーが canonical registry を直接書くことはない。
 
 ## Conventions
 
@@ -69,7 +69,7 @@
 
 ## State and git tracking
 
-- **公開物 (git で追跡)**: `report.json`, `index.html`, `og-image.png`, `build/provider-registry.json` (人間が管理するレジストリ)。これだけが配布物であり、昇格時にのみ書き換わる。
+- **公開物 (git で追跡)**: `report.json`, `index.html`, `og-image.png`, `build/provider-registry.json` (人間が管理するレジストリ)。これだけが配布物であり、昇格時にのみ書き換わる。`index.html` / `og-image.png` は `npm run build` (出力は `dist/`) + `npm run promote:dist` でのみ更新し、手編集しない。
 - **運用状態 (git で追跡しない)**: SQLite (`.agents/skills/llm-deals-intelligence-skill/state/collector.sqlite`) が唯一の運用状態。旧来の `known_offers.json` / `benchmarks.json` / `page_cache.json` は廃止済み。DB と実行ディレクトリ (manifest / artifacts / candidate / DB コピー / promotion manifest / logs) はすべてローカルのみ・`.gitignore` 対象。検証済み DB コピーが通常の復旧入力。`report.json` は非常時の bootstrap 源にすぎない。`offers.hidden` はカタログや worker が上書きしない運用者管理の公開抑止フラグで、非表示 offer は候補 report と benchmark queue から除外する。
 
 ## Notes for agents

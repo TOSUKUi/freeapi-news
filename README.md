@@ -66,7 +66,8 @@ npm run collect:dry-run  # 収集 → 候補検証 (昇格・デプロイしな�
 npm run deploy           # 最後に昇格した世代をコミット & プッシュ
 npm run full             # 収集 → 昇格 → デプロイを一括
 npm run validate         # 現行の公開スナップショットを検証
-npm run build            # 現行の公開スナップショットから HTML/OG 生成
+npm run build            # 現行の公開スナップショットから dist/ へ HTML/OG 生成 (canonical は触らない)
+npm run promote:dist     # 生成済み dist/ を公開位置 (index.html / og-image.png) へ反映
 npm run db:status        # SQLite スキーマ・実行状態を表示
 npm test                 # コレクタのフィクスチャテスト
 ```

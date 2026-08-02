@@ -263,6 +263,7 @@ function main() {
   const report = JSON.parse(raw);
 
   const html = buildOgHTML(report);
+  fs.mkdirSync(path.dirname(htmlPath), { recursive: true });
   fs.writeFileSync(htmlPath, html, 'utf8');
 
   const ok = render(htmlPath, pngPath);

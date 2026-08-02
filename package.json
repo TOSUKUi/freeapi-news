@@ -4,8 +4,9 @@
   "description": "無料LLM API速報 — 毎日更新される無料・割引API情報サイト",
   "scripts": {
     "validate": "node build/validate-report.js report.json .agents/skills/llm-deals-intelligence-skill/schemas/daily_report.schema.json",
-    "build": "node build/build-html.js report.json index.html && node build/build-og-image.js report.json og-image.html og-image.png",
-    "build:og": "node build/build-og-image.js report.json og-image.html og-image.png",
+    "build": "node build/build-html.js report.json dist/index.html && node build/build-og-image.js report.json dist/og-image.html dist/og-image.png",
+    "build:og": "node build/build-og-image.js report.json dist/og-image.html dist/og-image.png",
+    "promote:dist": "node build/promote-dist.js",
     "collect": "node .devops/db/cli.js collect",
     "collect:dry-run": "node .devops/db/cli.js collect --dry-run",
     "deploy": "node .devops/db/cli.js deploy",
