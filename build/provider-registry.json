@@ -51,7 +51,10 @@
       "added_at": "2026-07-28",
       "added_from": "https://openrouter.ai/docs/quickstart",
       "model_page_template": "https://openrouter.ai/{model_id}",
-      "api_catalog_url": "https://openrouter.ai/api/v1/models"
+      "api_catalog_url": "https://openrouter.ai/api/v1/models",
+      "anthropic_base_url": "https://openrouter.ai/api",
+      "openrouter": true,
+      "anthropic_docs_url": "https://openrouter.ai/docs/cookbook/coding-agents/claude-code-integration"
     },
     {
       "key": "deepseek",

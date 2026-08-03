@@ -62,7 +62,7 @@ function getCapability(offer) {
 // ── Versioned per agent connection templates (AC-6) ───────────────
 // Connection instructions are derived here at build time, never stored in
 // report.json. Bump the version when the template shapes change.
-const AGENT_TEMPLATE_VERSION = '2026.07.2';
+const AGENT_TEMPLATE_VERSION = '2026.08.1';
 const AGENTS = [
   { id: 'pi',          label: 'pi' },
   { id: 'claude_code', label: 'Claude Code' },
@@ -77,10 +77,32 @@ function openaiBaseUrl(o, cap) {
   return cap.openai_base_url || o.base_url;
 }
 
+// Anthropic Messages 互換エンドポイントを持つプロバイダー (OpenRouter の
+// /api 等) は registry の anthropic_base_url に記録され、Claude Code は
+// プロキシなしで直接接続できる (OpenRouter 公式ドキュメントの
+// claude-code-integration で検証済み)。
+function anthropicBaseUrl(o, cap) {
+  return cap.anthropic_base_url || null;
+}
+
 const AGENT_SNIPPETS = {
-  // pi: custom providers are registered in ~/.pi/agent/models.json; settings.json
-  // only selects an already-registered provider (pi docs: models.md).
-  pi: (o, cap) => `// ~/.pi/agent/models.json にプロバイダを登録
+  // pi: ビルトインプロバイダーは /login または OPENROUTER_API_KEY 環境変数で
+  // 認証を登録し、~/.pi/agent/settings.json の defaultProvider で選択する
+  // (pi docs: providers.md / models.md)。
+  pi: (o, cap) =>
+    cap.openrouter
+      ? `# pi は OpenRouter をビルトインでサポート (pi docs: providers.md)
+# 方法A: 対話モードで登録
+pi
+/login openrouter   # キーを貼付 (sk-or-v1-...)
+
+# 方法B: 環境変数
+# ~/.bashrc などに追記
+export OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxx
+
+# 起動 (または ~/.pi/agent/settings.json の defaultProvider)
+pi --model openrouter/${o.model_id}`
+      : `// ~/.pi/agent/models.json にプロバイダを登録
 {
   "providers": {
     "${cap.key}": {
@@ -98,10 +120,21 @@ export ${cap.env}=xxxxxxxxxxxxxxxx
 
 # 起動 (または .pi/settings.json の defaultProvider/defaultModel)
 pi --model ${cap.key}/${o.model_id}`,
-  // Claude Code: no native OpenAI-compatible provider support. The documented
-  // routes are an Anthropic-protocol gateway/proxy, or Vertex AI for Gemini.
-  claude_code: (o, cap) =>
-    cap.openai
+  // Claude Code: Anthropic Messages 互換エンドポイントがあれば直接接続。
+  // なければ OpenAI 互換 API は直接使えないので、Anthropic 規約に変換する
+  // プロキシ (LiteLLM, claude-code-router 等) 経由で接続する。
+  claude_code: (o, cap) => {
+    const anthropicBase = anthropicBaseUrl(o, cap);
+    if (anthropicBase) {
+      return `# Claude Code は Anthropic Messages 互換エンドポイントに直接接続 (プロキシ不要)
+# 公式手順: ${cap.anthropic_docs_url || cap.docs_url}
+export ANTHROPIC_BASE_URL=${anthropicBase}
+export ANTHROPIC_AUTH_TOKEN=sk-or-v1-xxxxxxxxxxxxxxxx
+export ANTHROPIC_API_KEY=""   # 明示的に空にする (Anthropic 直結と競合しないように)
+
+claude --model ${o.model_id}`;
+    }
+    return cap.openai
       ? `# Claude Code は OpenAI 互換 API に直接接続できません。
 # Anthropic 規約に変換するプロキシ (LiteLLM, claude-code-router 等) 経由で接続します。
 # プロキシの上流を ${o.base_url} ・ モデル ${o.model_id} に設定してから:
@@ -114,10 +147,29 @@ export CLAUDE_CODE_USE_VERTEX=1
 export CLOUD_ML_REGION=global
 export ANTHROPIC_VERTEX_PROJECT_ID=<GCPプロジェクトID>
 
-claude --model ${o.model_id}`,
+claude --model ${o.model_id}`;
+  },
+  // opencode: OpenRouter はビルトインプロバイダー (/connect でキー登録)。
+  // それ以外は opencode.json にプロバイダー定義を書く (公式 docs: providers)。
   opencode: (o, cap) =>
-    cap.openai
-      ? `// opencode.json
+    cap.openrouter
+      ? `# opencode は OpenRouter をビルトインでサポート (公式 docs: providers)
+# 1. opencode 起動
+opencode
+# 2. /connect → OpenRouter を選択 → APIキー (sk-or-v1-...) を貼付
+#    (キーは ~/.local/share/opencode/auth.json に保存)
+# 3. /models でモデル選択 (openrouter/${o.model_id})
+
+# 設定ファイルで明示する場合 (opencode.json)
+{
+  "provider": {
+    "openrouter": {
+      "models": { "${o.model_id}": {} }
+    }
+  }
+}`
+      : cap.openai
+        ? `// opencode.json
 {
   "provider": {
     "${cap.key}": {
@@ -130,7 +182,7 @@ claude --model ${o.model_id}`,
 
 # APIキー登録 (無料キーで可)
 # opencode 起動後 → /connect ${cap.key} → キーを貼付`
-      : `// opencode.json
+        : `// opencode.json
 {
   "provider": {
     "${cap.key}": {
