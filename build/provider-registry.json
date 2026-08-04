@@ -325,6 +325,19 @@
       "notes": "Data-sharing opt-in grants eligible orgs daily free tokens (see help.openai.com article 10306912).",
       "added_at": "2026-07-29",
       "added_from": "https://platform.openai.com/docs/quickstart"
+    },
+    {
+      "key": "xai",
+      "label": "xAI (SpaceXAI)",
+      "base_url": "https://api.x.ai/v1",
+      "base_url_pattern": "^https://api\\.x\\.ai/v1/?$",
+      "docs_url": "https://docs.x.ai",
+      "model_id_pattern": "^grok-[0-9.]+$",
+      "model_id_example": "grok-4.5",
+      "delivery_type": "official",
+      "notes": null,
+      "added_from": "https://docs.x.ai",
+      "added_at": "2026-08-04"
     }
   ]
 }
