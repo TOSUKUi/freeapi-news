@@ -38,7 +38,7 @@
 `.devops/db/collect.js` がフェイルセーフのパイプラインを回す。SQLite (`.agents/skills/llm-deals-intelligence-skill/state/collector.sqlite`) が唯一の運用状態。既知オファーの確認 (known lane) と新規探索 (discovery lane) を分け、失敗した収集が前回の公開を壊さない。機械的な作業はコード、LLM は事実抽出と分類・執筆だけ (ローカルモデル前提、各呼び出しは軽い)。
 
 1. **catalog** (決定的, `.devops/db/catalog.js`) … `api_catalog_url` を持つプロバイダー (例: OpenRouter `GET /api/v1/models`) を公式 API から直接列挙。LLM フォールバックなし。失敗時は前回オファーを保持。
-2. **known_refresh / discovery ワーカー** (LLM, 並列, `GLOBAL_CONCURRENCY` でスロットル) … 公式ドキュメントから**生の事実のみ**を抽出し `schemas/crawl-facts.schema.json` で `json_output`。enum は書かない。discovery の失敗は既知オファーに影響しない。
+2. **known_refresh / discovery ワーカー** (LLM, 並列, `GLOBAL_CONCURRENCY` でスロットル) … 公式ドキュメントから**生の事実のみ**を抽出し `schemas/crawl-facts.schema.json` で `json_output`。enum は書かない。discovery の失敗は既知オファーに影響しない。discovery レーンは1巨大タスクではなく小さなチャンクタスク (`discovery:sources:N` / `discovery:terms:N`) に分割される (spec 0005)。日次予算とチャンクサイズは `DISCOVERY_SOURCE_BUDGET` (既定20) / `DISCOVERY_TERM_BUDGET` (既定12) / `DISCOVERY_SOURCE_CHUNK` (既定5) / `DISCOVERY_TERM_CHUNK` (既定4)。priority/最終試行順の先頭から切るため、ヘルスカウンタと合わせてプールを日次ローテーションする。1チャンクのタイムアウトは自分だけしか失わない。
 3. **lane reduce** (決定的, `.devops/db/lanes.js`) … facts からライブネス (`verified` / `stale` / `confirmed_removed`) と enum を導出。検証失敗は前回事実を `stale` として持ち越し、4 連続失敗で caution。既知 verified ゼロは昇格をブロック。
 4. **benchmark_scout** (LLM) + **benchmark reduce** (決定的, `.devops/db/benchmarks.js`) … ゲートスコア不足モデルのみ日次調査。LLM の結果は**提案**であり、証拠検証 (テキストは本文確認、画像は HIGH confidence) を通ったものだけ不変の事実行になる。
 5. **classifier / editor** (LLM) … classifier は `classification` の最終判定、editor は日本語本文のみを `editorial.json` に書く。データ状態は一切書かない。

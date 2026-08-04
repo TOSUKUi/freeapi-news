@@ -224,9 +224,9 @@ function makeWorker(mode) {
           errors: [],
         });
       }
-    } else if (spec.taskId === 'discovery') {
+    } else if (spec.taskId.startsWith('discovery:')) {
       write({
-        schema_version: 1, task_id: 'discovery', status: 'complete',
+        schema_version: 1, task_id: spec.taskId, status: 'complete',
         crawled_at: new Date().toISOString(), provider_key: '_discovery',
         models: [], errors: [],
       });
@@ -703,9 +703,9 @@ describe('collect orchestrator', () => {
     }
 
     const runId = 'discovery-snapshot-1';
-    const captured = { runtime: null };
+    const captured = new Map();
     const capturingWorker = (spec) => {
-      if (spec.taskId === 'discovery') captured.runtime = spec.runtime;
+      if (spec.taskId.startsWith('discovery:')) captured.set(spec.taskId, spec.runtime);
       return makeWorker('ok')(spec);
     };
 
@@ -718,34 +718,45 @@ describe('collect orchestrator', () => {
       log: silent(),
     });
 
-    assert.ok(captured.runtime, 'discovery worker must receive a runtime prompt');
-    // The worker input must carry the manifest's snapshot arrays verbatim
+    assert.ok(captured.size > 0, 'discovery chunk workers must receive runtime prompts');
+    // The worker input must carry each chunk task's snapshot arrays verbatim
     // (unchanged from the buildLaneManifest discovery task).
     const manifest = JSON.parse(fs.readFileSync(
       path.join(ctx.stateDir, 'crawl', runId, 'manifest.json'), 'utf8'
     ));
-    const discoveryTask = manifest.tasks.find((t) => t.task_id === 'discovery');
-    for (const [key, label] of [
-      ['discovery_sources', 'Discovery sources'],
-      ['search_terms', 'Search terms'],
-      ['search_windows', 'Search windows'],
-    ]) {
-      const line = captured.runtime.split('\n').find((l) => l.startsWith(`${label} (`));
-      assert.ok(line, `${label} must be present in the discovery runtime`);
-      const json = line.slice(line.indexOf(': ') + 2);
-      assert.deepEqual(
-        JSON.parse(json), discoveryTask[key],
-        `${label} must arrive unchanged from the manifest`
-      );
+    const discoveryTasks = manifest.tasks.filter((t) => t.kind === 'discovery');
+    assert.equal(captured.size, discoveryTasks.length, 'every discovery chunk runs a worker');
+    for (const discoveryTask of discoveryTasks) {
+      const runtime = captured.get(discoveryTask.task_id);
+      assert.ok(runtime, `${discoveryTask.task_id} must receive a runtime prompt`);
+      for (const [key, label] of [
+        ['discovery_sources', 'Discovery sources'],
+        ['search_terms', 'Search terms'],
+        ['search_windows', 'Search windows'],
+      ]) {
+        const line = runtime.split('\n').find((l) => l.startsWith(`${label} (`));
+        assert.ok(line, `${label} must be present in the discovery runtime`);
+        const json = line.slice(line.indexOf(': ') + 2);
+        assert.deepEqual(
+          JSON.parse(json), discoveryTask[key],
+          `${label} must arrive unchanged from the manifest`
+        );
+      }
+      // Inactive rows were filtered by the manifest, so they cannot appear in
+      // the worker input.
+      assert.doesNotMatch(runtime, /vendor:inactive/);
+      assert.doesNotMatch(runtime, /inactive-offer-term/);
+      assert.doesNotMatch(runtime, /"7d"/);
     }
-    // Inactive rows were filtered by the manifest, so they cannot appear in
-    // the worker input.
-    assert.doesNotMatch(captured.runtime, /vendor:inactive/);
-    assert.doesNotMatch(captured.runtime, /inactive-offer-term/);
-    assert.doesNotMatch(captured.runtime, /"7d"/);
-    assert.equal(discoveryTask.discovery_sources.length, 1);
-    assert.equal(discoveryTask.search_terms.length, 1);
-    assert.equal(discoveryTask.search_windows.length, 1);
+    const sourcesTask = discoveryTasks.find((t) => t.task_id === 'discovery:sources:1');
+    const termsTask = discoveryTasks.find((t) => t.task_id === 'discovery:terms:1');
+    assert.ok(sourcesTask && termsTask, 'one source chunk and one term chunk');
+    assert.equal(sourcesTask.discovery_sources.length, 1);
+    assert.equal(sourcesTask.search_terms.length, 0);
+    assert.equal(sourcesTask.search_windows.length, 1);
+    assert.equal(termsTask.search_terms.length, 1);
+    assert.equal(termsTask.discovery_sources.length, 0);
+    assert.equal(termsTask.search_windows.length, 1);
   });
 
   it('reports one deterministic benchmark result incrementally in completion order', async () => {

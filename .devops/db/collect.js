@@ -559,7 +559,8 @@ async function runPipeline(options = {}) {
     await runPool(laneTasks, opts.concurrency, (task) => {
       const roleFile = task.kind === 'discovery' ? 'discovery-agent.md' : 'crawl-worker.md';
       const runtime = task.kind === 'discovery'
-        ? `Task: discovery. Manifest: ${path.join(runDir, 'manifest.json')}.\n`
+        ? `Task: ${task.task_id}. Manifest: ${path.join(runDir, 'manifest.json')}.\n`
+          + `This task is one chunk of the daily discovery lane; cover exactly this slice and emit one small conforming output.\n`
           + `Discovery sources (${task.discovery_sources.length}): ${JSON.stringify(task.discovery_sources)}\n`
           + `Search terms (${task.search_terms.length}): ${JSON.stringify(task.search_terms)}\n`
           + `Search windows (${task.search_windows.length}): ${JSON.stringify(task.search_windows)}\n`

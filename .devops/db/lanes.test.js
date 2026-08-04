@@ -112,7 +112,15 @@ function runCycle(ctx, runId, artifactsByTask, options = {}) {
   fs.writeFileSync(path.join(runDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
   db.startRun(runId, lanes.toStartRunTasks(manifest), ctx.options);
   for (const [taskId, artifact] of Object.entries(artifactsByTask)) {
-    writeArtifact(ctx, runDir, taskId, artifact);
+    if (taskId === 'discovery') {
+      // Spec 0005: the discovery lane is chunked; the legacy single artifact
+      // applies to every discovery chunk task, re-stamped with each task id.
+      for (const task of manifest.tasks.filter((t) => t.kind === 'discovery')) {
+        writeArtifact(ctx, runDir, task.task_id, { ...artifact, task_id: task.task_id });
+      }
+    } else {
+      writeArtifact(ctx, runDir, taskId, artifact);
+    }
   }
   const ingest = lanes.ingestTaskArtifacts(runId, runDir, ctx.options);
   const reduce = lanes.reduceLanes(runId, runDir, {
@@ -217,7 +225,20 @@ test('buildLaneManifest splits catalog, known refresh, and discovery lanes', (t)
   const manifest = lanes.buildLaneManifest(ctx.options);
   const byId = Object.fromEntries(manifest.tasks.map((task) => [task.task_id, task]));
 
-  assert.deepEqual(Object.keys(byId).sort(), ['catalog:openrouter', 'discovery', 'known:google']);
+  // Spec 0005: the discovery lane is chunked (migration seeds 138 sources /
+  // 66 terms; default budgets 20/12 and chunks 5/4 give 4 + 3 tasks).
+  const discoveryIds = manifest.tasks
+    .filter((task) => task.kind === 'discovery')
+    .map((task) => task.task_id)
+    .sort();
+  assert.deepEqual(discoveryIds, [
+    'discovery:sources:1', 'discovery:sources:2', 'discovery:sources:3', 'discovery:sources:4',
+    'discovery:terms:1', 'discovery:terms:2', 'discovery:terms:3',
+  ]);
+  assert.deepEqual(
+    Object.keys(byId).sort(),
+    ['catalog:openrouter', 'known:google', ...discoveryIds].sort()
+  );
 
   assert.equal(byId['catalog:openrouter'].kind, 'catalog');
   assert.deepEqual(byId['catalog:openrouter'].assigned_model_ids, ['acme/a:free', 'acme/b:free'], 'stale offers are still assigned');
@@ -228,16 +249,26 @@ test('buildLaneManifest splits catalog, known refresh, and discovery lanes', (t)
   assert.equal(byId['known:google'].cached_urls.length, 1);
   assert.equal(byId['known:google'].cached_urls[0].url, 'https://ai.google.dev/gemini-api/docs/pricing');
 
-  assert.equal(byId.discovery.kind, 'discovery');
   assert.equal(manifest.lanes.known.assigned_offers, 3);
   assert.deepEqual(manifest.lanes.catalog.providers, ['openrouter']);
+  assert.equal(manifest.lanes.discovery.assigned, discoveryIds.length);
+  assert.equal(manifest.lanes.discovery.assigned_sources, 20, 'source budget caps the daily slice');
+  assert.equal(manifest.lanes.discovery.assigned_terms, 12, 'term budget caps the daily slice');
+  const sourceChunks = discoveryIds.filter((id) => id.startsWith('discovery:sources:'));
+  for (const id of sourceChunks) {
+    assert.ok(byId[id].discovery_sources.length > 0 && byId[id].discovery_sources.length <= 5);
+    assert.deepEqual(byId[id].search_terms, [], 'source chunks carry no terms');
+  }
 
   // startRun accepts the slim rows.
   db.startRun('manifest-run', lanes.toStartRunTasks(manifest), ctx.options);
   const { tasks } = db.loadRunCandidate('manifest-run', ctx.options);
-  assert.equal(tasks.length, 3);
+  assert.equal(tasks.length, 2 + discoveryIds.length);
   const known = tasks.find((task) => task.task_id === 'known:google');
   assert.deepEqual(known.assigned_json, ['gemini-2.5-pro-free']);
+  const sourceTask = tasks.find((task) => task.task_id === 'discovery:sources:1');
+  assert.ok(sourceTask.assigned_json.discovery_sources.length > 0, 'chunk snapshot persists');
+  assert.deepEqual(sourceTask.assigned_json.search_terms, []);
 });
 
 // ── Discovery assignment (spec 0004 AC-13) ──────────────────────
@@ -366,30 +397,36 @@ test('the discovery task carries the active discovery assignment snapshot (AC-13
   });
 
   const manifest = lanes.buildLaneManifest(ctx.options);
-  const discovery = manifest.tasks.find((task) => task.task_id === 'discovery');
-  assert.ok(discovery, 'single discovery task exists');
-  assert.equal(manifest.lanes.discovery.assigned, 1);
-  assert.equal(manifest.tasks.filter((task) => task.kind === 'discovery').length, 1);
+  const discoveryTasks = manifest.tasks.filter((task) => task.kind === 'discovery');
+  const sourcesTask = manifest.tasks.find((task) => task.task_id === 'discovery:sources:1');
+  const termsTask = manifest.tasks.find((task) => task.task_id === 'discovery:terms:1');
+  assert.ok(sourcesTask, 'one source chunk covers the small assignment');
+  assert.ok(termsTask, 'one term chunk covers the small assignment');
+  assert.equal(manifest.lanes.discovery.assigned, discoveryTasks.length);
+  assert.equal(discoveryTasks.length, 2);
 
   // Sources: priority ASC, then last_attempted_at ASC with NULL first, then key.
-  assert.deepEqual(discovery.discovery_sources.map((s) => s.source_key), [
+  assert.deepEqual(sourcesTask.discovery_sources.map((s) => s.source_key), [
     'vendor:openai',   // priority 1, NULL attempt sorts before the attempted row
     'vendor:deepseek', // priority 1, attempted 2026-07-30
     'host:groq',       // priority 7
   ]);
+  assert.deepEqual(sourcesTask.search_terms, [], 'source chunks carry no terms');
 
   // Terms: priority ASC, then last_used_at ASC with NULL first, then category/locale/term.
-  assert.deepEqual(discovery.search_terms.map((t) => t.term), [
+  assert.deepEqual(termsTask.search_terms.map((t) => t.term), [
     'new model', // priority 1, NULL last_used, category new_model < offer
     '新モデル',   // priority 1, NULL last_used, category new_model, ja > en
     'free API',  // priority 5
   ]);
+  assert.deepEqual(termsTask.discovery_sources, [], 'term chunks carry no sources');
 
-  // Windows: priority ASC then key.
-  assert.deepEqual(discovery.search_windows.map((w) => w.window_key), ['24h', '72h', '30d']);
+  // Windows: priority ASC then key; both chunk kinds carry all active windows.
+  assert.deepEqual(sourcesTask.search_windows.map((w) => w.window_key), ['24h', '72h', '30d']);
+  assert.deepEqual(termsTask.search_windows.map((w) => w.window_key), ['24h', '72h', '30d']);
 
   // Each row carries its full configuration, not just the key.
-  assert.deepEqual(discovery.discovery_sources[0], {
+  assert.deepEqual(sourcesTask.discovery_sources[0], {
     source_key: 'vendor:openai',
     category: 'vendor',
     label: 'OpenAI',
@@ -403,7 +440,7 @@ test('the discovery task carries the active discovery assignment snapshot (AC-13
     last_success_at: null,
     consecutive_failures: 0,
   });
-  assert.deepEqual(discovery.search_windows[0], {
+  assert.deepEqual(termsTask.search_windows[0], {
     window_key: '24h', amount: 24, unit: 'hour', active: 1, priority: 0,
   });
 });
@@ -442,20 +479,22 @@ test('the discovery assignment excludes inactive rows and orders by last used ti
   });
 
   const manifest = lanes.buildLaneManifest(ctx.options);
-  const discovery = manifest.tasks.find((task) => task.task_id === 'discovery');
+  const sourcesTask = manifest.tasks.find((task) => task.task_id === 'discovery:sources:1');
+  const termsTask = manifest.tasks.find((task) => task.task_id === 'discovery:terms:1');
+  assert.ok(sourcesTask && termsTask, 'active rows still form one chunk each');
 
   // Only active rows appear; inactive sources, terms, and windows are excluded.
-  assert.deepEqual(discovery.discovery_sources.map((s) => s.source_key), [
+  assert.deepEqual(sourcesTask.discovery_sources.map((s) => s.source_key), [
     'vendor:old', 'vendor:newer',
   ]);
-  assert.deepEqual(discovery.search_terms.map((t) => t.term), [
+  assert.deepEqual(termsTask.search_terms.map((t) => t.term), [
     'stale term', 'fresher term',
   ]);
-  assert.deepEqual(discovery.search_windows.map((w) => w.window_key), ['30d']);
+  assert.deepEqual(termsTask.search_windows.map((w) => w.window_key), ['30d']);
 
   // Same priority: least recently used (last_used_at / last_attempted_at
   // ascending) runs first; NULL would run before any timestamp.
-  assert.deepEqual(discovery.discovery_sources.map((s) => s.label), ['Old', 'Newer']);
+  assert.deepEqual(sourcesTask.discovery_sources.map((s) => s.label), ['Old', 'Newer']);
 });
 
 test('an empty discovery assignment is a valid snapshot with empty arrays', (t) => {
@@ -470,11 +509,100 @@ test('an empty discovery assignment is a valid snapshot with empty arrays', (t) 
   });
 
   const manifest = lanes.buildLaneManifest(ctx.options);
-  const discovery = manifest.tasks.find((task) => task.task_id === 'discovery');
-  assert.deepEqual(discovery.discovery_sources, []);
-  assert.deepEqual(discovery.search_terms, []);
-  assert.deepEqual(discovery.search_windows, []);
-  assert.equal(manifest.lanes.discovery.assigned, 1, 'the single discovery task still exists');
+  assert.equal(
+    manifest.tasks.filter((task) => task.kind === 'discovery').length, 0,
+    'an empty assignment emits no discovery chunk tasks'
+  );
+  assert.equal(manifest.lanes.discovery.assigned, 0);
+  assert.equal(manifest.lanes.discovery.assigned_sources, 0);
+  assert.equal(manifest.lanes.discovery.assigned_terms, 0);
+});
+
+test('buildDiscoveryTasks applies budgets and chunk sizes deterministically (spec 0005)', () => {
+  const assignment = {
+    sources: Array.from({ length: 7 }, (_, i) => ({ source_key: `vendor:s${i}`, priority: i })),
+    terms: Array.from({ length: 5 }, (_, i) => ({ term: `t${i}`, priority: i })),
+    windows: [{ window_key: '24h', amount: 24, unit: 'hour', active: 1, priority: 0 }],
+  };
+
+  const tasks = lanes.buildDiscoveryTasks(assignment, {
+    sourceBudget: 5, termBudget: 5, sourceChunk: 2, termChunk: 3,
+  });
+  assert.deepEqual(tasks.map((task) => task.task_id), [
+    'discovery:sources:1', 'discovery:sources:2', 'discovery:sources:3',
+    'discovery:terms:1', 'discovery:terms:2',
+  ]);
+  assert.deepEqual(tasks.map((task) => task.discovery_sources.length), [2, 2, 1, 0, 0]);
+  assert.deepEqual(tasks.map((task) => task.search_terms.length), [0, 0, 0, 3, 2]);
+  // Budget cuts the tail of the ordered assignment.
+  assert.deepEqual(
+    tasks.filter((task) => task.task_id.startsWith('discovery:sources:'))
+      .flatMap((task) => task.discovery_sources.map((s) => s.source_key)),
+    ['vendor:s0', 'vendor:s1', 'vendor:s2', 'vendor:s3', 'vendor:s4']
+  );
+  // Every chunk carries the full window list.
+  for (const task of tasks) {
+    assert.deepEqual(task.search_windows.map((w) => w.window_key), ['24h']);
+    assert.equal(task.kind, 'discovery');
+    assert.equal(task.output, `artifacts/${task.task_id.replace(/:/g, '-')}.json`);
+  }
+
+  assert.deepEqual(
+    lanes.buildDiscoveryTasks(assignment, { sourceBudget: 0, termBudget: 0, sourceChunk: 2, termChunk: 2 }),
+    [],
+    'zero budgets emit no discovery tasks'
+  );
+
+  const defaults = lanes.discoveryChunkConfig({});
+  assert.deepEqual(defaults, { sourceBudget: 20, termBudget: 12, sourceChunk: 5, termChunk: 4 });
+  const overridden = lanes.discoveryChunkConfig({
+    DISCOVERY_SOURCE_BUDGET: '3', DISCOVERY_TERM_BUDGET: '0',
+    DISCOVERY_SOURCE_CHUNK: '1', DISCOVERY_TERM_CHUNK: 'bogus',
+  });
+  assert.deepEqual(overridden, { sourceBudget: 3, termBudget: 0, sourceChunk: 1, termChunk: 4 });
+});
+
+test('chunked discovery assignments union into source and term bookkeeping (spec 0005)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [offerSeed()]);
+
+  seedDiscoveryConfig(ctx, {
+    sources: Array.from({ length: 7 }, (_, i) =>
+      seedSource(`vendor:chunk-${i}`, { priority: i, label: `Chunk ${i}` })),
+    terms: Array.from({ length: 5 }, (_, i) =>
+      seedTerm('new_model', 'en', `term-${i}`, { priority: i })),
+    windows: [seedWindow('24h', 24, 'hour', { priority: 0 })],
+  });
+
+  const { manifest, reduce } = runCycle(ctx, 'run-chunked', {
+    'known:google': knownArtifact({ models: [knownModel('gemini-2.5-pro-free')] }),
+    discovery: { task_id: 'discovery', status: 'complete', models: [], errors: [] },
+  });
+
+  const discoveryTasks = manifest.tasks.filter((task) => task.kind === 'discovery');
+  // 7 sources / chunk 5 = 2 source tasks; 5 terms / chunk 4 = 2 term tasks.
+  assert.equal(discoveryTasks.length, 4);
+  assert.equal(reduce.coverage.discovery.assigned, 4);
+  assert.equal(reduce.coverage.discovery.complete, 4);
+
+  // The union of every chunk's assignment snapshot reaches finalizeRun, so
+  // each assigned source and term gets its bookkeeping in the same
+  // transaction.
+  const database = db.openCollectorDb(ctx.options);
+  try {
+    const attempted = database.prepare(
+      "SELECT COUNT(*) AS c FROM discovery_sources WHERE source_key LIKE 'vendor:chunk-%' AND last_attempted_at IS NOT NULL"
+    ).get().c;
+    assert.equal(attempted, 7, 'every assigned source is marked attempted');
+    const used = database.prepare(
+      "SELECT COUNT(*) AS c FROM search_terms WHERE term LIKE 'term-%' AND last_used_at IS NOT NULL"
+    ).get().c;
+    assert.equal(used, 5, 'every assigned term is marked used');
+  } finally {
+    database.close();
+  }
 });
 
 // ── Strict artifact identity (AC-11) ─────────────────────────────
@@ -496,7 +624,9 @@ test('ingest rejects identity mismatch and demotes incomplete complete artifacts
   writeArtifact(ctx, runDir, 'known:google', knownArtifact({ task_id: 'known:somebody-else' }));
   // discovery omits an assigned offer while claiming complete... discovery
   // has no assignment; use a second run for the demotion case instead.
-  writeArtifact(ctx, runDir, 'discovery', { task_id: 'discovery', status: 'failed', models: [], errors: ['nothing found'] });
+  for (const task of manifest.tasks.filter((tt) => tt.kind === 'discovery')) {
+    writeArtifact(ctx, runDir, task.task_id, { task_id: task.task_id, status: 'failed', models: [], errors: ['nothing found'] });
+  }
 
   lanes.ingestTaskArtifacts('run-id', runDir, ctx.options);
   const { tasks } = db.loadRunCandidate('run-id', ctx.options);
@@ -510,7 +640,9 @@ test('ingest rejects identity mismatch and demotes incomplete complete artifacts
   writeArtifact(ctx, runDir2, 'known:google', knownArtifact({
     models: [knownModel('model-one')], // model-two omitted
   }));
-  writeArtifact(ctx, runDir2, 'discovery', { task_id: 'discovery', status: 'complete', models: [] });
+  for (const task of manifest.tasks.filter((tt) => tt.kind === 'discovery')) {
+    writeArtifact(ctx, runDir2, task.task_id, { task_id: task.task_id, status: 'complete', models: [] });
+  }
   lanes.ingestTaskArtifacts('run-2', runDir2, ctx.options);
   const { tasks: tasks2 } = db.loadRunCandidate('run-2', ctx.options);
   const known2 = tasks2.find((task) => task.task_id === 'known:google');
@@ -528,8 +660,8 @@ test('missing artifact files become explicit failed task rows', (t) => {
   db.startRun('run-empty', lanes.toStartRunTasks(manifest), ctx.options);
   const summary = lanes.ingestTaskArtifacts('run-empty', runDir, ctx.options);
   // catalog:openrouter (registry catalog provider, zero assigned),
-  // known:google, and discovery all lack artifacts.
-  assert.equal(summary.recorded.length, 3);
+  // known:google, and every discovery chunk task all lack artifacts.
+  assert.equal(summary.recorded.length, manifest.tasks.length);
   assert.ok(summary.recorded.every((r) => r.status === 'failed'));
   const { tasks } = db.loadRunCandidate('run-empty', ctx.options);
   assert.ok(tasks.every((task) => task.status === 'failed'));
@@ -1060,7 +1192,9 @@ test('discovery failure never removes or changes a known offer (AC-2)', (t) => {
     discovery: { task_id: 'discovery', status: 'failed', models: [], errors: ['search quota exhausted'] },
   });
 
-  assert.equal(reduce.coverage.discovery.failed, 1);
+  assert.ok(reduce.coverage.discovery.assigned > 0, 'chunked discovery tasks exist');
+  assert.equal(reduce.coverage.discovery.failed, reduce.coverage.discovery.assigned,
+    'every chunk failure is counted');
   assert.equal(reduce.canPromote, true, 'discovery failure does not block promotion');
   const row = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
   assert.equal(row.status, 'verified');
@@ -1147,7 +1281,7 @@ test('reduceLanes writes the coverage report and discovery candidates to the run
     offerSeed({ exact_model_id: 'model-one' }),
   ]);
 
-  const { runDir, reduce } = runCycle(ctx, 'run-out', {
+  const { manifest, runDir, reduce } = runCycle(ctx, 'run-out', {
     'catalog:openrouter': catalogArtifact({ models: [catalogModel('acme/a:free')] }),
     'known:google': knownArtifact({ models: [knownModel('model-one')] }),
     discovery: { task_id: 'discovery', status: 'complete', models: [{ model_id: 'fresh', provider_key: 'google' }] },
@@ -1161,7 +1295,10 @@ test('reduceLanes writes the coverage report and discovery candidates to the run
   const coverage = JSON.parse(fs.readFileSync(coverageFile, 'utf8'));
   assert.equal(coverage.can_promote, true);
   assert.deepEqual(coverage.coverage.known, { assigned: 2, verified: 2, stale: 0, removed: 0, failed: 0 });
-  assert.deepEqual(coverage.coverage.discovery, { assigned: 1, complete: 1, partial: 0, failed: 0 });
+  const discoveryCount = manifest.tasks.filter((task) => task.kind === 'discovery').length;
+  assert.deepEqual(coverage.coverage.discovery, {
+    assigned: discoveryCount, complete: discoveryCount, partial: 0, failed: 0,
+  });
   assert.deepEqual(coverage.coverage.catalog.available, ['openrouter']);
 
   const candidates = JSON.parse(fs.readFileSync(candidatesFile, 'utf8'));

@@ -62,6 +62,93 @@ function nowIso() {
 }
 
 // ---------------------------------------------------------------------------
+// Discovery chunking (spec 0005)
+// ---------------------------------------------------------------------------
+
+// The discovery lane is split into small worker tasks so each pi session has
+// a small assignment and a small output: one timeout loses one chunk, not the
+// whole lane. Selection is the head of the deterministic assignment ordering
+// (priority ASC, least recently attempted/used first), and the per-source /
+// per-term health counters maintained by finalizeRun rotate the pool daily.
+function discoveryChunkConfig(env = process.env) {
+  const intEnv = (name, fallback) => {
+    const raw = env[name];
+    if (raw === undefined || raw === '') return fallback;
+    const value = Number.parseInt(raw, 10);
+    return Number.isInteger(value) && value >= 0 ? value : fallback;
+  };
+  return {
+    sourceBudget: intEnv('DISCOVERY_SOURCE_BUDGET', 20),
+    termBudget: intEnv('DISCOVERY_TERM_BUDGET', 12),
+    sourceChunk: Math.max(1, intEnv('DISCOVERY_SOURCE_CHUNK', 5)),
+    termChunk: Math.max(1, intEnv('DISCOVERY_TERM_CHUNK', 4)),
+  };
+}
+
+function chunkArray(items, size) {
+  const chunks = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+
+// Builds the chunked discovery tasks (spec 0005). Source tasks check a slice
+// of discovery_sources rows directly; term tasks search a slice of terms
+// within all active windows. Budgets are applied to the already ordered
+// assignment snapshot, so the head is today's rotation slice.
+function buildDiscoveryTasks(discoveryAssignment, config = discoveryChunkConfig()) {
+  const tasks = [];
+  const windows = discoveryAssignment.windows || [];
+
+  const sourceBudget = (discoveryAssignment.sources || []).slice(0, config.sourceBudget);
+  if (sourceBudget.length > 0) {
+    chunkArray(sourceBudget, config.sourceChunk).forEach((slice, index) => {
+      const taskId = `discovery:sources:${index + 1}`;
+      tasks.push({
+        task_id: taskId,
+        kind: 'discovery',
+        provider_key: null,
+        provider_label: null,
+        base_url: null,
+        docs_url: null,
+        api_catalog_url: null,
+        assigned_model_ids: [],
+        cached_urls: [],
+        discovery_sources: slice,
+        search_terms: [],
+        search_windows: windows,
+        output: `artifacts/${db.sanitizeTaskId(taskId)}.json`,
+      });
+    });
+  }
+
+  const termBudget = (discoveryAssignment.terms || []).slice(0, config.termBudget);
+  if (termBudget.length > 0) {
+    chunkArray(termBudget, config.termChunk).forEach((slice, index) => {
+      const taskId = `discovery:terms:${index + 1}`;
+      tasks.push({
+        task_id: taskId,
+        kind: 'discovery',
+        provider_key: null,
+        provider_label: null,
+        base_url: null,
+        docs_url: null,
+        api_catalog_url: null,
+        assigned_model_ids: [],
+        cached_urls: [],
+        discovery_sources: [],
+        search_terms: slice,
+        search_windows: windows,
+        output: `artifacts/${db.sanitizeTaskId(taskId)}.json`,
+      });
+    });
+  }
+
+  return tasks;
+}
+
+// ---------------------------------------------------------------------------
 // Manifest (build task 1: split into known and discovery lane assignments)
 // ---------------------------------------------------------------------------
 
@@ -183,21 +270,11 @@ function buildLaneManifest(options = {}) {
     });
   }
 
-  tasks.push({
-    task_id: 'discovery',
-    kind: 'discovery',
-    provider_key: null,
-    provider_label: null,
-    base_url: null,
-    docs_url: null,
-    api_catalog_url: null,
-    assigned_model_ids: [],
-    cached_urls: [],
-    discovery_sources: discoveryAssignment.sources,
-    search_terms: discoveryAssignment.terms,
-    search_windows: discoveryAssignment.windows,
-    output: 'artifacts/discovery.json',
-  });
+  // Spec 0005: the discovery lane is split into small chunk tasks (sources
+  // and terms separately) instead of one giant task, so each worker session
+  // has a small assignment, a small output, and an independent timeout.
+  const discoveryTasks = buildDiscoveryTasks(discoveryAssignment);
+  tasks.push(...discoveryTasks);
 
   tasks.sort((a, b) => a.task_id.localeCompare(b.task_id));
 
@@ -209,7 +286,11 @@ function buildLaneManifest(options = {}) {
         assigned_offers: known.length,
         providers: [...new Set(known.map((o) => o.provider_key))].sort(),
       },
-      discovery: { assigned: 1 },
+      discovery: {
+        assigned: discoveryTasks.length,
+        assigned_sources: discoveryTasks.reduce((n, t) => n + t.discovery_sources.length, 0),
+        assigned_terms: discoveryTasks.reduce((n, t) => n + t.search_terms.length, 0),
+      },
       catalog: { providers: [...catalogKeys].sort() },
     },
     tasks,
@@ -1152,6 +1233,9 @@ function reduceLanes(runId, runDir, options = {}) {
   }
 
   // ── Discovery lane (AC-2: nonfatal, addition only) ─────────────
+  // Spec 0005: the lane is chunked, so sibling chunks can report the same
+  // model; the first occurrence wins.
+  const seenDiscovery = new Set();
   for (const task of discoveryTasks) {
     coverage.discovery.assigned += 1;
     if (task.status === 'complete') coverage.discovery.complete += 1;
@@ -1166,6 +1250,9 @@ function reduceLanes(runId, runDir, options = {}) {
         const providerKey = typeof model.provider_key === 'string' && model.provider_key
           ? model.provider_key
           : null;
+        const dedupeKey = `${providerKey || ''}\u0000${model.model_id}`;
+        if (seenDiscovery.has(dedupeKey)) continue;
+        seenDiscovery.add(dedupeKey);
         // Discovery never mutates known offers: live ids (verified or
         // stale) are owned by their own lane and skipped. A removed id
         // resurfaces as a reappearance candidate so later stages can
@@ -1232,17 +1319,25 @@ function reduceLanes(runId, runDir, options = {}) {
   }
   const auditedCache = audited.flatMap((a) => a.source_cache || []);
   const auditedHealth = audited.flatMap((a) => a.source_health || []);
-  const assignmentTask = discoveryTasks[0];
-  const assignment = assignmentTask && assignmentTask.assigned_json && !Array.isArray(assignmentTask.assigned_json)
-    ? assignmentTask.assigned_json : {};
+  // Spec 0005: union the assignment snapshots of every discovery chunk task
+  // so each assigned source/term gets its attempted/health bookkeeping.
+  const assignment = { discovery_sources: [], search_terms: [] };
+  for (const task of discoveryTasks) {
+    const assigned = task.assigned_json && !Array.isArray(task.assigned_json)
+      ? task.assigned_json : {};
+    assignment.discovery_sources.push(...(Array.isArray(assigned.discovery_sources)
+      ? assigned.discovery_sources : []));
+    assignment.search_terms.push(...(Array.isArray(assigned.search_terms)
+      ? assigned.search_terms : []));
+  }
   const updatedRun = db.finalizeRun(runId, {
     offers: offerChanges,
     sourceCache: sourceCache.concat(auditedCache),
     discoverySources: [...sourceCandidates.values()],
     discoveryAssignments: {
       attempted_at: now,
-      sources: assignment.discovery_sources || [],
-      terms: assignment.search_terms || [],
+      sources: assignment.discovery_sources,
+      terms: assignment.search_terms,
       health: auditedHealth,
     },
     runStatus,
@@ -1299,6 +1394,8 @@ function reduceLanes(runId, runDir, options = {}) {
 module.exports = {
   CAUTION_FAILURES,
   buildLaneManifest,
+  buildDiscoveryTasks,
+  discoveryChunkConfig,
   toStartRunTasks,
   validateTaskArtifact,
   ingestTaskArtifacts,

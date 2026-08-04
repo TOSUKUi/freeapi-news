@@ -842,9 +842,17 @@ async function auditRunEvidence(tasks, options = {}) {
 
   // Sources assigned by SQLite must be attempted even when the worker omitted
   // them. Null URLs are recorded as failed attempts without a fetch.
-  const discoveryTask = (tasks || []).find((t) => t.kind === 'discovery');
-  const assignment = discoveryTask && discoveryTask.assigned_json && !Array.isArray(discoveryTask.assigned_json)
-    ? discoveryTask.assigned_json : {};
+  // Spec 0005: the discovery lane is chunked, so union the assignment
+  // snapshots of every discovery task.
+  const assignment = { discovery_sources: [], search_terms: [] };
+  for (const task of (tasks || []).filter((t) => t.kind === 'discovery')) {
+    const assigned = task.assigned_json && !Array.isArray(task.assigned_json)
+      ? task.assigned_json : {};
+    assignment.discovery_sources.push(...(Array.isArray(assigned.discovery_sources)
+      ? assigned.discovery_sources : []));
+    assignment.search_terms.push(...(Array.isArray(assigned.search_terms)
+      ? assigned.search_terms : []));
+  }
   const attemptedAt = options.now || new Date().toISOString();
   for (const source of assignment.discovery_sources || []) {
     const key = source.source_key || sourceKey(source);
