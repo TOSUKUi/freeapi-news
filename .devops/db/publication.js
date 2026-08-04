@@ -1063,12 +1063,16 @@ function cleanupOldRuns(options = {}) {
 
 function git(cwd, args, { allowFail = false } = {}) {
   try {
-    return execFileSync('git', args, {
+    const stdout = execFileSync('git', args, {
       cwd,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
       timeout: 60000,
     });
+    // With allowFail the caller inspects .status, so success must return the
+    // same object shape as failure (execFileSync returns a stdout string).
+    if (allowFail) return { status: 0, stdout, stderr: '' };
+    return stdout;
   } catch (err) {
     if (allowFail) return { status: err.status, stdout: err.stdout || '', stderr: err.stderr || '' };
     throw new Error(`git ${args.join(' ')} failed: ${(err.stderr || err.message).slice(0, 500)}`);

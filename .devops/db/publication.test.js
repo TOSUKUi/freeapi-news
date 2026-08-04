@@ -8,9 +8,11 @@
 
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
+const { execFileSync } = require('node:child_process');
 
 const db = require('./collector-db');
 const publication = require('./publication');
@@ -598,6 +600,117 @@ describe('publication', () => {
     });
     fs.writeFileSync(report, '{"tampered":true}');
     assert.throws(() => publication.assertNoManualInspectionRequired(ctx.options), /next-validated requires manual inspection/);
+  });
+
+  describe('deployGeneration', () => {
+    function gitIn(root, args) {
+      return execFileSync(
+        'git',
+        ['-c', 'commit.gpgsign=false', ...args],
+        { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+      );
+    }
+
+    function sha256File(file) {
+      return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+    }
+
+    function initGitRepo(root) {
+      gitIn(root, ['init', '-q']);
+      gitIn(root, ['config', 'user.email', 'test@example.com']);
+      gitIn(root, ['config', 'user.name', 'test']);
+    }
+
+    function writeCanonicalFiles(root) {
+      fs.writeFileSync(path.join(root, 'report.json'), '{"ranked_offers": []}\n');
+      fs.writeFileSync(path.join(root, 'index.html'), '<html>canonical</html>\n');
+      fs.writeFileSync(path.join(root, 'og-image.png'), 'png-bytes');
+    }
+
+    function writeFinalizedManifest(root, stateDir, runId) {
+      const runDir = path.join(stateDir, 'crawl', runId);
+      fs.mkdirSync(runDir, { recursive: true });
+      const files = {};
+      for (const [name, rel] of [
+        ['report.json', 'report.json'],
+        ['index.html', 'index.html'],
+        ['og-image.png', 'og-image.png'],
+        ['provider-registry.json', path.join('build', 'provider-registry.json')],
+      ]) {
+        const p = path.join(root, rel);
+        files[name] = { sha256: sha256File(p), size: fs.statSync(p).size, provenance: 'generated' };
+      }
+      fs.writeFileSync(path.join(runDir, 'promotion-manifest.json'), JSON.stringify({
+        run_id: runId,
+        schema_version: '0004',
+        created_at: new Date().toISOString(),
+        phase: 'db_finalized',
+        phase_at: { prepared: new Date().toISOString(), db_finalized: new Date().toISOString() },
+        candidate_hash: 'test-candidate-hash',
+        files,
+        backups: {},
+        promotion_started: true,
+      }, null, 2) + '\n');
+      return runDir;
+    }
+
+    it('resumes with a noop commit when the allowlist is already committed', () => {
+      db.applyMigrations(ctx.options);
+      const database = db.openDatabaseFile(path.join(ctx.stateDir, 'collector.sqlite'));
+      try {
+        database.prepare(
+          "INSERT INTO runs (run_id, status, started_at) VALUES ('deploy-noop', 'validated', ?)"
+        ).run(new Date().toISOString());
+      } finally {
+        database.close();
+      }
+      writeCanonicalFiles(ctx.root);
+      initGitRepo(ctx.root);
+      gitIn(ctx.root, ['add', '-A']);
+      gitIn(ctx.root, ['commit', '-qm', 'initial']);
+      const runDir = writeFinalizedManifest(ctx.root, ctx.stateDir, 'deploy-noop');
+
+      // No remote exists, so the push fails gracefully after the noop commit.
+      const result = publication.deployGeneration('deploy-noop', runDir, ctx.options);
+      assert.equal(result.deployed, false);
+      assert.equal(result.status, 'validated_not_deployed');
+
+      const manifest = JSON.parse(
+        fs.readFileSync(path.join(runDir, 'promotion-manifest.json'), 'utf8')
+      );
+      assert.equal(manifest.phase, 'committed');
+      assert.equal(manifest.commit, 'noop');
+    });
+
+    it('commits uncommitted allowlist changes before pushing', () => {
+      db.applyMigrations(ctx.options);
+      const database = db.openDatabaseFile(path.join(ctx.stateDir, 'collector.sqlite'));
+      try {
+        database.prepare(
+          "INSERT INTO runs (run_id, status, started_at) VALUES ('deploy-dirty', 'validated', ?)"
+        ).run(new Date().toISOString());
+      } finally {
+        database.close();
+      }
+      initGitRepo(ctx.root);
+      gitIn(ctx.root, ['add', '-A']);
+      gitIn(ctx.root, ['commit', '-qm', 'initial']);
+      // Mutate canonical files after the initial commit (post-finalization).
+      writeCanonicalFiles(ctx.root);
+      const runDir = writeFinalizedManifest(ctx.root, ctx.stateDir, 'deploy-dirty');
+
+      const result = publication.deployGeneration('deploy-dirty', runDir, ctx.options);
+      assert.equal(result.deployed, false);
+      assert.equal(result.status, 'validated_not_deployed');
+
+      const manifest = JSON.parse(
+        fs.readFileSync(path.join(runDir, 'promotion-manifest.json'), 'utf8')
+      );
+      assert.equal(manifest.phase, 'committed');
+      assert.notEqual(manifest.commit, 'noop');
+      const committed = gitIn(ctx.root, ['log', '--format=%H', '-1']).trim();
+      assert.equal(manifest.commit, committed);
+    });
   });
 
   describe('findDeployRetryTarget', () => {
