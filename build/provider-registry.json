@@ -364,6 +364,71 @@
       "notes": null,
       "added_from": "https://platform.minimax.io/docs/guides/pricing-paygo",
       "added_at": "2026-08-05"
+    },
+    {
+      "key": "mistral",
+      "label": "Mistral AI",
+      "base_url": "https://mistral.ai",
+      "base_url_pattern": "^https://mistral\\.ai/?$",
+      "docs_url": "https://mistral.ai/news/shieldstral/",
+      "model_id_pattern": "shieldstral",
+      "model_id_example": "shieldstral",
+      "delivery_type": "open_weights_download",
+      "notes": "Safety classifier, not a general LLM API. Open-weights under Apache 2.0.",
+      "added_from": "https://mistral.ai/news/shieldstral/",
+      "added_at": "2026-08-05"
+    },
+    {
+      "key": "anthropic",
+      "label": "Anthropic",
+      "base_url": "https://www.anthropic.com/news/claude-sonnet-5",
+      "base_url_pattern": "^https://www\\.anthropic\\.com/news/claude-sonnet-5/?$",
+      "docs_url": "https://www.anthropic.com/news/claude-sonnet-5",
+      "model_id_pattern": "claude-sonnet-5",
+      "model_id_example": "claude-sonnet-5",
+      "delivery_type": "paid_api",
+      "notes": "Paid API with introductory discount. Not free. Available on Anthropic Free plan with limited usage.",
+      "added_from": "https://www.anthropic.com/news/claude-sonnet-5",
+      "added_at": "2026-08-05"
+    },
+    {
+      "key": "cohere",
+      "label": "Cohere",
+      "base_url": "https://cohere.com/blog/transcribe-arabic",
+      "base_url_pattern": "^https://cohere\\.com/blog/transcribe-arabic/?$",
+      "docs_url": "https://cohere.com/blog/transcribe-arabic",
+      "model_id_pattern": "transcribe-arabic",
+      "model_id_example": "transcribe-arabic",
+      "delivery_type": "open_weights_with_api",
+      "notes": "ASR model, not an LLM. Open-source Apache 2.0. Also available via Cohere API/Model Vault.",
+      "added_from": "https://cohere.com/blog/transcribe-arabic",
+      "added_at": "2026-08-05"
+    },
+    {
+      "key": "aireleasetracker",
+      "label": "AI Release Tracker",
+      "base_url": "https://aireleasetracker.com",
+      "base_url_pattern": "^https://aireleasetracker\\.com/?$",
+      "docs_url": "https://aireleasetracker.com",
+      "model_id_pattern": ".*",
+      "model_id_example": "kimi-k3",
+      "delivery_type": "tracker",
+      "notes": "Discovery/tracker site, not an API provider. Tracks releases across providers.",
+      "added_from": "https://aireleasetracker.com",
+      "added_at": "2026-08-05"
+    },
+    {
+      "key": "liquidai",
+      "label": "Liquid AI",
+      "base_url": "https://docs.liquid.ai/lfm/models/lfm25-2.6b",
+      "base_url_pattern": "^https://docs\\.liquid\\.ai/lfm/models/lfm25-2\\.6b/?$",
+      "docs_url": "https://www.liquid.ai/blog/lfm2-5-2-6b",
+      "model_id_pattern": "^LFM2\\.5-[0-9]+\\.?[0-9]*B$",
+      "model_id_example": "LFM2.5-2.6B",
+      "delivery_type": "API",
+      "notes": "New API provider discovered via search; base_url from docs.liquid.ai subdomain, not yet confirmed from official API catalog",
+      "added_from": "https://www.liquid.ai/blog/lfm2-5-2-6b",
+      "added_at": "2026-08-05"
     }
   ]
 }
