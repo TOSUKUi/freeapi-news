@@ -338,6 +338,32 @@
       "notes": null,
       "added_from": "https://docs.x.ai",
       "added_at": "2026-08-04"
+    },
+    {
+      "key": "kimi",
+      "label": "Kimi (Moonshot AI)",
+      "base_url": "https://platform.kimi.ai",
+      "base_url_pattern": "^https://platform\\.kimi\\.ai/?$",
+      "docs_url": "https://www.kimi.com/blog/kimi-k3",
+      "model_id_pattern": "^kimi-k3$",
+      "model_id_example": "kimi-k3",
+      "delivery_type": "official",
+      "notes": null,
+      "added_from": "https://www.kimi.com/blog/kimi-k3",
+      "added_at": "2026-08-05"
+    },
+    {
+      "key": "minimax",
+      "label": "MiniMax",
+      "base_url": "https://platform.minimax.io",
+      "base_url_pattern": "^https://platform\\.minimax\\.io/?$",
+      "docs_url": "https://platform.minimax.io/docs/guides/pricing-paygo",
+      "model_id_pattern": "^MiniMax-M3$",
+      "model_id_example": "MiniMax-M3",
+      "delivery_type": "official",
+      "notes": null,
+      "added_from": "https://platform.minimax.io/docs/guides/pricing-paygo",
+      "added_at": "2026-08-05"
     }
   ]
 }
