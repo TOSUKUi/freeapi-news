@@ -53,6 +53,7 @@ async function main() {
   const providers = loadRegistry();
 
   autoFixAllowance(report, fixLog);
+  autoFixPaidClassification(report, fixLog);
 
   // ── 3. Exclude what we can't fix ───────────────────────────────
   excludeBadEndpoints(report, providers, fixLog);
@@ -147,6 +148,33 @@ function autoFixAllowance(report, fixLog) {
       o.free_allowance_rank = 'NORMAL';
       fixLog.push({ offer: o.name, action: 'auto-fix', gate: 'allowance',
         detail: 'free_allowance_rank missing → defaulted to NORMAL' });
+    }
+  }
+}
+
+// A non-zero ULTRA_LOW price is a paid API offer. It cannot carry a free
+// mechanism classification, even if a stale classifier artifact assigned one
+// to the same display name. The assembler now keys classifications by exact
+// offer identity; this remains a final publication guard for old snapshots.
+function autoFixPaidClassification(report, fixLog) {
+  const freeClassifications = new Set([
+    'A_TRUE_FREE', 'B_PERMANENT_FREE_TIER', 'C_LIMITED_FREE',
+  ]);
+  for (const section of ['ranked_offers', 'conditional_credits', 'caution_offers']) {
+    for (const o of report[section] || []) {
+      if (!freeClassifications.has(o.classification)) continue;
+      const price = o.effective_price_per_million;
+      if (!price || typeof price !== 'object') continue;
+      const accessKind = rankingPolicy.deriveAccessKind(price.input, price.output);
+      if (accessKind !== 'ULTRA_LOW' || (price.input === 0 && price.output === 0)) continue;
+      const priorClassification = o.classification;
+      o.classification = 'E_DISCOUNT';
+      fixLog.push({
+        offer: o.name,
+        action: 'auto-fix',
+        gate: 'classification',
+        detail: `non-zero ULTRA_LOW price cannot be ${priorClassification}; set to E_DISCOUNT`,
+      });
     }
   }
 }

@@ -567,11 +567,24 @@ function assembleReport(runId, runDir, options = {}) {
       if (prose && typeof prose.offer_key === 'string') proseByKey.set(prose.offer_key, prose);
     }
   }
-  const classificationByName = new Map();
+  // Classification is attached to the exact provider and model transport
+  // identity. Display names are not unique: a router can expose both
+  // `model` and `model:free` with the same name but different prices.
+  const classificationByKey = new Map();
+  const legacyClassificationsByName = new Map();
   if (classifications && Array.isArray(classifications.classifications)) {
     for (const entry of classifications.classifications) {
-      if (entry && typeof entry.name === 'string' && typeof entry.classification === 'string') {
-        classificationByName.set(entry.name, entry.classification);
+      if (!entry || typeof entry.classification !== 'string') continue;
+      if (typeof entry.offer_key === 'string' && entry.offer_key.length > 0) {
+        classificationByKey.set(entry.offer_key, entry.classification);
+      }
+      // Read old artifacts without allowing an ambiguous display name to
+      // classify multiple exact offers. New schema output never uses this
+      // fallback, but it keeps recovery of an old run fail safe.
+      if (typeof entry.name === 'string' && entry.name.length > 0) {
+        const values = legacyClassificationsByName.get(entry.name) || [];
+        values.push(entry.classification);
+        legacyClassificationsByName.set(entry.name, values);
       }
     }
   }
@@ -584,7 +597,12 @@ function assembleReport(runId, runDir, options = {}) {
 
   for (const candidate of view.candidates) {
     const prose = proseByKey.get(candidate.offer_key) || null;
-    const classification = classificationByName.get(candidate.name) || candidate.classification;
+    const legacyValues = legacyClassificationsByName.get(candidate.name);
+    const legacyClassification = legacyValues && legacyValues.length === 1
+      ? legacyValues[0]
+      : null;
+    const classification = classificationByKey.get(candidate.offer_key) ||
+      legacyClassification || candidate.classification;
     const eligibility = decideEligibility(candidate);
 
     if (!eligibility.eligible) {

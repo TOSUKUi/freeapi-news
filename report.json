@@ -816,7 +816,7 @@
       "provider": "OpenRouter",
       "model_vendor": "inclusionai",
       "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
+      "classification": "E_DISCOUNT",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,

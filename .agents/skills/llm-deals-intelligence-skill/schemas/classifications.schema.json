@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$comment": "Layer 3 分類エージェントの出力。merger の仮分類を、正規化済み candidate ごとに最終判定する。classification は LLM の判断なのでここで enum を縛る。",
+  "$comment": "Layer 3 分類エージェントの出力。merger の仮分類を、正規化済み candidate ごとに最終判定する。分類は offer_key で provider と exact model ID に結び付ける。classification は LLM の判断なのでここで enum を縛る。",
   "type": "object",
   "required": [
     "classifications"
@@ -11,12 +11,13 @@
       "items": {
         "type": "object",
         "required": [
-          "name",
+          "offer_key",
           "classification"
         ],
         "properties": {
-          "name": {
-            "type": "string"
+          "offer_key": {
+            "type": "string",
+            "minLength": 1
           },
           "classification": {
             "enum": [

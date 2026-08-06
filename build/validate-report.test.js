@@ -125,6 +125,22 @@ test('a ranked offer with all new contract fields validates cleanly', () => {
   assert.equal('free_model_names' in validated.ranked_offers[0], false);
 });
 
+test('a paid ULTRA_LOW offer cannot retain a free classification', () => {
+  const report = reportWithOffers([routerOffer({
+    name: 'Ling 3.0 Flash',
+    model_id: 'inclusionai/ling-3.0-flash',
+    canonical_model_id: 'inclusionai/ling-3.0-flash',
+    access_kind: 'ULTRA_LOW',
+    classification: 'B_PERMANENT_FREE_TIER',
+    effective_price_per_million: { input: 0.075, output: 0.22 },
+  })]);
+  const { result, output } = runValidator(report);
+  const validated = JSON.parse(output);
+
+  assert.equal(result.status, 0);
+  assert.equal(validated.ranked_offers[0].classification, 'E_DISCOUNT');
+});
+
 test('ordinary offer-level schema errors retain auto-exclude behavior', () => {
   const report = reportWithOffers([{
     delivery_type: 'official',

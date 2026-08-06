@@ -236,7 +236,7 @@ function makeWorker(mode) {
       }
       write({
         classifications: [{
-          name: 'Gemini 2.5 Pro',
+          offer_key: 'google/gemini-2.5-pro',
           classification: 'B_PERMANENT_FREE_TIER',
           suspicion_score: 0,
           information_confidence: 'HIGH',

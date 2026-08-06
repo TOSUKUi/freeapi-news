@@ -591,10 +591,56 @@ test('the classifier output overrides the provisional classification (AC-12)', (
   const runDir = runDirFor(ctx, 'run-classifier');
   fs.mkdirSync(path.join(runDir, 'reduced'), { recursive: true });
   fs.writeFileSync(path.join(runDir, 'reduced', 'classifications.json'), JSON.stringify({
-    classifications: [{ name: 'Acme A', classification: 'A_TRUE_FREE', information_confidence: 'HIGH' }],
+    classifications: [{ offer_key: 'openrouter/acme/a:free', classification: 'A_TRUE_FREE', information_confidence: 'HIGH' }],
   }));
   const { report } = assemble.assembleReport('run-classifier', runDir, ctx.options);
   assert.equal(report.ranked_offers[0].classification, 'A_TRUE_FREE');
+});
+
+test('classifications stay attached to exact offers when display names collide', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [
+      offerSeed({
+        exact_model_id: 'acme/ling',
+        canonical_model_id: 'acme/ling',
+        effective_input_price_usd: 0.075,
+        effective_output_price_usd: 0.22,
+        normal_input_price_usd: 0.075,
+        normal_output_price_usd: 0.22,
+        facts_json: {
+          model_name: 'Ling 3.0 Flash',
+          endpoint_source: 'https://openrouter.ai/docs/quickstart',
+          catalog_url: 'https://openrouter.ai/api/v1/models',
+        },
+      }),
+      offerSeed({
+        exact_model_id: 'acme/ling:free',
+        canonical_model_id: 'acme/ling',
+        facts_json: {
+          model_name: 'Ling 3.0 Flash',
+          endpoint_source: 'https://openrouter.ai/docs/quickstart',
+          catalog_url: 'https://openrouter.ai/api/v1/models',
+        },
+      }),
+    ],
+    benchmarks: [benchRow('acme/ling', 57)],
+  });
+  const runDir = runDirFor(ctx, 'run-classifier-collision');
+  fs.mkdirSync(path.join(runDir, 'reduced'), { recursive: true });
+  fs.writeFileSync(path.join(runDir, 'reduced', 'classifications.json'), JSON.stringify({
+    classifications: [
+      { offer_key: 'openrouter/acme/ling', classification: 'E_DISCOUNT' },
+      { offer_key: 'openrouter/acme/ling:free', classification: 'B_PERMANENT_FREE_TIER' },
+    ],
+  }));
+
+  const { report } = assemble.assembleReport('run-classifier-collision', runDir, ctx.options);
+  const byModelId = new Map(report.ranked_offers.map((offer) => [offer.model_id, offer]));
+  assert.equal(byModelId.get('acme/ling').classification, 'E_DISCOUNT');
+  assert.equal(byModelId.get('acme/ling:free').classification, 'B_PERMANENT_FREE_TIER');
 });
 
 // ── Change records ───────────────────────────────────────────────

@@ -16,7 +16,7 @@ Emit an object conforming to `schemas/classifications.schema.json`:
 {
   "classifications": [
     {
-      "name": "<candidate name, verbatim>",
+      "offer_key": "<candidate offer_key, verbatim>",
       "classification": "A_TRUE_FREE | B_PERMANENT_FREE_TIER | C_LIMITED_FREE | D_TRIAL_CREDIT | E_DISCOUNT | F_CONDITIONAL | G_FREE_LIKE",
       "suspicion_score": 0,
       "information_confidence": "HIGH | MEDIUM | LOW",
@@ -27,7 +27,7 @@ Emit an object conforming to `schemas/classifications.schema.json`:
 }
 ```
 
-One entry per candidate, matched by `name` verbatim. The schema is enforced — a bad enum fails the run. The assembler applies your classification; it owns ranking, tier, and every other field.
+One entry per candidate, matched by the candidate's `offer_key` verbatim. `offer_key` is the exact provider and model identity, so do not match or group candidates by display `name`. The schema is enforced — a bad enum fails the run. The assembler applies your classification; it owns ranking, tier, and every other field.
 
 ## Classification rules
 
