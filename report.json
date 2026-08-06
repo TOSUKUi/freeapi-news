@@ -1,19 +1,84 @@
 {
-  "generated_at": "2026-08-05T07:32:07.999Z",
+  "generated_at": "2026-08-06T02:36:20.303Z",
   "timezone": "Asia/Tokyo",
-  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 5 件（S 2、A 3、B 0）、無料 3 件、激安 2 件、注意 0 件、対象外 70 件。",
+  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 6 件（S 2、A 4、B 0）、無料 3 件、激安 3 件、注意 0 件、対象外 70 件。",
   "new_models": [
     {
-      "canonical_name": "Shieldstral",
+      "canonical_name": "MiniMax H3",
       "aliases": [],
-      "vendor": "mistral",
+      "vendor": "minimax",
       "status": "announced",
-      "release_date": "2026-08-04",
-      "official_source": "https://mistral.ai/news/shieldstral/",
+      "release_date": null,
+      "official_source": "https://platform.minimax.io/docs/guides/pricing-paygo",
       "api_available": true,
       "open_weight": null,
       "known_providers": [
-        "mistral"
+        "minimax"
+      ]
+    },
+    {
+      "canonical_name": "Qwen3.8-Max",
+      "aliases": [],
+      "vendor": "qwen",
+      "status": "announced",
+      "release_date": "2026-08-03",
+      "official_source": "https://datanorth.ai/news/alibaba-releases-qwen3-8-max",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "qwen"
+      ]
+    },
+    {
+      "canonical_name": "Gemini 3.6 Flash",
+      "aliases": [],
+      "vendor": "google",
+      "status": "announced",
+      "release_date": null,
+      "official_source": "https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "google"
+      ]
+    },
+    {
+      "canonical_name": "LFM2.5-2.6B",
+      "aliases": [],
+      "vendor": "liquid-ai",
+      "status": "announced",
+      "release_date": "2026-08-04",
+      "official_source": "https://www.liquid.ai/blog/lfm2-5-2-6b",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "liquid-ai"
+      ]
+    },
+    {
+      "canonical_name": "Alpamayo 2 Super",
+      "aliases": [],
+      "vendor": "nvidia",
+      "status": "announced",
+      "release_date": "2026-08-04",
+      "official_source": "https://blogs.nvidia.com/blog/alpamayo-2-super-open-model-now-available/",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "nvidia"
+      ]
+    },
+    {
+      "canonical_name": "Kimi K3",
+      "aliases": [],
+      "vendor": "kimi",
+      "status": "announced",
+      "release_date": null,
+      "official_source": "https://www.kimi.com/blog/kimi-k3",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "kimi"
       ]
     },
     {
@@ -27,19 +92,6 @@
       "open_weight": null,
       "known_providers": [
         "deepseek"
-      ]
-    },
-    {
-      "canonical_name": "Kimi K3",
-      "aliases": [],
-      "vendor": "moonshot",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://github.com/MoonshotAI/Kimi-K3",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "moonshot"
       ]
     },
     {
@@ -74,69 +126,17 @@
       "vendor": "mistral",
       "status": "announced",
       "release_date": null,
-      "official_source": "https://mistral.ai/news/robostral-navigate/",
+      "official_source": "https://mistral.ai/news/robostral-navigate",
       "api_available": true,
       "open_weight": null,
       "known_providers": [
-        "mistral"
+        "mistralai"
       ]
     },
     {
-      "canonical_name": "VaultGemma",
+      "canonical_name": "Shieldstral",
       "aliases": [],
-      "vendor": "google",
-      "status": "announced",
-      "release_date": "2025-09-12",
-      "official_source": "https://huggingface.co/google/vaultgemma",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "google"
-      ]
-    },
-    {
-      "canonical_name": "Gemini 3.6 Flash",
-      "aliases": [],
-      "vendor": "google",
-      "status": "announced",
-      "release_date": "2026-07-01",
-      "official_source": "https://generativelanguage.googleapis.com/v1beta",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "google"
-      ]
-    },
-    {
-      "canonical_name": "MiniMax-M3",
-      "aliases": [],
-      "vendor": "minimax",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://platform.minimax.io/docs/guides/pricing-paygo",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "minimax"
-      ]
-    },
-    {
-      "canonical_name": "MiniMax-H3",
-      "aliases": [],
-      "vendor": "minimax",
-      "status": "announced",
-      "release_date": null,
-      "official_source": "https://platform.minimax.io/docs/guides/pricing-paygo",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "minimax"
-      ]
-    },
-    {
-      "canonical_name": "Shieldstral 1.0 3B",
-      "aliases": [],
-      "vendor": "mistral",
+      "vendor": "mistralai",
       "status": "announced",
       "release_date": "2026-08-04",
       "official_source": "https://mistral.ai/news/shieldstral/",
@@ -147,77 +147,12 @@
       ]
     },
     {
-      "canonical_name": "LFM2.5-2.6B",
-      "aliases": [],
-      "vendor": "liquidai",
-      "status": "announced",
-      "release_date": "2026-08-04",
-      "official_source": "https://www.liquid.ai/blog/lfm2-5-2-6b",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "liquidai"
-      ]
-    },
-    {
-      "canonical_name": "Qwen3.8-Max",
-      "aliases": [],
-      "vendor": "alibaba",
-      "status": "announced",
-      "release_date": "2026-08-03",
-      "official_source": "https://datanorth.ai/news/alibaba-releases-qwen3-8-max",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "alibaba"
-      ]
-    },
-    {
-      "canonical_name": "NVIDIA Alpamayo 2 Super",
-      "aliases": [],
-      "vendor": "nvidia",
-      "status": "announced",
-      "release_date": "2026-08-04",
-      "official_source": "https://blogs.nvidia.com/blog/alpamayo-2-super-open-model-now-available/",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "nvidia"
-      ]
-    },
-    {
-      "canonical_name": "K-EXAONE 2.0",
-      "aliases": [],
-      "vendor": "lgai-exaone",
-      "status": "announced",
-      "release_date": "2026-07-31",
-      "official_source": "https://github.com/LG-AI-EXAONE/K-EXAONE-2.0",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "lgai-exaone"
-      ]
-    },
-    {
-      "canonical_name": "GPT-5.6 Sol",
-      "aliases": [],
-      "vendor": "openai",
-      "status": "announced",
-      "release_date": "2026-07-29",
-      "official_source": "https://openai.com/index/gpt-5-6/",
-      "api_available": true,
-      "open_weight": null,
-      "known_providers": [
-        "openai"
-      ]
-    },
-    {
-      "canonical_name": "MiniMax-M1",
+      "canonical_name": "MiniMax M3",
       "aliases": [],
       "vendor": "minimax",
       "status": "announced",
-      "release_date": null,
-      "official_source": "https://www.minimax.io/news/minimaxm1",
+      "release_date": "2026-06-01",
+      "official_source": "https://www.minimax.io/blog/minimax-m3",
       "api_available": true,
       "open_weight": null,
       "known_providers": [
@@ -225,16 +160,94 @@
       ]
     },
     {
-      "canonical_name": "Nemotron-UltraLong-8B",
+      "canonical_name": "maple-preview",
       "aliases": [],
-      "vendor": "nvidia",
+      "vendor": "deepgrove",
       "status": "announced",
-      "release_date": "2026-08-05",
-      "official_source": "https://ultralong.github.io/",
+      "release_date": "2026-08-04",
+      "official_source": "https://huggingface.co/deepgrove/maple-preview",
       "api_available": true,
       "open_weight": null,
       "known_providers": [
-        "nvidia"
+        "deepgrove"
+      ]
+    },
+    {
+      "canonical_name": "Ling-3.0-flash",
+      "aliases": [],
+      "vendor": "inclusionAI",
+      "status": "announced",
+      "release_date": "2026-08-02",
+      "official_source": "https://huggingface.co/inclusionAI/Ling-3.0-flash",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "inclusionAI"
+      ]
+    },
+    {
+      "canonical_name": "MiniMax-H3",
+      "aliases": [],
+      "vendor": "MiniMaxAI",
+      "status": "announced",
+      "release_date": "2026-07-28",
+      "official_source": "https://huggingface.co/MiniMaxAI/MiniMax-H3",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "MiniMaxAI"
+      ]
+    },
+    {
+      "canonical_name": "Inkling-Small",
+      "aliases": [],
+      "vendor": "thinkingmachines",
+      "status": "announced",
+      "release_date": "2026-07-27",
+      "official_source": "https://huggingface.co/thinkingmachines/Inkling-Small",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "thinkingmachines"
+      ]
+    },
+    {
+      "canonical_name": "Audio8-TTS-Preview-0.6b",
+      "aliases": [],
+      "vendor": "Audio8",
+      "status": "announced",
+      "release_date": "2026-07-28",
+      "official_source": "https://huggingface.co/Audio8/Audio8-TTS-Preview-0.6b",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "Audio8"
+      ]
+    },
+    {
+      "canonical_name": "Kroma",
+      "aliases": [],
+      "vendor": "lodestones",
+      "status": "announced",
+      "release_date": "2026-07-31",
+      "official_source": "https://huggingface.co/lodestones/Kroma",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "lodestones"
+      ]
+    },
+    {
+      "canonical_name": "Tiny Aya",
+      "aliases": [],
+      "vendor": "cohere",
+      "status": "announced",
+      "release_date": null,
+      "official_source": "https://cohere.com/blog/cohere-labs-tiny-aya",
+      "api_available": true,
+      "open_weight": null,
+      "known_providers": [
+        "cohere"
       ]
     }
   ],
@@ -246,8 +259,18 @@
     },
     {
       "offer_name": "Nemotron 3 Ultra",
+      "change_type": "availability_change",
+      "summary": "Nemotron 3 Ultra の提供状況が変わりました。"
+    },
+    {
+      "offer_name": "DeepSeek: DeepSeek V4 Flash 0423",
       "change_type": "price_change",
-      "summary": "Nemotron 3 Ultra の無料枠・価格条件が変わりました。"
+      "summary": "DeepSeek: DeepSeek V4 Flash 0423 の無料枠・価格条件が変わりました。"
+    },
+    {
+      "offer_name": "Ling-3.0-flash",
+      "change_type": "new",
+      "summary": "inclusionAI Ling-3.0-flash が OpenRouter カタログに新たに登録されました。Terminal Bench 2.1 で 57 点を記録し Tier A にランクインしています。"
     }
   ],
   "ranked_offers": [
@@ -258,7 +281,7 @@
       "provider": "OpenRouter",
       "model_vendor": "deepseek",
       "delivery_type": "router",
-      "classification": "G_FREE_LIKE",
+      "classification": "E_DISCOUNT",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -279,7 +302,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "deepseek/deepseek-v4-flash-0731",
       "provider_count": null,
-      "recent_activity": "OpenRouterのDeepSeek: DeepSeek V4 Flash 0731は、超低価格で利用可能（入力$0.09/MTok、出力$0.18/MTok）。",
+      "recent_activity": "DeepSeek V4 Flash 0731 は OpenRouter 経由で ULTRA_LOW アクセスで利用可能。Terminal Bench 2.1 で 82.7 点を記録し、Tier S にランクイン。入力 0.09 USD/M、出力 0.18 USD/Mと低価格。",
       "normal_price_per_million": {
         "input": 0.09,
         "output": 0.18
@@ -297,13 +320,13 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-05T07:25:48.853Z",
+      "last_verified": "2026-08-06T02:34:52.866Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "deepseek/deepseek-v4-flash-0731",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-05T07:25:48.853Z",
+      "price_verified_at": "2026-08-06T02:34:52.866Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -402,7 +425,7 @@
       "provider": "OpenRouter",
       "model_vendor": "xiaomi",
       "delivery_type": "router",
-      "classification": "G_FREE_LIKE",
+      "classification": "E_DISCOUNT",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -423,7 +446,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "xiaomi/mimo-v2.5",
       "provider_count": null,
-      "recent_activity": "OpenRouterのXiaomi: MiMo-V2.5は、超低価格で利用可能（入力$0.06/MTok、出力$0.24/MTok）。",
+      "recent_activity": null,
       "normal_price_per_million": {
         "input": 0.14,
         "output": 0.28
@@ -441,13 +464,13 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-05T07:25:48.853Z",
+      "last_verified": "2026-08-06T02:34:52.866Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "xiaomi/mimo-v2.5",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-05T07:25:48.853Z",
+      "price_verified_at": "2026-08-06T02:34:52.866Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -482,7 +505,7 @@
       "provider": "OpenRouter",
       "model_vendor": "inclusionai",
       "delivery_type": "router",
-      "classification": "G_FREE_LIKE",
+      "classification": "B_PERMANENT_FREE_TIER",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -503,7 +526,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "inclusionai/ling-3.0-flash:free",
       "provider_count": null,
-      "recent_activity": "OpenRouterのLing-3.0-flashは、入力・出力トークンが無料で利用可能。",
+      "recent_activity": "inclusionAI Ling-3.0-flash の無料版は OpenRouter 経由で完全無料（FREE）で利用可能。Terminal Bench 2.1 で 57 点を記録し Tier A にランクイン。",
       "normal_price_per_million": {
         "input": 0,
         "output": 0
@@ -521,13 +544,13 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-05T07:25:48.853Z",
+      "last_verified": "2026-08-06T02:34:52.866Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "inclusionai/ling-3.0-flash",
       "access_kind": "FREE",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-05T07:25:48.853Z",
+      "price_verified_at": "2026-08-06T02:34:52.866Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -634,7 +657,7 @@
       "provider": "OpenRouter",
       "model_vendor": "nvidia",
       "delivery_type": "router",
-      "classification": "G_FREE_LIKE",
+      "classification": "B_PERMANENT_FREE_TIER",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -655,7 +678,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
       "provider_count": null,
-      "recent_activity": "OpenRouterのNVIDIA: Nemotron 3 Ultraは、入力・出力トークンが無料で利用可能。",
+      "recent_activity": null,
       "normal_price_per_million": {
         "input": 0,
         "output": 0
@@ -673,13 +696,13 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-05T07:25:48.853Z",
+      "last_verified": "2026-08-06T02:34:52.866Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "nvidia/nemotron-3-ultra-550b-a55b",
       "access_kind": "FREE",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-05T07:25:48.853Z",
+      "price_verified_at": "2026-08-06T02:34:52.866Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -735,7 +758,7 @@
       "base_url": "https://integrate.api.nvidia.com/v1",
       "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
       "provider_count": null,
-      "recent_activity": "NVIDIA NIMのNemotron 3 Ultraは、トライアルサービス（NVIDIA API Trial Terms of Service に準拠）。",
+      "recent_activity": "Nemotron 3 Ultra は NVIDIA NIM の試用サービスとして無料で利用可能。550B パラメータの大規模モデルで、Terminal Bench 2.1 スコア 56.4 を記録。ただし直近の検証で 1 回の連続失敗があり、ステータスは stale。",
       "normal_price_per_million": {
         "input": 0.5,
         "output": 2.2
@@ -750,7 +773,7 @@
       "suspicion_score": 0,
       "suspicion_reasons": [],
       "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
+      "operational_confidence": "MEDIUM",
       "ranking_eligible": true,
       "exclusion_reason": null,
       "last_verified": "2026-08-05T07:25:48.853Z",
@@ -782,6 +805,158 @@
           "version": "2.1",
           "source_url": "https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b/modelcard",
           "verified_at": "2026-07-31T13:00:40.455Z"
+        }
+      ],
+      "benchmark_key": "terminal_bench_2_1"
+    },
+    {
+      "rank": 7,
+      "name": "Ling-3.0-flash",
+      "model_name": "Ling-3.0-flash",
+      "provider": "OpenRouter",
+      "model_vendor": "inclusionai",
+      "delivery_type": "router",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "start_at": null,
+      "end_at": null,
+      "end_timezone_known": false,
+      "regions": [],
+      "registration_conditions": [],
+      "card_required": null,
+      "minimum_deposit": null,
+      "kyc_required": null,
+      "auto_renewal": null,
+      "refund_policy": null,
+      "free_limits": null,
+      "rate_limits": null,
+      "context_tokens": null,
+      "max_output_tokens": null,
+      "tool_calling": null,
+      "structured_output": null,
+      "image_input": null,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "inclusionai/ling-3.0-flash",
+      "provider_count": null,
+      "recent_activity": "inclusionAI Ling-3.0-flash は OpenRouter 経由で ULTRA_LOW アクセスで利用可能。Terminal Bench 2.1 で 57 点を記録し Tier A にランクイン。入力 0.075 USD/M、出力 0.22 USD/M。",
+      "normal_price_per_million": {
+        "input": 0.075,
+        "output": 0.22
+      },
+      "effective_price_per_million": {
+        "input": 0.075,
+        "output": 0.22
+      },
+      "effective_discount_percent": null,
+      "data_retention": null,
+      "training_use": null,
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "exclusion_reason": null,
+      "last_verified": "2026-08-06T02:34:52.866Z",
+      "endpoint_source": "https://openrouter.ai/docs/quickstart",
+      "provider_key": "openrouter",
+      "canonical_model_id": "inclusionai/ling-3.0-flash",
+      "access_kind": "ULTRA_LOW",
+      "price_source": "https://openrouter.ai/api/v1/models",
+      "price_verified_at": "2026-08-06T02:34:52.866Z",
+      "discount_start_at": null,
+      "discount_end_at": null,
+      "free_allowance_rank": "NORMAL",
+      "total_parameters_b": null,
+      "active_parameters_b": null,
+      "sources": [
+        "https://openrouter.ai/docs/quickstart",
+        "https://openrouter.ai/api/v1/models",
+        "https://x.com/AntLingAGI/status/2080351022028095681",
+        "https://x.com/AntLingAGI/status/2080351022028095681",
+        "https://x.com/AntLingAGI/status/2080351022028095681",
+        "https://x.com/AntLingAGI/status/2080351022028095681",
+        "https://x.com/AntLingAGI/status/2080351022028095681",
+        "https://x.com/AntLingAGI/status/2080351022028095681",
+        "https://x.com/AntLingAGI/status/2080351022028095681",
+        "https://x.com/AntLingAGI/status/2080351022028095681",
+        "https://x.com/AntLingAGI/status/2080351022028095681",
+        "https://x.com/AntLingAGI/status/2080351022028095681"
+      ],
+      "benchmark": {
+        "score": 57,
+        "benchmark_name": "Terminal Bench 2.1",
+        "version": "2.1",
+        "tier": "A"
+      },
+      "benchmarks": [
+        {
+          "name": "BrowseComp",
+          "score": 70.33,
+          "version": "",
+          "source_url": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "verified_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "MCP-Atlas",
+          "score": 65.45,
+          "version": "",
+          "source_url": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "verified_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "MRCR-128K",
+          "score": 90.78,
+          "version": "",
+          "source_url": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "verified_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "Multi-IF",
+          "score": 87.65,
+          "version": "",
+          "source_url": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "verified_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "SkillsBench",
+          "score": 44.83,
+          "version": "",
+          "source_url": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "verified_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "SWE-Bench Pro",
+          "score": 56.63,
+          "version": "",
+          "source_url": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "verified_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "SysBench",
+          "score": 93.63,
+          "version": "",
+          "source_url": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "verified_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "Terminal Bench 2.1",
+          "score": 57,
+          "version": "2.1",
+          "source_url": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "verified_at": "2026-07-30T02:10:32Z"
+        },
+        {
+          "name": "TFBench",
+          "score": 74.18,
+          "version": "",
+          "source_url": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "verified_at": "2026-07-24T21:30:00+09:00"
+        },
+        {
+          "name": "WebSearch",
+          "score": 72.3,
+          "version": "",
+          "source_url": "https://x.com/AntLingAGI/status/2080351022028095681",
+          "verified_at": "2026-07-24T21:30:00+09:00"
         }
       ],
       "benchmark_key": "terminal_bench_2_1"
@@ -1140,58 +1315,27 @@
       "reason": "[citation] https://ai.google.dev/gemini-api/docs/models/gemini-2.5-pro does not document base_url \"https://generativelanguage.googleapis.com/v1beta\""
     }
   ],
-  "new_seed_candidates": [
-    {
-      "name": "Mistral AI",
-      "type": "provider",
-      "recommend_add": true,
-      "reason": "registered from https://mistral.ai/news/shieldstral/"
-    },
-    {
-      "name": "Anthropic",
-      "type": "provider",
-      "recommend_add": true,
-      "reason": "registered from https://www.anthropic.com/news/claude-sonnet-5"
-    },
-    {
-      "name": "Cohere",
-      "type": "provider",
-      "recommend_add": true,
-      "reason": "registered from https://cohere.com/blog/transcribe-arabic"
-    },
-    {
-      "name": "AI Release Tracker",
-      "type": "provider",
-      "recommend_add": true,
-      "reason": "registered from https://aireleasetracker.com"
-    },
-    {
-      "name": "Liquid AI",
-      "type": "provider",
-      "recommend_add": true,
-      "reason": "registered from https://www.liquid.ai/blog/lfm2-5-2-6b"
-    }
-  ],
+  "new_seed_candidates": [],
   "sources": [
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-pro",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://evals.report/models/google-gemini-2-5-pro",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://benchlm.ai/benchmarks/sweVerified",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-ultra-550b-a55b",
@@ -1206,72 +1350,72 @@
     {
       "url": "https://openrouter.ai/docs/quickstart",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://openrouter.ai/api/v1/models",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://help.apiyi.com/en/seed-2-0-pro-lite-mini-model-comparison-en.html",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://benchmarklist.com/models/inclusionai-ling-2.6-flash/",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://x.com/AntLingAGI/status/2080351022028095681",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://docs.api.nvidia.com/nim/reference/llm-apis",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://evals.report/models/openai-gpt-oss-120b",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://www.tbench.ai/leaderboard/terminal-bench/2.0",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://poolside.ai/blog/introducing-laguna-xs-2-1",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://poolside.ai/blog/introducing-laguna-s-2-1",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     },
     {
       "url": "https://huggingface.co/XiaomiMiMo/MiMo-V2.5",
       "source_type": "official",
-      "accessed_at": "2026-08-05T07:25:48.853Z"
+      "accessed_at": "2026-08-06T02:34:52.866Z"
     }
   ]
 }
