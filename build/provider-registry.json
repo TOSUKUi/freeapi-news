@@ -429,6 +429,19 @@
       "notes": "New API provider discovered via search; base_url from docs.liquid.ai subdomain, not yet confirmed from official API catalog",
       "added_from": "https://www.liquid.ai/blog/lfm2-5-2-6b",
       "added_at": "2026-08-05"
+    },
+    {
+      "key": "lg",
+      "label": "LG AI Research (FriendliAI)",
+      "base_url": "https://api.friendli.ai/serverless/v1",
+      "base_url_pattern": "^https://api\\.friendli\\.ai/serverless/v1/?$",
+      "docs_url": "https://friendli.ai/models/LGAI-EXAONE/K-EXAONE-2.0-750B-A37B",
+      "model_id_pattern": "^LGAI-EXAONE/K-EXAONE-2\\.0-750B-A37B(?:-DSpark)?$",
+      "model_id_example": "LGAI-EXAONE/K-EXAONE-2.0-750B-A37B",
+      "delivery_type": "official",
+      "notes": null,
+      "added_from": "https://friendli.ai/models/LGAI-EXAONE/K-EXAONE-2.0-750B-A37B",
+      "added_at": "2026-08-08"
     }
   ]
 }
