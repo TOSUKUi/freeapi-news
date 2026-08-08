@@ -1,53 +1,18 @@
 {
-  "generated_at": "2026-08-07T02:01:04.334Z",
+  "generated_at": "2026-08-08T02:02:16.385Z",
   "timezone": "Asia/Tokyo",
-  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 4 件（S 2、A 2、B 0）、無料 1 件、激安 3 件、注意 0 件、対象外 75 件。",
+  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 4 件（S 2、A 2、B 0）、無料 1 件、激安 3 件、注意 0 件、対象外 76 件。",
   "new_models": [],
   "changes": [
     {
-      "offer_name": "Gemini 2.5 Pro",
-      "change_type": "availability_change",
-      "summary": "Gemini 2.5 Pro の提供状況が変わりました。"
-    },
-    {
-      "offer_name": "Google: Gemini 2.5 Flash Lite (batch)",
-      "change_type": "new",
-      "summary": "Google: Gemini 2.5 Flash Lite (batch) が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "Ling-3.0-flash",
+      "offer_name": "DeepSeek: DeepSeek V4 Flash 0423",
       "change_type": "price_change",
-      "summary": "Ling-3.0-flash の無料枠・価格条件が変わりました。"
-    },
-    {
-      "offer_name": "Ling-3.0-flash",
-      "change_type": "ended",
-      "summary": "Ling-3.0-flash の無料提供が終了しました。"
-    },
-    {
-      "offer_name": "inclusionAI: Ling 3.0 Tiny",
-      "change_type": "new",
-      "summary": "inclusionAI: Ling 3.0 Tiny が新たにランキング対象になりました。"
+      "summary": "DeepSeek: DeepSeek V4 Flash 0423 の無料枠・価格条件が変わりました。"
     },
     {
       "offer_name": "NVIDIA: Nemotron 3 Super",
-      "change_type": "ended",
-      "summary": "NVIDIA: Nemotron 3 Super の無料提供が終了しました。"
-    },
-    {
-      "offer_name": "OpenAI: GPT-4.1 Nano (batch)",
-      "change_type": "new",
-      "summary": "OpenAI: GPT-4.1 Nano (batch) が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "OpenAI: GPT-4o-mini (batch)",
-      "change_type": "new",
-      "summary": "OpenAI: GPT-4o-mini (batch) が新たにランキング対象になりました。"
-    },
-    {
-      "offer_name": "OpenAI: GPT-5 Nano (batch)",
-      "change_type": "new",
-      "summary": "OpenAI: GPT-5 Nano (batch) が新たにランキング対象になりました。"
+      "change_type": "revived",
+      "summary": "NVIDIA: Nemotron 3 Super の無料提供が再開しました。"
     }
   ],
   "ranked_offers": [
@@ -97,13 +62,13 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-07T02:00:42.291Z",
+      "last_verified": "2026-08-08T02:01:27.865Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "deepseek/deepseek-v4-flash-0731",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-07T02:00:42.291Z",
+      "price_verified_at": "2026-08-08T02:01:27.865Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -241,13 +206,13 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-07T02:00:42.291Z",
+      "last_verified": "2026-08-08T02:01:27.865Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "xiaomi/mimo-v2.5",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-07T02:00:42.291Z",
+      "price_verified_at": "2026-08-08T02:01:27.865Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -321,13 +286,13 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-07T02:00:42.291Z",
+      "last_verified": "2026-08-08T02:01:27.865Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "nvidia/nemotron-3-ultra-550b-a55b",
       "access_kind": "FREE",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-07T02:00:42.291Z",
+      "price_verified_at": "2026-08-08T02:01:27.865Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -401,13 +366,13 @@
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-08-07T02:00:42.291Z",
+      "last_verified": "2026-08-08T02:01:27.865Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "inclusionai/ling-3.0-flash",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-08-07T02:00:42.291Z",
+      "price_verified_at": "2026-08-08T02:01:27.865Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -727,6 +692,11 @@
       "last_known_status": "verified"
     },
     {
+      "name": "NVIDIA: Nemotron 3 Super",
+      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
+      "last_known_status": "verified"
+    },
+    {
       "name": "NVIDIA: Nemotron 3.5 Content Safety",
       "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
       "last_known_status": "verified"
@@ -920,72 +890,72 @@
     {
       "url": "https://openrouter.ai/docs/quickstart",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://openrouter.ai/api/v1/models",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://help.apiyi.com/en/seed-2-0-pro-lite-mini-model-comparison-en.html",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://benchmarklist.com/models/inclusionai-ling-2.6-flash/",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://x.com/AntLingAGI/status/2080351022028095681",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://docs.api.nvidia.com/nim/reference/llm-apis",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://evals.report/models/openai-gpt-oss-120b",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://www.tbench.ai/leaderboard/terminal-bench/2.0",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://poolside.ai/blog/introducing-laguna-xs-2-1",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://poolside.ai/blog/introducing-laguna-s-2-1",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     },
     {
       "url": "https://huggingface.co/XiaomiMiMo/MiMo-V2.5",
       "source_type": "official",
-      "accessed_at": "2026-08-07T02:00:42.291Z"
+      "accessed_at": "2026-08-08T02:01:27.865Z"
     }
   ]
 }
