@@ -442,6 +442,33 @@
       "notes": null,
       "added_from": "https://friendli.ai/models/LGAI-EXAONE/K-EXAONE-2.0-750B-A37B",
       "added_at": "2026-08-08"
+    },
+    {
+      "key": "nanogpt",
+      "label": "NanoGPT",
+      "match": [
+        "nano-gpt.com",
+        "nanogpt"
+      ],
+      "base_url": "https://nano-gpt.com/api/v1",
+      "base_url_pattern": "^https://nano-gpt\\.com/api/v1/?$",
+      "docs_url": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
+      "model_id_pattern": "^[^/]+/.+$",
+      "model_id_example": "meta/muse-spark-1.2-contributor",
+      "delivery_type": "router",
+      "env": "NANOGPT_API_KEY",
+      "openai": true,
+      "agents": [
+        "pi",
+        "claude_code",
+        "opencode",
+        "codex"
+      ],
+      "notes": "OpenAI-compatible routed API. The public detailed model catalog reports current per-million-token prices and model conditions.",
+      "added_at": "2026-08-08",
+      "added_from": "https://docs.nano-gpt.com/api-reference/endpoint/models",
+      "model_page_template": "https://nano-gpt.com/models/text/{model_id}",
+      "api_catalog_url": "https://nano-gpt.com/api/v1/models?detailed=true"
     }
   ]
 }
