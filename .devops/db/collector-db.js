@@ -1014,6 +1014,14 @@ function buildPublicReportState(options = {}) {
   }
 }
 
+// Spec 0008 db:status additions: watch/leads/contradictions summaries.
+// Tables are queried defensively because older schema versions do not have
+// them yet (contradictions arrives with migration 0011).
+function tableExists(db, name) {
+  const row = db.prepare('SELECT name FROM sqlite_master WHERE type = ? AND name = ?').get('table', name);
+  return Boolean(row);
+}
+
 function getStatus(options = {}) {
   const paths = resolvePaths(options);
   const dbExists = fs.existsSync(paths.dbPath);
@@ -1021,6 +1029,7 @@ function getStatus(options = {}) {
   let schemaVersion = null;
   let currentRun = null;
   let lastPromotedRun = null;
+  let watchSummary = null;
   if (dbExists && integrityOk) {
     const db = openDatabaseFile(paths.dbPath, { readOnly: true });
     try {
@@ -1033,6 +1042,30 @@ function getStatus(options = {}) {
         "SELECT * FROM runs WHERE status = 'promoted' " +
         'ORDER BY COALESCE(finished_at, started_at) DESC LIMIT 1'
       ).get() || null;
+      watchSummary = {
+        models: tableExists(db, 'models')
+          ? db.prepare('SELECT COUNT(*) AS c FROM models').get().c
+          : null,
+        models_frontier: tableExists(db, 'models')
+          ? db.prepare('SELECT COUNT(*) AS c FROM models WHERE frontier = 1').get().c
+          : null,
+        leads: tableExists(db, 'leads')
+          ? db.prepare(
+            "SELECT status, COUNT(*) AS c FROM leads GROUP BY status"
+          ).all()
+          : null,
+        leads_open: tableExists(db, 'leads')
+          ? db.prepare("SELECT COUNT(*) AS c FROM leads WHERE status = 'open'").get().c
+          : null,
+        watch_facts_domains: tableExists(db, 'watch_facts')
+          ? db.prepare(
+            'SELECT domain, COUNT(*) AS c FROM watch_facts GROUP BY domain ORDER BY domain'
+          ).all()
+          : null,
+        contradictions_open: tableExists(db, 'contradictions')
+          ? db.prepare('SELECT COUNT(*) AS c FROM contradictions WHERE open = 1').get().c
+          : null,
+      };
     } finally {
       db.close();
     }
@@ -1044,6 +1077,7 @@ function getStatus(options = {}) {
     schemaVersion,
     currentRun,
     lastPromotedRun,
+    watch: watchSummary,
     copies: listDatabaseCopies(options),
   };
 }

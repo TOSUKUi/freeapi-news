@@ -1,0 +1,689 @@
+{
+  "version": 1,
+  "windows": {
+    "hot_days": 1,
+    "warm_days": 3,
+    "catchup_days": 30
+  },
+  "frontier_vendors": [
+    "openai",
+    "anthropic",
+    "google",
+    "xai",
+    "deepseek",
+    "qwen",
+    "zai",
+    "moonshot",
+    "minimax",
+    "meta",
+    "bytedance",
+    "tencent",
+    "baidu"
+  ],
+  "vendors": [
+    {
+      "key": "openai",
+      "label": "OpenAI",
+      "tier": 1,
+      "channels": {
+        "blog": null,
+        "x": "https://x.com/OpenAI",
+        "changelog": "https://developers.openai.com/api/docs/changelog",
+        "pricing": "https://openai.com/api/pricing/",
+        "model_catalog": "https://platform.openai.com/docs/models",
+        "hf_org": "openai",
+        "github_orgs": [],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "anthropic",
+      "label": "Anthropic",
+      "tier": 1,
+      "channels": {
+        "blog": "https://www.anthropic.com/news",
+        "x": "https://x.com/AnthropicAI",
+        "changelog": "https://docs.anthropic.com/en/release-notes",
+        "pricing": "https://www.anthropic.com/pricing",
+        "model_catalog": "https://docs.anthropic.com/en/api/models-overview",
+        "hf_org": null,
+        "github_orgs": [
+          "anthropics"
+        ],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "google",
+      "label": "Google (Gemini / AI Studio / Vertex AI)",
+      "tier": 1,
+      "channels": {
+        "blog": "https://blog.google/technology/ai/",
+        "x": "https://x.com/GoogleDeepMind",
+        "changelog": "https://ai.google.dev/gemini-api/docs/changelog",
+        "pricing": "https://ai.google.dev/gemini-api/docs/pricing",
+        "model_catalog": "https://ai.google.dev/gemini-api/docs/models",
+        "hf_org": "google",
+        "github_orgs": [
+          "google-gemini"
+        ],
+        "event_page": "https://io.google/",
+        "banner_url": null
+      }
+    },
+    {
+      "key": "xai",
+      "label": "xAI",
+      "tier": 1,
+      "channels": {
+        "blog": "https://x.ai/news",
+        "x": "https://x.com/xai",
+        "changelog": null,
+        "pricing": "https://x.ai/api",
+        "model_catalog": "https://docs.x.ai/docs/models",
+        "hf_org": "xai",
+        "github_orgs": [
+          "xai-org"
+        ],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "qwen",
+      "label": "Qwen / Alibaba Cloud Model Studio",
+      "tier": 1,
+      "channels": {
+        "blog": "https://qwenlm.github.io/",
+        "x": "https://x.com/Alibaba_Qwen",
+        "changelog": null,
+        "pricing": "https://www.alibabacloud.com/help/en/model-studio/billing-for-model-studio",
+        "model_catalog": "https://www.alibabacloud.com/help/en/model-studio/models",
+        "hf_org": "Qwen",
+        "github_orgs": [
+          "QwenLM"
+        ],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "deepseek",
+      "label": "DeepSeek",
+      "tier": 1,
+      "channels": {
+        "blog": null,
+        "x": "https://x.com/DeepSeek_AI",
+        "changelog": null,
+        "pricing": "https://api-docs.deepseek.com/quick_start/pricing",
+        "model_catalog": "https://api-docs.deepseek.com/models",
+        "hf_org": "deepseek-ai",
+        "github_orgs": [
+          "deepseek-ai"
+        ],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "zai",
+      "label": "Z.ai / GLM",
+      "tier": 1,
+      "channels": {
+        "blog": null,
+        "x": null,
+        "changelog": null,
+        "pricing": "https://docs.z.ai/guides/overview/pricing",
+        "model_catalog": "https://docs.z.ai/guides/overview",
+        "hf_org": "ZhipuAI",
+        "github_orgs": [
+          "zai-org"
+        ],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "moonshot",
+      "label": "Moonshot / Kimi",
+      "tier": 1,
+      "channels": {
+        "blog": null,
+        "x": "https://x.com/MoonshotAI",
+        "changelog": null,
+        "pricing": "https://platform.moonshot.cn/pricing",
+        "model_catalog": "https://platform.moonshot.cn/docs/pricing/chat",
+        "hf_org": "moonshotai",
+        "github_orgs": [],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "minimax",
+      "label": "MiniMax",
+      "tier": 1,
+      "channels": {
+        "blog": "https://www.minimaxi.com/news",
+        "x": "https://x.com/MiniMax_AI",
+        "changelog": null,
+        "pricing": "https://www.minimaxi.com/pricing",
+        "model_catalog": "https://platform.minimaxi.com/document/pricing",
+        "hf_org": null,
+        "github_orgs": [],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "meta",
+      "label": "Meta",
+      "tier": 1,
+      "channels": {
+        "blog": "https://ai.meta.com/blog/",
+        "x": "https://x.com/aiatmeta",
+        "changelog": null,
+        "pricing": null,
+        "model_catalog": "https://ai.meta.com/llama/",
+        "hf_org": "meta-llama",
+        "github_orgs": [
+          "meta-llama"
+        ],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "nvidia",
+      "label": "NVIDIA",
+      "tier": 1,
+      "channels": {
+        "blog": "https://blogs.nvidia.com/blog/category/deep-learning/",
+        "x": null,
+        "changelog": null,
+        "pricing": "https://build.nvidia.com/explore/discover",
+        "model_catalog": "https://build.nvidia.com/explore/discover",
+        "hf_org": null,
+        "github_orgs": [],
+        "event_page": "https://www.nvidia.com/en-us/gtc/",
+        "banner_url": null
+      }
+    },
+    {
+      "key": "mistral",
+      "label": "Mistral AI",
+      "tier": 1,
+      "channels": {
+        "blog": "https://mistral.ai/news",
+        "x": "https://x.com/mistralai",
+        "changelog": "https://docs.mistral.ai/getting-started/changelog/",
+        "pricing": "https://mistral.ai/pricing",
+        "model_catalog": "https://docs.mistral.ai/getting-started/models/models_overview/",
+        "hf_org": "mistralai",
+        "github_orgs": [
+          "mistralai"
+        ],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "cohere",
+      "label": "Cohere",
+      "tier": 1,
+      "channels": {
+        "blog": "https://cohere.com/blog",
+        "x": "https://x.com/CohereForAI",
+        "changelog": null,
+        "pricing": "https://cohere.com/pricing",
+        "model_catalog": "https://docs.cohere.com/docs/models",
+        "hf_org": null,
+        "github_orgs": [],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "tencent",
+      "label": "Tencent",
+      "tier": 1,
+      "channels": {
+        "blog": null,
+        "x": null,
+        "changelog": null,
+        "pricing": null,
+        "model_catalog": "https://cloud.tencent.com/document/product/1729/111007",
+        "hf_org": null,
+        "github_orgs": [],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "bytedance",
+      "label": "ByteDance",
+      "tier": 1,
+      "channels": {
+        "blog": null,
+        "x": null,
+        "changelog": null,
+        "pricing": null,
+        "model_catalog": "https://www.volcengine.com/docs/82379",
+        "hf_org": null,
+        "github_orgs": [],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "baidu",
+      "label": "Baidu",
+      "tier": 1,
+      "channels": {
+        "blog": null,
+        "x": null,
+        "changelog": null,
+        "pricing": "https://cloud.baidu.com/doc/WENXINWORKSHOP/s/hlrk4akp7",
+        "model_catalog": "https://cloud.baidu.com/doc/WENXINWORKSHOP/s/2ls0v7htq",
+        "hf_org": null,
+        "github_orgs": [],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "aws_bedrock",
+      "label": "AWS Bedrock",
+      "tier": 1,
+      "channels": {
+        "blog": null,
+        "x": null,
+        "changelog": null,
+        "pricing": "https://aws.amazon.com/bedrock/pricing/",
+        "model_catalog": "https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html",
+        "hf_org": null,
+        "github_orgs": [],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "azure_ai",
+      "label": "Azure AI",
+      "tier": 1,
+      "channels": {
+        "blog": null,
+        "x": null,
+        "changelog": "https://learn.microsoft.com/en-us/azure/foundry/whats-new-foundry",
+        "pricing": "https://azure.microsoft.com/en-us/pricing/details/cognitive-services/openai-service/",
+        "model_catalog": "https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-models/concepts/models",
+        "hf_org": null,
+        "github_orgs": [],
+        "event_page": null,
+        "banner_url": null
+      }
+    },
+    {
+      "key": "github_models",
+      "label": "GitHub Models",
+      "tier": 1,
+      "channels": {
+        "blog": null,
+        "x": null,
+        "changelog": null,
+        "pricing": "https://github.com/features/ai",
+        "model_catalog": "https://docs.github.com/en/github-models",
+        "hf_org": null,
+        "github_orgs": [],
+        "event_page": null,
+        "banner_url": null
+      }
+    }
+  ],
+  "provider_monitors": [
+    {
+      "provider_key": "tokenrouter",
+      "watch": {
+        "new_models": "https://www.tokenrouter.io/models"
+      }
+    },
+    {
+      "provider_key": "requesty",
+      "watch": {
+        "new_models": "https://www.requesty.ai/pricing",
+        "changelog": "https://docs.requesty.ai/changelog"
+      }
+    },
+    {
+      "provider_key": "portkey",
+      "watch": {
+        "new_models": "https://portkey.ai/pricing"
+      }
+    },
+    {
+      "provider_key": "helicone",
+      "watch": {
+        "new_models": "https://www.helicone.ai/pricing"
+      }
+    },
+    {
+      "provider_key": "unify",
+      "watch": {
+        "new_models": "https://www.unify.ai/pricing"
+      }
+    },
+    {
+      "provider_key": "aimlapi",
+      "watch": {
+        "new_models": "https://aimlapi.com/pricing"
+      }
+    },
+    {
+      "provider_key": "cometapi",
+      "watch": {
+        "new_models": "https://www.cometapi.com/pricing"
+      }
+    },
+    {
+      "provider_key": "chutes",
+      "watch": {
+        "new_models": "https://chutes.ai/pricing"
+      }
+    },
+    {
+      "provider_key": "siliconflow",
+      "watch": {
+        "new_models": "https://www.siliconflow.io/pricing"
+      }
+    },
+    {
+      "provider_key": "zenmux",
+      "watch": {
+        "new_models": "https://www.zenmux.ai/pricing"
+      }
+    },
+    {
+      "provider_key": "groq",
+      "watch": {
+        "new_models": "https://groq.com/pricing",
+        "changelog": "https://groq.com/changelog"
+      }
+    },
+    {
+      "provider_key": "together",
+      "watch": {
+        "new_models": "https://www.together.ai/pricing",
+        "changelog": "https://docs.together.ai/docs/changelog"
+      }
+    },
+    {
+      "provider_key": "fireworks",
+      "watch": {
+        "new_models": "https://fireworks.ai/pricing",
+        "changelog": "https://docs.fireworks.ai/updates/changelog"
+      }
+    },
+    {
+      "provider_key": "deepinfra",
+      "watch": {
+        "new_models": "https://deepinfra.com/pricing"
+      }
+    },
+    {
+      "provider_key": "sambanova",
+      "watch": {
+        "new_models": "https://cloud.sambanova.ai/pricing"
+      }
+    },
+    {
+      "provider_key": "nebius",
+      "watch": {
+        "new_models": "https://studio.nebius.com"
+      }
+    },
+    {
+      "provider_key": "novita",
+      "watch": {
+        "new_models": "https://novita.ai/pricing"
+      }
+    },
+    {
+      "provider_key": "hyperbolic",
+      "watch": {
+        "new_models": "https://hyperbolic.ai/pricing"
+      }
+    },
+    {
+      "provider_key": "friendli",
+      "watch": {
+        "new_models": "https://friendli.ai/pricing"
+      }
+    },
+    {
+      "provider_key": "huggingface",
+      "watch": {
+        "new_models": "https://huggingface.co/docs/inference-providers/pricing"
+      }
+    },
+    {
+      "provider_key": "baseten",
+      "watch": {
+        "new_models": "https://www.baseten.co/pricing"
+      }
+    },
+    {
+      "provider_key": "modal",
+      "watch": {
+        "new_models": "https://modal.com/pricing"
+      }
+    },
+    {
+      "provider_key": "runpod",
+      "watch": {
+        "new_models": "https://www.runpod.io/pricing"
+      }
+    },
+    {
+      "provider_key": "nvidia",
+      "watch": {
+        "catalog_api": "https://integrate.api.nvidia.com/v1/models",
+        "free_endpoint_page_template": "https://build.nvidia.com/models/{model_id}/overview"
+      }
+    },
+    {
+      "provider_key": "openrouter",
+      "watch": {
+        "discounted_models": "https://openrouter.ai/collections/discounted-models",
+        "new_models": "https://openrouter.ai/models?fmt=list"
+      }
+    }
+  ],
+  "community": [
+    {
+      "kind": "reddit",
+      "subreddits": [
+        "LocalLLaMA",
+        "LLMDevs",
+        "OpenRouter",
+        "Qwen_AI",
+        "ClaudeCode",
+        "opencodeCLI",
+        "Cline",
+        "cursor",
+        "selfhosted",
+        "MachineLearning"
+      ],
+      "keywords": [
+        "free",
+        "$0",
+        "discount",
+        "promo",
+        "credits",
+        "rate limit",
+        "deprecat",
+        "shutdown",
+        "off-peak"
+      ]
+    },
+    {
+      "kind": "hn",
+      "queries": [
+        "free LLM API",
+        "LLM pricing",
+        "open source LLM",
+        "inference API"
+      ]
+    },
+    {
+      "kind": "github",
+      "repos": [
+        "openai/openai-python",
+        "anthropics/claude-code"
+      ],
+      "orgs": [
+        "openrouter",
+        "deepseek-ai"
+      ]
+    }
+  ],
+  "coding_products": [
+    {
+      "key": "claude_code",
+      "label": "Claude Code",
+      "pricing_url": "https://www.anthropic.com/pricing",
+      "changelog_url": "https://docs.anthropic.com/en/release-notes"
+    },
+    {
+      "key": "codex",
+      "label": "Codex",
+      "pricing_url": "https://developers.openai.com/api/docs/pricing",
+      "changelog_url": "https://help.openai.com/en/articles/6825453-chatgpt-release-notes"
+    },
+    {
+      "key": "cursor",
+      "label": "Cursor",
+      "pricing_url": "https://cursor.com/pricing",
+      "changelog_url": "https://cursor.com/changelog"
+    },
+    {
+      "key": "windsurf",
+      "label": "Windsurf",
+      "pricing_url": "https://windsurf.com/pricing",
+      "changelog_url": "https://windsurf.com/changelog"
+    },
+    {
+      "key": "qoder",
+      "label": "Qoder",
+      "pricing_url": "https://qoder.com/pricing",
+      "changelog_url": null
+    },
+    {
+      "key": "opencode",
+      "label": "OpenCode",
+      "pricing_url": "https://opencode.ai/docs/",
+      "changelog_url": "https://opencode.ai/changelog"
+    },
+    {
+      "key": "cline",
+      "label": "Cline",
+      "pricing_url": "https://cline.bot/#pricing",
+      "changelog_url": "https://github.com/cline/cline/releases"
+    },
+    {
+      "key": "roo_code",
+      "label": "Roo Code",
+      "pricing_url": "https://roocode.com/pricing",
+      "changelog_url": "https://github.com/RooCodeInc/Roo-Code/releases"
+    },
+    {
+      "key": "kilo_code",
+      "label": "Kilo Code",
+      "pricing_url": "https://kilocode.ai/pricing",
+      "changelog_url": "https://github.com/Kilo-Org/kilocode/releases"
+    },
+    {
+      "key": "continue",
+      "label": "Continue",
+      "pricing_url": "https://www.continue.dev/pricing",
+      "changelog_url": "https://github.com/continuedev/continue/releases"
+    },
+    {
+      "key": "aider",
+      "label": "Aider",
+      "pricing_url": "https://aider.chat/docs/leaderboards/",
+      "changelog_url": "https://github.com/Aider-AI/aider/releases"
+    },
+    {
+      "key": "jetbrains_ai",
+      "label": "JetBrains AI",
+      "pricing_url": "https://www.jetbrains.com/ai-ides/buy/",
+      "changelog_url": "https://blog.jetbrains.com/ai/"
+    },
+    {
+      "key": "github_copilot",
+      "label": "GitHub Copilot",
+      "pricing_url": "https://github.com/features/copilot/plans",
+      "changelog_url": "https://github.blog/changelog/label/copilot/"
+    },
+    {
+      "key": "mimo_claw",
+      "label": "MiMo Claw",
+      "pricing_url": "https://mimo.xiaomi.com/",
+      "changelog_url": null
+    }
+  ],
+  "credit_programs": [
+    {
+      "key": "google_for_startups",
+      "label": "Google for Startups Cloud",
+      "url": "https://cloud.google.com/startup"
+    },
+    {
+      "key": "microsoft_for_startups",
+      "label": "Microsoft for Startups",
+      "url": "https://www.microsoft.com/startups"
+    },
+    {
+      "key": "aws_activate",
+      "label": "AWS Activate",
+      "url": "https://aws.amazon.com/startups/programs/activate/"
+    },
+    {
+      "key": "nvidia_inception",
+      "label": "NVIDIA Inception",
+      "url": "https://www.nvidia.com/en-us/startups/"
+    },
+    {
+      "key": "cloudflare_for_startups",
+      "label": "Cloudflare for Startups",
+      "url": "https://www.cloudflare.com/startups/"
+    },
+    {
+      "key": "oracle_for_startups",
+      "label": "Oracle for Startups",
+      "url": "https://www.oracle.com/startup/"
+    },
+    {
+      "key": "digitalocean_hatch",
+      "label": "DigitalOcean Hatch",
+      "url": "https://www.digitalocean.com/startups"
+    },
+    {
+      "key": "github_for_startups",
+      "label": "GitHub for Startups",
+      "url": "https://github.com/startups"
+    },
+    {
+      "key": "huggingface",
+      "label": "Hugging Face Credits",
+      "url": "https://huggingface.co/credits"
+    },
+    {
+      "key": "accelerator_student_research",
+      "label": "Accelerator / Student / Research Programs",
+      "url": "https://www.google.com/search?q=AI+inference+startup+credits+program"
+    }
+  ]
+}

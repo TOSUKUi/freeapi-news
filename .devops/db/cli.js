@@ -27,6 +27,7 @@ const assemble = require('./assemble');
 const publication = require('./publication');
 const collect = require('./collect');
 const importLegacy = require('./import-legacy');
+const researchWatchlist = require('../../build/research-watchlist');
 
 function flagValues(flags, name) {
   const values = [];
@@ -59,6 +60,9 @@ const USAGE = [
   '  candidate-view <run_dir>  write the deterministic candidate view for the classifier and editor',
   '  assemble <run_id> <run_dir>  assemble the staged report.json from SQLite state and prose',
   '  set-hidden <provider_key> <exact_model_id> <true|false>  change the operator publication flag',
+  '  watch:list [<domain>]           list research watchlist entries (spec 0008)',
+  '  watch:add <domain> <json>       add or replace a schema validated watchlist entry',
+  '  watch:remove <domain> <key>     remove a watchlist entry',
   '  collect [--dry-run] [--push] [--skip-citation] [--vision] [--model <id>] [--benchmark <name>]  run the full fail safe pipeline',
   '  validate-candidate <run_id> <run_dir>  validate candidate, build HTML and OG, record manifest',
   '  promote <run_id> <run_dir>  promote validated candidate to canonical tracked files',
@@ -263,6 +267,68 @@ function main() {
         value === 'true' || value === '1'
       );
       console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+    case 'watch:list': {
+      const domain = flags[0];
+      const data = researchWatchlist.loadWatchlist();
+      if (domain) {
+        if (domain === 'frontier_vendors') {
+          console.log(JSON.stringify(data.frontier_vendors, null, 2));
+          return;
+        }
+        if (!researchWatchlist.DOMAIN_KEYS.includes(domain)) {
+          console.error(`watch:list domain must be one of ${[...researchWatchlist.DOMAIN_KEYS, 'frontier_vendors'].join(', ')}`);
+          process.exitCode = 1;
+          return;
+        }
+        console.log(JSON.stringify(data[domain], null, 2));
+        return;
+      }
+      console.log(JSON.stringify({
+        path: researchWatchlist.WATCHLIST_PATH,
+        version: data.version,
+        windows: data.windows,
+        counts: Object.fromEntries(
+          Object.keys(data)
+            .filter((key) => Array.isArray(data[key]))
+            .map((key) => [key, data[key].length])
+        ),
+      }, null, 2));
+      return;
+    }
+    case 'watch:add': {
+      const [domain, rawJson] = flags;
+      if (!domain || rawJson === undefined) {
+        console.error('watch:add requires <domain> <json>');
+        process.exitCode = 1;
+        return;
+      }
+      let entry;
+      try {
+        entry = JSON.parse(rawJson);
+      } catch (err) {
+        console.error(`watch:add json is not valid JSON: ${err.message}`);
+        process.exitCode = 1;
+        return;
+      }
+      const data = researchWatchlist.loadWatchlist();
+      const next = researchWatchlist.addEntry(data, domain, entry);
+      researchWatchlist.writeWatchlist(next);
+      console.log(JSON.stringify({ added: domain, key: entry.key || entry.provider_key || entry.kind }, null, 2));
+      return;
+    }
+    case 'watch:remove': {
+      const [domain, key] = flags;
+      if (!domain || !key) {
+        console.error('watch:remove requires <domain> <key>');
+        process.exitCode = 1;
+        return;
+      }
+      const data = researchWatchlist.loadWatchlist();
+      const next = researchWatchlist.removeEntry(data, domain, key);
+      researchWatchlist.writeWatchlist(next);
+      console.log(JSON.stringify({ removed: domain, key }, null, 2));
       return;
     }
     case 'collect': {

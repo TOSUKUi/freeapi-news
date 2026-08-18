@@ -116,8 +116,8 @@ test('migrations create the tables and are idempotent', (t) => {
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
 
   const first = db.applyMigrations(ctx.options);
-  assert.deepEqual(first.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-  assert.equal(first.schemaVersion, 9);
+  assert.deepEqual(first.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.equal(first.schemaVersion, 10);
 
   const raw = openRaw(ctx);
   let names;
@@ -141,7 +141,7 @@ test('migrations create the tables and are idempotent', (t) => {
 
   const second = db.applyMigrations(ctx.options);
   assert.deepEqual(second.applied, []);
-  assert.equal(second.schemaVersion, 9);
+  assert.equal(second.schemaVersion, 10);
 });
 
 test('operator hidden flag survives catalog upserts and can be changed explicitly', (t) => {
@@ -733,7 +733,7 @@ test('getStatus reports schema, runs, and copies', (t) => {
   const mid = db.getStatus(ctx.options);
   assert.equal(mid.dbExists, true);
   assert.equal(mid.integrityOk, true);
-  assert.equal(mid.schemaVersion, 9);
+  assert.equal(mid.schemaVersion, 10);
   assert.equal(mid.currentRun.run_id, 'run-1');
   assert.equal(mid.lastPromotedRun, null);
   assert.equal(mid.copies.length, 1);
