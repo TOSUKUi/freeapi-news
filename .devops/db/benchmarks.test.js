@@ -100,6 +100,70 @@ function benchmarkRowsFor(ctx, canonicalModelId) {
   }
 }
 
+const BULK_FIXTURE_20 = `
+<h1>Terminal-Bench 2.0</h1><table><tbody>
+<tr><td></td><td>1</td><td>Agent A</td><td>Acme Model</td><td>2026-08-01</td><td>Acme</td><td>Acme</td><td>61.5 % ± 1.0</td></tr>
+</tbody></table>`;
+
+const BULK_FIXTURE_21 = `
+<h1>Terminal-Bench 2.1</h1><table><tbody>
+<tr><td>1</td><td>Agent B</td><td>GPT-5.5</td><td>high</td><td>83.1% ± 1.1%</td><td>Aug 2, 2026</td><td>OpenAI</td><td>OpenAI</td><td>#1</td><td>0%</td><td>$10</td></tr>
+</tbody></table>`;
+
+test('bulk leaderboard parser fetches each official version once and matches queued models', async (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  const queue = {
+    queued: 3,
+    queue: [
+      {
+        canonical_model_id: 'openai/gpt-5.5',
+        model_name: 'GPT-5.5',
+        facts: { model_name: 'GPT-5.5' },
+        offer_ids: [{ provider_key: 'openrouter', exact_model_id: 'openai/gpt-5.5:free' }],
+        metadata_hash: 'a'.repeat(64),
+      },
+      {
+        canonical_model_id: 'acme/acme-model',
+        model_name: 'Acme Model',
+        facts: { model_name: 'Acme Model' },
+        offer_ids: [{ provider_key: 'openrouter', exact_model_id: 'acme/acme-model:free' }],
+        metadata_hash: 'b'.repeat(64),
+      },
+      {
+        canonical_model_id: 'unlisted/model',
+        model_name: 'Unlisted Model',
+        facts: { model_name: 'Unlisted Model' },
+        offer_ids: [{ provider_key: 'openrouter', exact_model_id: 'unlisted/model:free' }],
+        metadata_hash: 'c'.repeat(64),
+      },
+    ],
+  };
+  const result = await benchmarks.collectBulkBenchmarkFacts(queue, {
+    ...ctx.options,
+    now: '2026-08-09T00:00:00.000Z',
+    fetchImpl: async (url) => ({
+      status: 200,
+      url,
+      headers: { get: () => null },
+      body: url.endsWith('/2.1') ? BULK_FIXTURE_21 : BULK_FIXTURE_20,
+    }),
+  });
+  assert.equal(result.fetches.length, 2);
+  assert.equal(result.fetches.filter((entry) => entry.ok).length, 2);
+  assert.equal(result.rows.length, 2);
+  assert.equal(result.accepted.length, 2);
+  assert.deepEqual(result.notFoundModels, ['unlisted/model']);
+  assert.deepEqual(result.changes.map((change) => change.canonical_model_id).sort(), [
+    'acme/acme-model', 'openai/gpt-5.5',
+  ]);
+  assert.deepEqual(result.changes.map((change) => change.score).sort((a, b) => a - b), [61.5, 83.1]);
+  assert.deepEqual(result.searchChanges.map((change) => change.result).sort(), ['found', 'found', 'not_found']);
+  assert.equal(result.unresolved.length, 0);
+  assert.equal(result.changes.every((change) => change.facts_json.origin === 'benchmark_bulk'), true);
+});
+
 // Starts a run whose manifest mirrors the benchmark queue chunks, so scout
 // artifacts carry real assigned model ids.
 function startScoutRun(ctx, runId) {
@@ -230,6 +294,48 @@ test('a newly admitted catalog model is queued while an existing gate score is r
   assert.equal(queue.queue[0].newly_discovered, true);
   assert.equal(queue.queue.some((entry) => entry.canonical_model_id === 'acme/scored'), false,
     'the existing Terminal Bench gate fact is reused instead of queued');
+});
+
+test('a completed found search is not repeated without a metadata change (AC-7)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [offerSeed()]);
+  db.startRun('seed-search', [], ctx.options);
+  db.finalizeRun('seed-search', {
+    benchmarkSearches: [{
+      canonical_model_id: 'acme/a',
+      last_searched_at: '2026-07-30T00:00:00.000Z',
+      result: 'found',
+      metadata_hash: null,
+    }],
+    runStatus: 'promoted',
+  }, ctx.options);
+
+  assert.deepEqual(benchmarks.buildBenchmarkQueue(ctx.options).queue, [],
+    'a found-but-unaccepted search must not burn tokens again every day');
+  assert.deepEqual(
+    benchmarks.buildBenchmarkQueue({ ...ctx.options, forceModelIds: ['acme/a'] })
+      .queue.map((entry) => entry.canonical_model_id),
+    ['acme/a'],
+    'an operator can explicitly re-search a completed model'
+  );
+
+  db.startRun('seed-search-metadata-change', [], ctx.options);
+  db.finalizeRun('seed-search-metadata-change', {
+    benchmarkSearches: [{
+      canonical_model_id: 'acme/a',
+      last_searched_at: '2026-07-31T00:00:00.000Z',
+      result: 'found',
+      metadata_hash: 'stale-metadata',
+    }],
+    runStatus: 'promoted',
+  }, ctx.options);
+  assert.deepEqual(
+    benchmarks.buildBenchmarkQueue(ctx.options).queue.map((entry) => entry.canonical_model_id),
+    ['acme/a'],
+    'a changed model metadata reopens a prior found search'
+  );
 });
 
 test('hidden offers are not added to the benchmark research queue', (t) => {

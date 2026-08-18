@@ -4,7 +4,7 @@ You make the FINAL `classification` decision for each candidate. The determinist
 
 ## Input (read-only, no fetch, no web search)
 
-- `state/crawl/<run_id>/reduced/candidate-view.json` — `candidates[]`, each with `offer_key`, `name`, verbatim `free_limits`, the provisional `classification`, `benchmark.tier`, and `delivery_type`.
+- `state/crawl/<run_id>/reduced/candidate-view.json` — `candidates[]`, each with `offer_key`, `name`, `description`, verbatim `free_limits`, `registration_conditions`, `training_use`, the provisional `classification`, `benchmark.tier`, and `delivery_type`.
 
 **Work only from this file.** Do not fetch URLs or run searches.
 
@@ -36,7 +36,7 @@ One entry per candidate, matched by the candidate's `offer_key` verbatim. `offer
 - `C_LIMITED_FREE` — free but with a hard cap that does not renew generously.
 - `D_TRIAL_CREDIT` — one-time trial credits or a time-boxed trial that expires.
 - `E_DISCOUNT` — paid, but discounted / off-peak pricing.
-- `F_CONDITIONAL` — free quota requires training-data or data-sharing consent. Make this explicit.
+- `F_CONDITIONAL` — access requires training-data, data-sharing, or similar data contribution consent. Make this explicit. This includes catalog entries explicitly marked as a Contributor or Data Used for Training variant, even when the variant is represented as a cheaper paid API model.
 - `G_FREE_LIKE` — free access only inside a consumer app / web chat / playground while the API itself is paid. This is NOT a free API.
 
 ## Confidence

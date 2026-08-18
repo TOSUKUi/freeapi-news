@@ -47,7 +47,7 @@ function catalogBody(entries) {
   return JSON.stringify({ data: entries });
 }
 
-test('parseDecimalPrice accepts decimal strings and rejects everything else', () => {
+test('parseDecimalPrice accepts decimal strings and JSON numbers', () => {
   assert.equal(catalog.parseDecimalPrice('0'), 0);
   assert.equal(catalog.parseDecimalPrice('0.0'), 0);
   assert.equal(catalog.parseDecimalPrice('0.00000000'), 0);
@@ -59,7 +59,9 @@ test('parseDecimalPrice accepts decimal strings and rejects everything else', ()
   assert.equal(catalog.parseDecimalPrice('abc'), null);
   assert.equal(catalog.parseDecimalPrice('0x10'), null, 'hex is not a decimal string');
   assert.equal(catalog.parseDecimalPrice('1e400'), null, 'overflow is not finite');
-  assert.equal(catalog.parseDecimalPrice(0), null, 'numbers are not decimal strings');
+  assert.equal(catalog.parseDecimalPrice(0), 0, 'official catalogs may use JSON numbers');
+  assert.equal(catalog.parseDecimalPrice(0.1), 0.1);
+  assert.equal(catalog.parseDecimalPrice(Number.POSITIVE_INFINITY), null);
   assert.equal(catalog.parseDecimalPrice(null), null);
   assert.equal(catalog.parseDecimalPrice(undefined), null);
 });
@@ -110,6 +112,43 @@ test('validateCatalogResponse accepts a mixed price catalog and flags free model
   assert.equal(byId['acme/fast:free'].pricing_hash, byId['acme/slow:free'].pricing_hash);
 });
 
+test('validateCatalogResponse accepts NanoGPT style numeric prices and metadata', () => {
+  const check = catalog.validateCatalogResponse({ data: [{
+    id: 'meta/muse-spark-1.2-contributor',
+    name: 'Muse Spark 1.2 Contributor (Data Used for Training)',
+    owned_by: 'meta',
+    description: 'Prompts and outputs may be used for training.',
+    context_length: 1000000,
+    max_output_tokens: 65536,
+    capabilities: { vision: true, tool_calling: true },
+    created: 1785888000,
+    pricing: {
+      prompt: 0.1,
+      completion: 0.2,
+      currency: 'USD',
+      unit: 'per_million_tokens',
+    },
+  }] });
+  assert.equal(check.ok, true);
+  assert.equal(check.entries[0].prompt, 0.1);
+  assert.equal(check.entries[0].completion, 0.2);
+  assert.equal(check.entries[0].context_tokens, 1000000);
+  assert.equal(check.entries[0].max_output_tokens, 65536);
+  assert.equal(check.entries[0].description, 'Prompts and outputs may be used for training.');
+  assert.equal(check.entries[0].release_date, '2026-08-05');
+});
+
+test('validateCatalogResponse preserves entries without published prices', () => {
+  const check = catalog.validateCatalogResponse({ data: [
+    { id: 'unpriced-model', name: 'Unpriced model' },
+    { id: 'priced-model', pricing: { prompt: 0.1, completion: 0.2 } },
+  ] });
+  assert.equal(check.ok, true);
+  assert.equal(check.entries[0].price_known, false);
+  assert.equal(check.entries[0].prompt, null);
+  assert.equal(check.entries[1].price_known, true);
+});
+
 test('validateCatalogResponse rejects malformed shapes', () => {
   const cases = [
     [null, 'not a JSON object'],
@@ -119,8 +158,7 @@ test('validateCatalogResponse rejects malformed shapes', () => {
     [{ data: [] }, 'empty'],
     [{ data: [{ id: 'a', pricing: { prompt: '0', completion: '0' } }, { id: 'a', pricing: { prompt: '0', completion: '0' } }] }, 'duplicate'],
     [{ data: [{ id: 42, pricing: { prompt: '0', completion: '0' } }] }, 'id is not a non empty string'],
-    [{ data: [{ id: 'a', pricing: { prompt: 0, completion: '0' } }] }, 'prompt price is not a parseable decimal string'],
-    [{ data: [{ id: 'a', pricing: { prompt: '0', completion: 'free' } }] }, 'completion price is not a parseable decimal string'],
+    [{ data: [{ id: 'a', pricing: { prompt: '0', completion: 'free' } }] }, 'completion price is not a parseable decimal value'],
     [{ data: [{ id: 'a', pricing: { prompt: '0', completion: '0' } }, 'junk'] }, 'not an object'],
   ];
   for (const [payload, needle] of cases) {

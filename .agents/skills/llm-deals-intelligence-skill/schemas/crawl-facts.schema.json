@@ -48,6 +48,56 @@
           "model_name": {
             "type": "string"
           },
+          "description": {
+            "type": "string"
+          },
+          "context_tokens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "capabilities": {
+            "type": "object",
+            "properties": {
+              "vision": {
+                "type": "boolean"
+              },
+              "image_input": {
+                "type": "boolean"
+              },
+              "video_input": {
+                "type": "boolean"
+              },
+              "audio_input": {
+                "type": "boolean"
+              },
+              "tool_calling": {
+                "type": "boolean"
+              },
+              "parallel_tool_calls": {
+                "type": "boolean"
+              },
+              "structured_output": {
+                "type": "boolean"
+              },
+              "pdf_upload": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "training_use": {
+            "type": "string"
+          },
+          "registration_conditions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "release_date": {
             "type": [
               "string",
@@ -233,12 +283,23 @@
           {
             "if": {
               "anyOf": [
-                { "required": ["discount_start_at"] },
-                { "required": ["discount_end_at"] }
+                {
+                  "required": [
+                    "discount_start_at"
+                  ]
+                },
+                {
+                  "required": [
+                    "discount_end_at"
+                  ]
+                }
               ]
             },
             "then": {
-              "required": ["discount_start_at", "discount_end_at"]
+              "required": [
+                "discount_start_at",
+                "discount_end_at"
+              ]
             }
           }
         ],
@@ -269,64 +330,6 @@
           },
           "reason": {
             "type": "string"
-          }
-        },
-        "additionalProperties": false
-      }
-    },
-    "source_candidates": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "category",
-          "label",
-          "source_url",
-          "provider_key",
-          "model_id"
-        ],
-        "properties": {
-          "category": {
-            "type": "string"
-          },
-          "label": {
-            "type": "string"
-          },
-          "source_url": {
-            "type": "string"
-          },
-          "parent_label": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "reason": {
-            "type": "string"
-          },
-          "provider_key": {
-            "type": "string"
-          },
-          "provider_label": {
-            "type": "string"
-          },
-          "model_id": {
-            "type": "string"
-          },
-          "fact_text": {
-            "type": "string"
-          },
-          "pricing_text": {
-            "type": "string"
-          },
-          "benchmark_name": {
-            "type": "string"
-          },
-          "benchmark_version": {
-            "type": "string"
-          },
-          "benchmark_score": {
-            "type": "number"
           }
         },
         "additionalProperties": false

@@ -12,8 +12,10 @@
 //
 // Rules (AC-6):
 //   * Validate HTTP success, JSON object shape, nonempty data, unique string
-//     ids, and decimal string prices that parse to finite numbers. Any
-//     violation marks the catalog unavailable and preserves prior offers.
+//     ids, and paired prices when a catalog publishes them. Prices may be
+//     decimal strings or JSON numbers. Invalid pairs make the catalog
+//     unavailable and preserve prior offers; entries without prices remain
+//     present for liveness but cannot be admitted.
 //   * Free means parsed prompt price equals positive zero AND parsed
 //     completion price equals positive zero. "0", "0.0", and "0.00000000"
 //     are equivalent; "-0" is not positive zero.
@@ -33,12 +35,17 @@ const crypto = require('node:crypto');
 
 const db = require('./collector-db');
 
-// Decimal strings only. Rejects "", "abc", hex ("0x10"), and bare signs so
-// Number() edge cases never reach the free check. Exponents are allowed
-// ("1e-9" is a decimal string); Infinity fails the finite check afterwards.
+// Catalogs commonly serialize prices as decimal strings (OpenRouter), but
+// some official OpenAI compatible catalogs serialize the same per-million
+// values as JSON numbers (NanoGPT). Accept both representations while still
+// rejecting NaN, Infinity, hex, bare signs, and non-finite values before the
+// free check.
 const DECIMAL_PATTERN = /^[+-]?(\d+(\.\d+)?|\.\d+)([eE][+-]?\d+)?$/;
 
 function parseDecimalPrice(value) {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   if (!DECIMAL_PATTERN.test(trimmed)) return null;
@@ -94,30 +101,67 @@ function validateCatalogResponse(json) {
     }
     seen.add(item.id);
     const pricing = item.pricing && typeof item.pricing === 'object' ? item.pricing : {};
-    const prompt = parseDecimalPrice(pricing.prompt);
-    const completion = parseDecimalPrice(pricing.completion);
-    if (prompt === null) {
-      errors.push(`data[${index}] (${item.id}) prompt price is not a parseable decimal string: ${JSON.stringify(pricing.prompt)}`);
+    const hasPrompt = pricing.prompt !== undefined && pricing.prompt !== null;
+    const hasCompletion = pricing.completion !== undefined && pricing.completion !== null;
+    const prompt = hasPrompt ? parseDecimalPrice(pricing.prompt) : null;
+    const completion = hasCompletion ? parseDecimalPrice(pricing.completion) : null;
+    if (hasPrompt && prompt === null) {
+      errors.push(`data[${index}] (${item.id}) prompt price is not a parseable decimal value: ${JSON.stringify(pricing.prompt)}`);
     }
-    if (completion === null) {
-      errors.push(`data[${index}] (${item.id}) completion price is not a parseable decimal string: ${JSON.stringify(pricing.completion)}`);
+    if (hasCompletion && completion === null) {
+      errors.push(`data[${index}] (${item.id}) completion price is not a parseable decimal value: ${JSON.stringify(pricing.completion)}`);
     }
-    if (prompt === null || completion === null) return;
+    if ((hasPrompt && prompt === null) || (hasCompletion && completion === null)) return;
+    if (hasPrompt !== hasCompletion) {
+      errors.push(`data[${index}] (${item.id}) must provide both prompt and completion prices or neither`);
+      return;
+    }
+    const priceKnown = hasPrompt && hasCompletion;
     const entry = {
       exact_model_id: item.id,
       model_name: typeof item.name === 'string' && item.name ? item.name : item.id,
       prompt,
       completion,
-      prompt_raw: pricing.prompt,
-      completion_raw: pricing.completion,
-      is_free: isPositiveZero(prompt) && isPositiveZero(completion),
-      pricing_hash: db.pricingHash(prompt, completion),
+      prompt_raw: priceKnown ? pricing.prompt : null,
+      completion_raw: priceKnown ? pricing.completion : null,
+      price_known: priceKnown,
+      is_free: priceKnown && isPositiveZero(prompt) && isPositiveZero(completion),
+      pricing_hash: priceKnown ? db.pricingHash(prompt, completion) : null,
     };
+    // Preserve optional detailed catalog facts as evidence. These fields are
+    // additive and provider neutral: they let the assembler show conditions
+    // such as training-data opt in instead of reducing a rich catalog row to
+    // only its price.
+    if (typeof item.description === 'string' && item.description.trim()) {
+      entry.description = item.description.trim();
+    }
+    if (typeof item.owned_by === 'string' && item.owned_by.trim()) {
+      entry.owned_by = item.owned_by.trim();
+    }
+    if (Number.isInteger(item.context_length) && item.context_length >= 0) {
+      entry.context_tokens = item.context_length;
+    }
+    if (Number.isInteger(item.max_output_tokens) && item.max_output_tokens >= 0) {
+      entry.max_output_tokens = item.max_output_tokens;
+    }
+    if (item.capabilities && typeof item.capabilities === 'object' && !Array.isArray(item.capabilities)) {
+      entry.capabilities = { ...item.capabilities };
+    }
+    if (item.pricing && typeof item.pricing.unit === 'string') {
+      entry.pricing_unit = item.pricing.unit;
+    }
+    if (item.pricing && typeof item.pricing.currency === 'string') {
+      entry.pricing_currency = item.pricing.currency;
+    }
     // Some official catalogs publish a release date. Preserve it as raw
     // evidence when present; missing dates remain unknown and are handled by
-    // the benchmark queue's fail-safe policy.
+    // the benchmark queue's fail-safe policy. OpenAI compatible catalogs may
+    // expose only a Unix created timestamp, which is equivalent evidence.
     if (typeof item.release_date === 'string' && item.release_date.trim()) {
       entry.release_date = item.release_date.trim();
+    } else if (Number.isFinite(item.created)) {
+      const created = new Date(Number(item.created) * 1000);
+      if (!Number.isNaN(created.getTime())) entry.release_date = created.toISOString().slice(0, 10);
     }
     entries.push(entry);
   });
@@ -280,11 +324,23 @@ async function fetchCatalogForProvider(task, registryEntry, options = {}) {
   const models = check.entries.map((entry) => ({
     model_id: entry.exact_model_id,
     model_name: cleanModelName(entry.model_name),
-    pricing: { prompt: entry.prompt_raw, completion: entry.completion_raw },
+    pricing: {
+      prompt: entry.prompt_raw,
+      completion: entry.completion_raw,
+      ...(entry.pricing_currency ? { currency: entry.pricing_currency } : {}),
+      ...(entry.pricing_unit ? { unit: entry.pricing_unit } : {}),
+    },
     prompt_price: entry.prompt,
     completion_price: entry.completion,
+    price_known: entry.price_known,
     is_free: entry.is_free,
     pricing_hash: entry.pricing_hash,
+    ...(entry.description ? { description: entry.description } : {}),
+    ...(entry.owned_by ? { owned_by: entry.owned_by } : {}),
+    ...(entry.context_tokens !== undefined ? { context_tokens: entry.context_tokens } : {}),
+    ...(entry.max_output_tokens !== undefined ? { max_output_tokens: entry.max_output_tokens } : {}),
+    ...(entry.capabilities ? { capabilities: entry.capabilities } : {}),
+    ...(entry.release_date ? { release_date: entry.release_date } : {}),
   }));
 
   // Only actually successful fetches become cache evidence (AC-16). The

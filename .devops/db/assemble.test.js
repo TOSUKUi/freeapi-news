@@ -151,6 +151,20 @@ test('provisional classification keeps conditional and trial offers out of true 
     assemble.deriveClassificationProvisional({ pricing_text: 'one-time $5 free trial credit' }),
     'D_TRIAL_CREDIT'
   );
+  const contributorFacts = {
+    model_name: 'Muse Spark 1.2 Contributor (Data Used for Training)',
+    description: 'A cheaper opt-in version. Prompts and outputs may be used for training.',
+  };
+  assert.equal(assemble.deriveClassificationProvisional(contributorFacts), 'F_CONDITIONAL');
+  assert.equal(
+    assemble.deriveClassificationProvisional({ ...contributorFacts, is_free_signal: false }),
+    'F_CONDITIONAL',
+    'a paid contributor variant still carries the data use condition'
+  );
+  assert.match(assemble.deriveTrainingUse(contributorFacts), /学習/);
+  assert.deepEqual(assemble.deriveRegistrationConditions(contributorFacts), [
+    'データ利用（学習・製品改善）への同意が必要な条件付きモデル',
+  ]);
 });
 
 // ── Access kind derivation (spec 0004 AC-4) ─────────────────────

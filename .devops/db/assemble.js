@@ -118,15 +118,54 @@ function deriveParamsB(facts) {
 // report is sane even when the Classifier did not run.
 function deriveClassificationProvisional(facts) {
   const f = facts || {};
-  const text = `${f.free_quota_text || ''} ${f.pricing_text || ''} ${f.params_text || ''} ${f.free_limits || ''}`.toLowerCase();
+  const text = [
+    f.name, f.model_name, f.description, f.free_quota_text, f.pricing_text,
+    f.params_text, f.free_limits, f.training_use,
+    ...(Array.isArray(f.registration_conditions) ? f.registration_conditions : []),
+  ].filter((value) => value !== undefined && value !== null).join(' ').toLowerCase();
+  // A data contribution or training opt in is a material access condition,
+  // even when the worker correctly says the underlying API is paid.
+  // Match both explicit data-sharing wording and catalog descriptions such as
+  // "opt-in version" whose condition is stated later in the sentence.
+  if (/data[\s-]?sharing|share.*data|opt[\s-]?in.*(?:data|training)|(?:data|prompt|output|conversation).*training|data used for training|training.*consent/.test(text)) {
+    return 'F_CONDITIONAL';
+  }
   if (f.is_free_signal === false) return 'G_FREE_LIKE';
-  if (/data[\s-]?sharing|share.*data|opt[\s-]?in.*data|training data/.test(text)) return 'F_CONDITIONAL';
   const recurrent = /per (?:month|day|mo\b)|monthly|daily|every (?:month|day)|毎月|毎日/.test(text);
   if (recurrent && /free|credit|quota|tier/.test(text)) return 'B_PERMANENT_FREE_TIER';
   if (/trial|launch credit|one[\s-]?time|\$?\d+\s*free credit/.test(text)) return 'D_TRIAL_CREDIT';
   if (/discount|\d+\s*% off|limited[\s-]?time.*off/.test(text)) return 'E_DISCOUNT';
   if (/free (?:api|tier|quota|access)|永久.*無料|always[\s-]?free/.test(text)) return 'B_PERMANENT_FREE_TIER';
   return 'G_FREE_LIKE';
+}
+
+// These facts are derived from the fetched official catalog description when
+// a provider exposes a data contribution or training condition. Keeping the
+// condition in typed candidate fields prevents it from disappearing when the
+// model is not a free tier and gives the classifier/editor the exact context.
+function deriveTrainingUse(facts) {
+  const f = facts || {};
+  if (typeof f.training_use === 'string' && f.training_use.trim()) return f.training_use.trim();
+  const text = [f.name, f.model_name, f.description].filter(Boolean).join(' ');
+  if (!/data[\s-]?sharing|opt[\s-]?in.*(?:data|training)|data used for training|(?:prompt|output|conversation).*training/i.test(text)) return null;
+  return 'あり。プロンプトまたは出力が提供元の学習・製品改善に利用される可能性があります。';
+}
+
+function deriveRegistrationConditions(facts) {
+  const f = facts || {};
+  if (Array.isArray(f.registration_conditions)) {
+    return f.registration_conditions.filter((value) => typeof value === 'string' && value.trim()).map((value) => value.trim());
+  }
+  return deriveTrainingUse(facts)
+    ? ['データ利用（学習・製品改善）への同意が必要な条件付きモデル']
+    : [];
+}
+
+function deriveCapability(facts, key) {
+  const capabilities = facts && facts.capabilities;
+  return capabilities && typeof capabilities === 'object' && typeof capabilities[key] === 'boolean'
+    ? capabilities[key]
+    : null;
 }
 
 // Access kind (spec 0004 AC-4): FREE when effective input and output are both
@@ -205,7 +244,13 @@ function buildCandidateView(options = {}) {
     const endpointSource = facts.endpoint_source ||
       (canUseRegistryDocsFallback ? reg.docs_url : null);
     const catalogSource = typeof facts.catalog_url === 'string' ? facts.catalog_url : null;
+    const modelPageSource = reg.delivery_type === 'router' &&
+      typeof reg.model_page_template === 'string' && reg.model_page_template.includes('{model_id}')
+      ? reg.model_page_template.replace('{model_id}', offer.exact_model_id)
+      : null;
     const freeLimits = facts.free_quota_text || facts.free_limits || null;
+    const trainingUse = deriveTrainingUse(facts);
+    const registrationConditions = deriveRegistrationConditions(facts);
     const inCaution = offer.status === 'stale' && (offer.consecutive_failures || 0) >= CAUTION_FAILURES;
 
     // Spec 0004 AC-3: core prices live in typed columns. Price evidence is
@@ -233,12 +278,20 @@ function buildCandidateView(options = {}) {
       model_vendor: modelVendor,
       name,
       model_name: facts.model_name || name,
+      description: typeof facts.description === 'string' ? facts.description : null,
       delivery_type: deliveryType,
       base_url: reg.base_url || null,
       endpoint_source: endpointSource,
       free_limits: freeLimits,
       rate_limits: facts.rate_limits || null,
+      registration_conditions: registrationConditions,
+      training_use: trainingUse,
       free_allowance_rank: deriveAllowance(freeLimits),
+      context_tokens: Number.isInteger(facts.context_tokens) ? facts.context_tokens : null,
+      max_output_tokens: Number.isInteger(facts.max_output_tokens) ? facts.max_output_tokens : null,
+      tool_calling: deriveCapability(facts, 'tool_calling'),
+      structured_output: deriveCapability(facts, 'structured_output'),
+      image_input: deriveCapability(facts, 'vision') ?? deriveCapability(facts, 'image_input'),
       total_parameters_b: deriveParamsB(facts),
       active_parameters_b: typeof facts.active_parameters_b === 'number' ? facts.active_parameters_b : null,
       classification: deriveClassificationProvisional(facts),
@@ -265,7 +318,10 @@ function buildCandidateView(options = {}) {
       last_verified: offer.last_verified_at || null,
       pricing_hash: offer.pricing_hash || null,
       suspicion_score: 0,
-      sources: [endpointSource, catalogSource, ...benchmarkRows.map((row) => row.source_url)]
+      // For router cards the exact model page is the primary citation. It is
+      // generated from the registry template, while only fetched URLs enter
+      // source_cache and endpoint evidence.
+      sources: [modelPageSource, endpointSource, catalogSource, ...benchmarkRows.map((row) => row.source_url)]
         .filter((url) => typeof url === 'string' && /^https?:\/\//.test(url)),
       facts,
     });
@@ -497,7 +553,9 @@ function toPublicOffer(candidate, classification, prose, rank) {
     end_at: candidate.facts.end_at || null,
     end_timezone_known: false,
     regions: [],
-    registration_conditions: [],
+    registration_conditions: Array.isArray(candidate.registration_conditions)
+      ? candidate.registration_conditions
+      : [],
     card_required: null,
     minimum_deposit: null,
     kyc_required: null,
@@ -505,20 +563,20 @@ function toPublicOffer(candidate, classification, prose, rank) {
     refund_policy: null,
     free_limits: candidate.free_limits,
     rate_limits: candidate.rate_limits,
-    context_tokens: typeof candidate.facts.context_tokens === 'number' ? candidate.facts.context_tokens : null,
-    max_output_tokens: typeof candidate.facts.max_output_tokens === 'number' ? candidate.facts.max_output_tokens : null,
-    tool_calling: null,
-    structured_output: null,
-    image_input: null,
+    context_tokens: candidate.context_tokens ?? (typeof candidate.facts.context_tokens === 'number' ? candidate.facts.context_tokens : null),
+    max_output_tokens: candidate.max_output_tokens ?? (typeof candidate.facts.max_output_tokens === 'number' ? candidate.facts.max_output_tokens : null),
+    tool_calling: candidate.tool_calling ?? null,
+    structured_output: candidate.structured_output ?? null,
+    image_input: candidate.image_input ?? null,
     base_url: candidate.base_url,
     model_id: candidate.exact_model_id,
     provider_count: null,
-    recent_activity: (prose && prose.summary) || null,
+    recent_activity: (prose && prose.summary) || candidate.description || null,
     normal_price_per_million: candidate.normal_price_per_million || null,
     effective_price_per_million: candidate.effective_price_per_million || null,
     effective_discount_percent: null,
     data_retention: null,
-    training_use: null,
+    training_use: candidate.training_use || null,
     suspicion_score: candidate.suspicion_score,
     suspicion_reasons: [],
     information_confidence: deriveInformationConfidence(candidate),
@@ -798,6 +856,9 @@ module.exports = {
   deriveDeliveryType,
   deriveAllowance,
   deriveParamsB,
+  deriveTrainingUse,
+  deriveRegistrationConditions,
+  deriveCapability,
   deriveAccessKind,
   priceObject,
   deriveClassificationProvisional,

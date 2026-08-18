@@ -109,20 +109,70 @@ function processAlive(pid) {
 // pi worker runner
 // ---------------------------------------------------------------------------
 
+// Spec 0007: the discovery crawlers hunt news inside a fixed recency window
+// (DISCOVERY_WINDOW_DAYS, default 7). Maps the window to a web-search-plus
+// --time-range value; the worker still filters results against the exact
+// window before reporting a fact.
+function discoveryWindowDays(env = process.env) {
+  const raw = env.DISCOVERY_WINDOW_DAYS;
+  if (raw === undefined || raw === '') return 7;
+  const value = Number.parseInt(raw, 10);
+  return Number.isInteger(value) && value >= 1 ? value : 7;
+}
+
+function windowFromDays(days) {
+  if (days <= 2) return 'day';
+  if (days <= 7) return 'week';
+  if (days <= 31) return 'month';
+  return 'year';
+}
+
+function discoverySearchTimeRange(env = process.env) {
+  return windowFromDays(discoveryWindowDays(env));
+}
+
+// Spec 0007: the two discovery goal crawlers investigate with web search
+// (web-search-plus CLI) and a real browser (pi `browser` tool on the camofox
+// server). The transport text is appended to the role prompt at runtime; the
+// prompt file owns the output contract and the worker budget.
+function discoveryTransportText(spec) {
+  if (!spec.taskId.startsWith('discovery:')) return '';
+  const session = `disc-${db.sanitizeTaskId(spec.taskId)}`;
+  const sessionRule = `Every browser call must pass session: "${session}" so parallel workers stay isolated.`;
+  return '\n\n## Discovery transport (web search + browser)\nThis is a goal-crawler task. Work in this order:\n'
+    + `1. Search: run at most 4 Bash searches phrased for your goal: \`web-search-plus --provider auto --query "<your query>" --time-range ${spec.searchTimeRange || 'week'} --max-results 5 --compact\`. `
+    + 'If the CLI fails or returns nothing usable, fall back to browser search-engine queries (browser action=search, engine=bing, query=<your query>; Google often serves a captcha to this host, so do not use google) and keep at most 5 results per search.\n'
+    + '2. Pick the most promising results. Prefer official provider pages (vendor site, docs, pricing, announcements). Ignore social media, aggregator listicles, and paywalled results unless they link to an official page. A result counts only if its date falls inside the assigned recency window.\n'
+    + '3. Verify with the browser: browser action=open with the URL, then browser action=snapshot to read the page. If a news page links to the official announcement, follow that link ONCE (official domain only) and snapshot that page instead. At most 8 page visits total.\n'
+    + '4. Extract raw facts verbatim from pages you actually saw: exact model id, pricing, free quota, endpoint. Never write a value you did not see on the page.\n'
+    + `5. ${sessionRule}\n`
+    + 'When done (or when the budget is used up): emit json_output once (an empty models[] with status complete is a valid result), then browser action=close_session.\n';
+}
+
 // Runs one pi worker. The role contract (prompts/*.md) is prepended to the
 // runtime parameters; --json-schema/--json-output (via @nqbao/pi-json-schema)
-// force schema conforming output written straight to outputFile. When the
-// worker produces nothing and a failureArtifact is supplied, write it so the
-// deterministic reducer counts the task as failed (not missing).
+// force schema conforming output written straight to outputFile. A worker that
+// exits without a usable JSON output is retried once, because local models can
+// spend their turn researching and miss the final json_output call.
 function runPiWorker(spec, options, baseOpts) {
   const dirs = skillDirs(baseOpts);
   const role = fs.readFileSync(path.join(dirs.promptsDir, spec.roleFile), 'utf8');
   const schema = fs.readFileSync(spec.schemaFile, 'utf8');
-  const fullPrompt = `${role}\n\n---\n\n## This run\n\n${spec.runtime}\n`;
+  const satelliteSearch = process.env.WSP_SATELLITE_URL
+    ? '\n\n## Search transport\nWhen search is needed, use Bash to run the local `web-search-plus` command. '
+      + 'It is configured for satellite mode and is the supported search route for this worker. '
+      + 'Do not call a hosted web_search tool. Example: `web-search-plus --provider auto --query "..." '
+      + '--time-range week --max-results 5 --compact`.\n'
+    : '';
+  const discoveryTransport = discoveryTransportText(spec);
+  const fullPrompt = `${role}\n\n---\n\n## This run\n\n${spec.runtime}\n${satelliteSearch}${discoveryTransport}`;
 
   fs.mkdirSync(path.dirname(spec.outputFile), { recursive: true });
-  const logStream = fs.openSync(spec.logFile, 'w');
 
+  // Spec 0006: only discovery workers get the browser tool. Known, catalog,
+  // benchmark, and editorial workers keep the minimal bash/read/json_output
+  // surface so their sessions stay small and cheap.
+  const isDiscovery = spec.taskId.startsWith('discovery:');
   const args = [
     '--skill', dirs.skillDir,
     '--model', options.piModel,
@@ -131,27 +181,80 @@ function runPiWorker(spec, options, baseOpts) {
     '--json-schema', schema,
     '--json-output', spec.outputFile,
     '--json-fallback', 'force',
-    '-p', fullPrompt,
+    '--no-context-files',
+    '--thinking', 'low',
+    '--tools', isDiscovery ? 'bash,read,json_output,browser' : 'bash,read,json_output',
   ];
+  // The hosted web_search connector does not inherit the local satellite
+  // configuration. Disable it when satellite mode is configured so the model
+  // uses the CLI route described above instead.
+  if (process.env.WSP_SATELLITE_URL) args.push('--exclude-tools', 'web_search');
+  args.push('-p', fullPrompt);
+
+  const retryCount = Math.max(0, Number(spec.retryCount ?? options.workerRetries ?? 1));
+  const spawnWorker = options.spawnImpl || spawn;
+
+  function outputIsUsable() {
+    if (!fs.existsSync(spec.outputFile)) return false;
+    try {
+      const value = JSON.parse(fs.readFileSync(spec.outputFile, 'utf8'));
+      return !!value && typeof value === 'object' && !Array.isArray(value);
+    } catch {
+      return false;
+    }
+  }
 
   return new Promise((resolve) => {
-    const child = spawn('pi', args, {
-      stdio: ['ignore', logStream, logStream],
-      timeout: options.piTimeout * 1000,
-    });
-    const finish = () => {
-      try { fs.closeSync(logStream); } catch { /* ok */ }
-      if (!fs.existsSync(spec.outputFile) && spec.failureArtifact) {
-        fs.writeFileSync(
-          spec.outputFile,
-          `${JSON.stringify(spec.failureArtifact, null, 2)}\n`
-        );
-        options.log(`     └─ ${spec.taskId}: no conforming output, wrote failure artifact`);
+    let attempt = 0;
+    const runAttempt = () => {
+      attempt += 1;
+      try { fs.rmSync(spec.outputFile, { force: true }); } catch { /* best effort */ }
+      const logStream = fs.openSync(spec.logFile, attempt === 1 ? 'w' : 'a');
+      let settled = false;
+      const finish = (exitCode = null, signal = null, error = null) => {
+        if (settled) return;
+        settled = true;
+        try { fs.closeSync(logStream); } catch { /* ok */ }
+        // A timeout/termination may leave a partial fallback JSON file behind;
+        // never accept that as a successful worker result.
+        const usable = !error && exitCode === 0 && !signal && outputIsUsable();
+        const diagnostic = error
+          ? `error=${error.message}`
+          : `exit=${exitCode === null ? 'null' : exitCode} signal=${signal || 'none'}`;
+        try {
+          fs.appendFileSync(spec.logFile,
+            `[worker] attempt ${attempt}/${retryCount + 1} ${diagnostic} output=${usable ? 'ok' : 'missing-or-invalid'}\\n`);
+        } catch { /* diagnostics must not mask the pipeline result */ }
+        const retryable = !error && !signal && exitCode !== null && exitCode !== 143;
+        if (usable || attempt > retryCount || !retryable) {
+          if (!usable && spec.failureArtifact) {
+            fs.writeFileSync(
+              spec.outputFile,
+              `${JSON.stringify(spec.failureArtifact, null, 2)}\\n`
+            );
+            options.log(`     └─ ${spec.taskId}: no conforming output after ${attempt} attempt(s), wrote failure artifact`);
+          }
+          resolve(spec.taskId);
+          return;
+        }
+        runAttempt();
+      };
+      let child;
+      try {
+        child = spawnWorker('pi', args, {
+          stdio: ['ignore', logStream, logStream],
+          // Discovery gets its own budget because it is intentionally more
+          // exploratory than the known-offer, benchmark, and editorial workers.
+          timeout: (spec.timeoutSeconds ?? options.piTimeout) * 1000,
+        });
+      } catch (error) {
+        finish(null, null, error);
+        return;
       }
-      resolve(spec.taskId);
+      child.on('error', (error) => finish(null, null, error));
+      child.on('close', (code, signal) => finish(code, signal));
     };
-    child.on('error', finish);
-    child.on('close', finish);
+    runAttempt();
   });
 }
 
@@ -427,8 +530,12 @@ async function runPipeline(options = {}) {
     skipCitation: false,
     visionCapable: false,
     concurrency: Number(process.env.GLOBAL_CONCURRENCY || 2),
-    piModel: process.env.PI_MODEL || 'litellm/free',
+    piModel: process.env.PI_MODEL || 'litellm/deepseek-v4-flash',
     piTimeout: Number(process.env.PI_TIMEOUT || 1800),
+    // Spec 0006: discovery workers now drive a real browser, so the per-chunk
+    // budget is 5 minutes instead of the old 3 minute curl budget.
+    discoveryTimeout: Number(process.env.DISCOVERY_TIMEOUT || 600),
+    workerRetries: Number(process.env.PI_RETRIES || 1),
     forceModelIds: [],
     forceBenchmarkKeys: [],
     runId: null,
@@ -558,20 +665,26 @@ async function runPipeline(options = {}) {
     log(`[4/9] lane workers (${laneTasks.length} task(s))...`);
     await runPool(laneTasks, opts.concurrency, (task) => {
       const roleFile = task.kind === 'discovery' ? 'discovery-agent.md' : 'crawl-worker.md';
+      const discoveryWindow = discoveryWindowDays();
+      const pricingTargets = manifest.tasks
+        .filter((t) => (t.kind === 'known_refresh' || t.kind === 'catalog') && (t.assigned_model_ids || []).length > 0)
+        .map((t) => ({ provider: t.provider_key, models: t.assigned_model_ids }));
       const runtime = task.kind === 'discovery'
         ? `Task: ${task.task_id}. Manifest: ${path.join(runDir, 'manifest.json')}.\n`
-          + `This task is one chunk of the daily discovery lane; cover exactly this slice and emit one small conforming output.\n`
-          + `Discovery sources (${task.discovery_sources.length}): ${JSON.stringify(task.discovery_sources)}\n`
-          + `Search terms (${task.search_terms.length}): ${JSON.stringify(task.search_terms)}\n`
-          + `Search windows (${task.search_windows.length}): ${JSON.stringify(task.search_windows)}\n`
-          + 'Search exactly these sources, terms, and recency windows from the manifest task snapshot — '
-          + 'do not add or drop any. Look for newly announced models and pricing changes within these windows. '
-          + 'For any unregistered API provider you find, report a provider_candidate with the fetched official base_url, docs_url, and model id form (AC-11).'
+          + 'This is one of two daily discovery crawler sessions; cover exactly this goal and emit one small conforming output.\n'
+          + `Recency window: the last ${discoveryWindow} days only. Facts outside the window do not count.\n`
+          + (task.discovery_goal === 'pricing'
+            ? `Goal: find pricing, free-tier, or promo changes announced within the window for these known providers and models: ${JSON.stringify(pricingTargets)}. `
+              + 'Report each changed model with the new pricing text verbatim. '
+            : 'Goal: find LLM models, API access, or free-tier programs newly announced or newly launched within the window (new provider launches, new model releases, new free access). ')
+          + 'For any unregistered API provider you find, report a provider_candidate with the fetched official base_url, docs_url, and model id form (AC-11). '
+          + 'Do not search benchmark sources or emit benchmark_finds; the dedicated benchmark_scout stage handles benchmark lookup after lane reduction.'
         : `Task: ${task.task_id} (kind: known_refresh). Provider: ${task.provider_key}. `
           + `Assigned model_ids: ${(task.assigned_model_ids || []).join(', ') || '(none)'}. `
           + `Manifest: ${path.join(runDir, 'manifest.json')}. Registry: build/provider-registry.json. `
           + `Cached URLs to try first: ${JSON.stringify((task.cached_urls || []).map((c) => c.url))}. `
-          + 'Re-fetch the official docs for each assigned model and report current facts.';
+          + 'Re-fetch the official docs for each assigned model and report current facts. '
+          + 'Do not search benchmark sources or emit benchmark_finds; the dedicated benchmark_scout stage handles benchmark lookup.';
       return runWorker({
         taskId: task.task_id,
         roleFile,
@@ -579,6 +692,8 @@ async function runPipeline(options = {}) {
         outputFile: db.artifactPathFor(runDir, task.task_id),
         logFile: path.join(runDir, 'logs', `${db.sanitizeTaskId(task.task_id)}.log`),
         runtime,
+        searchTimeRange: task.kind === 'discovery' ? discoverySearchTimeRange() : undefined,
+        timeoutSeconds: task.kind === 'discovery' ? opts.discoveryTimeout : opts.piTimeout,
         failureArtifact: factsFailureArtifact(task.task_id, task.provider_key),
       }, opts, baseOpts);
     });
@@ -612,34 +727,76 @@ async function runPipeline(options = {}) {
       };
     }
 
-    // Benchmark queue + scout workers (only models with no accepted benchmark fact).
+    // Fetch the two complete official leaderboards once, then use targeted
+    // scouts only for aliases that the deterministic matcher cannot resolve.
+    // This removes the old one LLM search session per queued model.
     const queue = benchmarks.buildBenchmarkQueue(baseOpts);
     benchmarks.writeBenchmarkQueue(runDir, queue, baseOpts);
     let benchmarkEvidence = {
       sourceBodies: new Map(), sourceHashes: new Map(), fetchCache: new Map(), fetches: [],
     };
     if (queue.queued > 0) {
-      const scoutTasks = benchmarkScoutModelTasks(queue);
-      db.addRunTasks(runId, scoutTasks.map((task) => ({
-        task_id: task.task_id,
-        kind: task.kind,
-        assigned_model_ids: task.model.offer_ids.map((id) => id.exact_model_id),
-      })), baseOpts);
-      log(`[6/9] benchmark scouts (${scoutTasks.length} model(s), concurrency ${opts.concurrency})...`);
-      benchmarkEvidence = await runBenchmarkScouts({
-        runId, runDir, scoutTasks, dirs, opts, baseOpts, log, queue, runWorker,
-      });
-      const benchmarkTasks = db.loadRunCandidate(runId, baseOpts).tasks
-        .filter((task) => task.kind === 'benchmark_scout');
-      const finalFetches = await benchmarks.fetchBenchmarkSourceBodies(benchmarkTasks, {
-        fetchImpl: opts.evidenceFetchImpl || undefined,
-        sourceBodies: benchmarkEvidence.sourceBodies,
-        sourceHashes: benchmarkEvidence.sourceHashes,
-        fetchCache: benchmarkEvidence.fetchCache,
-      });
-      benchmarkEvidence.fetches.push(...finalFetches.fetches);
+      const bulk = opts.bulkBenchmark
+        ? await opts.bulkBenchmark(queue, runDir, baseOpts)
+        : opts.runWorker
+          // Unit and fixture pipelines inject their workers and must remain
+          // network free. Production uses the deterministic bulk collector.
+          ? {
+            changes: [], searchChanges: [], coveredModels: [], notFoundModels: [],
+            unresolved: queue.queue, accepted: [], rows: [],
+            sourceBodies: new Map(), sourceHashes: new Map(), fetches: [], errors: [],
+          }
+          : await benchmarks.collectBulkBenchmarkFacts(queue, {
+            ...baseOpts,
+            runDir,
+            now: nowIso(),
+            fetchImpl: opts.evidenceFetchImpl || undefined,
+          });
+      benchmarkEvidence.sourceBodies = bulk.sourceBodies;
+      benchmarkEvidence.sourceHashes = bulk.sourceHashes;
+      benchmarkEvidence.fetches.push(...bulk.fetches);
+      if (bulk.changes.length > 0 || bulk.searchChanges.length > 0) {
+        db.finalizeRun(runId, {
+          benchmarks: bulk.changes,
+          benchmarkSearches: bulk.searchChanges,
+        }, baseOpts);
+      }
+      log(`[6/9] bulk leaderboards: ${bulk.accepted.length}/${queue.queued} model(s) matched, `
+        + `${bulk.rows.length} row(s) parsed, ${bulk.errors.length} source error(s)`);
+
+      const covered = new Set(bulk.coveredModels);
+      const remainingQueue = queue.queue.filter((entry) => !covered.has(entry.canonical_model_id));
+      if (remainingQueue.length > 0) {
+        const scoutQueue = { ...queue, queue: remainingQueue, queued: remainingQueue.length };
+        const scoutTasks = benchmarkScoutModelTasks(scoutQueue);
+        db.addRunTasks(runId, scoutTasks.map((task) => ({
+          task_id: task.task_id,
+          kind: task.kind,
+          assigned_model_ids: task.model.offer_ids.map((id) => id.exact_model_id),
+        })), baseOpts);
+        log(`[6/9] targeted benchmark scouts (${scoutTasks.length} unresolved model(s), `
+          + `concurrency ${opts.concurrency})...`);
+        const scoutEvidence = await runBenchmarkScouts({
+          runId, runDir, scoutTasks, dirs, opts, baseOpts, log, queue: scoutQueue, runWorker,
+        });
+        for (const [url, body] of scoutEvidence.sourceBodies) benchmarkEvidence.sourceBodies.set(url, body);
+        for (const [url, hash] of scoutEvidence.sourceHashes) benchmarkEvidence.sourceHashes.set(url, hash);
+        benchmarkEvidence.fetchCache = scoutEvidence.fetchCache;
+        benchmarkEvidence.fetches.push(...scoutEvidence.fetches);
+        const benchmarkTasks = db.loadRunCandidate(runId, baseOpts).tasks
+          .filter((task) => task.kind === 'benchmark_scout');
+        const finalFetches = await benchmarks.fetchBenchmarkSourceBodies(benchmarkTasks, {
+          fetchImpl: opts.evidenceFetchImpl || undefined,
+          sourceBodies: benchmarkEvidence.sourceBodies,
+          sourceHashes: benchmarkEvidence.sourceHashes,
+          fetchCache: benchmarkEvidence.fetchCache,
+        });
+        benchmarkEvidence.fetches.push(...finalFetches.fetches);
+      } else {
+        log('[6/9] targeted benchmark scouts: no unresolved model aliases, skipped');
+      }
     } else {
-      log('[6/9] benchmark scouts: no models without accepted benchmark facts, skipped');
+      log('[6/9] bulk leaderboards: no models without accepted benchmark facts, skipped');
     }
     const benchmarkTasks = db.loadRunCandidate(runId, baseOpts).tasks
       .filter((task) => task.kind === 'benchmark_scout');
@@ -695,6 +852,7 @@ async function runPipeline(options = {}) {
         runtime: `Candidate view: ${path.join(runDir, 'reduced', 'candidate-view.json')}. `
           + `Coverage: ${path.join(runDir, 'reduced', 'lane-coverage.json')}. `
           + `Discovery: ${path.join(runDir, 'reduced', 'discovery-candidates.json')}. `
+          + `Pricing news: ${path.join(runDir, 'reduced', 'discovery-news.json')} (known-offer price/free-tier change news from the discovery pricing crawler; usable in change_prose, never offer data). `
           + 'Write the Japanese prose to editorial.json via json_output conforming to schemas/editorial.schema.json.',
         failureArtifact: null,
       },
@@ -777,6 +935,9 @@ module.exports = {
   runPipeline,
   // exported for tests
   runPool,
+  runPiWorker,
+  discoveryWindowDays,
+  discoverySearchTimeRange,
   runBenchmarkScouts,
   benchmarkScoutModelTasks,
   defaultRunId,

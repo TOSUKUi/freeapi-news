@@ -389,34 +389,20 @@ test('discount dates require exact fetched price body dates, and cache prices ar
   assert.equal(verified.price_source_url, undefined);
 });
 
-test('assigned source health and search term timestamps finalize atomically', async (t) => {
+test('discovery goal tasks carry a goal assignment and finalize without pool state (spec 0007)', async (t) => {
   const c = ctx();
   t.after(() => fs.rmSync(c.root, { recursive: true, force: true }));
   db.applyMigrations(c.options);
-  const raw = db.openCollectorDb(c.options);
-  let term;
-  try {
-    term = raw.prepare('SELECT category, locale, term FROM search_terms WHERE active = 1 LIMIT 1').get();
-    raw.prepare("UPDATE discovery_sources SET source_url = ? WHERE source_key = 'vendor:openai'").run('https://assigned.example/source');
-  } finally { raw.close(); }
-  db.startRun('evidence-health', [{ task_id: 'discovery', kind: 'discovery', assigned_json: {
-    discovery_sources: [{ source_key: 'vendor:openai', source_url: 'https://assigned.example/source' }],
-    search_terms: [term], search_windows: [],
-  } }], c.options);
-  db.finalizeRun('evidence-health', {
-    discoveryAssignments: {
-      attempted_at: '2026-08-01T00:00:00.000Z',
-      sources: [{ source_key: 'vendor:openai', source_url: 'https://assigned.example/source' }],
-      terms: [term], health: [{ source_key: 'vendor:openai', attempted_at: '2026-08-01T00:00:00.000Z', success_at: null, verified: false }],
-    }, runStatus: 'candidate_ready',
-  }, c.options);
+  for (const goal of ['new', 'pricing']) {
+    db.startRun(`evidence-goal-${goal}`, [{ task_id: `discovery:${goal}`, kind: 'discovery', assigned_json: { goal } }], c.options);
+    db.finalizeRun(`evidence-goal-${goal}`, { runStatus: 'candidate_ready' }, c.options);
+  }
   const check = db.openCollectorDb(c.options);
   try {
-    const source = check.prepare("SELECT last_attempted_at, consecutive_failures, priority FROM discovery_sources WHERE source_key = 'vendor:openai'").get();
-    assert.equal(source.last_attempted_at, '2026-08-01T00:00:00.000Z');
-    assert.equal(source.consecutive_failures, 1);
-    const used = check.prepare('SELECT last_used_at FROM search_terms WHERE category = ? AND locale = ? AND term = ?').get(term.category, term.locale, term.term);
-    assert.equal(used.last_used_at, '2026-08-01T00:00:00.000Z');
+    const tables = check.prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('discovery_sources', 'search_terms', 'search_windows')"
+    ).all().map((r) => r.name);
+    assert.deepEqual(tables, [], 'spec 0007 drops the discovery pool tables');
   } finally { check.close(); }
 });
 

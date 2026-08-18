@@ -687,23 +687,6 @@ function loadRunCandidate(runId, options = {}) {
 // Finalization (the one short mutating transaction)
 // ---------------------------------------------------------------------------
 
-const DISCOVERY_SOURCE_CATEGORIES = new Set([
-  'vendor', 'router', 'host', 'product', 'discovery', 'community', 'benchmark', 'watchlist', 'other',
-]);
-
-function validateDiscoverySourceChange(source) {
-  if (!source || typeof source !== 'object') throw new Error('discovery source change must be an object');
-  if (typeof source.source_key !== 'string' || !source.source_key) throw new Error('discovery source requires source_key');
-  if (!DISCOVERY_SOURCE_CATEGORIES.has(source.category)) {
-    throw new Error(`discovery source ${source.source_key} has invalid category ${JSON.stringify(source.category)}`);
-  }
-  if (typeof source.label !== 'string' || !source.label.trim()) throw new Error(`discovery source ${source.source_key} requires label`);
-  if (source.source_url !== null && source.source_url !== undefined &&
-      (typeof source.source_url !== 'string' || !/^https?:\/\//.test(source.source_url))) {
-    throw new Error(`discovery source ${source.source_key} has invalid source_url`);
-  }
-}
-
 function validateOfferChange(offer) {
   const required = ['provider_key', 'exact_model_id', 'canonical_model_id', 'source_kind'];
   for (const field of required) {
@@ -936,98 +919,12 @@ function finalizeRun(runId, changes = {}, options = {}) {
         );
       }
 
-      // Discovery source growth (spec 0004 AC-10): new validated sources are
-      // inserted idempotently; existing rows and their priority are never
-      // removed. Successful use resets the failure count and improves
-      // priority within a bounded range.
-      const upsertSource = db.prepare(
-        'INSERT INTO discovery_sources (' +
-        '  source_key, category, label, source_url, parent_label, active, priority,' +
-        '  added_from, created_at, last_attempted_at, last_success_at, consecutive_failures' +
-        ') VALUES (?, ?, ?, ?, ?, 1, 0, ?, ?, ?, ?, 0) ' +
-        'ON CONFLICT(source_key) DO UPDATE SET' +
-        '  last_success_at = COALESCE(excluded.last_success_at, discovery_sources.last_success_at),' +
-        '  consecutive_failures = 0,' +
-        '  priority = MIN(discovery_sources.priority, 10)'
-      );
-      for (const source of changes.discoverySources || []) {
-        validateDiscoverySourceChange(source);
-        const created = nowIso();
-        upsertSource.run(
-          source.source_key,
-          source.category,
-          source.label,
-          source.source_url ?? null,
-          source.parent_label ?? null,
-          source.added_from ?? null,
-          created,
-          null
-        );
-      }
-
-      // Every assigned source is attempted, including rows with no URL. The
-      // health updates are part of this same finalization transaction; an
-      // irrelevant 2xx is a failed attempt and never becomes cache evidence.
-      const assignment = changes.discoveryAssignments || {};
-      const healthByKey = new Map((assignment.health || []).map((h) => [h.source_key, h]));
-      const assignedSources = Array.isArray(assignment.sources) ? assignment.sources : [];
-      const touchAssignedSource = db.prepare(
-        'UPDATE discovery_sources SET last_attempted_at = ?, ' +
-        'last_success_at = CASE WHEN ? = 1 THEN COALESCE(?, last_success_at) ELSE last_success_at END, ' +
-        'consecutive_failures = CASE WHEN ? = 1 THEN 0 ELSE MIN(consecutive_failures + 1, 2147483647) END, ' +
-        'priority = CASE WHEN ? = 1 THEN MAX(priority - 1, 0) ELSE MIN(priority + 1, 1000) END ' +
-        'WHERE source_key = ? AND active = 1'
-      );
-      for (const source of assignedSources) {
-        if (!source || typeof source.source_key !== 'string') continue;
-        const health = healthByKey.get(source.source_key);
-        const attemptedAt = (health && health.attempted_at) || assignment.attempted_at || nowIso();
-        const successAt = health && health.success_at ? health.success_at : attemptedAt;
-        const verified = health && health.verified === true ? 1 : 0;
-        touchAssignedSource.run(attemptedAt, verified, verified ? successAt : null, verified, verified, source.source_key);
-      }
-      const touchTerm = db.prepare(
-        'UPDATE search_terms SET last_used_at = ? WHERE category = ? AND locale = ? AND term = ? AND active = 1'
-      );
-      for (const term of Array.isArray(assignment.terms) ? assignment.terms : []) {
-        if (!term || typeof term.category !== 'string' || typeof term.locale !== 'string' || typeof term.term !== 'string') continue;
-        touchTerm.run(term._attempted_at || assignment.attempted_at || nowIso(), term.category, term.locale, term.term);
-      }
-
-      // Repeated source failures lower priority without deleting the row
-      // (AC-10): a failed fetch of a known source URL increments its failure
-      // count and raises the priority number so it runs later. Success resets
-      // the count.
-      const touchSourceFailure = db.prepare(
-        'UPDATE discovery_sources SET ' +
-        '  last_attempted_at = COALESCE(?, last_attempted_at),' +
-        '  consecutive_failures = consecutive_failures + 1,' +
-        '  priority = MIN(priority + 1, 1000) ' +
-        'WHERE source_url = ? AND active = 1'
-      );
-      const touchSourceSuccess = db.prepare(
-        'UPDATE discovery_sources SET ' +
-        '  last_attempted_at = COALESCE(?, last_attempted_at),' +
-        '  last_success_at = COALESCE(?, last_success_at),' +
-        '  consecutive_failures = 0,' +
-        '  priority = MAX(priority - 1, 0) ' +
-        'WHERE source_url = ? AND active = 1'
-      );
-      // A fetch is source_cache evidence only when the attempt returned an
-      // integer 2xx status and carried a url, subject_key, content_hash, and
-      // fetched_at (AC-16). Invalid and non-2xx entries are filtered before
-      // source health success handling and before the source_cache upsert, so
-      // they never insert or overwrite a cache row and a failed later attempt
-      // leaves the previous successful row unchanged. A non-2xx attempt may
-      // still count as a source failure when its URL is tied to an existing
-      // discovery source (AC-10); the failure UPDATE matches source_url.
-      const sourceCacheFetches = changes.sourceCache || [];
-      const assignedSourceUrls = new Set((Array.isArray((changes.discoveryAssignments || {}).sources)
-        ? changes.discoveryAssignments.sources : [])
-        .map((source) => source && source.source_url)
-        .filter((url) => typeof url === 'string'));
+      // source_cache records only real fetch evidence: an integer 2xx
+      // status plus url, subject_key, content_hash, and fetched_at.
+      // Spec 0007: discovery no longer maintains a source pool, so a
+      // non-2xx attempt leaves no state behind.
       const evidence = [];
-      for (const fetch of sourceCacheFetches) {
+      for (const fetch of changes.sourceCache || []) {
         if (typeof fetch.url !== 'string' || !fetch.url) continue;
         const hasStatus = Number.isInteger(fetch.http_status);
         const is2xx = hasStatus && fetch.http_status >= 200 && fetch.http_status <= 299;
@@ -1035,14 +932,7 @@ function finalizeRun(runId, changes = {}, options = {}) {
           typeof fetch.subject_key === 'string' && fetch.subject_key.length > 0 &&
           typeof fetch.content_hash === 'string' && fetch.content_hash.length > 0 &&
           typeof fetch.fetched_at === 'string' && fetch.fetched_at.length > 0;
-        if (isEvidence) {
-          evidence.push(fetch);
-          if (!assignedSourceUrls.has(fetch.url)) {
-            touchSourceSuccess.run(fetch.fetched_at, fetch.fetched_at, fetch.url);
-          }
-        } else if (hasStatus && !is2xx && !assignedSourceUrls.has(fetch.url)) {
-          touchSourceFailure.run(fetch.fetched_at || null, fetch.url);
-        }
+        if (isEvidence) evidence.push(fetch);
       }
 
       const upsertCache = db.prepare(

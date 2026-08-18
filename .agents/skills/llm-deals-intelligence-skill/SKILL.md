@@ -82,14 +82,7 @@ For every newly found model or service, create a normalized discovery record:
 - open-weight status
 - known providers
 
-**Benchmark data collection (mandatory):** For every newly discovered model, attempt to collect benchmark scores before proceeding to Phase 1. Check these sources in order:
-
-1. HuggingFace model card (`huggingface.co/{vendor}/{model-name}`) — README often contains a benchmark table.
-2. Vendor technical blog — release posts almost always include benchmark charts or tables.
-3. Official X / social media posts — release-day posts frequently include benchmark comparison images; extract scores from images.
-4. GitHub repository README — may link to a technical report PDF or embed benchmark tables.
-
-If benchmark data is found, include it in the record's `benchmark_finds[]` with the score, the source URL, and (for text) a `body_excerpt` quoting the model, benchmark version, and score. The deterministic pipeline validates the evidence and persists accepted scores to SQLite; a proposal is not a fact until confirmed. If no data is found after checking all four sources, note `benchmark_source_checked` in `errors[]` so downstream phases know the search was performed.
+**Benchmark data collection is a separate stage:** Discovery workers must not perform extra benchmark searches for newly found models. After offer/lane reduction, deterministic code fetches the complete official Terminal-Bench 2.0 and 2.1 leaderboards once each, parses every row, and matches unambiguous model aliases in bulk. Only unresolved aliases enter the `benchmark_scout` queue. A completed search is reused even when proposals are rejected; only a metadata change or explicit force request reopens it.
 
 ### Phase 1 — Search each discovered model for offers
 
@@ -116,7 +109,7 @@ Run searches in English, Japanese, and Chinese where relevant.
 
 ### Phase 2 — Search known providers and aggregators
 
-Check the provider and discovery sources in the collector SQLite tables (`discovery_sources`, `search_terms`, `search_windows`), seeded by migration 0003 from the former `config/sources.yaml` and `config/search_queries.yaml` (spec 0004 AC-13). Use `npm run db:status` or the DB CLI to inspect them; the YAML files are gone.
+Check the registered providers in `build/provider-registry.json` (the canonical list of providers the collector knows about). Discovery no longer keeps a source/term pool (spec 0007): the collector runs two fixed goal crawlers (`discovery:new`, `discovery:pricing`) with web search + browser, and new sources are proposed per-run via the deterministic evidence audit. Use `npm run db:status` to inspect collector state.
 
 For routers and marketplaces, inspect:
 
@@ -309,7 +302,7 @@ If an offer has a known end date, always set `end_at` and `end_timezone_known`. 
 
 ### Tier criteria (S/A)
 
-Tier S/A certifies agentic coding competence and requires **Terminal-Bench 2.0 or 2.1 ≥ 50%** on record. The deterministic assembler derives tier from the verified benchmark rows in SQLite (≥65 S, 50–64.999 A) using the shared ranking policy (`build/ranking-policy.js`); the benchmark scout searches allowed official sources only for models with no accepted benchmark fact. Once a supplemental benchmark is accepted, the model is not searched again merely because Terminal-Bench is absent. A model scoring under 50%, or with no verified Terminal-Bench 2.0/2.1 score, is `benchmark_pending` and unranked (never a rankable tier B). The assembler, validator, and builder all enforce the same shared policy; workers never assign tier.
+Tier S/A certifies agentic coding competence and requires **Terminal-Bench 2.0 or 2.1 ≥ 50%** on record. The deterministic assembler derives tier from the verified benchmark rows in SQLite (≥65 S, 50–64.999 A) using the shared ranking policy (`build/ranking-policy.js`); bulk ingestion fetches the complete official leaderboards once and the benchmark scout searches allowed official sources only for unresolved model aliases. A completed search is not repeated merely because no proposal was accepted; a metadata change can reopen a prior `found` search, and explicit force flags can reopen any search. Once a supplemental benchmark is accepted, the model is not searched again merely because Terminal-Bench is absent. A model scoring under 50%, or with no verified Terminal-Bench 2.0/2.1 score, is `benchmark_pending` and unranked (never a rankable tier B). The assembler, validator, and builder all enforce the same shared policy; workers never assign tier.
 
 ### Free allowance rank (display only)
 
@@ -378,12 +371,13 @@ The daily collection (`.devops/db/collect.js`, driven by `npm run collect` / `fu
 4. Catalog (deterministic)  providers with api_catalog_url fetched from their API
 5. Lane workers (LLM)     known_refresh + discovery, parallel (GLOBAL_CONCURRENCY)
 6. Lane reduction         liveness + enums + promotion gate (zero verified blocks)
-7. Benchmark scout (LLM)  only models with no accepted benchmark fact; proposals validated
-8. Candidate view         deterministic input for classifier + editor
-9. Classifier + editor    final classification; Japanese prose only
-10. Assembly              deterministic report.json from SQLite + prose
-11. Validation + build    schema + live citation re-fetch; HTML + OG in candidate/
-12. Promotion + deploy    phased manifest; canonical files change only after all
+7. Bulk benchmark ingestion (deterministic)  fetch Terminal-Bench 2.0 and 2.1 once each, parse and match all rows
+8. Benchmark scout (LLM)  unresolved aliases only; proposals validated
+9. Candidate view         deterministic input for classifier + editor
+10. Classifier + editor   final classification; Japanese prose only
+11. Assembly              deterministic report.json from SQLite + prose
+12. Validation + build    schema + live citation re-fetch; HTML + OG in candidate/
+13. Promotion + deploy    phased manifest; canonical files change only after all
                           checks pass; push failure keeps validated_not_deployed
 ```
 
@@ -391,9 +385,10 @@ The daily collection (`.devops/db/collect.js`, driven by `npm run collect` / `fu
 
 1. `crawl-worker` (prompts/crawl-worker.md): per-provider facts. Handles known_refresh (re-verify known offers). Emits `crawl-facts.schema.json` facts.
 2. `discovery-agent` (prompts/discovery-agent.md): finds new models and providers. Emits facts; failure never mutates known offers.
-3. `benchmark-scout` (prompts/benchmark-scout.md): finds benchmark scores only for models with no accepted benchmark fact. Emits proposals (`benchmark-scout.schema.json`), confirmed by evidence before becoming facts.
-4. `classifier-agent` (prompts/classifier-agent.md): final classification per candidate. Does NOT fetch.
-5. `editor-agent` (prompts/editor-agent.md): writes Japanese prose only (`editorial.json`). Does NOT fetch, does NOT write data.
+3. Bulk benchmark ingestion (`.devops/db/benchmarks.js`): fetches the official Terminal-Bench 2.0 and 2.1 leaderboards once each, records body hashes, parses all rows, and accepts only deterministic alias matches through the normal evidence validator.
+4. `benchmark-scout` (prompts/benchmark-scout.md): handles unresolved aliases only. A completed search is reused even when all proposals are rejected; metadata changes or explicit force flags are required to search again. Emits proposals (`benchmark-scout.schema.json`), confirmed by evidence before becoming facts.
+5. `classifier-agent` (prompts/classifier-agent.md): final classification per candidate. Does NOT fetch.
+6. `editor-agent` (prompts/editor-agent.md): writes Japanese prose only (`editorial.json`). Does NOT fetch, does NOT write data.
 
 ### Fail-safe guarantees
 

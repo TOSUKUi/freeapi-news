@@ -116,8 +116,8 @@ test('migrations create the tables and are idempotent', (t) => {
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
 
   const first = db.applyMigrations(ctx.options);
-  assert.deepEqual(first.applied, [1, 2, 3, 4, 5, 6, 7]);
-  assert.equal(first.schemaVersion, 7);
+  assert.deepEqual(first.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.equal(first.schemaVersion, 9);
 
   const raw = openRaw(ctx);
   let names;
@@ -131,14 +131,17 @@ test('migrations create the tables and are idempotent', (t) => {
   for (const table of [
     'schema_migrations', 'runs', 'tasks', 'offers',
     'benchmarks', 'benchmark_searches', 'source_cache',
-    'discovery_sources', 'search_terms', 'search_windows',
   ]) {
     assert.ok(names.includes(table), `missing table ${table}`);
+  }
+  // Spec 0007: the discovery source/term pool tables are dropped.
+  for (const table of ['discovery_sources', 'search_terms', 'search_windows']) {
+    assert.ok(!names.includes(table), `pool table ${table} must be dropped`);
   }
 
   const second = db.applyMigrations(ctx.options);
   assert.deepEqual(second.applied, []);
-  assert.equal(second.schemaVersion, 7);
+  assert.equal(second.schemaVersion, 9);
 });
 
 test('operator hidden flag survives catalog upserts and can be changed explicitly', (t) => {
@@ -612,25 +615,14 @@ test('a failed later attempt leaves the previous successful cache row unchanged 
   assert.equal(rows[0].fetched_at, '2026-07-31T00:00:00.000Z', 'stale fetched_at is preserved');
 });
 
-test('non-2xx attempts count as discovery source failures without writing cache (AC-10, AC-16)', (t) => {
+test('non-2xx attempts never write source_cache; 2xx evidence does (AC-16)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   db.applyMigrations(ctx.options);
   db.startRun('run-1', [], ctx.options);
 
-  const url = 'https://example.test/discovery-source';
-  db.finalizeRun('run-1', {
-    discoverySources: [{
-      source_key: 'discovery:example-test',
-      category: 'discovery',
-      label: 'Example Test',
-      source_url: url,
-      parent_label: null,
-      added_from: 'test',
-    }],
-  }, ctx.options);
-
-  const fetch = {
+  const url = 'https://example.test/page';
+  const failedFetch = {
     url,
     subject_key: 'example:subject',
     provider_key: 'example',
@@ -639,22 +631,12 @@ test('non-2xx attempts count as discovery source failures without writing cache 
     http_status: 500,
     content_hash: 'hash-failed',
   };
-  db.finalizeRun('run-1', { sourceCache: [fetch] }, ctx.options);
-
-  let sources = allRows(ctx, 'discovery_sources');
-  const source = sources.find((s) => s.source_key === 'discovery:example-test');
-  assert.ok(source, 'seeded discovery source exists');
-  assert.equal(source.consecutive_failures, 1, 'non-2xx attempt increments the failure count');
-  assert.equal(source.last_attempted_at, '2026-08-01T00:00:00.000Z');
+  db.finalizeRun('run-1', { sourceCache: [failedFetch] }, ctx.options);
   assert.equal(countRows(ctx, 'source_cache'), 0, 'failed fetch never lands in source_cache');
 
   db.finalizeRun('run-1', {
-    sourceCache: [{ ...fetch, http_status: 200, content_hash: 'hash-ok', fetched_at: '2026-08-02T00:00:00.000Z' }],
+    sourceCache: [{ ...failedFetch, http_status: 200, content_hash: 'hash-ok', fetched_at: '2026-08-02T00:00:00.000Z' }],
   }, ctx.options);
-  sources = allRows(ctx, 'discovery_sources');
-  const refreshed = sources.find((s) => s.source_key === 'discovery:example-test');
-  assert.equal(refreshed.consecutive_failures, 0, '2xx evidence resets the failure count');
-  assert.equal(refreshed.last_success_at, '2026-08-02T00:00:00.000Z');
   const cached = allRows(ctx, 'source_cache');
   assert.equal(cached.length, 1);
   assert.equal(cached[0].http_status, 200);
@@ -751,7 +733,7 @@ test('getStatus reports schema, runs, and copies', (t) => {
   const mid = db.getStatus(ctx.options);
   assert.equal(mid.dbExists, true);
   assert.equal(mid.integrityOk, true);
-  assert.equal(mid.schemaVersion, 7);
+  assert.equal(mid.schemaVersion, 9);
   assert.equal(mid.currentRun.run_id, 'run-1');
   assert.equal(mid.lastPromotedRun, null);
   assert.equal(mid.copies.length, 1);
@@ -821,42 +803,31 @@ test('buildPublicReportState returns deterministic current state', (t) => {
   assert.equal(state.lastPromotedRun.run_id, 'run-1');
 });
 
-test('migration 3 seeds discovery configuration once and idempotently (AC-13)', (t) => {
+test('migration 9 drops the discovery pool on a pre-0009 database (spec 0007)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   db.applyMigrations(ctx.options);
 
   const raw = openRaw(ctx);
-  let sources;
-  let terms;
-  let windows;
   let priceColumns;
   try {
-    sources = raw.prepare('SELECT COUNT(*) AS c FROM discovery_sources').get().c;
-    terms = raw.prepare('SELECT COUNT(*) AS c FROM search_terms').get().c;
-    windows = raw.prepare('SELECT COUNT(*) AS c FROM search_windows').get().c;
     priceColumns = raw.prepare(
       "SELECT name FROM pragma_table_info('offers') WHERE name IN " +
       "('effective_input_price_usd', 'effective_output_price_usd', 'price_source_url', 'price_verified_at', 'discount_end_at')"
     ).all().map((r) => r.name);
+    const poolTables = raw.prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN " +
+      "('discovery_sources', 'search_terms', 'search_windows')"
+    ).all().map((r) => r.name);
+    assert.deepEqual(poolTables, [], 'spec 0007 drops the discovery pool tables');
   } finally {
     raw.close();
   }
-  assert.ok(sources >= 100, `expected seeded sources, got ${sources}`);
-  assert.ok(terms >= 40, `expected seeded terms, got ${terms}`);
-  assert.equal(windows, 3);
+  // The offers pricing columns survive the pool removal.
   assert.deepEqual(priceColumns.sort(), ['discount_end_at', 'effective_input_price_usd', 'effective_output_price_usd', 'price_source_url', 'price_verified_at']);
 
-  // Rerun migrations: no data changes.
   const second = db.applyMigrations(ctx.options);
   assert.deepEqual(second.applied, []);
-  const raw2 = openRaw(ctx);
-  try {
-    assert.equal(raw2.prepare('SELECT COUNT(*) AS c FROM discovery_sources').get().c, sources);
-    assert.equal(raw2.prepare('SELECT COUNT(*) AS c FROM search_terms').get().c, terms);
-  } finally {
-    raw2.close();
-  }
 });
 
 test('price columns persist through finalizeRun and survive fetch failure (AC-3, AC-8)', (t) => {
@@ -1024,6 +995,31 @@ test('migration 0004 backfills per-token catalog rows and strips facts (AC-3, AC
     database.exec(`
       CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT);
       INSERT INTO schema_migrations (version, applied_at) VALUES (1, 'x'), (2, 'x'), (3, 'x');
+      CREATE TABLE search_terms (
+        category TEXT NOT NULL,
+        locale TEXT NOT NULL,
+        term TEXT NOT NULL,
+        active INTEGER NOT NULL DEFAULT 1,
+        priority INTEGER NOT NULL DEFAULT 100,
+        added_from TEXT,
+        created_at TEXT NOT NULL,
+        last_used_at TEXT,
+        PRIMARY KEY (category, locale, term)
+      );
+      CREATE TABLE discovery_sources (
+        source_key TEXT PRIMARY KEY,
+        category TEXT NOT NULL,
+        label TEXT NOT NULL,
+        source_url TEXT,
+        parent_label TEXT,
+        active INTEGER NOT NULL DEFAULT 1,
+        priority INTEGER NOT NULL DEFAULT 100,
+        added_from TEXT,
+        created_at TEXT NOT NULL,
+        last_attempted_at TEXT,
+        last_success_at TEXT,
+        consecutive_failures INTEGER NOT NULL DEFAULT 0
+      );
       CREATE TABLE offers (
         provider_key TEXT NOT NULL,
         exact_model_id TEXT NOT NULL,

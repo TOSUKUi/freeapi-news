@@ -19,6 +19,10 @@ Thumbs.db
 .pi-subagents/
 .agents/cache/
 
+# Local browser / runtime scratch
+.playwright-cli/
+editorial.json
+
 # AI workflow skills are local tooling, not project source.
 # Track only the domain collection skill and the lock-pinned shadcn skill.
 .agents/skills/*

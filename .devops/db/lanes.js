@@ -62,123 +62,52 @@ function nowIso() {
 }
 
 // ---------------------------------------------------------------------------
-// Discovery chunking (spec 0005)
+// Discovery goal crawlers (spec 0007; supersedes the spec 0005 source/term
+// pool, budgets, chunking, and daily rotation)
 // ---------------------------------------------------------------------------
 
-// The discovery lane is split into small worker tasks so each pi session has
-// a small assignment and a small output: one timeout loses one chunk, not the
-// whole lane. Selection is the head of the deterministic assignment ordering
-// (priority ASC, least recently attempted/used first), and the per-source /
-// per-term health counters maintained by finalizeRun rotate the pool daily.
-function discoveryChunkConfig(env = process.env) {
-  const intEnv = (name, fallback) => {
-    const raw = env[name];
-    if (raw === undefined || raw === '') return fallback;
-    const value = Number.parseInt(raw, 10);
-    return Number.isInteger(value) && value >= 0 ? value : fallback;
-  };
-  return {
-    sourceBudget: intEnv('DISCOVERY_SOURCE_BUDGET', 20),
-    termBudget: intEnv('DISCOVERY_TERM_BUDGET', 12),
-    sourceChunk: Math.max(1, intEnv('DISCOVERY_SOURCE_CHUNK', 5)),
-    termChunk: Math.max(1, intEnv('DISCOVERY_TERM_CHUNK', 4)),
-  };
-}
+// The discovery lane is two fixed goal crawlers per run, each one pi session
+// that web-searches for its goal, opens the most promising official pages in
+// the browser, and reports raw facts only:
+//   discovery:new      newly announced models / API launches in the window
+//   discovery:pricing  pricing, free-tier, and promo changes for known offers
+// No source or term pool exists: candidates are found live each run, so a
+// run costs a bounded two sessions instead of rotating a stale pool.
+// Discovery stays addition-only and nonfatal (AC-2): a failed crawler never
+// touches a known offer, and promotion never depends on discovery success.
+const DISCOVERY_GOALS = ['new', 'pricing'];
 
-function chunkArray(items, size) {
-  const chunks = [];
-  for (let i = 0; i < items.length; i += size) {
-    chunks.push(items.slice(i, i + size));
+function discoveryGoalOfTask(task) {
+  if (!task) return 'new';
+  if (task.assigned_json && typeof task.assigned_json === 'object' && !Array.isArray(task.assigned_json) &&
+      (task.assigned_json.goal === 'new' || task.assigned_json.goal === 'pricing')) {
+    return task.assigned_json.goal;
   }
-  return chunks;
+  return task.task_id === 'discovery:pricing' ? 'pricing' : 'new';
 }
 
-// Builds the chunked discovery tasks (spec 0005). Source tasks check a slice
-// of discovery_sources rows directly; term tasks search a slice of terms
-// within all active windows. Budgets are applied to the already ordered
-// assignment snapshot, so the head is today's rotation slice.
-function buildDiscoveryTasks(discoveryAssignment, config = discoveryChunkConfig()) {
+function buildDiscoveryTasks() {
   const tasks = [];
-  const windows = discoveryAssignment.windows || [];
-
-  const sourceBudget = (discoveryAssignment.sources || []).slice(0, config.sourceBudget);
-  if (sourceBudget.length > 0) {
-    chunkArray(sourceBudget, config.sourceChunk).forEach((slice, index) => {
-      const taskId = `discovery:sources:${index + 1}`;
-      tasks.push({
-        task_id: taskId,
-        kind: 'discovery',
-        provider_key: null,
-        provider_label: null,
-        base_url: null,
-        docs_url: null,
-        api_catalog_url: null,
-        assigned_model_ids: [],
-        cached_urls: [],
-        discovery_sources: slice,
-        search_terms: [],
-        search_windows: windows,
-        output: `artifacts/${db.sanitizeTaskId(taskId)}.json`,
-      });
+  for (const goal of DISCOVERY_GOALS) {
+    const taskId = `discovery:${goal}`;
+    tasks.push({
+      task_id: taskId,
+      kind: 'discovery',
+      provider_key: null,
+      provider_label: null,
+      base_url: null,
+      docs_url: null,
+      api_catalog_url: null,
+      assigned_model_ids: [],
+      cached_urls: [],
+      discovery_goal: goal,
+      output: `artifacts/${db.sanitizeTaskId(taskId)}.json`,
     });
   }
-
-  const termBudget = (discoveryAssignment.terms || []).slice(0, config.termBudget);
-  if (termBudget.length > 0) {
-    chunkArray(termBudget, config.termChunk).forEach((slice, index) => {
-      const taskId = `discovery:terms:${index + 1}`;
-      tasks.push({
-        task_id: taskId,
-        kind: 'discovery',
-        provider_key: null,
-        provider_label: null,
-        base_url: null,
-        docs_url: null,
-        api_catalog_url: null,
-        assigned_model_ids: [],
-        cached_urls: [],
-        discovery_sources: [],
-        search_terms: slice,
-        search_windows: windows,
-        output: `artifacts/${db.sanitizeTaskId(taskId)}.json`,
-      });
-    });
-  }
-
   return tasks;
 }
 
 // ---------------------------------------------------------------------------
-// Manifest (build task 1: split into known and discovery lane assignments)
-// ---------------------------------------------------------------------------
-
-// Loads the active discovery assignment snapshot for the single daily
-// discovery task: discovery_sources, search_terms, and search_windows rows
-// (spec 0004 AC-13: the former YAML configuration is SQLite owned). Inactive
-// rows are excluded. Sources sort by priority ASC, then last_attempted_at ASC
-// with NULL first, then source_key; terms by priority ASC, then last_used_at
-// ASC with NULL first, then category/locale/term; windows by priority ASC
-// then window_key. SQLite sorts NULL before any value in ascending order, so
-// the plain column orders implement the "NULL first" rule.
-function loadDiscoveryAssignment(database) {
-  const sources = database.prepare(
-    'SELECT source_key, category, label, source_url, parent_label, active, priority, ' +
-    'added_from, created_at, last_attempted_at, last_success_at, consecutive_failures ' +
-    'FROM discovery_sources WHERE active = 1 ' +
-    'ORDER BY priority ASC, last_attempted_at ASC, source_key ASC'
-  ).all().map((row) => ({ ...row }));
-  const terms = database.prepare(
-    'SELECT category, locale, term, active, priority, added_from, created_at, last_used_at ' +
-    'FROM search_terms WHERE active = 1 ' +
-    'ORDER BY priority ASC, last_used_at ASC, category ASC, locale ASC, term ASC'
-  ).all().map((row) => ({ ...row }));
-  const windows = database.prepare(
-    'SELECT window_key, amount, unit, active, priority ' +
-    'FROM search_windows WHERE active = 1 ' +
-    'ORDER BY priority ASC, window_key ASC'
-  ).all().map((row) => ({ ...row }));
-  return { sources, terms, windows };
-}
 
 // Builds one manifest with two logical lane groups from current SQLite state:
 //   catalog:<key>   one per registry provider with api_catalog_url. Assigned
@@ -186,11 +115,8 @@ function loadDiscoveryAssignment(database) {
 //   known:<key>     one per provider with known offers and no catalog.
 //                   Carries cached_urls from source_cache so workers try
 //                   known good pages first.
-//   discovery       exactly one general LLM discovery task, addition only.
-//                   Carries the active discovery assignment snapshot
-//                   (discovery_sources, search_terms, search_windows) so the
-//                   worker searches exactly the sources, terms, and recency
-//                   windows this run assigned.
+//   discovery       two fixed goal crawlers (spec 0007): discovery:new and
+//                   discovery:pricing. Addition only; no pool assignment.
 // confirmed_removed offers are never assigned; a catalog can still surface
 // them again, which the reducer turns back into verified (AC-5).
 function buildLaneManifest(options = {}) {
@@ -201,7 +127,6 @@ function buildLaneManifest(options = {}) {
   const database = db.openCollectorDb(options);
   let offers;
   let cacheRows;
-  let discoveryAssignment;
   try {
     offers = database.prepare(
       'SELECT * FROM offers ORDER BY provider_key, exact_model_id'
@@ -210,7 +135,6 @@ function buildLaneManifest(options = {}) {
       'SELECT url, subject_key, provider_key, exact_model_id, fetched_at, http_status ' +
       'FROM source_cache ORDER BY fetched_at DESC'
     ).all();
-    discoveryAssignment = loadDiscoveryAssignment(database);
   } finally {
     database.close();
   }
@@ -270,10 +194,8 @@ function buildLaneManifest(options = {}) {
     });
   }
 
-  // Spec 0005: the discovery lane is split into small chunk tasks (sources
-  // and terms separately) instead of one giant task, so each worker session
-  // has a small assignment, a small output, and an independent timeout.
-  const discoveryTasks = buildDiscoveryTasks(discoveryAssignment);
+  // Spec 0007: two fixed goal crawlers per run (see buildDiscoveryTasks).
+  const discoveryTasks = buildDiscoveryTasks();
   tasks.push(...discoveryTasks);
 
   tasks.sort((a, b) => a.task_id.localeCompare(b.task_id));
@@ -288,8 +210,7 @@ function buildLaneManifest(options = {}) {
       },
       discovery: {
         assigned: discoveryTasks.length,
-        assigned_sources: discoveryTasks.reduce((n, t) => n + t.discovery_sources.length, 0),
-        assigned_terms: discoveryTasks.reduce((n, t) => n + t.search_terms.length, 0),
+        goals: DISCOVERY_GOALS,
       },
       catalog: { providers: [...catalogKeys].sort() },
     },
@@ -306,11 +227,7 @@ function toStartRunTasks(manifest) {
     provider_key: task.provider_key ?? undefined,
     assigned_model_ids: task.kind === 'discovery' ? undefined : task.assigned_model_ids,
     assigned_json: task.kind === 'discovery'
-      ? {
-        discovery_sources: task.discovery_sources || [],
-        search_terms: task.search_terms || [],
-        search_windows: task.search_windows || [],
-      }
+      ? { goal: task.discovery_goal }
       : undefined,
   }));
 }
@@ -467,7 +384,14 @@ function offerChangeKey(providerKey, exactModelId) {
 // re-derives access_kind from the typed columns. Input values are already
 // normalized to USD per million before this check (see normalizeCatalogPrice).
 function isPriceEligible(promptPrice, completionPrice) {
-  return isSharedPriceEligible(Number(promptPrice), Number(completionPrice));
+  // Do not coerce null to zero. Catalog rows without both published prices
+  // are present for liveness safety, but they are not eligible for admission.
+  if (promptPrice === null || promptPrice === undefined ||
+      completionPrice === null || completionPrice === undefined) return false;
+  const input = Number(promptPrice);
+  const output = Number(completionPrice);
+  if (!Number.isFinite(input) || !Number.isFinite(output)) return false;
+  return isSharedPriceEligible(input, output);
 }
 
 // Catalog price normalization (spec 0004 AC-3, AC-4). Official catalogs such
@@ -792,56 +716,6 @@ function collectProviderCandidates(result, task, knownProviderKeys, out) {
   }
 }
 
-// Allowed discovery_sources categories (must match migration 0003 CHECK).
-const SOURCE_CATEGORIES = new Set([
-  'vendor', 'router', 'host', 'product', 'discovery',
-  'community', 'benchmark', 'watchlist', 'other',
-]);
-
-// Spec 0004 AC-10: a discovery source candidate becomes durable only when it
-// is a well formed http(s) URL with a category and label. The reducer
-// inserts it into discovery_sources idempotently and never removes an
-// existing row. An unknown category is rejected (not silently remapped),
-// so a worker mistake can never crash the finalize transaction.
-function validateSourceCandidate(candidate) {
-  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
-    return { ok: false, reason: 'source_candidate is not an object' };
-  }
-  const label = typeof candidate.label === 'string' ? candidate.label.trim() : '';
-  const url = typeof candidate.source_url === 'string' ? candidate.source_url.trim() : '';
-  if (!label) return { ok: false, reason: 'source_candidate requires a label' };
-  if (!isHttpUrl(url)) return { ok: false, reason: `source ${label} requires an http(s) source_url` };
-  const category = typeof candidate.category === 'string' && candidate.category.trim()
-    ? candidate.category.trim()
-    : 'other';
-  if (!SOURCE_CATEGORIES.has(category)) {
-    return { ok: false, reason: `source ${label} category ${JSON.stringify(category)} is not one of ${[...SOURCE_CATEGORIES].join(', ')}` };
-  }
-  return { ok: true, entry: {
-    source_key: `${category}:${label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`,
-    category,
-    label,
-    source_url: url,
-    parent_label: typeof candidate.parent_label === 'string' && candidate.parent_label.trim()
-      ? candidate.parent_label.trim()
-      : null,
-    added_from: candidate.reason || 'discovery',
-  } };
-}
-
-// Collects validated source candidates from a task artifact into a Map keyed
-// by source_key (deduplication across lanes and runs).
-function collectSourceCandidates(result, task, out) {
-  if (!result || typeof result !== 'object' || !Array.isArray(result.source_candidates)) return;
-  for (const candidate of result.source_candidates) {
-    if (!candidate || candidate._evidence_verified === false) continue;
-    const check = validateSourceCandidate(candidate);
-    if (!check.ok) continue;
-    const key = check.entry.source_key;
-    if (!out.has(key)) out.set(key, check.entry);
-  }
-}
-
 // Keep catalog offer facts limited to values in the deterministic artifact.
 // In particular, do not create quota or rate-limit claims from a zero price.
 function catalogModelFacts(result, entry, catalogUrl) {
@@ -887,7 +761,7 @@ function reduceLanes(runId, runDir, options = {}) {
   const sourceCache = [];
   const discoveryCandidates = [];
   const providerCandidates = [];
-  const sourceCandidates = new Map();
+  const discoveryNews = [];
   const knownProviderKeys = new Set(providers.map((p) => p.key));
   const coverage = {
     known: { assigned: 0, verified: 0, stale: 0, removed: 0, failed: 0 },
@@ -1005,6 +879,13 @@ function reduceLanes(runId, runDir, options = {}) {
         if (prior.provider_key !== providerKey) continue;
         const entry = entriesById.get(prior.exact_model_id);
         const priceEligible = !!entry && priceEligibleIds.has(entry.model_id);
+        // Some exhaustive catalogs expose model IDs without pricing even in
+        // detailed mode. Presence proves the model is still listed, but an
+        // unknown price cannot prove it is free or paid. Preserve the prior
+        // offer as stale instead of falsely confirming removal.
+        const priceKnown = !!entry && entry.price_known !== false &&
+          Number.isFinite(normalizeCatalogPrice(entry.prompt_price, sourceUnit)) &&
+          Number.isFinite(normalizeCatalogPrice(entry.completion_price, sourceUnit));
         if (prior.status === 'confirmed_removed') {
           if (priceEligible) {
             const change = changeFor(prior);
@@ -1055,6 +936,10 @@ function reduceLanes(runId, runDir, options = {}) {
           }
           if (entry.pricing_hash) change.pricing_hash = entry.pricing_hash;
           coverage.known.verified += 1;
+        } else if (!priceKnown) {
+          markStale(change);
+          coverage.known.stale += 1;
+          coverage.known.failed += 1;
         } else {
           // Present but no longer free or ultra low: official price change
           // (AC-5) and the price gate (AC-4) both exclude the offer. Keep
@@ -1233,15 +1118,18 @@ function reduceLanes(runId, runDir, options = {}) {
   }
 
   // ── Discovery lane (AC-2: nonfatal, addition only) ─────────────
-  // Spec 0005: the lane is chunked, so sibling chunks can report the same
-  // model; the first occurrence wins.
+  // Spec 0007: the two goal crawlers can report the same model; the first
+  // occurrence wins. Known-offer facts from the pricing crawler become
+  // editorial news (discoveryNews), never offer state.
   const seenDiscovery = new Set();
+  const seenNews = new Set();
   for (const task of discoveryTasks) {
     coverage.discovery.assigned += 1;
     if (task.status === 'complete') coverage.discovery.complete += 1;
     else if (task.status === 'partial') coverage.discovery.partial += 1;
     else coverage.discovery.failed += 1;
 
+    const goal = discoveryGoalOfTask(task);
     const result = task.result_json;
     if ((task.status === 'complete' || task.status === 'partial') &&
         result && Array.isArray(result.models)) {
@@ -1250,17 +1138,37 @@ function reduceLanes(runId, runDir, options = {}) {
         const providerKey = typeof model.provider_key === 'string' && model.provider_key
           ? model.provider_key
           : null;
-        const dedupeKey = `${providerKey || ''}\u0000${model.model_id}`;
-        if (seenDiscovery.has(dedupeKey)) continue;
-        seenDiscovery.add(dedupeKey);
         // Discovery never mutates known offers: live ids (verified or
         // stale) are owned by their own lane and skipped. A removed id
         // resurfaces as a reappearance candidate so later stages can
         // reverify it (AC-5), still without any offer mutation here (AC-2).
+        // The pricing crawler's known-offer facts become editorial news
+        // before candidate dedupe, so the new goal cannot shadow them.
         const existing = providerKey
           ? offerByKey.get(offerChangeKey(providerKey, model.model_id))
           : null;
-        if (existing && existing.status !== 'confirmed_removed') continue;
+        if (existing && existing.status !== 'confirmed_removed') {
+          if (goal === 'pricing') {
+            const newsKey = `news\u0000${providerKey}\u0000${model.model_id}`;
+            if (!seenNews.has(newsKey)) {
+              seenNews.add(newsKey);
+              discoveryNews.push({
+                provider_key: existing.provider_key,
+                exact_model_id: existing.exact_model_id,
+                model_name: model.model_name || existing.exact_model_id,
+                pricing_text: typeof model.pricing_text === 'string' && model.pricing_text.trim() ? model.pricing_text : null,
+                free_quota_text: typeof model.free_quota_text === 'string' && model.free_quota_text.trim() ? model.free_quota_text : null,
+                docs_url: typeof model.docs_url === 'string' && model.docs_url.trim() ? model.docs_url : null,
+                task_id: task.task_id,
+                detected_at: now,
+              });
+            }
+          }
+          continue;
+        }
+        const dedupeKey = `${providerKey || ''}\u0000${model.model_id}`;
+        if (seenDiscovery.has(dedupeKey)) continue;
+        seenDiscovery.add(dedupeKey);
         discoveryCandidates.push({
           provider_key: providerKey,
           exact_model_id: model.model_id,
@@ -1275,11 +1183,10 @@ function reduceLanes(runId, runDir, options = {}) {
     }
   }
 
-  // Collect provider and source candidates from every lane artifact exactly
-  // once. Evidence auditing has already removed unverified claims.
+  // Collect provider registration candidates from every lane artifact.
+  // Evidence auditing has already removed unverified claims.
   for (const task of [...knownTasks, ...catalogTasks, ...discoveryTasks]) {
     collectProviderCandidates(task.result_json, task, knownProviderKeys, providerCandidates);
-    collectSourceCandidates(task.result_json, task, sourceCandidates);
   }
 
   // Collect provider registration candidates from every lane artifact
@@ -1318,28 +1225,9 @@ function reduceLanes(runId, runDir, options = {}) {
     if (audit) audited.push(audit);
   }
   const auditedCache = audited.flatMap((a) => a.source_cache || []);
-  const auditedHealth = audited.flatMap((a) => a.source_health || []);
-  // Spec 0005: union the assignment snapshots of every discovery chunk task
-  // so each assigned source/term gets its attempted/health bookkeeping.
-  const assignment = { discovery_sources: [], search_terms: [] };
-  for (const task of discoveryTasks) {
-    const assigned = task.assigned_json && !Array.isArray(task.assigned_json)
-      ? task.assigned_json : {};
-    assignment.discovery_sources.push(...(Array.isArray(assigned.discovery_sources)
-      ? assigned.discovery_sources : []));
-    assignment.search_terms.push(...(Array.isArray(assigned.search_terms)
-      ? assigned.search_terms : []));
-  }
   const updatedRun = db.finalizeRun(runId, {
     offers: offerChanges,
     sourceCache: sourceCache.concat(auditedCache),
-    discoverySources: [...sourceCandidates.values()],
-    discoveryAssignments: {
-      attempted_at: now,
-      sources: assignment.discovery_sources,
-      terms: assignment.search_terms,
-      health: auditedHealth,
-    },
     runStatus,
     error: gateReason || undefined,
   }, options);
@@ -1368,6 +1256,15 @@ function reduceLanes(runId, runDir, options = {}) {
       }, null, 2)}\n`
     );
     fs.writeFileSync(
+      path.join(reducedDir, 'discovery-news.json'),
+      `${JSON.stringify({
+        run_id: runId,
+        generated_at: now,
+        note: 'Pricing, free-tier, and promo change news about known offers from the discovery pricing crawler. Editorial change_prose input only; never offer state.',
+        news: discoveryNews,
+      }, null, 2)}\n`
+    );
+    fs.writeFileSync(
       path.join(reducedDir, 'provider-candidates.json'),
       `${JSON.stringify({
         run_id: runId,
@@ -1385,8 +1282,8 @@ function reduceLanes(runId, runDir, options = {}) {
     gateReason,
     offerChanges,
     discoveryCandidates,
+    discoveryNews,
     providerCandidates,
-    sourceCandidates: [...sourceCandidates.values()],
     sourceCache,
   };
 }
@@ -1395,7 +1292,6 @@ module.exports = {
   CAUTION_FAILURES,
   buildLaneManifest,
   buildDiscoveryTasks,
-  discoveryChunkConfig,
   toStartRunTasks,
   validateTaskArtifact,
   ingestTaskArtifacts,
@@ -1408,6 +1304,6 @@ module.exports = {
   applyStructuredPrices,
   validateProviderCandidate,
   collectProviderCandidates,
-  validateSourceCandidate,
-  collectSourceCandidates,
+  DISCOVERY_GOALS,
+  discoveryGoalOfTask,
 };

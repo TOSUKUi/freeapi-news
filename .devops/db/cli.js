@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Load environment configuration (sets defaults on process.env).
+require('../config/env.config');
+
 // Collector database commands (spec 0003, children 0001 through 0004).
 //   node .devops/db/cli.js migrate            apply numbered migrations
 //   node .devops/db/cli.js status             schema, runs, copies as JSON

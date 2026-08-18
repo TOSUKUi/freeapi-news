@@ -1,8 +1,8 @@
 'use strict';
 
-// Verified benchmark reuse and targeted research. Spec 0003 fail safe
-// collection pipeline, child 0003 (AC-7 through AC-10, AC-11, and the
-// benchmark cases of AC-18).
+// Verified benchmark reuse with bulk leaderboard ingestion and targeted
+// fallback research. Spec 0003 fail safe collection pipeline, child 0003
+// (AC-7 through AC-10, AC-11, and the benchmark cases of AC-18).
 //
 // Accepted benchmark facts live only in the SQLite benchmarks table. LLM
 // benchmark results stay proposals inside the run task result_json until a
@@ -14,8 +14,11 @@
 //           replacement. Source display variants collapse to one internal
 //           key (Terminal Bench 2.1 / Terminal-Bench 2.1 -> terminal_bench_2_1).
 //           Only current free models without an accepted benchmark fact or a
-//           completed not_found search are searched each day. Known releases
-//           at least six months old are excluded; unknown release dates remain
+//           completed benchmark search are searched each day. A completed
+//           search is reused even when all proposals were rejected; metadata
+//           changes reopen a prior `found` search, and explicit force flags
+//           are the re-search escape hatch for any result. Known releases at
+//           least six months old are excluded; unknown release dates remain
 //           eligible. The queue remains deterministic and is split into chunks
 //           of at most four models.
 //   * AC-8  A proposal enters current benchmarks only after matching an exact
@@ -56,7 +59,8 @@ const RANKING_MIN_SCORE = rankingPolicy.RANKING_MIN_SCORE;
 const TIER_S_SCORE = 65;
 const TIER_A_SCORE = 50;
 
-// Search queue chunks hold at most four models (AC-7).
+// Search queue chunks hold at most four models for unresolved aliases only
+// (AC-7). Complete official leaderboard pages are handled in bulk first.
 const QUEUE_CHUNK_SIZE = 4;
 const BENCHMARK_RESEARCH_MAX_AGE_MONTHS = 6;
 
@@ -64,6 +68,25 @@ const EXTRACTION_METHODS = ['text', 'official_image'];
 const CONFIDENCE_LEVELS = ['HIGH', 'MEDIUM', 'LOW'];
 const UNKNOWN_VERSION_VALUES = new Set([
   'unknown', 'n/a', 'na', 'none', 'null', 'undefined', 'undetermined',
+]);
+
+// The official Terminal-Bench pages are complete leaderboards. Fetching each
+// page once is both faster and safer than asking one LLM worker per model to
+// rediscover the same rows. Unmatched aliases remain in the targeted scout
+// queue for exceptional cases.
+const BULK_LEADERBOARD_SOURCES = Object.freeze([
+  {
+    benchmark_key: 'terminal_bench_2_1',
+    display_name: 'Terminal-Bench 2.1',
+    version: '2.1',
+    url: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1',
+  },
+  {
+    benchmark_key: 'terminal_bench_2_0',
+    display_name: 'Terminal-Bench 2.0',
+    version: '2.0',
+    url: 'https://www.tbench.ai/leaderboard/terminal-bench/2.0',
+  },
 ]);
 
 function nowIso() {
@@ -165,13 +188,14 @@ function modelMetadataHash(facts) {
 }
 
 // Builds the deterministic daily search queue. Normal research considers
-// current free canonical models with no accepted benchmark fact, no terminal
-// not-found result, and no known release date at least six months old. Unknown
+// current free canonical models with no accepted benchmark fact, no completed
+// benchmark search, and no known release date at least six months old. Unknown
 // release dates remain eligible. A force model or benchmark bypasses those
-// automatic exclusions for explicit manual re-search. "Current free" means an
-// offer that is verified or stale (confirmed_removed offers are never searched).
-// One entry per canonical model ID. The queue is split into chunks of at most
-// four models.
+// automatic exclusions for explicit manual re-search. A metadata change
+// reopens a prior `found` search, while `not_found` remains terminal until
+// forced. "Current free" means an offer that is verified or stale
+// (confirmed_removed offers are never searched). One entry per canonical
+// model ID. The queue is split into chunks of at most four models.
 function buildBenchmarkQueue(options = {}) {
   const now = options.now || nowIso();
   const database = db.openCollectorDb(options);
@@ -204,6 +228,11 @@ function buildBenchmarkQueue(options = {}) {
           row.benchmark_key.trim().length > 0 &&
           row.benchmark_key !== 'unknown_benchmark';
       })
+      .map((row) => row.canonical_model_id)
+  );
+  const hasCompletedFound = new Set(
+    searches
+      .filter((row) => row && row.result === 'found')
       .map((row) => row.canonical_model_id)
   );
   const hasTerminalNotFound = new Set(
@@ -251,11 +280,13 @@ function buildBenchmarkQueue(options = {}) {
     const forced = forceBenchmark || forceIds.has(model.canonical_model_id) ||
       model.offer_ids.some((id) => forceIds.has(id.exact_model_id));
     const tooOld = model.release_dates.some((date) => isTooOldForBenchmarkResearch(date, now));
-    if (!forced && (hasStoppingBenchmark.has(model.canonical_model_id) ||
-      hasTerminalNotFound.has(model.canonical_model_id) || tooOld)) continue;
     const metadataHash = modelMetadataHash({ ...model.facts, canonical_model_id: model.canonical_model_id });
     const neverSearched = !search;
     const metadataChanged = !!search && !!search.metadata_hash && search.metadata_hash !== metadataHash;
+    const foundSearch = hasCompletedFound.has(model.canonical_model_id);
+    if (!forced && (hasStoppingBenchmark.has(model.canonical_model_id) ||
+      hasTerminalNotFound.has(model.canonical_model_id) ||
+      (foundSearch && !metadataChanged) || tooOld)) continue;
     queue.push({
       canonical_model_id: model.canonical_model_id,
       offer_ids: model.offer_ids,
@@ -265,6 +296,8 @@ function buildBenchmarkQueue(options = {}) {
       metadata_hash: metadataHash,
       newly_discovered: neverSearched,
       metadata_changed: metadataChanged,
+      model_name: typeof model.facts.model_name === 'string' ? model.facts.model_name : null,
+      facts: model.facts,
     });
   }
 
@@ -296,6 +329,251 @@ function buildBenchmarkQueue(options = {}) {
   }
 
   return { generated_at: now, queued: queue.length, queue, chunks };
+}
+
+function decodeHtml(value) {
+  return String(value || '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&#(x[0-9a-f]+|[0-9]+);?/gi, (_, raw) => {
+      const code = raw[0].toLowerCase() === 'x'
+        ? parseInt(raw.slice(1), 16)
+        : parseInt(raw, 10);
+      return Number.isFinite(code) ? String.fromCodePoint(Math.min(code, 0x10ffff)) : ' ';
+    });
+}
+
+function htmlText(value) {
+  return decodeHtml(String(value || '')
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' '))
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function htmlLinks(value) {
+  return [...String(value || '').matchAll(/<a\b[^>]*\bhref=["']([^"']+)["'][^>]*>/gi)]
+    .map((match) => decodeHtml(match[1]));
+}
+
+function parseLeaderboardRows(body, source) {
+  const tbody = String(body || '').match(/<tbody\b[^>]*>([\s\S]*?)<\/tbody>/i)?.[1] || String(body || '');
+  const rawRows = [...tbody.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map((match) => match[1]);
+  const rows = [];
+  for (const rawRow of rawRows) {
+    const cells = [...rawRow.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map((match) => match[1]);
+    if (cells.length < 7) continue;
+    const texts = cells.map(htmlText);
+    const is20 = source.version === '2.0';
+    const indexes = is20
+      ? { rank: 1, agent: 2, model: 3, date: 4, agentOrg: 5, modelOrg: 6, score: 7 }
+      : { rank: 0, agent: 1, model: 2, effort: 3, score: 4, date: 5, agentOrg: 6, modelOrg: 7 };
+    if (texts.length <= indexes.score) continue;
+    const rank = Number.parseInt(texts[indexes.rank], 10);
+    const modelName = texts[indexes.model];
+    const scoreMatch = texts[indexes.score].match(/(-?\d+(?:\.\d+)?)\s*%/);
+    const score = scoreMatch ? Number(scoreMatch[1]) : NaN;
+    if (!Number.isInteger(rank) || !modelName || modelName === 'Multiple' || !Number.isFinite(score)) continue;
+    rows.push({
+      rank,
+      agent: texts[indexes.agent] || null,
+      model_name: modelName,
+      model_url: htmlLinks(cells[indexes.model])[0] || null,
+      effort: is20 ? null : texts[indexes.effort] || null,
+      score,
+      date: texts[indexes.date] || null,
+      agent_org: texts[indexes.agentOrg] || null,
+      model_org: texts[indexes.modelOrg] || null,
+      row_text: texts.join(' | '),
+      benchmark_key: source.benchmark_key,
+      display_name: source.display_name,
+      version: source.version,
+      source_url: source.url,
+    });
+  }
+  return rows;
+}
+
+function normalizeModelAlias(value) {
+  let text = String(value || '').toLocaleLowerCase().normalize('NFKC');
+  text = text.replace(/\([^)]*\)/g, ' ')
+    .replace(/:(?:free|batch)$/g, '')
+    .replace(/\b(?:latest|preview|instruct|chat|model|api)\b/g, ' ')
+    .replace(/[-_. ](?:20\d{2}|\d{4})(?=$|[-_. ])/g, ' ')
+    .replace(/[^a-z0-9]+/g, '');
+  return text;
+}
+
+function queueModelAliases(entry) {
+  const facts = entry && entry.facts && typeof entry.facts === 'object' ? entry.facts : {};
+  return [...new Set([
+    entry && entry.canonical_model_id,
+    entry && entry.model_name,
+    facts.model_name,
+    facts.model_id,
+    ...(entry && Array.isArray(entry.offer_ids) ? entry.offer_ids.map((id) => id.exact_model_id) : []),
+  ].map(normalizeModelAlias).filter((value) => value.length >= 4))];
+}
+
+function rowMatchesQueueModel(row, entry) {
+  const rowAlias = normalizeModelAlias(row.model_name);
+  if (!rowAlias) return false;
+  const aliases = queueModelAliases(entry);
+  if (aliases.some((alias) => alias === rowAlias)) return true;
+  // Allow a dated or provider suffixed model ID to match its displayed base
+  // name, but only when the common prefix is distinctive.
+  return aliases.some((alias) => {
+    const common = alias.startsWith(rowAlias) ? rowAlias : rowAlias.startsWith(alias) ? alias : '';
+    return common.length >= 8;
+  });
+}
+
+function chooseBulkRow(rows, entry) {
+  const matches = rows.filter((row) => rowMatchesQueueModel(row, entry));
+  if (matches.length === 0) return null;
+  const normalizedNames = new Set(matches.map((row) => normalizeModelAlias(row.model_name)));
+  if (normalizedNames.size > 1 && !matches.some((row) => queueModelAliases(entry).includes(normalizeModelAlias(row.model_name)))) {
+    return null;
+  }
+  return matches.slice().sort((a, b) =>
+    (b.score - a.score) || (a.rank - b.rank) || a.model_name.localeCompare(b.model_name)
+  )[0];
+}
+
+// Fetch both complete official leaderboards in parallel, parse all rows, and
+// directly accept only unambiguous rows for queued models. The source body is
+// still passed through the same evidence validator used by scout proposals.
+async function collectBulkBenchmarkFacts(queueResult, options = {}) {
+  const { fetchEvidence } = require('./evidence');
+  const sourceBodies = new Map();
+  const sourceHashes = new Map();
+  const fetches = [];
+  const responses = await Promise.all(BULK_LEADERBOARD_SOURCES.map((source) =>
+    fetchEvidence(source.url, {
+      fetchImpl: options.fetchImpl,
+      timeoutMs: options.timeoutMs || 15000,
+      attempts: options.attempts || 1,
+      maxRedirects: 3,
+      maxBodyBytes: options.maxBodyBytes || 3 * 1024 * 1024,
+    }).then((result) => ({ source, result }))
+  ));
+  const rows = [];
+  const errors = [];
+  for (const { source, result } of responses) {
+    fetches.push({
+      url: source.url,
+      ok: result.ok,
+      final_url: result.final_url,
+      status: result.status,
+      body_hash: result.body_hash,
+      error: result.error || null,
+    });
+    if (!result.ok) {
+      errors.push(`${source.version}: ${result.error || 'leaderboard fetch failed'}`);
+      continue;
+    }
+    sourceBodies.set(source.url, result.body);
+    sourceHashes.set(source.url, result.body_hash);
+    rows.push(...parseLeaderboardRows(result.body, source));
+  }
+
+  const existing = loadCurrentBenchmarks(options).byModel;
+  const changes = [];
+  const coveredModels = [];
+  const accepted = [];
+  const notFoundModels = [];
+  const unresolved = [];
+  const complete = errors.length === 0 && rows.length > 0;
+  for (const entry of queueResult.queue || []) {
+    const matchingRows = rows.filter((row) => rowMatchesQueueModel(row, entry));
+    const row = chooseBulkRow(rows, entry);
+    if (!row) {
+      // Both official leaderboards are exhaustive. Once both pages were
+      // fetched and parsed successfully, an exact alias absent from both is
+      // a deterministic gate miss, not a reason to launch another scout.
+      if (complete && matchingRows.length === 0) {
+        coveredModels.push(entry.canonical_model_id);
+        notFoundModels.push(entry.canonical_model_id);
+      } else {
+        unresolved.push(entry);
+      }
+      continue;
+    }
+    if ((existing.get(entry.canonical_model_id) || []).some((item) => item.benchmark_key === row.benchmark_key)) {
+      coveredModels.push(entry.canonical_model_id);
+      continue;
+    }
+    const exactModelId = entry.offer_ids[0]?.exact_model_id || entry.canonical_model_id;
+    const find = {
+      model_id: exactModelId,
+      display_name: row.display_name,
+      version: row.version,
+      score: row.score,
+      source_url: row.source_url,
+      source_hash: sourceHashes.get(row.source_url) || null,
+      extraction_method: 'text',
+      confidence: 'HIGH',
+      body_excerpt: row.row_text,
+      row_description: `${row.agent || 'unknown agent'} / ${row.model_name} / ${row.date || 'unknown date'} / ${row.score}%`,
+    };
+    const evaluation = evaluateProposal({ ...find }, {
+      canonical_model_id: entry.canonical_model_id,
+      model_ids: entry.offer_ids.map((id) => id.exact_model_id),
+      offer_ids: entry.offer_ids,
+      // Evidence confirms the displayed row name. The deterministic alias
+      // matcher above already bound it to the queued exact model ID.
+      model_name: row.model_name,
+    }, {
+      sourceBodies,
+      sourceHashes,
+      requireFetchedEvidence: true,
+      now: options.now || nowIso(),
+    });
+    if (!evaluation.accepted) {
+      unresolved.push(entry);
+      continue;
+    }
+    evaluation.change.facts_json.origin = 'benchmark_bulk';
+    evaluation.change.facts_json.leaderboard_row = row;
+    changes.push(evaluation.change);
+    coveredModels.push(entry.canonical_model_id);
+    accepted.push({
+      canonical_model_id: entry.canonical_model_id,
+      benchmark_key: row.benchmark_key,
+      score: row.score,
+      source_url: row.source_url,
+      row: row.row_text,
+    });
+  }
+
+  const searchChanges = coveredModels.map((canonical_model_id) => {
+    const entry = (queueResult.queue || []).find((item) => item.canonical_model_id === canonical_model_id);
+    return {
+      canonical_model_id,
+      last_searched_at: options.now || nowIso(),
+      result: changes.some((change) => change.canonical_model_id === canonical_model_id) ? 'found' : 'not_found',
+      metadata_hash: entry ? entry.metadata_hash : null,
+    };
+  });
+  if (options.runDir) {
+    const dir = path.join(options.runDir, 'reduced');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'benchmark-bulk.json'), `${JSON.stringify({
+      fetched_at: options.now || nowIso(),
+      sources: fetches,
+      rows: rows.length,
+      accepted,
+      not_found: notFoundModels,
+      unresolved: unresolved.map((entry) => entry.canonical_model_id),
+      errors,
+    }, null, 2)}\n`);
+  }
+  return { changes, searchChanges, coveredModels, notFoundModels, unresolved, accepted, rows, sourceBodies, sourceHashes, fetches, errors, complete };
 }
 
 // Writes one needs-list file per chunk into <run_dir>/benchmarks/ and returns
@@ -988,6 +1266,9 @@ module.exports = {
   modelMetadataHash,
   loadCurrentBenchmarks,
   buildBenchmarkQueue,
+  BULK_LEADERBOARD_SOURCES,
+  parseLeaderboardRows,
+  collectBulkBenchmarkFacts,
   writeBenchmarkQueue,
   validateProposalShape,
   validateTextEvidence,

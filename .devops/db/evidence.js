@@ -840,32 +840,7 @@ async function auditRunEvidence(tasks, options = {}) {
     auditedTasks.push({ ...task, result_json: out });
   }
 
-  // Sources assigned by SQLite must be attempted even when the worker omitted
-  // them. Null URLs are recorded as failed attempts without a fetch.
-  // Spec 0005: the discovery lane is chunked, so union the assignment
-  // snapshots of every discovery task.
-  const assignment = { discovery_sources: [], search_terms: [] };
-  for (const task of (tasks || []).filter((t) => t.kind === 'discovery')) {
-    const assigned = task.assigned_json && !Array.isArray(task.assigned_json)
-      ? task.assigned_json : {};
-    assignment.discovery_sources.push(...(Array.isArray(assigned.discovery_sources)
-      ? assigned.discovery_sources : []));
-    assignment.search_terms.push(...(Array.isArray(assigned.search_terms)
-      ? assigned.search_terms : []));
-  }
-  const attemptedAt = options.now || new Date().toISOString();
-  for (const source of assignment.discovery_sources || []) {
-    const key = source.source_key || sourceKey(source);
-    const fetched = source.source_url ? await getFetch(source.source_url) : null;
-    const relevant = fetched && fetched.ok && [...sourceHealth.values()].some((h) => h.source_key === key && h.verified);
-    markSource({ ...source, source_key: key }, !!relevant, attemptedAt, relevant ? attemptedAt : null);
-  }
-  for (const term of assignment.search_terms || []) {
-    // Terms are tracked atomically by finalizeRun; this list is intentionally
-    // separate from source health because a search can have no URL result.
-    term._attempted_at = attemptedAt;
-  }
-  return { tasks: auditedTasks, sourceCache, sourceHealth: [...sourceHealth.values()], terms: assignment.search_terms || [] };
+  return { tasks: auditedTasks, sourceCache, sourceHealth: [...sourceHealth.values()] };
 }
 
 module.exports = {

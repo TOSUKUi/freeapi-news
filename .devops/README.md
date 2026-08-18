@@ -127,8 +127,9 @@ nodenv/nvm PATH is loaded.
 
 | Variable | Default | Description |
 |---|---|---|
-| `PI_MODEL` | `litellm/free` | pi model for the LLM workers |
-| `PI_TIMEOUT` | `1800` | pi worker timeout in seconds |
+| `PI_MODEL` | `litellm/deepseek-v4-flash` | pi model for the LLM workers |
+| `PI_TIMEOUT` | `1800` | pi timeout in seconds for non-discovery workers |
+| `DISCOVERY_TIMEOUT` | `1800` | pi timeout in seconds for discovery workers |
 | `GLOBAL_CONCURRENCY` | `2` | parallel LLM worker count |
 | `SKIP_CITATION_CHECK` | unset | set to `1` to skip live citation re-fetch |
 | `SCHEDULE_CRON` | `0 11 * * *` | local cron schedule (machine local time) |

@@ -674,38 +674,13 @@ describe('collect orchestrator', () => {
     }
   });
 
-  it('discovery worker input carries the manifest snapshot arrays with inactive rows filtered', async () => {
+it('discovery worker input carries the two goal crawlers with the known-offer list', async () => {
     seedKnownOffer(ctx);
 
-    // Seed a discovery assignment with one active and one inactive row per
-    // array. The manifest (buildLaneManifest) filters inactive rows, so the
-    // worker input must never see them.
-    const database = db.openCollectorDb(ctx.options);
-    try {
-      database.exec('DELETE FROM discovery_sources; DELETE FROM search_terms; DELETE FROM search_windows;');
-      const insertSource = database.prepare(
-        'INSERT INTO discovery_sources (source_key, category, label, source_url, parent_label, active, priority, added_from, created_at, last_attempted_at, last_success_at, consecutive_failures) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-      );
-      insertSource.run('vendor:active', 'vendor', 'Active Vendor', 'https://example.test/active', null, 1, 1, 'test', '2026-08-01T00:00:00.000Z', null, null, 0);
-      insertSource.run('vendor:inactive', 'vendor', 'Inactive Vendor', 'https://example.test/inactive', null, 0, 0, 'test', '2026-08-01T00:00:00.000Z', null, null, 0);
-      const insertTerm = database.prepare(
-        'INSERT INTO search_terms (category, locale, term, active, priority, added_from, created_at, last_used_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-      );
-      insertTerm.run('new_model', 'en', 'launch', 1, 1, 'test', '2026-08-01T00:00:00.000Z', null);
-      insertTerm.run('offer', 'any', 'inactive-offer-term', 0, 0, 'test', '2026-08-01T00:00:00.000Z', null);
-      const insertWindow = database.prepare(
-        'INSERT INTO search_windows (window_key, amount, unit, active, priority) VALUES (?, ?, ?, ?, ?)'
-      );
-      insertWindow.run('48h', 48, 'hour', 1, 1);
-      insertWindow.run('7d', 7, 'day', 0, 0);
-    } finally {
-      database.close();
-    }
-
-    const runId = 'discovery-snapshot-1';
+    const runId = 'discovery-goals-1';
     const captured = new Map();
     const capturingWorker = (spec) => {
-      if (spec.taskId.startsWith('discovery:')) captured.set(spec.taskId, spec.runtime);
+      if (spec.taskId.startsWith('discovery:')) captured.set(spec.taskId, spec);
       return makeWorker('ok')(spec);
     };
 
@@ -715,50 +690,31 @@ describe('collect orchestrator', () => {
       runId,
       runWorker: capturingWorker,
       runCatalog: fakeCatalog,
+      discoveryTimeout: 1800,
       log: silent(),
     });
 
-    assert.ok(captured.size > 0, 'discovery chunk workers must receive runtime prompts');
-    // The worker input must carry each chunk task's snapshot arrays verbatim
-    // (unchanged from the buildLaneManifest discovery task).
-    const manifest = JSON.parse(fs.readFileSync(
-      path.join(ctx.stateDir, 'crawl', runId, 'manifest.json'), 'utf8'
-    ));
-    const discoveryTasks = manifest.tasks.filter((t) => t.kind === 'discovery');
-    assert.equal(captured.size, discoveryTasks.length, 'every discovery chunk runs a worker');
-    for (const discoveryTask of discoveryTasks) {
-      const runtime = captured.get(discoveryTask.task_id);
-      assert.ok(runtime, `${discoveryTask.task_id} must receive a runtime prompt`);
-      for (const [key, label] of [
-        ['discovery_sources', 'Discovery sources'],
-        ['search_terms', 'Search terms'],
-        ['search_windows', 'Search windows'],
-      ]) {
-        const line = runtime.split('\n').find((l) => l.startsWith(`${label} (`));
-        assert.ok(line, `${label} must be present in the discovery runtime`);
-        const json = line.slice(line.indexOf(': ') + 2);
-        assert.deepEqual(
-          JSON.parse(json), discoveryTask[key],
-          `${label} must arrive unchanged from the manifest`
-        );
-      }
-      // Inactive rows were filtered by the manifest, so they cannot appear in
-      // the worker input.
-      assert.doesNotMatch(runtime, /vendor:inactive/);
-      assert.doesNotMatch(runtime, /inactive-offer-term/);
-      assert.doesNotMatch(runtime, /"7d"/);
+    assert.deepEqual(
+      [...captured.keys()].sort(),
+      ['discovery:new', 'discovery:pricing'],
+      'exactly two goal crawlers run per day'
+    );
+    for (const taskId of captured.keys()) {
+      const spec = captured.get(taskId);
+      assert.equal(spec.timeoutSeconds, 1800, 'discovery workers use the dedicated timeout');
+      const runtime = spec.runtime;
+      assert.match(runtime, /Recency window: the last 7 days only/, 'default window is 7 days');
+      assert.match(runtime, /This is one of two daily discovery crawler sessions/);
+      assert.match(runtime, /Do not search benchmark sources or emit benchmark_finds/,
+        'discovery workers must leave benchmark research to benchmark_scout');
+      // No pool data of any kind may reach the worker (spec 0007).
+      assert.doesNotMatch(runtime, /discovery_sources|search_terms|search_windows/);
     }
-    const sourcesTask = discoveryTasks.find((t) => t.task_id === 'discovery:sources:1');
-    const termsTask = discoveryTasks.find((t) => t.task_id === 'discovery:terms:1');
-    assert.ok(sourcesTask && termsTask, 'one source chunk and one term chunk');
-    assert.equal(sourcesTask.discovery_sources.length, 1);
-    assert.equal(sourcesTask.search_terms.length, 0);
-    assert.equal(sourcesTask.search_windows.length, 1);
-    assert.equal(termsTask.search_terms.length, 1);
-    assert.equal(termsTask.discovery_sources.length, 0);
-    assert.equal(termsTask.search_windows.length, 1);
+    assert.match(captured.get('discovery:new').runtime, /Goal: find LLM models, API access, or free-tier programs newly announced/);
+    const pricingRuntime = captured.get('discovery:pricing').runtime;
+    assert.match(pricingRuntime, /Goal: find pricing, free-tier, or promo changes announced within the window/);
+    assert.match(pricingRuntime, /"models"/, 'pricing goal receives the known offer list');
   });
-
   it('reports one deterministic benchmark result incrementally in completion order', async () => {
     const ctx = tmpProject();
     const runId = 'benchmark-progress';
@@ -836,5 +792,111 @@ describe('collect orchestrator', () => {
       }
     ).verified, 2);
     fs.rmSync(ctx.root, { recursive: true, force: true });
+  });
+});
+
+describe('runPiWorker transport (spec 0007)', () => {
+  let ctx;
+
+  function fixtureWithPrompts() {
+    ctx = tmpProject();
+    fs.mkdirSync(path.join(ctx.root, 'state', 'logs'), { recursive: true });
+    const promptsDir = path.join(ctx.root, '.agents', 'skills', 'llm-deals-intelligence-skill', 'prompts');
+    fs.mkdirSync(promptsDir, { recursive: true });
+    fs.writeFileSync(path.join(promptsDir, 'discovery-agent.md'), '# stub discovery role\n');
+    fs.writeFileSync(path.join(promptsDir, 'crawl-worker.md'), '# stub crawl role\n');
+    const schemasDir = path.join(ctx.root, '.agents', 'skills', 'llm-deals-intelligence-skill', 'schemas');
+    fs.writeFileSync(path.join(schemasDir, 'crawl-facts.schema.json'), JSON.stringify({ type: 'object' }, null, 2) + '\n');
+    return ctx;
+  }
+
+  function capturingSpawn() {
+    const calls = [];
+    const spawnImpl = (cmd, args, opts) => {
+      calls.push({ cmd, args });
+      const outArgIndex = args.indexOf('--json-output');
+      fs.writeFileSync(args[outArgIndex + 1], `${JSON.stringify({ schema_version: 1, status: 'complete', models: [] })}\n`);
+      const { EventEmitter } = require('node:events');
+      const child = new EventEmitter();
+      setImmediate(() => child.emit('close', 0, null));
+      return child;
+    };
+    return { calls, spawnImpl };
+  }
+
+  function lastPrompt(args) {
+    const i = args.indexOf('-p');
+    return args[i + 1];
+  }
+
+  function toolsValue(args) {
+    const i = args.indexOf('--tools');
+    return args[i + 1];
+  }
+
+  function specFor(taskId, extra = {}) {
+    return {
+      taskId,
+      roleFile: taskId.startsWith('discovery') ? 'discovery-agent.md' : 'crawl-worker.md',
+      schemaFile: path.join(ctx.root, '.agents', 'skills', 'llm-deals-intelligence-skill', 'schemas', 'crawl-facts.schema.json'),
+      outputFile: path.join(ctx.root, 'state', 'out', `${taskId.replace(/:/g, '-')}.json`),
+      logFile: path.join(ctx.root, 'state', 'logs', `${taskId.replace(/:/g, '-')}.log`),
+      runtime: `Task: ${taskId}.`,
+      ...extra,
+    };
+  }
+
+  beforeEach(() => { fixtureWithPrompts(); });
+  afterEach(() => { fs.rmSync(ctx.root, { recursive: true, force: true }); });
+
+  it('gives the discovery:new crawler the browser tool and a search + browser transport', async () => {
+    const { calls, spawnImpl } = capturingSpawn();
+    await collect.runPiWorker(specFor('discovery:new', { searchTimeRange: 'week' }), {
+      piModel: 'test-model', piTimeout: 600, spawnImpl,
+    }, ctx.options);
+    assert.equal(calls.length, 1);
+    assert.equal(toolsValue(calls[0].args), 'bash,read,json_output,browser');
+    const prompt = lastPrompt(calls[0].args);
+    assert.match(prompt, /Discovery transport \(web search \+ browser\)/);
+    assert.match(prompt, /at most 4 Bash searches/);
+    assert.match(prompt, /web-search-plus --provider auto --query "<your query>" --time-range week --max-results 5/);
+    assert.match(prompt, /At most 8 page visits total/);
+    assert.match(prompt, /action=open/);
+    assert.match(prompt, /action=snapshot/);
+    assert.match(prompt, /session: "disc-discovery-new"/);
+    assert.match(prompt, /close_session/);
+  });
+
+  it('gives the discovery:pricing crawler its own isolated browser session', async () => {
+    const { calls, spawnImpl } = capturingSpawn();
+    await collect.runPiWorker(specFor('discovery:pricing'), {
+      piModel: 'test-model', piTimeout: 600, spawnImpl,
+    }, ctx.options);
+    assert.equal(calls.length, 1);
+    assert.equal(toolsValue(calls[0].args), 'bash,read,json_output,browser');
+    const prompt = lastPrompt(calls[0].args);
+    assert.match(prompt, /Discovery transport \(web search \+ browser\)/);
+    assert.doesNotMatch(prompt, /curl -L --max-time/);
+    assert.match(prompt, /session: "disc-discovery-pricing"/);
+    assert.match(prompt, /close_session/);
+  });
+
+  it('keeps non-discovery workers on the minimal tool surface without browser transport', async () => {
+    const { calls, spawnImpl } = capturingSpawn();
+    await collect.runPiWorker(specFor('known:google'), {
+      piModel: 'test-model', piTimeout: 600, spawnImpl,
+    }, ctx.options);
+    assert.equal(calls.length, 1);
+    assert.equal(toolsValue(calls[0].args), 'bash,read,json_output');
+    const prompt = lastPrompt(calls[0].args);
+    assert.doesNotMatch(prompt, /browser tool/);
+  });
+
+  it('maps the discovery window in days to a search time-range', () => {
+    assert.equal(collect.discoverySearchTimeRange({}), 'week');
+    assert.equal(collect.discoverySearchTimeRange({ DISCOVERY_WINDOW_DAYS: '2' }), 'day');
+    assert.equal(collect.discoverySearchTimeRange({ DISCOVERY_WINDOW_DAYS: '30' }), 'month');
+    assert.equal(collect.discoverySearchTimeRange({ DISCOVERY_WINDOW_DAYS: '400' }), 'year');
+    assert.equal(collect.discoverySearchTimeRange({ DISCOVERY_WINDOW_DAYS: 'not-a-number' }), 'week');
   });
 });
