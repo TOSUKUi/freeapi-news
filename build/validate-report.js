@@ -63,6 +63,11 @@ async function main() {
   excludeNoTerminalBench(report, fixLog);
   excludeNoAccessKind(report, fixLog);
   excludeMismatchedPrices(report, fixLog);
+  excludeNoGate3(report, fixLog);
+  excludeHighSuspicion(report, fixLog);
+  excludeNimDeprecated(report, fixLog);
+  excludeInvalidDiscountOffers(report, fixLog);
+  checkContradictions(report);
 
   // ── 4. Rewrite report.json ─────────────────────────────────────
   // This is the final authority: all auto-fixes and exclusions, including
@@ -352,6 +357,105 @@ function excludeMismatchedPrices(report, fixLog) {
     }
   }
   report.ranked_offers = remaining;
+}
+
+// ── Exclude: no Gate 3 operational evidence (spec 0008 §4.7) ──
+// Ranking admits HIGH / MEDIUM operational confidence only. A measured
+// zero provider set at $0 (NONE) or no fresh evidence this run (LOW) is a
+// deterministic exclusion.
+function excludeNoGate3(report, fixLog) {
+  const remaining = [];
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) { remaining.push(o); continue; }
+    const conf = o.operational_confidence;
+    if (conf === 'NONE') {
+      moveToExcluded(report, 'ranked_offers', o,
+        '[gate3] no operational evidence: the offer is not currently operable (spec 0008 §4.7)', fixLog);
+    } else if (conf === 'LOW') {
+      moveToExcluded(report, 'ranked_offers', o,
+        '[gate3] operational confidence LOW: no fresh operational evidence this run (spec 0008 §4.7)', fixLog);
+    } else if (conf !== 'HIGH' && conf !== 'MEDIUM') {
+      moveToExcluded(report, 'ranked_offers', o,
+        `[gate3] operational_confidence ${JSON.stringify(conf)} is missing or invalid (spec 0008 §4.7)`, fixLog);
+    } else {
+      remaining.push(o);
+    }
+  }
+  report.ranked_offers = remaining;
+}
+
+// ── Exclude: suspicion 4-5 never ranks (spec 0008 §4.7) ──────────
+function excludeHighSuspicion(report, fixLog) {
+  const remaining = [];
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) { remaining.push(o); continue; }
+    const score = o.suspicion_score;
+    if (typeof score === 'number' && score > rankingPolicy.SUSPICION_RANKING_MAX) {
+      moveToExcluded(report, 'ranked_offers', o,
+        `[suspicion] suspicion ${score} >= 4 never ranks (spec 0008 §4.7)`, fixLog);
+    } else {
+      remaining.push(o);
+    }
+  }
+  report.ranked_offers = remaining;
+}
+
+// ── Exclude: deprecated NIM free endpoint (spec 0008 §4.7) ───────
+// A deprecated free endpoint is deterministic removal evidence; the offer
+// must already be confirmed_removed by the observe phase, so any ranked
+// row still carrying the flag is a hard data error we must not publish.
+function excludeNimDeprecated(report, fixLog) {
+  const remaining = [];
+  for (const o of report.ranked_offers || []) {
+    if (o.ranking_eligible !== true) { remaining.push(o); continue; }
+    if (o.free_endpoint_status === 'deprecated') {
+      moveToExcluded(report, 'ranked_offers', o,
+        '[nim] free endpoint deprecated on the individual model page (spec 0008 §4.7)', fixLog);
+    } else {
+      remaining.push(o);
+    }
+  }
+  report.ranked_offers = remaining;
+}
+
+// ── Discount section integrity (spec 0008 §4.11) ─────────────────
+// discount_offers is DISCOUNTED-only: every entry must carry the access
+// kind, both full price objects, and the deterministic discount rates.
+// Violations are moved to excluded rather than published.
+function excludeInvalidDiscountOffers(report, fixLog) {
+  if (!Array.isArray(report.discount_offers)) return;
+  const remaining = [];
+  for (const o of report.discount_offers) {
+    const normal = o.normal_price_per_million;
+    const effective = o.effective_price_per_million;
+    const full = (p) => p && typeof p === 'object' &&
+      typeof p.input === 'number' && Number.isFinite(p.input) && p.input >= 0 &&
+      typeof p.output === 'number' && Number.isFinite(p.output) && p.output >= 0;
+    const rates = o.discount_rates;
+    if (o.access_kind !== 'DISCOUNTED' || !full(normal) || !full(effective) ||
+        !rates || typeof rates !== 'object') {
+      moveToExcluded(report, 'discount_offers', o,
+        '[discount] discount_offers entries need access_kind DISCOUNTED, full normal and effective prices, and discount_rates (spec 0008 §4.11)', fixLog);
+    } else if (!rankingPolicy.isDiscountPrice(normal.input, normal.output, effective.input, effective.output)) {
+      moveToExcluded(report, 'discount_offers', o,
+        '[discount] normal price does not exceed the effective price (spec 0008 §4.11)', fixLog);
+    } else {
+      remaining.push(o);
+    }
+  }
+  report.discount_offers = remaining;
+}
+
+// ── Contradictions integrity (spec 0008 §4.5) ────────────────────
+// A contradiction needs at least two disagreeing values; a single-value
+// entry is a data error and hard-fails the candidate.
+function checkContradictions(report) {
+  if (!Array.isArray(report.contradictions)) return;
+  for (const c of report.contradictions) {
+    if (!Array.isArray(c.values) || c.values.length < 2) {
+      throw new Error(`contradictions entry for ${c.offer_name} has ${Array.isArray(c.values) ? c.values.length : 0} value(s); a contradiction needs at least two`);
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════

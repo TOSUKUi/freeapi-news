@@ -21,6 +21,14 @@ const RANKING_BENCHMARK_KEYS = ['terminal_bench_2_0', 'terminal_bench_2_1'];
 const RANKING_MIN_SCORE = 50;
 const ULTRA_LOW_MAX_INPUT_USD = 0.2;
 const ULTRA_LOW_MAX_OUTPUT_USD = 0.4;
+// Spec 0008 §4.11: frontier models are Terminal-Bench 2.0/2.1 at or above
+// 80 (separate from the 50 ranking admission gate) or a watchlist
+// frontier vendor. The vendor list itself is operator data in the watchlist.
+const FRONTIER_MIN_SCORE = 80;
+// Spec 0008 §4.7: suspicion 4-5 never ranks; an unregistered provider is
+// never better than suspicion 2 (deterministic floor).
+const SUSPICION_RANKING_MAX = 3;
+const SUSPICION_UNREGISTERED_FLOOR = 2;
 
 // Catalog and publication stages must share the same access thresholds.
 function isPriceEligible(input, output) {
@@ -79,6 +87,100 @@ function hasRankableEffectivePrices(input, output) {
   return deriveAccessKind(input, output) !== null;
 }
 
+// ---------------------------------------------------------------------------
+// Spec 0008 §4.11: DISCOUNTED admission (Gate 2 extension) and frontier
+// qualification. A discounted frontier model shows at any absolute price.
+// ---------------------------------------------------------------------------
+
+// Deterministic price check for a discount: normal and effective are both
+// known (at least one direction each) and normal strictly exceeds effective
+// in at least one direction. No inference from missing sides.
+function isDiscountPrice(normalInput, normalOutput, effectiveInput, effectiveOutput) {
+  const finite = (n) => typeof n === 'number' && Number.isFinite(n) && n >= 0;
+  if (!finite(normalInput) || !finite(normalOutput) ||
+      !finite(effectiveInput) || !finite(effectiveOutput)) {
+    return false;
+  }
+  return normalInput > effectiveInput || normalOutput > effectiveOutput;
+}
+
+// Discount rate per direction in percent (null when the direction has no
+// positive normal price). The report shows both rates; admission only needs
+// isDiscountPrice.
+function discountRates(normalInput, normalOutput, effectiveInput, effectiveOutput) {
+  const rate = (normal, effective) => {
+    if (typeof normal !== 'number' || typeof effective !== 'number' ||
+        !Number.isFinite(normal) || !Number.isFinite(effective) || normal <= 0) {
+      return null;
+    }
+    return Math.round(((normal - effective) / normal) * 1000) / 10;
+  };
+  return {
+    input: rate(normalInput, effectiveInput),
+    output: rate(normalOutput, effectiveOutput),
+  };
+}
+
+// A benchmark key qualifies for frontier at the 80 line (same keys as
+// ranking; the threshold is the only difference).
+function qualifiesFrontierBenchmark(benchmarkKey, score) {
+  if (!isRankingBenchmarkKey(benchmarkKey)) return false;
+  if (typeof score !== 'number' || !Number.isFinite(score)) return false;
+  return score >= FRONTIER_MIN_SCORE;
+}
+
+// ---------------------------------------------------------------------------
+// Spec 0008 §4.7: Gate 3 deterministic operational confidence.
+// Returns 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE'. NONE is a deterministic
+// ranking exclusion (e.g. a $0 router model with zero providers: listed but
+// not operable). The LLM's confidence is advisory only and never drives this.
+// ---------------------------------------------------------------------------
+
+function deriveOperationalConfidence({
+  providerKey = null,
+  accessKind = null,
+  verified = false,
+  staleMild = false,
+  providerCount = null,
+  uptimePercent = null,
+  freeEndpointStatus = null,
+  apiCalls30d = null,
+} = {}) {
+  const isRouter = providerKey === 'openrouter';
+  const isNvidia = providerKey === 'nvidia';
+  const count = Number.isInteger(providerCount) ? providerCount : null;
+  const uptime = typeof uptimePercent === 'number' && Number.isFinite(uptimePercent)
+    ? uptimePercent : null;
+  const calls = Number.isInteger(apiCalls30d) ? apiCalls30d : null;
+
+  if (isNvidia && (accessKind === 'FREE' || accessKind === 'ULTRA_LOW')) {
+    // NIM: the individual free endpoint page is the operational evidence.
+    if (freeEndpointStatus === 'deprecated') return 'NONE';
+    if (freeEndpointStatus === 'available') {
+      return (calls !== null && calls > 0) ? 'HIGH' : 'MEDIUM';
+    }
+    return 'LOW'; // unknown: the page was not verified this run
+  }
+
+  if (isRouter) {
+    // A measured zero provider set at $0 / ultra-low is not operable:
+    // deterministic exclusion, not merely low confidence (spec: listed but
+    // no provider). An unobserved model (count null) is not an observed
+    // zero: carried-over evidence stays rankable at MEDIUM (fail-safe).
+    if (count === 0 && accessKind && accessKind !== 'DISCOUNTED') return 'NONE';
+    if ((count !== null && count > 0) && uptime !== null) return 'HIGH';
+    if ((count !== null && count > 0) || uptime !== null) return 'MEDIUM';
+    if (verified || staleMild) return 'MEDIUM';
+    return 'LOW';
+  }
+
+  // Official providers: this run's docs / pricing fetch success is HIGH.
+  // A mild stale carryover (failures below the caution threshold) keeps the
+  // last verified evidence rankable at MEDIUM; deeper staleness is LOW.
+  if (verified) return 'HIGH';
+  return staleMild ? 'MEDIUM' : 'LOW';
+}
+
 module.exports = {
   RANKING_BENCHMARK_KEYS,
   RANKING_BENCHMARK_KEY: 'terminal_bench_2_1',
@@ -92,4 +194,12 @@ module.exports = {
   isRankingBenchmarkKey,
   qualifiesTerminalBench,
   hasRankableEffectivePrices,
+  // spec 0008
+  FRONTIER_MIN_SCORE,
+  SUSPICION_RANKING_MAX,
+  SUSPICION_UNREGISTERED_FLOOR,
+  isDiscountPrice,
+  discountRates,
+  qualifiesFrontierBenchmark,
+  deriveOperationalConfidence,
 };

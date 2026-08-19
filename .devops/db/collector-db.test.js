@@ -116,8 +116,8 @@ test('migrations create the tables and are idempotent', (t) => {
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
 
   const first = db.applyMigrations(ctx.options);
-  assert.deepEqual(first.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-  assert.equal(first.schemaVersion, 11);
+  assert.deepEqual(first.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  assert.equal(first.schemaVersion, 12);
 
   const raw = openRaw(ctx);
   let names;
@@ -131,7 +131,7 @@ test('migrations create the tables and are idempotent', (t) => {
   for (const table of [
     'schema_migrations', 'runs', 'tasks', 'offers',
     'benchmarks', 'benchmark_searches', 'source_cache',
-    'models', 'leads', 'watch_facts',
+    'models', 'leads', 'watch_facts', 'changes', 'contradictions',
   ]) {
     assert.ok(names.includes(table), `missing table ${table}`);
   }
@@ -142,7 +142,7 @@ test('migrations create the tables and are idempotent', (t) => {
 
   const second = db.applyMigrations(ctx.options);
   assert.deepEqual(second.applied, []);
-  assert.equal(second.schemaVersion, 11);
+  assert.equal(second.schemaVersion, 12);
 });
 
 test('operator hidden flag survives catalog upserts and can be changed explicitly', (t) => {
@@ -734,7 +734,7 @@ test('getStatus reports schema, runs, and copies', (t) => {
   const mid = db.getStatus(ctx.options);
   assert.equal(mid.dbExists, true);
   assert.equal(mid.integrityOk, true);
-  assert.equal(mid.schemaVersion, 11);
+  assert.equal(mid.schemaVersion, 12);
   assert.equal(mid.currentRun.run_id, 'run-1');
   assert.equal(mid.lastPromotedRun, null);
   assert.equal(mid.copies.length, 1);
@@ -1015,6 +1015,16 @@ test('migration 0004 backfills per-token catalog rows and strips facts (AC-3, AC
         error_json TEXT,
         completed_at TEXT,
         PRIMARY KEY (run_id, task_id)
+      );
+      CREATE TABLE source_cache (
+        url TEXT NOT NULL,
+        subject_key TEXT NOT NULL,
+        provider_key TEXT,
+        exact_model_id TEXT,
+        fetched_at TEXT NOT NULL,
+        http_status INTEGER NOT NULL,
+        content_hash TEXT NOT NULL,
+        PRIMARY KEY (url, subject_key)
       );
       CREATE TABLE search_terms (
         category TEXT NOT NULL,

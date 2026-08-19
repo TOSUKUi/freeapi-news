@@ -277,6 +277,85 @@
               "null"
             ],
             "minimum": 0
+          },
+          "provider_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "uptime_percent": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 100
+          },
+          "activity_text": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "$comment": "verbatim activity evidence, e.g. 'API calls (last 30 days): 1,234,567'"
+          },
+          "free_endpoint_status": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "available",
+              "deprecated",
+              null
+            ]
+          },
+          "api_calls_30d": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "card_required": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "minimum_deposit_usd": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "subscription_required": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "referral_required": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "data_policy_text": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "$comment": "verbatim data policy quote"
+          },
+          "data_policy_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
           }
         },
         "allOf": [

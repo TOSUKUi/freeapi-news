@@ -38,6 +38,7 @@ const catalog = require('./catalog');
 const evidence = require('./evidence');
 const watch = require('./watch');
 const modelsLane = require('./models');
+const observe = require('./observe');
 const { loadWatchlist } = require('../../build/research-watchlist');
 
 function skillDirs(baseOpts) {
@@ -622,7 +623,22 @@ async function runPipeline(options = {}) {
       throw error;
     }
     try {
-      return db.restoreExactRunDatabase(preRunBackup, baseOpts);
+      const restored = db.restoreExactRunDatabase(preRunBackup, baseOpts);
+      // Mark the promotion manifest terminal. Without this, a later startup
+      // recovery sees the 'prepared' phase and restores this run's (older)
+      // pre run backup on top of newer schema state.
+      const manifestPath = path.join(runDir, 'promotion-manifest.json');
+      if (fs.existsSync(manifestPath)) {
+        try {
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+          manifest.phase = 'restored';
+          manifest.phase_at = manifest.phase_at || {};
+          manifest.phase_at.restored = new Date().toISOString();
+          manifest.restore_reason = 'exact pre-run database restored';
+          fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+        } catch { /* manifest bookkeeping never fails the restore */ }
+      }
+      return restored;
     } catch (err) {
       restoreFailure = err;
       throw err;
@@ -648,6 +664,13 @@ async function runPipeline(options = {}) {
     // Startup recovery runs before this collection obtains a run ID or creates
     // its directory, so a manual-inspection stop cannot start a new run.
     const recovered = publication.recoverInterruptedPromotion(baseOpts);
+    // A recovered exact pre run backup can predate the newest migrations
+    // (the backup is a byte copy taken before this run upgraded anything).
+    // Re-apply idempotently so the restored file reaches the current schema.
+    const reMigrated = db.applyMigrations(baseOpts);
+    if (reMigrated.applied && reMigrated.applied.length) {
+      log(`[1/9] migrations re-applied after recovery: ${reMigrated.applied.join(', ')}`);
+    }
     if (recovered) {
       log(`[recover] ${recovered.length} interrupted promotion(s): `
         + recovered.map((r) => `${r.runId} (${r.action})`).join(', '));
@@ -731,6 +754,7 @@ async function runPipeline(options = {}) {
     // in-window newcomers become model fan out tasks (0..3 per day); undated
     // catalog newcomers are registered as baseline rows without fan out.
     const fanoutTasks = [];
+    const catalogArtifacts = modelsLane.readCatalogArtifacts(runDir);
     if (watchlist) {
       const detection = modelsLane.detectNewModels({
         runDir, baseOpts, now: nowIso(), watchlist,
@@ -747,11 +771,50 @@ async function runPipeline(options = {}) {
         }, baseOpts);
       }
       fanoutTasks.push(...modelsLane.planFanoutTasks(
-        detection.candidates, modelsLane.readCatalogArtifacts(runDir), watchlist));
+        detection.candidates, catalogArtifacts, watchlist));
       log(`[3/9] models: ${detection.baselines.length} baseline row(s), `
         + `${detection.candidates.length} new model candidate(s) -> ${fanoutTasks.length} fan out task(s)`
         + (detection.deferred_candidates.length > 0
           ? `, ${detection.deferred_candidates.length} deferred` : ''));
+    }
+
+    // Spec 0008 Phase 2: deterministic router market observer (D5). For
+    // every openrouter offer that is free or a known offer, read the public
+    // endpoints API and store provider count / uptime as Gate 3 evidence.
+    // Bounded: 120 calls/day, 250ms interval, 24h cache in watch_facts.
+    if (watchlist) {
+      const orCatalog = catalogArtifacts.find((a) => a && a.provider_key === 'openrouter') || null;
+      const orOffers = db.listOffersByProvider('openrouter', baseOpts);
+      const orResult = await watch.observeOrEndpoints({
+        runId, runDir, baseOpts,
+        fetchImpl: opts.watchFetchImpl || undefined,
+        now: nowIso(),
+        catalogArtifact: orCatalog,
+        offers: orOffers,
+        log,
+      });
+      const orSummary = orResult.summary;
+      log(`[3/9] or_endpoints: ${orSummary.models} model(s), ${orSummary.fetched} fetched, ${orSummary.cached} cached, ${orSummary.failed} failed`);
+    }
+
+    // Spec 0008 Phase 2: deterministic community prefilter. Fetches the
+    // community feeds (reddit / HN / GitHub) and keeps only items that name
+    // a known model, alias, or registry provider. The candidates are the
+    // community worker's input; the LLM extracts leads only.
+    let prefilterCandidates = [];
+    if (watchlist) {
+      const rawRegistry = JSON.parse(fs.readFileSync(paths.registryPath, 'utf8'));
+      const registryProviders = Array.isArray(rawRegistry) ? rawRegistry : rawRegistry.providers || [];
+      prefilterCandidates = await watch.prefilterCommunity({
+        runId, runDir, baseOpts,
+        fetchImpl: opts.watchFetchImpl || undefined,
+        now: nowIso(),
+        watchlist,
+        models: db.listModels(baseOpts),
+        providerNames: registryProviders.map((p) => p.key),
+        log,
+      });
+      log(`[3/9] community prefilter: ${prefilterCandidates.length} candidate(s)`);
     }
 
     // Spec 0008: the research worker plan. news_scan always runs once; the
@@ -762,7 +825,7 @@ async function runPipeline(options = {}) {
     const researchTasks = [];
     if (watchlist) {
       researchTasks.push(watch.planNewsScanTask(watchlist));
-      researchTasks.push(watch.planCommunityTask(watchSignals));
+      researchTasks.push(watch.planCommunityTask(watchSignals, prefilterCandidates));
       for (const vt of watch.planVendorTasks(watchSignals, watchlist, new Date())) {
         researchTasks.push({
           task_id: `vendor:${vt.key}`,
@@ -774,6 +837,16 @@ async function runPipeline(options = {}) {
           vendor_changed_urls: vt.changed_urls,
         });
       }
+      // Spec 0008 Phase 2: NIM per-model verification (small browser
+      // session, one visit per candidate model) and the provider monitors
+      // (4-6 LLM-side providers per session, always run; catalog discount
+      // signals ride along as hints).
+      const nvidiaCatalog = catalogArtifacts.find((a) => a && a.provider_key === 'nvidia') || null;
+      const nimTask = watch.planNimVerifyTask(baseOpts, nvidiaCatalog);
+      if (nimTask) researchTasks.push(nimTask);
+      const discountSignals = observe.catalogDiscountSignals(
+        catalogArtifacts, db.knownNormalPricesByCanonical(baseOpts));
+      researchTasks.push(...watch.planProviderMonitorTasks(watchlist, watchSignals, discountSignals));
       researchTasks.push(...fanoutTasks);
     }
 
@@ -879,8 +952,16 @@ async function runPipeline(options = {}) {
           status: p.status,
           new_items: (p.new_items || []).slice(0, 20),
         }));
+        const candidates = (task.candidates || []).map((c) => ({
+          source: c.entity,
+          url: c.url,
+          title: c.title,
+          snippet: c.snippet,
+        }));
         runtime = `Task: ${task.task_id}. Prefilter (community feed items that changed since the last run; empty means no changed items):\n`
-          + JSON.stringify(prefilter, null, 1);
+          + JSON.stringify(prefilter, null, 1) + '\n'
+          + 'Deterministic prefilter candidates (feed items from the last day that name a known model, alias, or provider; verify on the page before using any claim):\n'
+          + JSON.stringify(candidates, null, 1);
       } else if (task.kind === 'model_fanout') {
         roleFile = 'model-fanout.md';
         schemaName = 'vendor-facts.schema.json';
@@ -900,6 +981,41 @@ async function runPipeline(options = {}) {
           + `Routes to check on official pages: ${JSON.stringify(task.routes_to_check || [])}. `
           + 'Emit an explicit distribution verdict (served / not_served / unconfirmed) for every route. '
           + 'Free, ultra-low, or discount routes also get a models[] offer-facts entry with verbatim pricing, base_url, and endpoint_source.';
+      } else if (task.kind === 'provider_monitor') {
+        roleFile = 'provider-monitor.md';
+        schemaName = 'crawl-facts.schema.json';
+        transport = 'discovery';
+        searchBudget = 1;
+        visitBudget = 12;
+        timeoutSeconds = opts.discoveryTimeout;
+        failureArtifact = factsFailureArtifact(
+          task.task_id, task.provider_keys ? task.provider_keys.join(',') : null);
+        const watchLines = (task.watch_urls || [])
+          .map((w) => `- ${w.provider_key} ${w.channel}: ${w.url}`).join('\n');
+        runtime = `Task: ${task.task_id}. Providers in this session: ${(task.provider_keys || []).join(', ')}.\n`
+          + 'Watch URLs (deterministic watch):\n' + watchLines + '\n'
+          + (task.changed_urls && task.changed_urls.length
+            ? `Changed watch URLs, investigate these first (at most 6 of the 12 visits):\n${task.changed_urls.map((u) => `- ${u}`).join('\n')}\n`
+            : 'No watch changes today: verify the current facts on the watch URLs (at most 12 visits total).\n')
+          + 'Catalog discount signals (deterministic price drops vs known normal prices; a hint, verify on the page):\n'
+          + JSON.stringify(task.discount_signals || [], null, 1) + '\n'
+          + 'Report only changed or newly evidenced facts with verbatim pricing text and the fetched source URL. '
+          + 'For discount claims report normal and effective amounts separately.';
+      } else if (task.kind === 'nim_verify') {
+        roleFile = 'nim-verify.md';
+        schemaName = 'crawl-facts.schema.json';
+        transport = 'discovery';
+        searchBudget = 0;
+        visitBudget = Math.max(1, (task.assigned_model_ids || []).length);
+        timeoutSeconds = opts.discoveryTimeout;
+        failureArtifact = factsFailureArtifact(task.task_id, 'nvidia');
+        const modelLines = (task.assigned_model_ids || [])
+          .map((id, i) => `- ${id} -> ${task.check_urls ? task.check_urls[i] : null}`).join('\n');
+        runtime = `Task: ${task.task_id}. Open each NVIDIA model page below and record the free endpoint status and API call count:\n`
+          + modelLines + '\n'
+          + 'For every model emit one models[] entry with model_id, free_endpoint_status (available / deprecated), '
+          + 'api_calls_30d (integer when visible, else null), and evidence_url. '
+          + 'Do not report prices; the catalog lane handles pricing.';
       } else {
         roleFile = 'crawl-worker.md';
         failureArtifact = factsFailureArtifact(task.task_id, task.provider_key);
@@ -965,6 +1081,27 @@ async function runPipeline(options = {}) {
       log(`[5/9] models: ${modelSummary.announcements_verified} announcement(s) verified, `
         + `${modelSummary.distribution_served_verified}/${modelSummary.distribution_notes} served route(s) verified, `
         + `${modelSummary.leads_created} new lead(s), ${modelSummary.leads_expired} expired`);
+    }
+
+    // Spec 0008 Phase 2: deterministic observation application. The LLM
+    // artifacts (nim_verify, provider_monitor, discovery candidates) and
+    // the catalog artifacts are applied as data: operational evidence
+    // columns, NIM removals, within-run contradictions, frontier
+    // re-derivation, and DISCOUNTED admission plus liveness. Everything
+    // runs against the candidate DB before the candidate view is built, so
+    // the classifier and the report see the final observed state.
+    if (watchlist) {
+      const obsSummary = observe.runObservationPhase(runId, runDir, baseOpts, {
+        watchlist,
+        now: nowIso(),
+        catalogArtifacts,
+        log,
+      });
+      log(`[5/9] observe: or=${obsSummary.or_endpoints.applied} `
+        + `nim=${obsSummary.nim.applied} updated / ${obsSummary.nim.removed} removed `
+        + `contradictions=${obsSummary.contradictions.findings} `
+        + `frontier=${obsSummary.frontier.updated} `
+        + `discounted=${obsSummary.discounted.admitted} admitted / ${obsSummary.discounted.ended} ended`);
     }
     if (!reduce.canPromote) {
       log(`  gate blocked promotion; previous report stays live (run ${runId} failed)`);

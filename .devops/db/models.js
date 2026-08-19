@@ -271,38 +271,10 @@ async function verifyUrlContains(url, needles, fetchImpl, nowIso) {
   }
 }
 
-// Deterministic source tier from URL patterns (spec 0008 §4.5). 1 is the
-// strongest; 11 the weakest. The LLM never writes a tier.
-function sourceTierFromUrl(url) {
-  if (!url || typeof url !== 'string') return 11;
-  let host = '';
-  let pathname = '';
-  try {
-    const u = new URL(url);
-    host = u.hostname.toLowerCase();
-    pathname = u.pathname.toLowerCase();
-  } catch {
-    return 11;
-  }
-  const community = ['reddit.com', 'redd.it', 'news.ycombinator.com', 'hn.algolia.com', 'discord.com', 'x.com', 'twitter.com'];
-  if (community.some((h) => host === h || host.endsWith(`.${h}`))) return 9;
-  const githubHf = ['github.com', 'huggingface.co'];
-  if (githubHf.some((h) => host === h || host.endsWith(`.${h}`))) {
-    return /\/(releases|tags)\b/.test(pathname) ? 5 : 7;
-  }
-  const pricing = /(^|\/)(pricing|price|plans?)(\/|$)/.test(pathname);
-  const changelog = /(^|\/)(changelog|release-notes?|whats-new|news)(\/|$)/.test(pathname);
-  const blog = host.startsWith('blog.') || /(^|\/)blog(\/|$)/.test(pathname);
-  const apiDocs = /(^|\/)(api|docs)(\/|$)/.test(pathname) && !pricing;
-  const modelPage = /(^|\/)models?(\/|$)/.test(pathname);
-  if (pricing) return 2;
-  if (changelog) return 5;
-  if (blog) return 6;
-  if (apiDocs) return 3;
-  if (host === 'openrouter.ai') return 8; // router listing, not the model page
-  if (modelPage) return 4;
-  return 11;
-}
+// Deterministic source tier from URL patterns (spec 0008 §4.5). Defined in
+// collector-db.js (shared with the source_cache writer); re-exported here
+// for the model lane and tests.
+const { sourceTierFromUrl } = db;
 
 function vendorKeyOf(watchlist, vendorKey) {
   if (!watchlist) return null;

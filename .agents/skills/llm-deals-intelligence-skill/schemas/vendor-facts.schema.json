@@ -287,6 +287,24 @@
               "string",
               "null"
             ]
+          },
+          "suggested_check": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "$comment": "one line: what to verify on the official source"
+          },
+          "priority": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "high",
+              "normal",
+              null
+            ]
           }
         }
       }

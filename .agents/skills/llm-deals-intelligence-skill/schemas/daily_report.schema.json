@@ -74,32 +74,6 @@
         "additionalProperties": false
       }
     },
-    "new_seed_candidates": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "name",
-          "type",
-          "recommend_add"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "recommend_add": {
-            "type": "boolean"
-          },
-          "reason": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      }
-    },
     "sources": {
       "type": "array",
       "items": {
@@ -130,6 +104,149 @@
           "accessed_at": {
             "type": "string",
             "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "discount_offers": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/offer"
+          },
+          {
+            "required": [
+              "normal_price_per_million",
+              "effective_price_per_million",
+              "discount_rates"
+            ]
+          }
+        ]
+      }
+    },
+    "contradictions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "offer_name",
+          "fact",
+          "adopted_value",
+          "note"
+        ],
+        "properties": {
+          "offer_name": {
+            "type": "string"
+          },
+          "fact": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "source",
+                "value"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "source_tier": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1,
+                  "maximum": 11
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "adopted_value": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "new_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "status"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "proposed"
+            ]
+          },
+          "add_command": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "new_seed_candidates": {
+      "$comment": "Deprecated in spec 0008 (renamed to new_sources). Kept optional for the last pre-0008 promoted report.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "recommend_add"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "recommend_add": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -228,17 +345,62 @@
         "change_type": {
           "enum": [
             "new",
-            "price_change",
-            "limit_change",
-            "provider_change",
-            "end_date_change",
             "ended",
             "revived",
-            "availability_change"
+            "price_change",
+            "discount_rate_change",
+            "provider_count_change",
+            "free_status_change",
+            "availability_change",
+            "context_change",
+            "model_id_change",
+            "rate_limit_change",
+            "data_policy_change",
+            "capability_change",
+            "campaign_started",
+            "campaign_ended",
+            "campaign_date_change",
+            "limit_change",
+            "provider_change",
+            "end_date_change"
           ]
         },
         "summary": {
           "type": "string"
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "before": {
+          "type": [
+            "object",
+            "string",
+            "number",
+            "null"
+          ]
+        },
+        "after": {
+          "type": [
+            "object",
+            "string",
+            "number",
+            "null"
+          ]
+        },
+        "discount_before": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "discount_after": {
+          "type": [
+            "number",
+            "null"
+          ]
         }
       },
       "additionalProperties": false
@@ -296,6 +458,7 @@
           "enum": [
             "FREE",
             "ULTRA_LOW",
+            "DISCOUNTED",
             null
           ]
         },
@@ -517,12 +680,6 @@
             }
           }
         },
-        "effective_discount_percent": {
-          "type": [
-            "number",
-            "null"
-          ]
-        },
         "data_retention": {
           "type": [
             "string",
@@ -715,6 +872,75 @@
             },
             "additionalProperties": false
           }
+        },
+        "data_policy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "data_policy_source": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "free_endpoint_status": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "available",
+            "deprecated",
+            "unknown",
+            null
+          ]
+        },
+        "operational_evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "activity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "discount_rates": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "input": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100
+            },
+            "output": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "additionalProperties": false
+        },
+        "effective_discount_percent": {
+          "$comment": "Deprecated in spec 0008 (replaced by discount_rates). Kept optional for the last pre-0008 promoted report.",
+          "type": [
+            "number",
+            "null"
+          ]
         }
       },
       "allOf": [

@@ -86,11 +86,12 @@ test('0010 creates models, leads and watch_facts and backfills models from offer
     dbo.close();
   }
 
-  // Now apply the real migrations directory: 0010 (model lane) and 0011
-  // (research task kinds) are new for this v9 database.
+  // Now apply the real migrations directory: 0010 (model lane), 0011
+  // (research task kinds), and 0012 (operational evidence + gates) are new
+  // for this v9 database.
   const r10 = db.applyMigrations({ dbPath: ctx.dbPath, migrationsDir: MIGRATIONS_DIR });
-  assert.deepEqual(r10.applied, [10, 11]);
-  assert.equal(r10.schemaVersion, 11);
+  assert.deepEqual(r10.applied, [10, 11, 12]);
+  assert.equal(r10.schemaVersion, 12);
 
   const t = db.openDatabaseFile(ctx.dbPath);
   try {
@@ -163,7 +164,7 @@ test('leads enforces the status lifecycle and watch_facts enforces domains', () 
   }
 });
 
-test('db status reports the watch summary on a v11 database', () => {
+test('db status reports the watch summary on a v12 database', () => {
   const ctx = tmpProject();
   db.applyMigrations({ dbPath: ctx.dbPath, migrationsDir: MIGRATIONS_DIR });
   const t = db.openDatabaseFile(ctx.dbPath);
@@ -180,7 +181,7 @@ test('db status reports the watch summary on a v11 database', () => {
     t.close();
   }
   const status = db.getStatus({ dbPath: ctx.dbPath, stateDir: ctx.stateDir });
-  assert.equal(status.schemaVersion, 11);
+  assert.equal(status.schemaVersion, 12);
   assert.equal(status.watch.leads_open, 1);
   assert.deepEqual(
     status.watch.leads.map((r) => ({ status: r.status, c: r.c })).sort((a, b) => a.status.localeCompare(b.status)),
@@ -189,7 +190,7 @@ test('db status reports the watch summary on a v11 database', () => {
       { status: 'verified', c: 1 },
     ]
   );
-  assert.equal(status.watch.contradictions_open, null, 'contradictions table arrives in Phase 2');
+  assert.equal(status.watch.contradictions_open, 0, 'contradictions table exists in v12 with no rows');
 });
 
 test('0011 extends tasks.kind with the spec 0008 research kinds', () => {

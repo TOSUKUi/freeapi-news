@@ -63,6 +63,8 @@ const USAGE = [
   '  watch:list [<domain>]           list research watchlist entries (spec 0008)',
   '  watch:add <domain> <json>       add or replace a schema validated watchlist entry',
   '  watch:remove <domain> <key>     remove a watchlist entry',
+  '  leads:list [<status>]          list leads (open | verified | dismissed | expired | all)',
+  '  leads:resolve <lead_id> <verified|dismissed|expired> [--note <text>] [--link <offer_key>]  resolve an open lead',
   '  collect [--dry-run] [--push] [--skip-citation] [--vision] [--model <id>] [--benchmark <name>]  run the full fail safe pipeline',
   '  validate-candidate <run_id> <run_dir>  validate candidate, build HTML and OG, record manifest',
   '  promote <run_id> <run_dir>  promote validated candidate to canonical tracked files',
@@ -329,6 +331,38 @@ function main() {
       const next = researchWatchlist.removeEntry(data, domain, key);
       researchWatchlist.writeWatchlist(next);
       console.log(JSON.stringify({ removed: domain, key }, null, 2));
+      return;
+    }
+    case 'leads:list': {
+      const [statusArg] = flags;
+      const status = statusArg && statusArg !== 'all' ? statusArg : null;
+      if (statusArg && !['open', 'verified', 'dismissed', 'expired', 'all'].includes(statusArg)) {
+        console.error('leads:list status must be one of open, verified, dismissed, expired, all');
+        process.exitCode = 1;
+        return;
+      }
+      const rows = db.listLeads({ status }, {});
+      console.log(JSON.stringify(rows, null, 2));
+      return;
+    }
+    case 'leads:resolve': {
+      const leadId = flags[0];
+      const status = flags[1];
+      if (!leadId || !status) {
+        console.error('leads:resolve requires <lead_id> <verified|dismissed|expired>');
+        process.exitCode = 1;
+        return;
+      }
+      if (!['verified', 'dismissed', 'expired'].includes(status)) {
+        console.error('leads:resolve status must be verified, dismissed, or expired');
+        process.exitCode = 1;
+        return;
+      }
+      const note = flagValues(flags, '--note')[0] || null;
+      const link = flagValues(flags, '--link')[0] || null;
+      const changed = db.resolveLead(leadId, { status, note, linked_offer_key: link }, {});
+      console.log(JSON.stringify({ lead_id: leadId, status, resolved: changed }, null, 2));
+      if (!changed) process.exitCode = 1;
       return;
     }
     case 'collect': {

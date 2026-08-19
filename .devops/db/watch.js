@@ -562,17 +562,368 @@ function planNewsScanTask(watchlist) {
 // The community worker always runs once per run (spec 0008: 常時 1 本). It
 // receives the changed community feed URLs as a prefilter; an empty prefilter
 // means it can complete with zero leads after a light check.
-function planCommunityTask(signals) {
+function planCommunityTask(signals, prefilterCandidates = []) {
   const prefilter = (signals || [])
     .filter((s) => s.domain === 'community' && (s.status === 'changed' || s.status === 'first_seen'))
     .map((s) => ({ entity_key: s.entity_key, url: s.url, status: s.status, new_items: s.new_items || [] }));
+  const candidates = (prefilterCandidates || []).map((c) => ({
+    entity: c.source,
+    url: c.url,
+    status: 'candidate',
+    new_items: [c.title, c.snippet].filter(Boolean),
+    title: c.title || null,
+    snippet: c.snippet || null,
+    created_at: c.created_at || null,
+  }));
   return {
     task_id: 'community',
     kind: 'community',
     provider_key: null,
     assigned_model_ids: [],
     prefilter,
+    candidates,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Phase 2 deterministic observation (spec 0008 §4.3-3/4/5, §4.4)
+// ---------------------------------------------------------------------------
+
+const OR_ENDPOINTS_BASE = 'https://openrouter.ai/api/v1/models';
+const OR_ENDPOINTS_MAX_PER_DAY = 120;
+const OR_ENDPOINTS_INTERVAL_MS = 250;
+const OR_ENDPOINTS_CACHE_MS = 24 * 60 * 60 * 1000;
+const PREFILTER_MAX_CANDIDATES = 40;
+const PREFILTER_SLEEP_MS = 250;
+
+function sleepMs(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Check list for the router endpoints observer: every free model in this
+// run's OpenRouter catalog plus every non-removed known OR offer. Both sets
+// are deterministically known before any fetch.
+function orEndpointChecklist(catalogArtifact, offers = []) {
+  const ids = new Set();
+  for (const m of (catalogArtifact && catalogArtifact.models) || []) {
+    if (m.is_free) ids.add(m.model_id);
+  }
+  for (const o of offers || []) {
+    if (o.provider_key === 'openrouter' && o.status !== 'confirmed_removed') ids.add(o.exact_model_id);
+  }
+  return [...ids].sort();
+}
+
+// Extracts the Gate 3 evidence from one OR /endpoints response: provider
+// count, provider names, top provider (highest 1d uptime), uptime, context.
+function endpointObservation(modelId, body) {
+  // The endpoints API answers { data: { id, endpoints: [...] } }; tolerate a
+  // bare { endpoints: [...] } shape too.
+  const data = (body && body.data) || body || {};
+  const endpoints = data.endpoints || [];
+  const providers = [...new Set(endpoints.map((e) => e.provider_name).filter(Boolean))].sort();
+  let top = null;
+  for (const e of endpoints) {
+    const up = typeof e.uptime_last_1d === 'number' ? e.uptime_last_1d : null;
+    if (top === null || (up !== null && (top.uptime === null || up > top.uptime))) {
+      top = { uptime: up, provider: e.provider_name || null };
+    }
+  }
+  const contexts = endpoints.map((e) => e.context_length).filter((n) => typeof n === 'number' && Number.isFinite(n));
+  return {
+    model_id: modelId,
+    provider_count: endpoints.length,
+    providers,
+    top_provider: top ? top.provider : null,
+    uptime_percent: top && top.uptime !== null ? Math.round(top.uptime * 10) / 10 : null,
+    context_length: contexts.length ? Math.max(...contexts) : null,
+  };
+}
+
+// Deterministic router market observer (D5). Unauthenticated GET per model,
+// capped at 120 calls/day with a 250ms interval and a 24h watch_facts cache
+// (domain provider_watch, entity or_endpoints:<model>). Observations are
+// facts: the lane reducer applies them to offers, never this module.
+async function observeOrEndpoints(options = {}) {
+  const {
+    runId, runDir, baseOpts = {}, fetchImpl, now,
+    catalogArtifact = null, offers = [], log = () => {},
+  } = options;
+  if (!runId || !runDir) throw new Error('observeOrEndpoints requires runId and runDir');
+  const stampedNow = now || new Date().toISOString();
+  const nowMs = Date.parse(stampedNow);
+  const checklist = orEndpointChecklist(catalogArtifact, offers).slice(0, OR_ENDPOINTS_MAX_PER_DAY);
+  const cached = new Map(db.latestWatchFacts(baseOpts)
+    .filter((f) => f.domain === 'provider_watch' && (f.entity_key || '').startsWith('or_endpoints:'))
+    .map((f) => [f.entity_key, f]));
+
+  const reducedDir = path.join(runDir, 'reduced');
+  fs.mkdirSync(reducedDir, { recursive: true });
+  const observations = [];
+  let fetched = 0;
+  let fromCache = 0;
+  let failed = 0;
+  for (const modelId of checklist) {
+    const entityKey = `or_endpoints:${modelId}`;
+    const url = `${OR_ENDPOINTS_BASE}/${modelId}/endpoints`;
+    const prev = cached.get(entityKey);
+    if (prev && prev.facts_json && prev.http_status === 200 && prev.fetched_at
+        && nowMs - Date.parse(prev.fetched_at) < OR_ENDPOINTS_CACHE_MS) {
+      observations.push({ ...prev.facts_json, model_id: modelId, source: 'cache', error: null });
+      fromCache += 1;
+      continue;
+    }
+    let obs;
+    let httpStatus = null;
+    let error = null;
+    try {
+      const res = await fetchWithRetry(url, fetchImpl);
+      httpStatus = res.status;
+      if (res.ok && res.status >= 200) {
+        obs = endpointObservation(modelId, JSON.parse(res.body));
+        fetched += 1;
+        db.recordWatchFact({
+          domain: 'provider_watch', entity_key: entityKey, url,
+          run_id: runId, fetched_at: stampedNow, http_status: httpStatus,
+          content_hash: null, facts_json: obs,
+        }, baseOpts);
+      } else {
+        obs = { model_id: modelId, provider_count: null, providers: [], top_provider: null, uptime_percent: null, context_length: null };
+        error = `http ${res.status}`;
+      }
+    } catch (err) {
+      obs = { model_id: modelId, provider_count: null, providers: [], top_provider: null, uptime_percent: null, context_length: null };
+      error = (err && err.message) || String(err);
+    }
+    if (error) failed += 1;
+    observations.push({ ...obs, source: error ? 'failed' : 'fetched', http_status: httpStatus, error });
+    log(`  or_endpoints ${modelId} -> ${obs.provider_count === null ? 'error' : `${obs.provider_count} provider(s)`}`);
+    if (fetched > 0 && fetched < OR_ENDPOINTS_MAX_PER_DAY) await sleepMs(OR_ENDPOINTS_INTERVAL_MS);
+  }
+  const summary = { run_id: runId, models: checklist.length, fetched, cached: fromCache, failed };
+  fs.writeFileSync(path.join(reducedDir, 'or-endpoints.json'),
+    `${JSON.stringify({ ...summary, observations }, null, 2)}\n`);
+  return { observations, summary };
+}
+
+// ---------------------------------------------------------------------------
+// NIM free endpoint check list (§4.3-4). build.nvidia.com overview pages are
+// client rendered (verified 2026-08-19: no Free Endpoint / API calls data in
+// the server HTML), so the deterministic side only builds the check list and
+// the nim_verify browser worker reads the pages. The list is nvidia offers
+// that are not confirmed removed (they entered via the free / ultra-low
+// catalog lane) plus any free model in this run's NIM catalog.
+// ---------------------------------------------------------------------------
+
+function nvidiaOverviewUrl(exactModelId) {
+  // nvidia/nemotron-3-ultra-550b-a55b -> build.nvidia.com/models/nvidia/nemotron-3-ultra-550b-a55b/overview
+  // deepseek/deepseek-chat -> build.nvidia.com/models/deepseek/deepseek-chat/overview
+  const slash = String(exactModelId || '').indexOf('/');
+  if (slash <= 0) return `https://build.nvidia.com/models/${exactModelId}/overview`;
+  return `https://build.nvidia.com/models/${exactModelId}/overview`;
+}
+
+function planNimVerifyTask(baseOpts = {}, catalogArtifact = null) {
+  const ids = new Set();
+  try {
+    for (const o of db.listNimCandidateOffers(baseOpts)) ids.add(o.exact_model_id);
+  } catch { /* table absent in fresh fixtures: catalog only */ }
+  for (const m of (catalogArtifact && catalogArtifact.models) || []) {
+    if (m.is_free) ids.add(m.model_id);
+  }
+  const models = [...ids].sort();
+  if (models.length === 0) return null;
+  return {
+    task_id: 'nim_verify',
+    kind: 'nim_verify',
+    provider_key: 'nvidia',
+    assigned_model_ids: models,
+    check_urls: models.map(nvidiaOverviewUrl),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Community prefilter (deterministic, §4.3-5). Fetches the reddit / HN /
+// GitHub community surfaces from the watchlist and keeps only items whose
+// text names a known model (display name, alias, canonical id), a registry
+// provider, or a watchlist keyword. The remaining 10-40 candidates (url +
+// title + snippet) are the community worker's input; the LLM extracts leads
+// only and does no fetching itself.
+// ---------------------------------------------------------------------------
+
+function prefilterTermSet(models = [], providerNames = []) {
+  const terms = new Set();
+  const add = (v) => {
+    const s = typeof v === 'string' ? v.trim().toLowerCase() : '';
+    if (s.length >= 3) terms.add(s);
+  };
+  for (const m of models || []) {
+    add(m.display_name);
+    add(m.canonical_model_id);
+    for (const a of m.aliases_json || []) add(a);
+  }
+  for (const p of providerNames || []) add(p);
+  return terms;
+}
+
+// A candidate is kept when it names a known model, alias, or registry
+// provider. Keywords alone ("free" in LocalLLaMA) are noise; the name is
+// the signal. The snippet carries the keyword context for the worker.
+function prefilterMatch(text, terms, keywords = []) {
+  const lower = String(text || '').toLowerCase();
+  if ([...terms].some((t) => lower.includes(t))) return true;
+  return false;
+}
+
+async function prefilterCommunity(options = {}) {
+  const {
+    runId, runDir, baseOpts = {}, fetchImpl, now,
+    watchlist, models = [], providerNames = [], log = () => {},
+  } = options;
+  if (!runId || !runDir) throw new Error('prefilterCommunity requires runId and runDir');
+  const list = watchlist || loadWatchlist(watchlistPathFor(baseOpts));
+  const stampedNow = now || new Date().toISOString();
+  const terms = prefilterTermSet(models, providerNames);
+  const entries = list.community || [];
+  const keywords = entries.flatMap((e) => e.keywords || []);
+  const seen = new Set();
+  const candidates = [];
+  const push = (candidate) => {
+    const url = candidate.url;
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    candidates.push(candidate);
+  };
+
+  for (const entry of entries) {
+    if (entry.kind === 'reddit') {
+      for (const sub of entry.subreddits || []) {
+        const url = `https://www.reddit.com/r/${sub}/new.json?limit=100&t=day`;
+        try {
+          const res = await fetchWithRetry(url, fetchImpl);
+          if (!res.ok) { log(`  prefilter reddit r/${sub}: http ${res.status}`); continue; }
+          const parsed = JSON.parse(res.body);
+          for (const child of (parsed && parsed.data && parsed.data.children) || []) {
+            const d = child && child.data;
+            if (!d) continue;
+            const text = `${d.title || ''} ${d.selftext || ''}`;
+            if (!prefilterMatch(text, terms, keywords)) continue;
+            push({
+              source: `reddit:${sub}`, kind: 'reddit',
+              url: d.permalink ? `https://www.reddit.com${d.permalink}` : null,
+              title: d.title || null,
+              snippet: String(d.selftext || d.title || '').slice(0, 300),
+              created_at: d.created_utc ? new Date(d.created_utc * 1000).toISOString() : null,
+            });
+          }
+        } catch { /* best effort: one board down is not a run failure */ }
+        await sleepMs(PREFILTER_SLEEP_MS);
+      }
+    } else if (entry.kind === 'hn') {
+      const since = Math.floor((Date.parse(stampedNow) - 72 * 3600 * 1000) / 1000);
+      for (const q of entry.queries || []) {
+        const url = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(q)}`
+          + `&tags=story&numericFilters=created_at_i%3E${since}`;
+        try {
+          const res = await fetchWithRetry(url, fetchImpl);
+          if (!res.ok) { log(`  prefilter hn ${q}: http ${res.status}`); continue; }
+          const parsed = JSON.parse(res.body);
+          for (const hit of (parsed && parsed.hits) || []) {
+            const text = `${hit.title || ''} ${hit.story_text || ''} ${hit.url || ''}`;
+            if (!prefilterMatch(text, terms, keywords)) continue;
+            push({
+              source: `hn:${q}`, kind: 'hn',
+              url: hit.url || (hit.objectID ? `https://news.ycombinator.com/item?id=${hit.objectID}` : null),
+              title: hit.title || null,
+              snippet: String(hit.story_text || hit.title || '').slice(0, 300),
+              created_at: hit.created_at || null,
+            });
+          }
+        } catch { /* best effort */ }
+        await sleepMs(PREFILTER_SLEEP_MS);
+      }
+    } else if (entry.kind === 'github') {
+      for (const repo of entry.repos || []) {
+        const url = `https://api.github.com/repos/${repo}/releases?per_page=10`;
+        try {
+          const res = await fetchWithRetry(url, fetchImpl);
+          if (!res.ok) { log(`  prefilter github ${repo}: http ${res.status}`); continue; }
+          const parsed = JSON.parse(res.body);
+          for (const rel of Array.isArray(parsed) ? parsed : []) {
+            const text = `${rel.name || ''} ${rel.body || ''}`;
+            if (!prefilterMatch(text, terms, keywords)) continue;
+            push({
+              source: `github:${repo}`, kind: 'github',
+              url: rel.html_url || null,
+              title: rel.name || rel.tag_name || null,
+              snippet: String(rel.body || rel.name || '').slice(0, 300),
+              created_at: rel.published_at || null,
+            });
+          }
+        } catch { /* best effort */ }
+        await sleepMs(PREFILTER_SLEEP_MS);
+      }
+    }
+  }
+
+  const artifact = {
+    schema_version: 1,
+    task_id: 'community_prefilter',
+    generated_at: stampedNow,
+    terms: [...terms],
+    candidates: candidates.slice(0, PREFILTER_MAX_CANDIDATES),
+  };
+  const artifactPath = path.join(runDir, 'artifacts', 'community-prefilter.json');
+  fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
+  fs.writeFileSync(artifactPath, `${JSON.stringify(artifact, null, 2)}\n`);
+  log(`  prefilter community: ${artifact.candidates.length} candidate(s)`);
+  return artifact.candidates;
+}
+
+// ---------------------------------------------------------------------------
+// Provider monitor planning (§4.4): the LLM-side providers (watchlist
+// provider_monitors with watch URLs) are batched into up to 4 sessions of
+// 4-6 providers each (PROVIDER_MONITOR_BATCH, default 5). They always run.
+// A watch signal (hash change) on one of their channels is passed so the
+// worker knows which page changed; a discount_signal from the catalog lane
+// is passed for the provider it names.
+// ---------------------------------------------------------------------------
+
+const PROVIDER_MONITOR_MAX_SESSIONS = 4;
+
+function planProviderMonitorTasks(watchlist, signals, discountSignals = {}, opts = {}) {
+  const batch = Math.max(1, Math.min(6, opts.batch || Number(process.env.PROVIDER_MONITOR_BATCH) || 5));
+  const monitors = (watchlist.provider_monitors || []).filter((m) => m && m.watch && Object.keys(m.watch).length > 0);
+  const tasks = [];
+  for (let i = 0; i < monitors.length; i += batch) {
+    if (tasks.length >= PROVIDER_MONITOR_MAX_SESSIONS) break;
+    const slice = monitors.slice(i, i + batch);
+    const providerKeys = slice.map((m) => m.provider_key);
+    const watchUrls = slice.flatMap((m) => Object.entries(m.watch).map(([channel, url]) => ({
+      provider_key: m.provider_key, channel, url,
+    })));
+    const changedUrls = (signals || [])
+      .filter((s) => s.domain === 'provider_watch'
+        && typeof s.entity_key === 'string' && s.entity_key.startsWith('monitor:')
+        && providerKeys.includes(s.entity_key.split(':')[1]))
+      .filter((s) => s.status === 'changed')
+      .map((s) => s.url);
+    const discounts = providerKeys
+      .map((k) => discountSignals[k])
+      .flat()
+      .filter(Boolean);
+    tasks.push({
+      task_id: `provider_monitor:${tasks.length + 1}`,
+      kind: 'provider_monitor',
+      provider_key: providerKeys.length === 1 ? providerKeys[0] : null,
+      assigned_model_ids: [],
+      provider_keys: providerKeys,
+      watch_urls: watchUrls,
+      changed_urls: changedUrls,
+      discount_signals: discounts,
+    });
+  }
+  return tasks;
 }
 
 module.exports = {
@@ -588,4 +939,18 @@ module.exports = {
   planNewsScanTask,
   planCommunityTask,
   MAX_VENDOR_TASKS_PER_DAY,
+  // spec 0008 Phase 2 observation
+  OR_ENDPOINTS_BASE,
+  OR_ENDPOINTS_MAX_PER_DAY,
+  orEndpointChecklist,
+  endpointObservation,
+  observeOrEndpoints,
+  nvidiaOverviewUrl,
+  planNimVerifyTask,
+  PREFILTER_MAX_CANDIDATES,
+  prefilterTermSet,
+  prefilterMatch,
+  prefilterCommunity,
+  PROVIDER_MONITOR_MAX_SESSIONS,
+  planProviderMonitorTasks,
 };

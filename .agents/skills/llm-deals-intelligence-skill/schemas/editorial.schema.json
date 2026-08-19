@@ -88,16 +88,97 @@
           "change_type": {
             "enum": [
               "new",
-              "price_change",
-              "limit_change",
-              "provider_change",
-              "end_date_change",
               "ended",
               "revived",
-              "availability_change"
+              "price_change",
+              "discount_rate_change",
+              "provider_count_change",
+              "free_status_change",
+              "availability_change",
+              "context_change",
+              "model_id_change",
+              "rate_limit_change",
+              "data_policy_change",
+              "capability_change",
+              "campaign_started",
+              "campaign_ended",
+              "campaign_date_change",
+              "limit_change",
+              "provider_change",
+              "end_date_change"
             ]
           },
           "summary": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "$comment": "change の要約は構造化 before / after の数値を含める (例: 65% off -> 77% off)。"
+    },
+    "product_prose": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "summary"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "program_prose": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "summary"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "contradiction_notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "offer_name",
+          "note"
+        ],
+        "properties": {
+          "offer_name": {
+            "type": "string"
+          },
+          "note": {
             "type": "string"
           }
         },

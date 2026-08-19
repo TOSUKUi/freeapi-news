@@ -36,6 +36,9 @@ const TASK_KINDS = [
   // Spec 0008 Phase 1: deterministic watch channel fetch + model first
   // research workers.
   'watch', 'news_scan', 'vendor_deep_dive', 'community', 'model_fanout',
+  // Spec 0008 Phase 2: operational evidence workers (Phase 3 reservation
+  // for product / program monitors lives here so 0012 rebuilds tasks once).
+  'provider_monitor', 'nim_verify', 'product_monitor', 'program_monitor',
 ];
 const TASK_STATUSES = ['pending', 'complete', 'partial', 'failed'];
 const TASK_RESULT_STATUSES = ['complete', 'partial', 'failed'];
@@ -193,6 +196,8 @@ const ROW_JSON_COLUMNS = {
   benchmarks: ['facts_json'],
   models: ['aliases_json', 'known_providers_json'],
   watch_facts: ['facts_json'],
+  changes: ['before_json', 'after_json'],
+  contradictions: ['values_json'],
 };
 
 function parseRow(table, row) {
@@ -839,6 +844,41 @@ function setOfferHidden(providerKey, exactModelId, hidden, options = {}) {
   }
 }
 
+// Deterministic status transition (Gate 3 removals: NIM deprecated endpoint,
+// DISCOUNTED liveness). The lane offer upsert owns normal verification; this
+// is the only other write path to offers.status besides it.
+function setOfferStatus(providerKey, exactModelId, status, removalEvidence = null, options = {}) {
+  if (!['verified', 'stale', 'confirmed_removed'].includes(status)) {
+    throw new Error(`setOfferStatus: unknown status ${status}`);
+  }
+  const database = openCollectorDb(options);
+  try {
+    const now = nowIso();
+    const result = database.prepare(
+      'UPDATE offers SET status = ?, removal_evidence_json = ?, last_attempted_at = ? '
+      + 'WHERE provider_key = ? AND exact_model_id = ?'
+    ).run(
+      status,
+      removalEvidence === null || removalEvidence === undefined ? null : JSON.stringify(removalEvidence),
+      now, providerKey, exactModelId,
+    );
+    return { updated: result.changes > 0 };
+  } finally {
+    database.close();
+  }
+}
+
+function getOffer(providerKey, exactModelId, options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    return parseRow('offers', database.prepare(
+      'SELECT * FROM offers WHERE provider_key = ? AND exact_model_id = ?'
+    ).get(providerKey, exactModelId)) || null;
+  } finally {
+    database.close();
+  }
+}
+
 // Applies current offer, benchmark, cache, search, and run changes in one
 // BEGIN IMMEDIATE transaction. Any error rolls back and leaves current rows
 // unchanged (AC-15). Existing benchmark rows are immutable: a benchmark
@@ -945,14 +985,15 @@ function finalizeRun(runId, changes = {}, options = {}) {
 
       const upsertCache = db.prepare(
         'INSERT INTO source_cache (' +
-        '  url, subject_key, provider_key, exact_model_id, fetched_at, http_status, content_hash' +
-        ') VALUES (?, ?, ?, ?, ?, ?, ?) ' +
+        '  url, subject_key, provider_key, exact_model_id, fetched_at, http_status, content_hash, source_tier' +
+        ') VALUES (?, ?, ?, ?, ?, ?, ?, ?) ' +
         'ON CONFLICT(url, subject_key) DO UPDATE SET' +
         '  provider_key = excluded.provider_key,' +
         '  exact_model_id = excluded.exact_model_id,' +
         '  fetched_at = excluded.fetched_at,' +
         '  http_status = excluded.http_status,' +
-        '  content_hash = excluded.content_hash'
+        '  content_hash = excluded.content_hash,' +
+        '  source_tier = excluded.source_tier'
       );
       for (const entry of evidence) {
         validateSourceCacheChange(entry);
@@ -963,7 +1004,8 @@ function finalizeRun(runId, changes = {}, options = {}) {
           entry.exact_model_id ?? null,
           entry.fetched_at,
           entry.http_status,
-          entry.content_hash
+          entry.content_hash,
+          Number.isInteger(entry.source_tier) ? entry.source_tier : sourceTierFromUrl(entry.url),
         );
       }
 
@@ -1418,6 +1460,307 @@ function latestWatchFacts(options = {}) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Gate 3 operational evidence + condition facts (spec 0008 Phase 2)
+// ---------------------------------------------------------------------------
+
+// Deterministic-only write path for Gate 3 evidence columns. These columns
+// are never written by the lane offer upsert (the worker never sets them);
+// the deterministic observer (OR endpoints, NIM verify) owns them.
+const OPERATIONAL_EVIDENCE_COLUMNS = [
+  'provider_count', 'uptime_percent', 'activity_evidence',
+  'free_endpoint_status', 'api_calls_30d',
+];
+const OFFER_CONDITION_COLUMNS = [
+  'card_required', 'minimum_deposit_usd', 'subscription_required',
+  'referral_required', 'data_policy_json', 'data_policy_hash',
+  'data_policy_verified_at', 'suspicion_score',
+];
+
+function setOfferOperationalEvidence(providerKey, exactModelId, evidence = {}, options = {}) {
+  const keys = OPERATIONAL_EVIDENCE_COLUMNS.filter((column) => column in evidence);
+  if (!keys.length) return { updated: false };
+  const assignments = keys.map((column) => `${column} = ?`).join(', ');
+  const database = openCollectorDb(options);
+  try {
+    const result = database.prepare(
+      `UPDATE offers SET ${assignments} WHERE provider_key = ? AND exact_model_id = ?`
+    ).run(...keys.map((column) => evidence[column] === undefined ? null : evidence[column]), providerKey, exactModelId);
+    return { updated: result.changes > 0 };
+  } finally {
+    database.close();
+  }
+}
+
+// Condition facts derived from crawl-facts (worker proposal, deterministically
+// stored; booleans arrive as 0/1 or null). suspicion_score is the classifier
+// value adopted by the assembler (0..5).
+function setOfferConditionFacts(providerKey, exactModelId, facts = {}, options = {}) {
+  const keys = OFFER_CONDITION_COLUMNS.filter((column) => column in facts);
+  if (!keys.length) return { updated: false };
+  const assignments = keys.map((column) => `${column} = ?`).join(', ');
+  const database = openCollectorDb(options);
+  try {
+    const result = database.prepare(
+      `UPDATE offers SET ${assignments} WHERE provider_key = ? AND exact_model_id = ?`
+    ).run(...keys.map((column) => facts[column] === undefined ? null : facts[column]), providerKey, exactModelId);
+    return { updated: result.changes > 0 };
+  } finally {
+    database.close();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Change engine persistence (spec 0008 §4.6): per-run append of the
+// structured before / after diff. The report reads the current run's computed
+// changes; the table is the durable audit trail.
+// ---------------------------------------------------------------------------
+
+function recordChange(runId, change, options = {}) {
+  if (!change.change_key || !change.change_type) {
+    throw new Error('recordChange requires change_key and change_type');
+  }
+  const database = openCollectorDb(options);
+  try {
+    database.prepare(
+      'INSERT INTO changes (run_id, change_key, change_type, field, before_json, after_json, detected_at) '
+      + 'VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(
+      runId, change.change_key, change.change_type,
+      nullableString(change.field),
+      change.before === undefined || change.before === null ? null : JSON.stringify(change.before),
+      change.after === undefined || change.after === null ? null : JSON.stringify(change.after),
+      change.detected_at || new Date().toISOString(),
+    );
+    return { recorded: true };
+  } finally {
+    database.close();
+  }
+}
+
+function listChanges({ runId = null, limit = 500 } = {}, options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    if (runId) {
+      return database.prepare(
+        'SELECT * FROM changes WHERE run_id = ? ORDER BY change_id ASC LIMIT ?'
+      ).all(runId, limit).map((row) => parseRow('changes', row));
+    }
+    return database.prepare(
+      'SELECT * FROM changes ORDER BY detected_at DESC, change_id DESC LIMIT ?'
+    ).all(limit).map((row) => parseRow('changes', row));
+  } finally {
+    database.close();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Within-run contradictions (spec 0008 §4.5): two or more fetch evidences in
+// the same run disagree on one (offer, fact). The lowest source tier wins.
+// If a later run reaches the same adopted value the contradiction closes;
+// a new disagreement keeps it open.
+// ---------------------------------------------------------------------------
+
+function addContradiction(runId, entry, options = {}) {
+  if (!entry.change_key || !entry.fact || !Array.isArray(entry.values) || entry.values.length < 2) {
+    throw new Error('addContradiction requires change_key, fact, and at least two values');
+  }
+  const database = openCollectorDb(options);
+  try {
+    database.prepare(
+      'INSERT INTO contradictions (run_id, change_key, fact, values_json, resolved_value, '
+      + "resolution_rule, open, detected_at, resolved_at) VALUES (?, ?, ?, ?, ?, ?, 1, ?, NULL)"
+    ).run(
+      runId, entry.change_key, entry.fact, JSON.stringify(entry.values),
+      nullableString(entry.resolved_value), nullableString(entry.resolution_rule),
+      entry.detected_at || new Date().toISOString(),
+    );
+    return { added: true };
+  } finally {
+    database.close();
+  }
+}
+
+// Reconciles today's contradiction finding with the open history for the same
+// (change_key, fact). Same adopted value -> close (open = 0, resolved_at);
+// different value -> keep open with today's values appended history.
+function reconcileContradiction(runId, entry, options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    const open = parseRow('contradictions', database.prepare(
+      'SELECT * FROM contradictions WHERE change_key = ? AND fact = ? AND open = 1 '
+      + 'ORDER BY contradiction_id DESC LIMIT 1'
+    ).get(entry.change_key, entry.fact)) || null;
+    const now = entry.detected_at || new Date().toISOString();
+    if (!open) return addContradiction(runId, entry, options);
+    if (String(open.resolved_value ?? '') === String(entry.resolved_value ?? '')) {
+      database.prepare(
+        'UPDATE contradictions SET open = 0, resolved_at = ? WHERE contradiction_id = ?'
+      ).run(now, open.contradiction_id);
+      return { closed: open.contradiction_id };
+    }
+    database.prepare(
+      'UPDATE contradictions SET open = 1, resolved_at = NULL WHERE contradiction_id = ?'
+    ).run(open.contradiction_id);
+    return addContradiction(runId, entry, options);
+  } finally {
+    database.close();
+  }
+}
+
+function listContradictions({ openOnly = false, limit = 200 } = {}, options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    const where = openOnly ? 'WHERE open = 1 ' : '';
+    return database.prepare(
+      `SELECT * FROM contradictions ${where}ORDER BY contradiction_id DESC LIMIT ?`
+    ).all(limit).map((row) => parseRow('contradictions', row));
+  } finally {
+    database.close();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// NIM verification candidates + known normal price baselines (§4.3-4, §4.11)
+// ---------------------------------------------------------------------------
+
+// Nvidia offers that are not confirmed removed are the NIM free endpoint
+// check list: their historical state is free / ultra-low by definition of
+// how nvidia offers enter this table (the catalog lane admits only free or
+// ultra-low prices).
+function listNimCandidateOffers(options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    return database.prepare(
+      "SELECT provider_key, exact_model_id, canonical_model_id, status, "
+      + 'effective_input_price_usd, effective_output_price_usd, price_source_url '
+      + "FROM offers WHERE provider_key = 'nvidia' AND status != 'confirmed_removed' "
+      + 'ORDER BY exact_model_id'
+    ).all();
+  } finally {
+    database.close();
+  }
+}
+
+function listOffersByProvider(providerKey, options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    return database.prepare('SELECT * FROM offers WHERE provider_key = ?').all(providerKey);
+  } finally {
+    database.close();
+  }
+}
+
+// Known normal prices per canonical model from the offers history: the
+// discount_signal baseline for catalog price drops (§4.11). Returns a map of
+// canonical_model_id -> { input, output } using the most recently verified
+// normal prices when present, else the latest stored normals.
+function knownNormalPricesByCanonical(options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    const rows = database.prepare(
+      'SELECT canonical_model_id, normal_input_price_usd, normal_output_price_usd, '
+      + 'price_verified_at, last_seen_run_id FROM offers '
+      + 'WHERE canonical_model_id IS NOT NULL '
+      + 'AND (normal_input_price_usd IS NOT NULL OR normal_output_price_usd IS NOT NULL) '
+      + 'ORDER BY last_seen_run_id ASC, price_verified_at ASC'
+    ).all();
+    const byCanonical = new Map();
+    for (const row of rows) {
+      byCanonical.set(row.canonical_model_id, {
+        input: row.normal_input_price_usd,
+        output: row.normal_output_price_usd,
+      });
+    }
+    return byCanonical;
+  } finally {
+    database.close();
+  }
+}
+
+// All leads (CLI + lead lifecycle); listOpenLeads is the pipeline view.
+function listLeads({ status = null, limit = 500 } = {}, options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    if (status) {
+      return database.prepare(
+        'SELECT * FROM leads WHERE status = ? ORDER BY detected_at DESC, lead_id DESC LIMIT ?'
+      ).all(status, limit).map((row) => parseRow('leads', row));
+    }
+    return database.prepare(
+      'SELECT * FROM leads ORDER BY detected_at DESC, lead_id DESC LIMIT ?'
+    ).all(limit).map((row) => parseRow('leads', row));
+  } finally {
+    database.close();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Deterministic source tier (spec 0008 §4.5). 1 is the strongest evidence,
+// 11 the weakest. The LLM never writes a tier: this is the single code path
+// that assigns tiers from URL patterns (crawl-facts carries no
+// source_tier_hint either).
+// ---------------------------------------------------------------------------
+
+function sourceTierFromUrl(url) {
+  if (!url || typeof url !== 'string') return 11;
+  let host = '';
+  let pathname = '';
+  try {
+    const u = new URL(url);
+    host = u.hostname.toLowerCase();
+    pathname = u.pathname.toLowerCase();
+  } catch {
+    return 11;
+  }
+  const community = ['reddit.com', 'redd.it', 'news.ycombinator.com', 'hn.algolia.com', 'discord.com', 'x.com', 'twitter.com'];
+  if (community.some((h) => host === h || host.endsWith(`.${h}`))) return 9;
+  const githubHf = ['github.com', 'huggingface.co'];
+  if (githubHf.some((h) => host === h || host.endsWith(`.${h}`))) {
+    return /\/(releases|tags)\b/.test(pathname) ? 5 : 7;
+  }
+  const pricing = /(^|\/)(pricing|price|plans?)(\/|$)/.test(pathname);
+  const changelog = /(^|\/)(changelog|release-notes?|whats-new|news)(\/|$)/.test(pathname);
+  const blog = host.startsWith('blog.') || /(^|\/)blog(\/|$)/.test(pathname);
+  const apiDocs = /(^|\/)(api|docs)(\/|$)/.test(pathname) && !pricing;
+  const modelPage = /(^|\/)models?(\/|$)/.test(pathname);
+  if (pricing) return 2;
+  if (changelog) return 5;
+  if (blog) return 6;
+  if (apiDocs) return 3;
+  if (host === 'openrouter.ai') return 8; // router listing, not the model page
+  if (/^integrate\.api\./.test(host)) return 8; // raw API model listing (aggregator)
+  if (modelPage) return 4;
+  return 11;
+}
+
+// Spec 0008 §4.11: frontier is re-derived every run (never LLM-written).
+// A model is frontier when a verified Terminal-Bench 2.0/2.1 score is at or
+// above 80, or its vendor is in the watchlist frontier_vendors. Returns the
+// number of updated rows.
+function rederiveFrontier(frontierVendorKeys = [], options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    const rows = database.prepare('SELECT canonical_model_id, vendor_key FROM models').all();
+    const frontierVendors = new Set(frontierVendorKeys);
+    let updated = 0;
+    const stmt = database.prepare('UPDATE models SET frontier = ? WHERE canonical_model_id = ?');
+    for (const row of rows) {
+      const bench = database.prepare(
+        "SELECT score FROM benchmarks WHERE canonical_model_id = ? "
+        + "AND benchmark_key IN ('terminal_bench_2_0', 'terminal_bench_2_1') ORDER BY score DESC LIMIT 1"
+      ).get(row.canonical_model_id);
+      const byScore = bench && typeof bench.score === 'number' && bench.score >= 80;
+      const byVendor = row.vendor_key !== null && frontierVendors.has(row.vendor_key);
+      const frontier = byScore || byVendor ? 1 : 0;
+      if (stmt.run(frontier, row.canonical_model_id).changes > 0) updated += 1;
+    }
+    return { updated };
+  } finally {
+    database.close();
+  }
+}
+
 function uniqueList(values) {
   const seen = new Set();
   const out = [];
@@ -1724,6 +2067,8 @@ module.exports = {
   buildOfferUpsertSql,
   offerUpsertParams,
   setOfferHidden,
+  setOfferStatus,
+  getOffer,
   extractOfferPriceColumns,
   sanitizeOfferFacts,
   // errors
@@ -1769,6 +2114,20 @@ module.exports = {
   listOpenLeads,
   recordWatchFact,
   latestWatchFacts,
+  // spec 0008 Phase 2: gate 3 evidence, changes, contradictions
+  setOfferOperationalEvidence,
+  setOfferConditionFacts,
+  recordChange,
+  listChanges,
+  addContradiction,
+  reconcileContradiction,
+  listContradictions,
+  listNimCandidateOffers,
+  listOffersByProvider,
+  knownNormalPricesByCanonical,
+  listLeads,
+  sourceTierFromUrl,
+  rederiveFrontier,
   // run directory layout
   sanitizeTaskId,
   artifactPathFor,

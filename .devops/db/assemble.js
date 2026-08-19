@@ -44,9 +44,20 @@ const LOCAL_MODEL_GATE_B = 30;
 const CAUTION_FAILURES = 4;
 
 const CHANGE_TYPES = [
-  'new', 'price_change', 'limit_change', 'provider_change',
-  'end_date_change', 'ended', 'revived', 'availability_change',
+  'new', 'ended', 'revived', 'price_change', 'discount_rate_change',
+  'provider_count_change', 'free_status_change', 'availability_change',
+  'context_change', 'model_id_change', 'rate_limit_change',
+  'data_policy_change', 'capability_change', 'campaign_started',
+  'campaign_ended', 'campaign_date_change', 'limit_change', 'provider_change',
+  'end_date_change',
 ];
+
+// Report priority (§4.6): ranked price drops / free-ups > new free offers
+// > ended / removed > everything else. Within a class the order is
+// deterministic (offer key).
+const CHANGE_PRIORITY = {
+  price_drop: 0, new_free: 1, ended: 2, other: 3,
+};
 
 function nowIso() {
   return new Date().toISOString();
@@ -184,14 +195,59 @@ function deriveInformationConfidence(candidate) {
   return 'MEDIUM';
 }
 
-// Operational confidence: HIGH when verified this run, MEDIUM while stale
-// runs one through three, LOW in caution or removed state.
-function deriveOperationalConfidence(offer) {
-  if (offer.status === 'confirmed_removed') return 'LOW';
-  if (offer.status === 'stale') {
-    return (offer.consecutive_failures || 0) >= CAUTION_FAILURES ? 'LOW' : 'MEDIUM';
+// Operational confidence is deterministic Gate 3 evidence (spec 0008 §4.7),
+// derived from the stored observation columns, never from the LLM:
+//   * NIM free offers need the individual endpoint page (available /
+//     deprecated + API call count);
+//   * router offers need the endpoints observer (provider count / uptime;
+//     a measured zero provider set at $0 is NONE = not operable);
+//   * official providers need this run's docs / pricing fetch success.
+// Ranking admits HIGH and MEDIUM only; NONE and LOW are deterministic
+// ranking exclusions.
+function deriveOperationalConfidence(candidate) {
+  return rankingPolicy.deriveOperationalConfidence({
+    providerKey: candidate.provider_key,
+    accessKind: candidate.access_kind,
+    verified: candidate.status === 'verified',
+    // Mild staleness (below the caution threshold) keeps the carried-over
+    // evidence rankable at MEDIUM; the fail-safe convention is preserved.
+    staleMild: candidate.status === 'stale' &&
+      (candidate.consecutive_failures || 0) < CAUTION_FAILURES,
+    providerCount: candidate.provider_count ?? null,
+    uptimePercent: candidate.uptime_percent ?? null,
+    freeEndpointStatus: candidate.free_endpoint_status ?? null,
+    apiCalls30d: candidate.api_calls_30d ?? null,
+  });
+}
+
+// Human readable Gate 3 evidence line for the report card.
+function gate3Evidence(candidate) {
+  if (candidate.provider_key === 'nvidia') {
+    if (candidate.free_endpoint_status === 'deprecated') return 'NIM free endpoint deprecated on the individual model page';
+    if (candidate.free_endpoint_status === 'available') {
+      return candidate.api_calls_30d !== null && candidate.api_calls_30d !== undefined
+        ? `NIM free endpoint available (API calls last 30 days: ${candidate.api_calls_30d})`
+        : 'NIM free endpoint available (call count not visible)';
+    }
+    return candidate.activity_evidence || null;
   }
-  return 'HIGH';
+  if (candidate.provider_key === 'openrouter') {
+    if (typeof candidate.provider_count === 'number') {
+      return candidate.uptime_percent !== null && candidate.uptime_percent !== undefined
+        ? `router: ${candidate.provider_count} provider(s), 1d uptime ${candidate.uptime_percent}%`
+        : `router: ${candidate.provider_count} provider(s)`;
+    }
+    return candidate.activity_evidence || null;
+  }
+  return candidate.status === 'verified' ? 'official docs / pricing fetch verified this run' : null;
+}
+
+// Suspicion: the classifier value (Phase 3 wiring) or the deterministic
+// floor for unregistered providers (spec §4.7: unregistered = minimum 2).
+function finalSuspicion(candidate, registered) {
+  const base = Number.isInteger(candidate.suspicion_score) ? candidate.suspicion_score : 0;
+  if (!registered) return Math.max(base, rankingPolicy.SUSPICION_UNREGISTERED_FLOOR);
+  return base;
 }
 
 // ---------------------------------------------------------------------------
@@ -208,14 +264,30 @@ function buildCandidateView(options = {}) {
 
   const database = db.openCollectorDb(options);
   let offers;
+  let frontierRows = [];
   try {
     offers = database.prepare(
       'SELECT * FROM offers ORDER BY provider_key, exact_model_id'
     ).all().map((row) => db.parseRow('offers', row));
-  } finally {
+    // Frontier models (spec 0008 §4.11): re-derived this run into
+    // models.frontier (Terminal-Bench 80+ or watchlist frontier vendor).
+    // Discount tracking matches canonical id and aliases, slash insensitive.
+    frontierRows = database.prepare(
+      'SELECT canonical_model_id, aliases_json FROM models WHERE frontier = 1'
+    ).all();
+  } catch { /* models table absent in very old fixtures: no frontier */ }
+  finally {
     database.close();
   }
   const { byModel } = benchmarks.loadCurrentBenchmarks(options);
+  const normId = (v) => String(v || '').replace(/\//g, '').toLowerCase();
+  const frontierIds = new Set();
+  for (const row of frontierRows) {
+    frontierIds.add(normId(row.canonical_model_id));
+    let aliases = [];
+    try { aliases = JSON.parse(row.aliases_json || '[]'); } catch { aliases = []; }
+    for (const alias of aliases) frontierIds.add(normId(alias));
+  }
 
   const candidates = [];
   for (const offer of offers) {
@@ -265,8 +337,30 @@ function buildCandidateView(options = {}) {
       offer.effective_input_price_usd, offer.effective_output_price_usd,
       offer.effective_cache_read_price_usd, offer.effective_cache_write_price_usd
     );
-    const accessKind = deriveAccessKind(
+    const derivedAccessKind = deriveAccessKind(
       offer.effective_input_price_usd, offer.effective_output_price_usd
+    );
+    const frontierModel = Boolean(offer.canonical_model_id) &&
+      (frontierIds.has(normId(offer.canonical_model_id)) ||
+        frontierIds.has(normId(offer.exact_model_id)));
+    const isDiscount = rankingPolicy.isDiscountPrice(
+      offer.normal_input_price_usd, offer.normal_output_price_usd,
+      offer.effective_input_price_usd, offer.effective_output_price_usd
+    );
+    // A frontier model at a verified discount is DISCOUNTED (discount
+    // section, never ranked), even when the discounted price would also
+    // qualify as ULTRA_LOW (spec 0008 §4.11, operator decision 2026-08-19).
+    const accessKind = (isDiscount && frontierModel)
+      ? 'DISCOUNTED'
+      : derivedAccessKind;
+
+    // Deterministic suspicion floor: an unregistered provider never scores
+    // better than 2 (spec 0008 §4.7); the classifier value (Phase 3) can
+    // raise it, nothing raises it above 5.
+    const registered = Boolean(regByKey[offer.provider_key]);
+    const suspicion = Math.max(
+      Number.isInteger(offer.suspicion_score) ? offer.suspicion_score : 0,
+      registered ? 0 : rankingPolicy.SUSPICION_UNREGISTERED_FLOOR
     );
 
     candidates.push({
@@ -317,7 +411,15 @@ function buildCandidateView(options = {}) {
       in_caution: inCaution,
       last_verified: offer.last_verified_at || null,
       pricing_hash: offer.pricing_hash || null,
-      suspicion_score: 0,
+      suspicion_score: suspicion,
+      // Spec 0008 Phase 2: Gate 3 operational evidence columns.
+      provider_count: Number.isInteger(offer.provider_count) ? offer.provider_count : null,
+      uptime_percent: typeof offer.uptime_percent === 'number' ? offer.uptime_percent : null,
+      activity_evidence: offer.activity_evidence || null,
+      free_endpoint_status: offer.free_endpoint_status || null,
+      api_calls_30d: Number.isInteger(offer.api_calls_30d) ? offer.api_calls_30d : null,
+      frontier: frontierModel,
+      data_policy: offerDataPolicy(offer),
       // For router cards the exact model page is the primary citation. It is
       // generated from the registry template, while only fetched URLs enter
       // source_cache and endpoint evidence.
@@ -327,6 +429,24 @@ function buildCandidateView(options = {}) {
     });
   }
   return { generatedAt: nowIso(), candidates };
+}
+
+// Data policy text from the stored condition facts (Phase 3 wires the
+// refresh; the column may already carry a verified value).
+function offerDataPolicy(offer) {
+  if (!offer.data_policy_json) return null;
+  try {
+    const parsed = typeof offer.data_policy_json === 'string'
+      ? JSON.parse(offer.data_policy_json)
+      : offer.data_policy_json;
+    if (parsed && typeof parsed === 'object') {
+      return typeof parsed.text === 'string' ? parsed.text
+        : (typeof parsed.value === 'string' ? parsed.value : null);
+    }
+    return typeof parsed === 'string' ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 // Builds the price object from typed USD columns. Only finite numbers are
@@ -354,6 +474,26 @@ function priceObject(input, output, cacheRead, cacheWrite) {
 // confirmation date, passes the local model gate, and carries the endpoint
 // evidence the validator will re-check.
 function decideEligibility(candidate) {
+  // Spec 0008 §4.11: DISCOUNTED frontier offers are never ranked; they are
+  // evaluated for the discount_offers section instead.
+  if (candidate.access_kind === 'DISCOUNTED') {
+    return { eligible: false, reason: '[discounted] frontier discount offers belong to discount_offers, never ranked (spec 0008 §4.11)' };
+  }
+  // Gate 3 (spec 0008 §4.7): deterministic operational evidence. NONE is a
+  // hard exclusion (e.g. a $0 router model with a measured zero provider
+  // set: listed but not operable); LOW means no fresh evidence this run and
+  // does not rank.
+  const operationalConfidence = deriveOperationalConfidence(candidate);
+  if (operationalConfidence === 'NONE') {
+    return { eligible: false, reason: '[gate3] no operational evidence: the offer is not currently operable (provider_count 0 at $0, deprecated endpoint, or unverified)' };
+  }
+  if (operationalConfidence === 'LOW') {
+    return { eligible: false, reason: '[gate3] operational confidence LOW: no fresh operational evidence this run' };
+  }
+  // Suspicion 4-5 never ranks (classifier value + deterministic floor).
+  if (candidate.suspicion_score > rankingPolicy.SUSPICION_RANKING_MAX) {
+    return { eligible: false, reason: `[suspicion] suspicion ${candidate.suspicion_score} >= 4 never ranks (spec 0008 §4.7)` };
+  }
   if (candidate.benchmark_pending || !candidate.tier) {
     return { eligible: false, reason: '[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)' };
   }
@@ -392,6 +532,62 @@ function decideEligibility(candidate) {
   }
   if (!candidate.endpoint_source) {
     return { eligible: false, reason: '[endpoint] missing endpoint_source; no fetched official doc states the base URL' };
+  }
+  return { eligible: true, reason: null };
+}
+
+// Spec 0008 §4.11: DISCOUNTED admission for the discount_offers section.
+// Gate 1 (endpoint evidence) and Gate 3 (operational evidence) apply as
+// usual; on top of them the discount-specific deterministic conditions:
+// frontier status, both prices known with normal > effective, and discount
+// evidence (a stated window or a quoted normal price). No inference.
+function decideDiscountEligibility(candidate) {
+  if (candidate.in_caution) {
+    return { eligible: false, reason: `[stale] ${candidate.consecutive_failures} consecutive failed verifications; moved to caution (AC-3)` };
+  }
+  if (!candidate.frontier) {
+    return { eligible: false, reason: '[frontier] not a frontier model (no Terminal-Bench 80+ and no frontier vendor); discount tracking is frontier-only (§4.11)' };
+  }
+  if (!candidate.price_source) {
+    return { eligible: false, reason: '[price-source] no fetched price source on record' };
+  }
+  if (!candidate.price_verified_at) {
+    return { eligible: false, reason: '[price-date] no price confirmation date on record' };
+  }
+  const normal = candidate.normal_price_per_million || {};
+  const effective = candidate.effective_price_per_million || {};
+  if (typeof normal.input !== 'number' || typeof normal.output !== 'number' ||
+      typeof effective.input !== 'number' || typeof effective.output !== 'number') {
+    return { eligible: false, reason: '[discount] normal and effective prices must both be fully known (no inference)' };
+  }
+  if (!rankingPolicy.isDiscountPrice(normal.input, normal.output, effective.input, effective.output)) {
+    return { eligible: false, reason: '[discount] normal price does not strictly exceed the effective price' };
+  }
+  const hasWindow = Boolean(candidate.discount_start_at && candidate.discount_end_at);
+  const hasNormalQuote = candidate.facts &&
+    typeof candidate.facts.pricing_text === 'string' && candidate.facts.pricing_text.trim().length > 0;
+  if (!hasWindow && !hasNormalQuote) {
+    return { eligible: false, reason: '[discount] no discount window or normal price citation on record (no inference)' };
+  }
+  const operationalConfidence = deriveOperationalConfidence(candidate);
+  if (operationalConfidence === 'NONE') {
+    return { eligible: false, reason: '[gate3] no operational evidence: the offer is not currently operable' };
+  }
+  if (operationalConfidence === 'LOW') {
+    return { eligible: false, reason: '[gate3] operational confidence LOW: no fresh operational evidence this run' };
+  }
+  if (candidate.suspicion_score > rankingPolicy.SUSPICION_RANKING_MAX) {
+    return { eligible: false, reason: `[suspicion] suspicion ${candidate.suspicion_score} >= 4 never ranks (spec 0008 §4.7)` };
+  }
+  if (!candidate.base_url) {
+    return { eligible: false, reason: '[endpoint] missing base_url; provider not in registry' };
+  }
+  if (!candidate.endpoint_source) {
+    return { eligible: false, reason: '[endpoint] missing endpoint_source' };
+  }
+  if (typeof candidate.total_parameters_b === 'number' && candidate.total_parameters_b > 0 &&
+      candidate.total_parameters_b < 30) {
+    return { eligible: false, reason: '[local-run] under 30B models stay out of discount tracking (quality gate)' };
   }
   return { eligible: true, reason: null };
 }
@@ -443,10 +639,13 @@ function loadOffersFromBackup(runDir) {
   }
 }
 
-// Deterministic change records: exact identity, pricing hash, quota facts,
-// endpoint, benchmark key, and liveness diffs from the last promoted state
-// (spec value sourcing). The Editor supplies the Japanese summary; the
-// assembler provides a deterministic fallback so changes never depend on prose.
+// Deterministic change records with structured before / after (spec 0008
+// §4.6). Exact identity, pricing, quota, endpoint, benchmark, liveness,
+// discount campaign, provider count, context, model id alias join, data
+// policy. The Editor supplies the Japanese summary from the structured
+// values; the assembler keeps a deterministic fallback so changes never
+// depend on prose. Returns one record per (offer, type) so a single offer
+// can produce both a price_change and a campaign_date_change.
 function computeChanges(currentOffers, priorOffers) {
   const priorByKey = new Map(priorOffers.map((o) => [offerKey(o.provider_key, o.exact_model_id), o]));
   const currentByKey = new Map(currentOffers.map((o) => [offerKey(o.provider_key, o.exact_model_id), o]));
@@ -456,61 +655,220 @@ function computeChanges(currentOffers, priorOffers) {
     const facts = offer.facts_json && typeof offer.facts_json === 'object' ? offer.facts_json : {};
     return facts.name || facts.model_name || offer.canonical_model_id;
   };
+  const pricePair = (o) => ({
+    input: o.effective_input_price_usd === undefined ? null : o.effective_input_price_usd,
+    output: o.effective_output_price_usd === undefined ? null : o.effective_output_price_usd,
+  });
+  const isFreePair = (p) => p.input === 0 && p.output === 0;
+  const discPct = (normalIn, normalOut, effIn, effOut) => {
+    const rate = (n, e) => (typeof n === 'number' && typeof e === 'number' && n > 0 && Number.isFinite(n) && Number.isFinite(e))
+      ? Math.round(((n - e) / n) * 1000) / 10 : null;
+    const a = rate(normalIn, effIn);
+    const b = rate(normalOut, effOut);
+    return a === null ? b : (b === null ? a : Math.max(a, b));
+  };
+  const factsOf = (o) => (o.facts_json && typeof o.facts_json === 'object' ? o.facts_json : {});
+  const quotaText = (o) => {
+    const f = factsOf(o);
+    return String(f.free_quota_text || f.free_limits || '') + '|' + JSON.stringify(f.rate_limits || o.facts_json?.rate_limits || null);
+  };
+
+  // model_id_change: the old exact id disappeared but the same canonical
+  // model reappeared under a new id (alias join). Those two offers are not
+  // "ended + new"; they are one rename (spec §4.6).
+  const priorByCanonical = new Map();
+  for (const o of priorOffers) {
+    if (!o.canonical_model_id || o.status === 'confirmed_removed') continue;
+    priorByCanonical.set(`${o.provider_key}\u0000${o.canonical_model_id}`, o);
+  }
+  const renamedCurrent = new Set();
+  const renamedPrior = new Set();
+  for (const [key, current] of currentByKey) {
+    if (!current.canonical_model_id || priorByKey.has(key)) continue;
+    const prior = priorByCanonical.get(`${current.provider_key}\u0000${current.canonical_model_id}`);
+    if (prior && prior.exact_model_id !== current.exact_model_id && !priorByKey.has(offerKey(current.provider_key, prior.exact_model_id))) {
+      renamedCurrent.add(key);
+      renamedPrior.add(offerKey(current.provider_key, prior.exact_model_id));
+      changes.push({
+        offer_key: key, offer_name: nameOf(current), change_type: 'model_id_change',
+        field: 'model_id', before: prior.exact_model_id, after: current.exact_model_id,
+      });
+    }
+  }
 
   for (const [key, current] of currentByKey) {
     const prior = priorByKey.get(key);
     const name = nameOf(current);
     if (!prior) {
-      if (current.status !== 'confirmed_removed') {
-        changes.push({ offer_key: key, offer_name: name, change_type: 'new', diffs: ['first seen this run'] });
+      if (current.status !== 'confirmed_removed' && !renamedCurrent.has(key)) {
+        const p = pricePair(current);
+        const newFree = isFreePair(p) ||
+          (p.input !== null && p.input <= 0.2 && p.output !== null && p.output <= 0.4);
+        changes.push({
+          offer_key: key, offer_name: name, change_type: 'new',
+          field: null, before: null, after: newFree ? { free: true } : null,
+        });
       }
       continue;
     }
-    const diffs = [];
-    let changeType = null;
+
+    const curFacts = factsOf(current);
+    const priorFacts = factsOf(prior);
+    const priorPair = pricePair(prior);
+    const curPair = pricePair(current);
+    const priorDates = { start: prior.discount_start_at ?? null, end: prior.discount_end_at ?? null };
+    const curDates = { start: current.discount_start_at ?? null, end: current.discount_end_at ?? null };
+    const priorDiscounted = (prior.normal_input_price_usd !== null || prior.normal_output_price_usd !== null) &&
+      priorPair.input !== null && priorPair.output !== null &&
+      ((prior.normal_input_price_usd ?? 0) > priorPair.input || (prior.normal_output_price_usd ?? 0) > priorPair.output);
+    const curDiscounted = (current.normal_input_price_usd !== null || current.normal_output_price_usd !== null) &&
+      curPair.input !== null && curPair.output !== null &&
+      ((current.normal_input_price_usd ?? 0) > curPair.input || (current.normal_output_price_usd ?? 0) > curPair.output);
+
+    // Liveness transitions first: they can redefine the whole record.
     if (prior.status === 'confirmed_removed' && current.status !== 'confirmed_removed') {
-      changeType = 'revived';
-      diffs.push(`liveness: ${prior.status} -> ${current.status}`);
-    } else if (prior.status !== 'confirmed_removed' && current.status === 'confirmed_removed') {
-      changeType = 'ended';
-      diffs.push(`liveness: ${prior.status} -> confirmed_removed`);
+      changes.push({ offer_key: key, offer_name: name, change_type: 'revived', field: 'liveness', before: prior.status, after: current.status });
+      continue;
     }
-    if (prior.pricing_hash && current.pricing_hash && prior.pricing_hash !== current.pricing_hash) {
-      diffs.push('pricing_hash changed');
-      if (!changeType) changeType = 'price_change';
+    if (prior.status !== 'confirmed_removed' && current.status === 'confirmed_removed') {
+      // A discounted offer whose price returned to normal is a campaign end,
+      // not a plain removal (§4.11 liveness).
+      const type = priorDiscounted || priorDates.start || priorDates.end ? 'campaign_ended' : 'ended';
+      changes.push({ offer_key: key, offer_name: name, change_type: type, field: 'liveness', before: prior.status, after: current.status });
+      continue;
     }
-    // Typed effective price change detection (spec 0004 AC-3). A change in
-    // either effective price is a price change regardless of the hash.
-    const priorEffIn = prior.effective_input_price_usd;
-    const curEffIn = current.effective_input_price_usd;
-    const priorEffOut = prior.effective_output_price_usd;
-    const curEffOut = current.effective_output_price_usd;
-    if ((priorEffIn !== undefined && curEffIn !== undefined && priorEffIn !== curEffIn) ||
-        (priorEffOut !== undefined && curEffOut !== undefined && priorEffOut !== curEffOut)) {
-      diffs.push(`effective price: ${priorEffIn}/${priorEffOut} -> ${curEffIn}/${curEffOut}`);
-      if (!changeType) changeType = 'price_change';
+
+    // free_status_change: $0 <-> paid flip (spec §4.6).
+    if (priorPair.input !== null && priorPair.output !== null && curPair.input !== null && curPair.output !== null) {
+      const wasFree = isFreePair(priorPair);
+      const isFreeNow = isFreePair(curPair);
+      if (wasFree !== isFreeNow) {
+        changes.push({
+          offer_key: key, offer_name: name, change_type: 'free_status_change',
+          field: 'effective_price_per_million', before: priorPair, after: curPair,
+        });
+      }
     }
-    const priorFacts = prior.facts_json && typeof prior.facts_json === 'object' ? prior.facts_json : {};
-    const curFacts = current.facts_json && typeof current.facts_json === 'object' ? current.facts_json : {};
-    const priorQuota = String(priorFacts.free_quota_text || priorFacts.free_limits || '');
-    const curQuota = String(curFacts.free_quota_text || curFacts.free_limits || '');
+
+    // Discount rate change takes the specific slot; it carries the price
+    // before / after too (AC: 65% -> 77% with structured values).
+    const priorRate = discPct(prior.normal_input_price_usd, prior.normal_output_price_usd, priorPair.input, priorPair.output);
+    const curRate = discPct(current.normal_input_price_usd, current.normal_output_price_usd, curPair.input, curPair.output);
+    const priceMoved = priorPair.input !== curPair.input || priorPair.output !== curPair.output;
+    if (priceMoved) {      if (priorRate !== null || curRate !== null) {
+        changes.push({
+          offer_key: key, offer_name: name, change_type: 'discount_rate_change',
+          field: 'effective_price_per_million', before: priorPair, after: curPair,
+          discount_before: priorRate, discount_after: curRate,
+        });
+      } else {
+        changes.push({
+          offer_key: key, offer_name: name, change_type: 'price_change',
+          field: 'effective_price_per_million', before: priorPair, after: curPair,
+        });
+      }
+    } else if (priorRate !== null && curRate !== null && Math.abs(priorRate - curRate) > 0.05) {
+      changes.push({
+        offer_key: key, offer_name: name, change_type: 'discount_rate_change',
+        field: 'discount_rate', before: { percent: priorRate }, after: { percent: curRate },
+        discount_before: priorRate, discount_after: curRate,
+      });
+    }
+
+    // Hash fallback: the effective pair did not move (e.g. both $0) but the
+    // raw pricing evidence changed, so the price terms changed (legacy
+    // pricing_hash semantics kept for free offers).
+    if (!priceMoved && priorRate === null && curRate === null &&
+        prior.pricing_hash && current.pricing_hash && prior.pricing_hash !== current.pricing_hash) {
+      changes.push({
+        offer_key: key, offer_name: name, change_type: 'price_change',
+        field: 'pricing_hash', before: prior.pricing_hash, after: current.pricing_hash,
+      });
+    }
+
+    // Campaign window transitions (dates present / absent / changed).
+    const hadDates = Boolean(priorDates.start || priorDates.end);
+    const hasDates = Boolean(curDates.start || curDates.end);
+    if (curDiscounted && !hadDates && hasDates) {
+      changes.push({ offer_key: key, offer_name: name, change_type: 'campaign_started', field: 'discount_window', before: null, after: { start: curDates.start, end: curDates.end } });
+    } else if (hadDates && !hasDates && curDiscounted) {
+      changes.push({ offer_key: key, offer_name: name, change_type: 'campaign_date_change', field: 'discount_window', before: { start: priorDates.start, end: priorDates.end }, after: null });
+    } else if (hadDates && hasDates && (priorDates.start !== curDates.start || priorDates.end !== curDates.end)) {
+      changes.push({ offer_key: key, offer_name: name, change_type: 'campaign_date_change', field: 'discount_window', before: { start: priorDates.start, end: priorDates.end }, after: { start: curDates.start, end: curDates.end } });
+    }
+
+    // Router market observation.
+    if (Number.isInteger(prior.provider_count) && Number.isInteger(current.provider_count) &&
+        prior.provider_count !== current.provider_count) {
+      changes.push({ offer_key: key, offer_name: name, change_type: 'provider_count_change', field: 'provider_count', before: prior.provider_count, after: current.provider_count });
+    }
+
+    // Context window.
+    const priorCtx = typeof priorFacts.context_tokens === 'number' ? priorFacts.context_tokens : null;
+    const curCtx = typeof curFacts.context_tokens === 'number' ? curFacts.context_tokens : null;
+    if (priorCtx !== null && curCtx !== null && priorCtx !== curCtx) {
+      changes.push({ offer_key: key, offer_name: name, change_type: 'context_change', field: 'context_tokens', before: priorCtx, after: curCtx });
+    }
+
+    // Rate limit / quota text.
+    const priorQuota = quotaText(prior);
+    const curQuota = quotaText(current);
     if (priorQuota && curQuota && priorQuota !== curQuota) {
-      diffs.push('free quota text changed');
-      if (!changeType) changeType = 'limit_change';
+      changes.push({ offer_key: key, offer_name: name, change_type: 'rate_limit_change', field: 'free_quota', before: priorFacts.free_quota_text || priorFacts.free_limits || null, after: curFacts.free_quota_text || curFacts.free_limits || null });
     }
+
+    // Data policy hash.
+    if ((prior.data_policy_hash || null) !== (current.data_policy_hash || null) &&
+        (prior.data_policy_hash || current.data_policy_hash)) {
+      changes.push({ offer_key: key, offer_name: name, change_type: 'data_policy_change', field: 'data_policy', before: prior.data_policy_hash || null, after: current.data_policy_hash || null });
+    }
+
+    // Capability (tool calling / structured output) turns on or off.
+    const priorCap = [Boolean(priorFacts.tool_calling), Boolean(priorFacts.structured_output)];
+    const curCap = [Boolean(curFacts.tool_calling), Boolean(curFacts.structured_output)];
+    if (priorCap.some((v, i) => v !== curCap[i])) {
+      changes.push({ offer_key: key, offer_name: name, change_type: 'capability_change', field: 'capabilities', before: { tool_calling: priorCap[0], structured_output: priorCap[1] }, after: { tool_calling: curCap[0], structured_output: curCap[1] } });
+    }
+
+    // Endpoint / provider move.
     if (priorFacts.endpoint_source && curFacts.endpoint_source &&
         priorFacts.endpoint_source !== curFacts.endpoint_source) {
-      diffs.push(`endpoint_source: ${priorFacts.endpoint_source} -> ${curFacts.endpoint_source}`);
-      if (!changeType) changeType = 'provider_change';
+      changes.push({ offer_key: key, offer_name: name, change_type: 'provider_change', field: 'endpoint_source', before: priorFacts.endpoint_source, after: curFacts.endpoint_source });
     }
-    if (!changeType && prior.status !== current.status) {
-      changeType = 'availability_change';
-      diffs.push(`liveness: ${prior.status} -> ${current.status}`);
-    }
-    if (changeType) {
-      changes.push({ offer_key: key, offer_name: name, change_type: changeType, diffs });
+
+    // Anything left over that changed liveness-ish state.
+    if (prior.status !== current.status) {
+      changes.push({ offer_key: key, offer_name: name, change_type: 'availability_change', field: 'liveness', before: prior.status, after: current.status });
     }
   }
+
+  // Ended offers that no longer exist at all (row removed from the current
+  // candidate view is impossible: confirmed_removed rows persist). The
+  // renamed old ids are not "ended".
+  for (const [key, prior] of priorByKey) {
+    if (currentByKey.has(key) || renamedPrior.has(key)) continue;
+    if (prior.status === 'confirmed_removed') continue;
+    const type = prior.discount_start_at || prior.discount_end_at ? 'campaign_ended' : 'ended';
+    changes.push({ offer_key: key, offer_name: nameOf(prior), change_type: type, field: 'liveness', before: prior.status, after: 'confirmed_removed' });
+  }
+
+  // Deterministic report ordering by priority class.
+  const classOf = (change) => {
+    if (change.change_type === 'new' && change.after && change.after.free) return CHANGE_PRIORITY.new_free;
+    if (change.change_type === 'ended' || change.change_type === 'campaign_ended') return CHANGE_PRIORITY.ended;
+    if (change.change_type === 'price_change' || change.change_type === 'discount_rate_change' ||
+        change.change_type === 'free_status_change') {
+      const before = change.before || {};
+      const after = change.after || {};
+      const beforeSum = (before.input || 0) + (before.output || 0);
+      const afterSum = (after.input || 0) + (after.output || 0);
+      return afterSum < beforeSum ? CHANGE_PRIORITY.price_drop : CHANGE_PRIORITY.other;
+    }
+    return CHANGE_PRIORITY.other;
+  };
+  changes.forEach((change, index) => { change._order = classOf(change) * 100000 + index; });
+  changes.sort((a, b) => a._order - b._order);
+  for (const change of changes) delete change._order;
   return changes;
 }
 
@@ -519,9 +877,20 @@ const CHANGE_FALLBACK_JA = {
   ended: (n) => `${n} の無料提供が終了しました。`,
   revived: (n) => `${n} の無料提供が再開しました。`,
   price_change: (n) => `${n} の無料枠・価格条件が変わりました。`,
+  discount_rate_change: (n) => `${n} の割引率が変更になりました。`,
+  provider_count_change: (n) => `${n} の提供プロバイダ数が変わりました。`,
+  free_status_change: (n) => `${n} の無料 / 有料状況が反転しました。`,
   limit_change: (n) => `${n} の無料枠の条件が変わりました。`,
   provider_change: (n) => `${n} の提供元・エンドポイントが変わりました。`,
   availability_change: (n) => `${n} の提供状況が変わりました。`,
+  context_change: (n) => `${n} のコンテキスト長が変わりました。`,
+  model_id_change: (n) => `${n} のモデル ID が変更になりました。`,
+  rate_limit_change: (n) => `${n} のレート制限・無料枠条件が変わりました。`,
+  data_policy_change: (n) => `${n} のデータ利用条件が変わりました。`,
+  capability_change: (n) => `${n} の機能（ツール呼び出し等）が変わりました。`,
+  campaign_started: (n) => `${n} のキャンペーン（割引期間）が始まりました。`,
+  campaign_ended: (n) => `${n} の割引キャンペーンが終了しました。`,
+  campaign_date_change: (n) => `${n} のキャンペーン期間が変わりました。`,
   end_date_change: (n) => `${n} の提供期限が変わりました。`,
 };
 
@@ -570,12 +939,18 @@ function toPublicOffer(candidate, classification, prose, rank) {
     image_input: candidate.image_input ?? null,
     base_url: candidate.base_url,
     model_id: candidate.exact_model_id,
-    provider_count: null,
+    provider_count: candidate.provider_count ?? null,
     recent_activity: (prose && prose.summary) || candidate.description || null,
     normal_price_per_million: candidate.normal_price_per_million || null,
     effective_price_per_million: candidate.effective_price_per_million || null,
     effective_discount_percent: null,
+    discount_rates: null,
     data_retention: null,
+    data_policy: candidate.data_policy || null,
+    data_policy_source: null,
+    free_endpoint_status: candidate.free_endpoint_status || null,
+    operational_evidence: gate3Evidence(candidate),
+    activity: candidate.activity_evidence || null,
     training_use: candidate.training_use || null,
     suspicion_score: candidate.suspicion_score,
     suspicion_reasons: [],
@@ -661,6 +1036,22 @@ function assembleReport(runId, runDir, options = {}) {
       : null;
     const classification = classificationByKey.get(candidate.offer_key) ||
       legacyClassification || candidate.classification;
+
+    // Stale run four discloses staleness in caution before any eligibility
+    // gate (the fail-safe convention: carried-over facts stay visible).
+    if (candidate.in_caution) {
+      const cautionOffer = toPublicOffer(candidate, classification, prose, null);
+      cautionOffer.ranking_eligible = false;
+      cautionOffer.exclusion_reason = `[stale] ${candidate.consecutive_failures} consecutive failed verifications; moved to caution (AC-3)`;
+      caution.push(cautionOffer);
+      continue;
+    }
+
+    // DISCOUNTED frontier offers are evaluated in the discount section
+    // below; they never enter the ranked loop or the exclusion list here
+    // (spec 0008 §4.11).
+    if (candidate.access_kind === 'DISCOUNTED') continue;
+
     const eligibility = decideEligibility(candidate);
 
     if (!eligibility.eligible) {
@@ -674,14 +1065,6 @@ function assembleReport(runId, runDir, options = {}) {
 
     const offer = toPublicOffer(candidate, classification, prose, null);
     offer.ranking_eligible = true;
-
-    if (candidate.in_caution) {
-      // Stale run four: move to caution, keep prior facts, disclose staleness.
-      offer.ranking_eligible = false;
-      offer.exclusion_reason = `[stale] ${candidate.consecutive_failures} consecutive failed verifications; moved to caution (AC-3)`;
-      caution.push(offer);
-      continue;
-    }
 
     if (classification === 'F_CONDITIONAL') {
       // Data sharing opt in free tiers are conditional credits (AGENTS.md).
@@ -700,6 +1083,54 @@ function assembleReport(runId, runDir, options = {}) {
     return entry.offer;
   });
 
+  // Spec 0008 §4.11: DISCOUNTED frontier offers. They are evaluated here,
+  // never in the ranked loop: a discounted frontier model shows at any
+  // absolute price, with normal price, current price, discount rate, and
+  // window always displayed (deterministic computation).
+  const discountOffers = [];
+  for (const candidate of view.candidates) {
+    if (candidate.access_kind !== 'DISCOUNTED') continue;
+    const eligibility = decideDiscountEligibility(candidate);
+    if (!eligibility.eligible) {
+      excluded.push({ name: candidate.name, reason: eligibility.reason, last_known_status: candidate.status });
+      continue;
+    }
+    const prose = proseByKey.get(candidate.offer_key) || null;
+    const classification = classificationByKey.get(candidate.offer_key) || candidate.classification;
+    const offer = toPublicOffer(candidate, classification, prose, null);
+    offer.ranking_eligible = false;
+    offer.access_kind = 'DISCOUNTED';
+    const normal = candidate.normal_price_per_million || {};
+    const effective = candidate.effective_price_per_million || {};
+    offer.discount_rates = rankingPolicy.discountRates(
+      normal.input, normal.output, effective.input, effective.output
+    );
+    discountOffers.push(offer);
+  }
+
+  // Open contradictions (spec 0008 §4.5): within-run disagreements between
+  // fetch evidences of different source tiers, resolved by the lowest tier.
+  let contradictions = [];
+  try {
+    const open = db.listContradictions({ openOnly: true }, options);
+    contradictions = open.map((entry) => {
+      const offerKey = typeof entry.change_key === 'string' && entry.change_key.startsWith('offer:')
+        ? entry.change_key.slice('offer:'.length)
+        : entry.change_key;
+      const candidate = candidatesByKey.get(offerKey);
+      return {
+        offer_name: candidate ? candidate.name : offerKey,
+        fact: entry.fact,
+        values: (entry.values_json || []).map((v) => ({
+          source: v.source_url || null,
+          value: v.value,
+        })),
+        adopted_value: entry.resolved_value ?? null,
+        note: entry.resolution_rule || 'lowest_source_tier',
+      };
+    });
+  } catch { /* table absent in very old fixtures: no contradictions */ }
+
   // Change records: deterministic diff plus editorial Japanese summaries.
   const priorOffers = loadOffersFromBackup(runDir);
   const database = db.openCollectorDb(options);
@@ -711,6 +1142,20 @@ function assembleReport(runId, runDir, options = {}) {
     database.close();
   }
   const rawChanges = computeChanges(currentOffers, priorOffers);
+  // Persist the structured diff to the changes table (per-run append; the
+  // durable audit trail behind the report's change section, spec §4.6).
+  for (const change of rawChanges) {
+    try {
+      db.recordChange(runId, {
+        change_key: `offer:${change.offer_key}`,
+        change_type: change.change_type,
+        field: change.field ?? null,
+        before: change.before ?? null,
+        after: change.after ?? null,
+        detected_at: now,
+      }, options);
+    } catch { /* persistence is best effort; the report still carries them */ }
+  }
   const changeProseByKey = new Map();
   if (editorial && Array.isArray(editorial.change_prose)) {
     for (const entry of editorial.change_prose) {
@@ -721,11 +1166,18 @@ function assembleReport(runId, runDir, options = {}) {
   }
   const changes = rawChanges
     .filter((change) => CHANGE_TYPES.includes(change.change_type))
+    .slice(0, 10)
     .map((change) => {
       const fallback = CHANGE_FALLBACK_JA[change.change_type] || ((n) => `${n} の状況が変わりました。`);
       const summary = changeProseByKey.get(`${change.offer_name}\u0000${change.change_type}`) ||
         fallback(change.offer_name);
-      return { offer_name: change.offer_name, change_type: change.change_type, summary };
+      const record = { offer_name: change.offer_name, change_type: change.change_type, summary };
+      if (change.field !== undefined) record.field = change.field;
+      if (change.before !== undefined) record.before = change.before;
+      if (change.after !== undefined) record.after = change.after;
+      if (change.discount_before !== undefined) record.discount_before = change.discount_before;
+      if (change.discount_after !== undefined) record.discount_after = change.discount_after;
+      return record;
     });
 
   // New models from the discovery candidate set (best effort, deterministic).
@@ -778,10 +1230,12 @@ function assembleReport(runId, runDir, options = {}) {
     new_models: newModels,
     changes,
     ranked_offers: rankedOffers,
+    discount_offers: discountOffers,
     conditional_credits: conditional,
     caution_offers: caution,
     excluded_offers: excluded,
     new_seed_candidates: seedCandidates,
+    contradictions,
     sources: [...sourceSet.values()],
   };
 
@@ -801,11 +1255,13 @@ function assembleReport(runId, runDir, options = {}) {
     candidateDir,
     counts: {
       ranked: rankedOffers.length,
+      discounted: discountOffers.length,
       conditional: conditional.length,
       caution: caution.length,
       excluded: excluded.length,
       changes: changes.length,
       newModels: newModels.length,
+      contradictions: contradictions.length,
     },
   };
 }
