@@ -25,7 +25,8 @@
       ],
       "notes": null,
       "added_at": "2026-07-28",
-      "added_from": "https://docs.api.nvidia.com/nim/reference/llm-apis"
+      "added_from": "https://docs.api.nvidia.com/nim/reference/llm-apis",
+      "api_catalog_url": "https://integrate.api.nvidia.com/v1/models"
     },
     {
       "key": "openrouter",
@@ -225,7 +226,8 @@
       ],
       "notes": null,
       "added_at": "2026-07-28",
-      "added_from": "https://huggingface.co/docs/inference-providers"
+      "added_from": "https://huggingface.co/docs/inference-providers",
+      "api_catalog_url": "https://router.huggingface.co/v1/models"
     },
     {
       "key": "groq",
@@ -416,6 +418,57 @@
       "added_from": "https://docs.nano-gpt.com/api-reference/endpoint/models",
       "model_page_template": "https://nano-gpt.com/models/text/{model_id}",
       "api_catalog_url": "https://nano-gpt.com/api/v1/models?detailed=true"
+    },
+    {
+      "key": "deepinfra",
+      "label": "DeepInfra",
+      "match": [
+        "deepinfra"
+      ],
+      "base_url": "https://api.deepinfra.com/v1/openai",
+      "base_url_pattern": "^https://api\\.deepinfra\\.com/v1/openai/?$",
+      "openai_base_url": null,
+      "api_type": "openai-completions",
+      "delivery_type": "official",
+      "env": "DEEPINFRA_TOKEN",
+      "openai": true,
+      "docs_url": "https://deepinfra.com/docs/api-reference/getting-started/authentication",
+      "agents": [
+        "pi",
+        "claude_code",
+        "opencode",
+        "codex"
+      ],
+      "notes": "OpenAI-compatible base is /v1/openai (official docs). The public model catalog at /v1/models is unauthenticated (spike 2026-08-19) and lists id/created but no pricing.",
+      "added_at": "2026-08-20",
+      "added_from": "https://deepinfra.com/docs/api-reference/getting-started/authentication",
+      "api_catalog_url": "https://api.deepinfra.com/v1/models"
+    },
+    {
+      "key": "sambanova",
+      "label": "SambaNova",
+      "match": [
+        "sambanova",
+        "sambanovacompute"
+      ],
+      "base_url": "https://api.sambanova.ai/v1",
+      "base_url_pattern": "^https://api\\.sambanova\\.ai/v1/?$",
+      "openai_base_url": null,
+      "api_type": "openai-completions",
+      "delivery_type": "official",
+      "env": "SAMBANOVA_API_KEY",
+      "openai": true,
+      "docs_url": "https://docs.sambanova.ai/docs/en/get-started/api-keys-urls",
+      "agents": [
+        "pi",
+        "claude_code",
+        "opencode",
+        "codex"
+      ],
+      "notes": "Official base https://api.sambanova.ai/v1 (docs api-keys-urls). The public model catalog at /v1/models is unauthenticated (spike 2026-08-19) and lists id/context_length but no pricing.",
+      "added_at": "2026-08-20",
+      "added_from": "https://docs.sambanova.ai/docs/en/get-started/api-keys-urls",
+      "api_catalog_url": "https://api.sambanova.ai/v1/models"
     }
   ]
 }
