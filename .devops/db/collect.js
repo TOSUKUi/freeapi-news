@@ -36,6 +36,9 @@ const assemble = require('./assemble');
 const publication = require('./publication');
 const catalog = require('./catalog');
 const evidence = require('./evidence');
+const watch = require('./watch');
+const modelsLane = require('./models');
+const { loadWatchlist } = require('../../build/research-watchlist');
 
 function skillDirs(baseOpts) {
   const { projectRoot } = db.resolvePaths(baseOpts);
@@ -135,18 +138,27 @@ function discoverySearchTimeRange(env = process.env) {
 // (web-search-plus CLI) and a real browser (pi `browser` tool on the camofox
 // server). The transport text is appended to the role prompt at runtime; the
 // prompt file owns the output contract and the worker budget.
+// Spec 0008: the discovery-style transport (bounded web search + real
+// browser) is shared by the discovery goal crawlers and the model-first
+// research workers (news scan, vendor deep dive, community, model fan out).
+function isDiscoveryTransport(spec) {
+  return spec.taskId.startsWith('discovery:') || spec.transport === 'discovery';
+}
+
 function discoveryTransportText(spec) {
-  if (!spec.taskId.startsWith('discovery:')) return '';
+  if (!isDiscoveryTransport(spec)) return '';
   const session = `disc-${db.sanitizeTaskId(spec.taskId)}`;
   const sessionRule = `Every browser call must pass session: "${session}" so parallel workers stay isolated.`;
-  return '\n\n## Discovery transport (web search + browser)\nThis is a goal-crawler task. Work in this order:\n'
-    + `1. Search: run at most 4 Bash searches phrased for your goal: \`web-search-plus --provider auto --query "<your query>" --time-range ${spec.searchTimeRange || 'week'} --max-results 5 --compact\`. `
+  const searchBudget = spec.searchBudget ?? 4;
+  const visitBudget = spec.visitBudget ?? 8;
+  return '\n\n## Discovery transport (web search + browser)\nThis is a research task with a bounded transport. Work in this order:\n'
+    + `1. Search: run at most ${searchBudget} Bash searches phrased for your goal: \`web-search-plus --provider auto --query "<your query>" --time-range ${spec.searchTimeRange || 'week'} --max-results 5 --compact\`. `
     + 'If the CLI fails or returns nothing usable, fall back to browser search-engine queries (browser action=search, engine=bing, query=<your query>; Google often serves a captcha to this host, so do not use google) and keep at most 5 results per search.\n'
     + '2. Pick the most promising results. Prefer official provider pages (vendor site, docs, pricing, announcements). Ignore social media, aggregator listicles, and paywalled results unless they link to an official page. A result counts only if its date falls inside the assigned recency window.\n'
-    + '3. Verify with the browser: browser action=open with the URL, then browser action=snapshot to read the page. If a news page links to the official announcement, follow that link ONCE (official domain only) and snapshot that page instead. At most 8 page visits total.\n'
+    + `3. Verify with the browser: browser action=open with the URL, then browser action=snapshot to read the page. If a news page links to the official announcement, follow that link ONCE (official domain only) and snapshot that page instead. At most ${visitBudget} page visits total.\n`
     + '4. Extract raw facts verbatim from pages you actually saw: exact model id, pricing, free quota, endpoint. Never write a value you did not see on the page.\n'
     + `5. ${sessionRule}\n`
-    + 'When done (or when the budget is used up): emit json_output once (an empty models[] with status complete is a valid result), then browser action=close_session.\n';
+    + 'When done (or when the budget is used up): emit json_output once (an empty output with status complete is a valid result), then browser action=close_session.\n';
 }
 
 // Runs one pi worker. The role contract (prompts/*.md) is prepended to the
@@ -169,10 +181,10 @@ function runPiWorker(spec, options, baseOpts) {
 
   fs.mkdirSync(path.dirname(spec.outputFile), { recursive: true });
 
-  // Spec 0006: only discovery workers get the browser tool. Known, catalog,
+  // Spec 0006: discovery workers get the browser tool. Known, catalog,
   // benchmark, and editorial workers keep the minimal bash/read/json_output
   // surface so their sessions stay small and cheap.
-  const isDiscovery = spec.taskId.startsWith('discovery:');
+  const isDiscovery = isDiscoveryTransport(spec);
   const args = [
     '--skill', dirs.skillDir,
     '--model', options.piModel,
@@ -290,6 +302,36 @@ function factsFailureArtifact(taskId, providerKey) {
     crawled_at: nowIso(),
     provider_key: providerKey || '',
     models: [],
+    errors: ['worker did not produce conforming output'],
+  };
+}
+
+// Spec 0008: failure artifacts for the vendor-facts shaped workers. The
+// reducer treats a failed worker as zero facts; the failure artifact keeps
+// the shape valid so ingest never records an identity error on top of the
+// real worker failure.
+function vendorFactsFailureArtifact(taskId, vendorKey) {
+  return {
+    schema_version: 1,
+    task_id: taskId,
+    status: 'failed',
+    crawled_at: nowIso(),
+    vendor_key: vendorKey || '_multi',
+    announcements: [],
+    pricing_claims: [],
+    distribution: [],
+    leads: [],
+    errors: ['worker did not produce conforming output'],
+  };
+}
+
+function leadsFailureArtifact(taskId) {
+  return {
+    schema_version: 1,
+    task_id: taskId,
+    status: 'failed',
+    crawled_at: nowIso(),
+    leads: [],
     errors: ['worker did not produce conforming output'],
   };
 }
@@ -658,19 +700,120 @@ async function runPipeline(options = {}) {
       log('[3/9] catalog fetch: no catalog providers, skipped');
     }
 
-    // Known refresh + discovery LLM workers.
+    // Spec 0008: deterministic research watch. Fetches every watchlist
+    // channel in process (no LLM), records per-run watch_facts snapshots,
+    // and derives hash based change signals. Fetch failures are signals, not
+    // run failures: the watch lane is addition only.
+    let watchlist = null;
+    let watchSignals = [];
+    try {
+      watchlist = loadWatchlist(paths.watchlistPath);
+    } catch (err) {
+      log(`  watchlist unreadable (${err.message}); research lanes skipped`);
+    }
+    const watchTasks = manifest.tasks.filter((t) => t.kind === 'watch');
+    if (watchTasks.length > 0 && watchlist) {
+      log(`[3/9] watch fetch (${watchTasks.length} channel(s))...`);
+      const watchResult = await watch.runWatchPhase({
+        runId, runDir, baseOpts, watchlist,
+        fetchImpl: opts.watchFetchImpl || undefined, log,
+      });
+      watchSignals = watchResult.signals;
+      log(`  watch: ${watchResult.summary.ok}/${watchResult.summary.channels} ok, `
+        + `${watchResult.summary.changed} changed, ${watchResult.summary.first_seen} first seen, `
+        + `${watchResult.summary.fetch_failed} fetch failed`);
+    } else {
+      log('[3/9] watch fetch: no watch channels, skipped');
+    }
+
+    // Spec 0008: deterministic new model detection from this run's catalog
+    // artifacts and the HF new-models feed, against the models table. Dated
+    // in-window newcomers become model fan out tasks (0..3 per day); undated
+    // catalog newcomers are registered as baseline rows without fan out.
+    const fanoutTasks = [];
+    if (watchlist) {
+      const detection = modelsLane.detectNewModels({
+        runDir, baseOpts, now: nowIso(), watchlist,
+        windowDays: discoveryWindowDays(),
+      });
+      const stamp = nowIso();
+      for (const baseline of detection.baselines) {
+        db.upsertModel(baseline.model_id, {
+          display_name: baseline.display_name,
+          release_date: baseline.release_date || undefined,
+          source_url: baseline.source_url || undefined,
+          last_run_id: runId,
+          last_seen_at: stamp,
+        }, baseOpts);
+      }
+      fanoutTasks.push(...modelsLane.planFanoutTasks(
+        detection.candidates, modelsLane.readCatalogArtifacts(runDir), watchlist));
+      log(`[3/9] models: ${detection.baselines.length} baseline row(s), `
+        + `${detection.candidates.length} new model candidate(s) -> ${fanoutTasks.length} fan out task(s)`
+        + (detection.deferred_candidates.length > 0
+          ? `, ${detection.deferred_candidates.length} deferred` : ''));
+    }
+
+    // Spec 0008: the research worker plan. news_scan always runs once; the
+    // community worker always runs once (an empty prefilter is a valid
+    // zero-lead day); vendor deep dives are signal driven plus the tier 1
+    // 7 day rotation; model fan out runs only for detected new models. A
+    // quiet day therefore costs exactly two research sessions.
+    const researchTasks = [];
+    if (watchlist) {
+      researchTasks.push(watch.planNewsScanTask(watchlist));
+      researchTasks.push(watch.planCommunityTask(watchSignals));
+      for (const vt of watch.planVendorTasks(watchSignals, watchlist, new Date())) {
+        researchTasks.push({
+          task_id: `vendor:${vt.key}`,
+          kind: 'vendor_deep_dive',
+          provider_key: null,
+          assigned_model_ids: [],
+          vendor_key: vt.key,
+          vendor_reason: vt.reason,
+          vendor_changed_urls: vt.changed_urls,
+        });
+      }
+      researchTasks.push(...fanoutTasks);
+    }
+
+    // Research tasks are planned at runtime (after the watch phase), so they
+    // are not part of the static manifest. Register them in the run before
+    // the workers start; ingestTaskArtifacts only validates task rows that
+    // exist, and reduceLanes only reduces rows with recorded results.
+    if (researchTasks.length > 0) {
+      const added = db.addRunTasks(runId, researchTasks, baseOpts);
+      log(`  research plan: ${researchTasks.length} worker task(s) registered (${added.added} new)`);
+    }
+
+    // Known refresh + discovery LLM workers, plus the spec 0008 research
+    // workers (news_scan / vendor / community / model_fanout).
     const laneTasks = manifest.tasks.filter(
       (t) => t.kind === 'known_refresh' || t.kind === 'discovery'
     );
-    log(`[4/9] lane workers (${laneTasks.length} task(s))...`);
-    await runPool(laneTasks, opts.concurrency, (task) => {
-      const roleFile = task.kind === 'discovery' ? 'discovery-agent.md' : 'crawl-worker.md';
+    const allWorkerTasks = [...laneTasks, ...researchTasks];
+    log(`[4/9] lane workers (${allWorkerTasks.length} task(s): ${laneTasks.length} legacy, ${researchTasks.length} research)...`);
+    await runPool(allWorkerTasks, opts.concurrency, (task) => {
+      let roleFile;
+      let schemaName = 'crawl-facts.schema.json';
+      let runtime;
+      let failureArtifact;
+      let transport = undefined;
+      let searchBudget = undefined;
+      let visitBudget = undefined;
+      let searchTimeRange = undefined;
+      let timeoutSeconds = opts.piTimeout;
       const discoveryWindow = discoveryWindowDays();
       const pricingTargets = manifest.tasks
         .filter((t) => (t.kind === 'known_refresh' || t.kind === 'catalog') && (t.assigned_model_ids || []).length > 0)
         .map((t) => ({ provider: t.provider_key, models: t.assigned_model_ids }));
-      const runtime = task.kind === 'discovery'
-        ? `Task: ${task.task_id}. Manifest: ${path.join(runDir, 'manifest.json')}.\n`
+      if (task.kind === 'discovery') {
+        roleFile = 'discovery-agent.md';
+        transport = 'discovery';
+        searchTimeRange = discoverySearchTimeRange();
+        timeoutSeconds = opts.discoveryTimeout;
+        failureArtifact = factsFailureArtifact(task.task_id, task.provider_key);
+        runtime = `Task: ${task.task_id}. Manifest: ${path.join(runDir, 'manifest.json')}.\n`
           + 'This is one of two daily discovery crawler sessions; cover exactly this goal and emit one small conforming output.\n'
           + `Recency window: the last ${discoveryWindow} days only. Facts outside the window do not count.\n`
           + (task.discovery_goal === 'pricing'
@@ -678,25 +821,111 @@ async function runPipeline(options = {}) {
               + 'Report each changed model with the new pricing text verbatim. '
             : 'Goal: find LLM models, API access, or free-tier programs newly announced or newly launched within the window (new provider launches, new model releases, new free access). ')
           + 'For any unregistered API provider you find, report a provider_candidate with the fetched official base_url, docs_url, and model id form (AC-11). '
-          + 'Do not search benchmark sources or emit benchmark_finds; the dedicated benchmark_scout stage handles benchmark lookup after lane reduction.'
-        : `Task: ${task.task_id} (kind: known_refresh). Provider: ${task.provider_key}. `
+          + 'Do not search benchmark sources or emit benchmark_finds; the dedicated benchmark_scout stage handles benchmark lookup after lane reduction.';
+      } else if (task.kind === 'news_scan') {
+        roleFile = 'news-scan.md';
+        schemaName = 'vendor-facts.schema.json';
+        transport = 'discovery';
+        searchBudget = 6;
+        visitBudget = 8;
+        searchTimeRange = 'day';
+        timeoutSeconds = opts.discoveryTimeout;
+        failureArtifact = vendorFactsFailureArtifact(task.task_id, '_multi');
+        const vendorLines = (watchlist && watchlist.vendors || [])
+          .map((v) => `${v.key} (${v.label})`).join(', ');
+        const signals = watchSignals
+          .filter((s) => s.status === 'changed' || s.status === 'first_seen')
+          .map((s) => ({
+            entity: s.entity_key,
+            url: s.url,
+            status: s.status,
+            new_items: (s.new_items || []).slice(0, 10),
+            summary: (s.summary || '').slice(0, 200),
+          }));
+        runtime = `Task: ${task.task_id}. Vendor list to cover: ${vendorLines}. `
+          + `Recency windows: hot = last 24h, warm = last 72h; facts older than 72h are not news.\n`
+          + "Triage signals (deterministic hash diffs from today's watch fetch; each is a hint, verify on the page before using it):\n"
+          + JSON.stringify(signals, null, 1);
+      } else if (task.kind === 'vendor_deep_dive') {
+        roleFile = 'vendor-deep-dive.md';
+        schemaName = 'vendor-facts.schema.json';
+        transport = 'discovery';
+        searchBudget = 2;
+        visitBudget = 4;
+        timeoutSeconds = opts.discoveryTimeout;
+        failureArtifact = vendorFactsFailureArtifact(task.task_id, task.vendor_key);
+        const vendor = (watchlist && watchlist.vendors || []).find((v) => v.key === task.vendor_key) || {};
+        const channelLines = Object.entries(vendor.channels || {})
+          .filter(([, v]) => typeof v === 'string' && v.trim())
+          .map(([k, v]) => `- ${k}: ${v}`).join('\n');
+        runtime = `Task: ${task.task_id}. Vendor: ${vendor.label || task.vendor_key} (key ${task.vendor_key}). Reason: ${task.vendor_reason}.\n`
+          + (task.vendor_reason === 'signal' || task.vendor_reason === 'signal+rotation'
+            ? 'Changed URLs to investigate (at most 4 page visits total):\n'
+              + (task.vendor_changed_urls || []).map((u) => `- ${u}`).join('\n')
+            : 'Rotation run: no channel changed today. Re-read the model catalog or changelog (at most 4 page visits total).\n'
+              + channelLines);
+      } else if (task.kind === 'community') {
+        roleFile = 'community-leads.md';
+        schemaName = 'leads.schema.json';
+        transport = 'discovery';
+        searchBudget = 2;
+        visitBudget = 4;
+        searchTimeRange = 'day';
+        timeoutSeconds = opts.discoveryTimeout;
+        failureArtifact = leadsFailureArtifact(task.task_id);
+        const prefilter = (task.prefilter || []).map((p) => ({
+          entity: p.entity_key,
+          url: p.url,
+          status: p.status,
+          new_items: (p.new_items || []).slice(0, 20),
+        }));
+        runtime = `Task: ${task.task_id}. Prefilter (community feed items that changed since the last run; empty means no changed items):\n`
+          + JSON.stringify(prefilter, null, 1);
+      } else if (task.kind === 'model_fanout') {
+        roleFile = 'model-fanout.md';
+        schemaName = 'vendor-facts.schema.json';
+        transport = 'discovery';
+        searchBudget = 4;
+        visitBudget = 6;
+        searchTimeRange = 'week';
+        timeoutSeconds = opts.discoveryTimeout;
+        failureArtifact = vendorFactsFailureArtifact(task.task_id, null);
+        const m = task.model || {};
+        runtime = `Task: ${task.task_id}. New model: ${m.model_id}`
+          + (m.display_name && m.display_name !== m.model_id ? ` (${m.display_name})` : '')
+          + `. Detected via: ${m.reason}`
+          + (m.release_date ? `, release date ${m.release_date}` : '') + '.\n'
+          + 'Catalog verdicts (machine-verified this run; do NOT re-check these providers, carry the verdicts into distribution):\n'
+          + JSON.stringify(task.catalog_verdicts || [], null, 1) + '\n'
+          + `Routes to check on official pages: ${JSON.stringify(task.routes_to_check || [])}. `
+          + 'Emit an explicit distribution verdict (served / not_served / unconfirmed) for every route. '
+          + 'Free, ultra-low, or discount routes also get a models[] offer-facts entry with verbatim pricing, base_url, and endpoint_source.';
+      } else {
+        roleFile = 'crawl-worker.md';
+        failureArtifact = factsFailureArtifact(task.task_id, task.provider_key);
+        runtime = `Task: ${task.task_id} (kind: known_refresh). Provider: ${task.provider_key}. `
           + `Assigned model_ids: ${(task.assigned_model_ids || []).join(', ') || '(none)'}. `
           + `Manifest: ${path.join(runDir, 'manifest.json')}. Registry: build/provider-registry.json. `
           + `Cached URLs to try first: ${JSON.stringify((task.cached_urls || []).map((c) => c.url))}. `
           + 'Re-fetch the official docs for each assigned model and report current facts. '
           + 'Do not search benchmark sources or emit benchmark_finds; the dedicated benchmark_scout stage handles benchmark lookup.';
+      }
       return runWorker({
         taskId: task.task_id,
         roleFile,
-        schemaFile: path.join(dirs.schemasDir, 'crawl-facts.schema.json'),
+        schemaFile: path.join(dirs.schemasDir, schemaName),
         outputFile: db.artifactPathFor(runDir, task.task_id),
         logFile: path.join(runDir, 'logs', `${db.sanitizeTaskId(task.task_id)}.log`),
         runtime,
-        searchTimeRange: task.kind === 'discovery' ? discoverySearchTimeRange() : undefined,
-        timeoutSeconds: task.kind === 'discovery' ? opts.discoveryTimeout : opts.piTimeout,
-        failureArtifact: factsFailureArtifact(task.task_id, task.provider_key),
+        transport,
+        searchBudget,
+        visitBudget,
+        searchTimeRange,
+        timeoutSeconds,
+        failureArtifact,
       }, opts, baseOpts);
     });
+
 
     // Ingest lane artifacts, then deterministic reduction.
     const ingest = lanes.ingestTaskArtifacts(runId, runDir, baseOpts);
@@ -718,6 +947,25 @@ async function runPipeline(options = {}) {
       + (reduce.gateReason ? ` (${reduce.gateReason})` : '')
       + ` known verified=${reduce.coverage.known.verified}/${reduce.coverage.known.assigned}`
       + ` stale=${reduce.coverage.known.stale} removed=${reduce.coverage.known.removed}`);
+
+    // Spec 0008: the deterministic model lane applies the ingested vendor
+    // facts (announcements, distribution verdicts, leads) to the models and
+    // leads tables. Every write is backed by a bounded fetch that shows the
+    // model name on the cited page. This never affects the promotion gate:
+    // model/lead state is additive and the fail-safe offers are already
+    // reduced above.
+    if (watchlist) {
+      const modelSummary = await modelsLane.applyModelFacts({
+        runId, runDir, baseOpts,
+        fetchImpl: opts.watchFetchImpl || undefined,
+        now: nowIso(),
+        watchlist,
+        log,
+      });
+      log(`[5/9] models: ${modelSummary.announcements_verified} announcement(s) verified, `
+        + `${modelSummary.distribution_served_verified}/${modelSummary.distribution_notes} served route(s) verified, `
+        + `${modelSummary.leads_created} new lead(s), ${modelSummary.leads_expired} expired`);
+    }
     if (!reduce.canPromote) {
       log(`  gate blocked promotion; previous report stays live (run ${runId} failed)`);
       if (opts.dryRun) restoreExactPreRun();

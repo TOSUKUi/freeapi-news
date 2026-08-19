@@ -330,6 +330,76 @@ test('pricing-crawler facts about known offers become news, never candidates or 
   assert.equal(offer.consecutive_failures, 0);
 });
 
+test('fan out vendor-facts offers become discovery candidates (spec 0008 AC)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [offerSeed()]);
+
+  const manifest = lanes.buildLaneManifest({ ...ctx.options, runId: 'run-fanout' });
+  const runDir = runDirFor(ctx, 'run-fanout');
+  fs.writeFileSync(path.join(runDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+  db.startRun('run-fanout', lanes.toStartRunTasks(manifest), ctx.options);
+  // The fan out task is planned at runtime, so it is registered in the run
+  // after the static manifest (same path the orchestrator takes).
+  db.addRunTasks('run-fanout', [{
+    task_id: 'model_fanout:acme/fresh',
+    kind: 'model_fanout',
+    provider_key: null,
+    assigned_model_ids: ['acme/fresh'],
+  }], ctx.options);
+  writeArtifact(ctx, runDir, 'known:google', knownArtifact({ models: [knownModel('gemini-2.5-pro-free')] }));
+  const fanoutArtifact = {
+    schema_version: 1,
+    task_id: 'model_fanout:acme/fresh',
+    status: 'complete',
+    crawled_at: '2026-07-31T00:00:00.000Z',
+    vendor_key: 'acme',
+    announcements: [{
+      model_name: 'Acme Fresh',
+      model_id: 'acme/fresh',
+      announcement_url: 'https://acme.example/blog/fresh',
+    }],
+    pricing_claims: [],
+    distribution: [
+      { model_id: 'acme/fresh', provider_key: 'groq', status: 'served', evidence_url: 'https://groq.com/docs/models/acme-fresh' },
+      { model_id: 'acme/fresh', provider_key: 'fireworks', status: 'not_served' },
+      { model_id: 'acme/fresh', provider_key: 'cerebras', status: 'unconfirmed' },
+    ],
+    models: [{
+      model_id: 'acme/fresh:free',
+      model_name: 'Acme Fresh (free)',
+      provider_key: 'groq',
+      base_url: 'https://api.groq.com/openai/v1',
+      endpoint_source: 'https://groq.com/docs/models/acme-fresh',
+      pricing_text: 'free tier while beta',
+      free_quota_text: 'unlimited during beta',
+    }],
+    leads: [],
+    errors: [],
+  };
+  writeArtifact(ctx, runDir, 'model_fanout:acme/fresh', fanoutArtifact);
+
+  lanes.ingestTaskArtifacts('run-fanout', runDir, ctx.options);
+  const reduce = lanes.reduceLanes('run-fanout', runDir, {
+    ...ctx.options,
+    now: '2026-07-31T00:00:00.000Z',
+  });
+
+  const candidates = reduce.discoveryCandidates.filter((c) => c.exact_model_id === 'acme/fresh:free');
+  assert.equal(candidates.length, 1, 'fan out offer fact becomes one discovery candidate');
+  assert.equal(candidates[0].provider_key, 'groq');
+  assert.equal(candidates[0].canonical_model_id, 'acme/fresh');
+  assert.equal(candidates[0].facts.free_quota_text, 'unlimited during beta');
+
+  const file = JSON.parse(fs.readFileSync(path.join(runDir, 'reduced', 'discovery-candidates.json'), 'utf8'));
+  assert.ok(file.candidates.some((c) => c.model_name === 'Acme Fresh (free)'));
+
+  // The known offer lane is untouched by the research lane (additions only).
+  const offer = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
+  assert.equal(offer.status, 'verified');
+});
+
 // ── Strict artifact identity (AC-11) ─────────────────────────────
 
 test('ingest rejects identity mismatch and demotes incomplete complete artifacts (AC-11)', (t) => {

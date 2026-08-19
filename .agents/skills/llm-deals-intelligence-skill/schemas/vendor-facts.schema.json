@@ -1,0 +1,332 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "Raw facts emitted by news_scan, vendor deep dive, and model fan out workers (spec 0008 Phase 1). All entries are proposals: the deterministic model reducer fetch-verifies announcements and distribution evidence before writing the models table. source_tier is assigned by code from URL patterns, never by the worker.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_id",
+    "status",
+    "crawled_at",
+    "vendor_key",
+    "announcements",
+    "pricing_claims",
+    "distribution",
+    "leads",
+    "errors"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "number"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "partial",
+        "failed"
+      ]
+    },
+    "crawled_at": {
+      "type": "string"
+    },
+    "vendor_key": {
+      "type": "string",
+      "$comment": "watchlist vendor key for vendor:<key> and model_fanout tasks; '_multi' for news_scan"
+    },
+    "models": {
+      "type": "array",
+      "$comment": "model_fanout only: crawl-facts shaped offer facts (free/discount routes). Same shape as schemas/crawl-facts.schema.json models[] items. The shared evidence auditor fetch-verifies price evidence before admission."
+    },
+    "announcements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "model_name",
+          "vendor_key",
+          "announcement_url"
+        ],
+        "properties": {
+          "model_name": {
+            "type": "string"
+          },
+          "model_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "$comment": "exact model ID when the vendor published one, else null"
+          },
+          "vendor_key": {
+            "type": "string"
+          },
+          "announcement_url": {
+            "type": "string",
+            "format": "uri",
+            "$comment": "official page stating the announcement"
+          },
+          "announcement_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "release_status": {
+            "enum": [
+              "announced",
+              "preview",
+              "beta",
+              "ga",
+              "open_weight_planned",
+              "deprecated",
+              null
+            ]
+          },
+          "total_parameters_b": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "active_parameters_b": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "open_weight": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "context_tokens": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "summary": {
+            "type": "string",
+            "$comment": "one verbatim sentence from the announcement page"
+          }
+        }
+      }
+    },
+    "pricing_claims": {
+      "type": "array",
+      "$comment": "crawl-facts shaped price/free-tier/discount claims. The shared evidence auditor fetches pricing_url before the lane reducer may admit any of these as offer candidates.",
+      "items": {
+        "type": "object",
+        "required": [
+          "model_id",
+          "pricing_url",
+          "pricing_text"
+        ],
+        "properties": {
+          "model_id": {
+            "type": "string"
+          },
+          "model_name": {
+            "type": "string"
+          },
+          "vendor_key": {
+            "type": "string"
+          },
+          "provider_key": {
+            "type": "string"
+          },
+          "pricing_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "pricing_text": {
+            "type": "string"
+          },
+          "free_quota_text": {
+            "type": "string"
+          },
+          "is_free_signal": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "normal_source_amount_input": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "normal_source_amount_output": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "effective_source_amount_input": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "effective_source_amount_output": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "source_currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_unit": {
+            "enum": [
+              "per_token",
+              "per_million_tokens",
+              null
+            ]
+          },
+          "discount_start_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "discount_end_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "distribution": {
+      "type": "array",
+      "$comment": "model fan out route verdicts. status is the worker's finding; the reducer keeps unconfirmed explicit and never upgrades it.",
+      "items": {
+        "type": "object",
+        "required": [
+          "model_id",
+          "provider_key",
+          "status"
+        ],
+        "properties": {
+          "model_id": {
+            "type": "string"
+          },
+          "provider_key": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "served",
+              "not_served",
+              "unconfirmed"
+            ]
+          },
+          "evidence_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "note": {
+            "type": "string",
+            "$comment": "verbatim snippet or short factual note"
+          }
+        }
+      }
+    },
+    "leads": {
+      "type": "array",
+      "$comment": "unverified claims worth official back-checking. The lead lifecycle (open/verified/dismissed/expired) is owned by the deterministic lead reducer.",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim_text",
+          "source_url"
+        ],
+        "properties": {
+          "claim_text": {
+            "type": "string",
+            "$comment": "verbatim claim text"
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "model_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provider_key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "provider_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "provider_key",
+          "docs_url"
+        ],
+        "properties": {
+          "provider_key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "base_url": {
+            "type": "string"
+          },
+          "docs_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "model_id_pattern": {
+            "type": "string"
+          },
+          "model_id_example": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

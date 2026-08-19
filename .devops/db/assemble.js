@@ -810,41 +810,116 @@ function assembleReport(runId, runDir, options = {}) {
   };
 }
 
-// Builds new_models entries from the discovery candidate set the lane reducer
-// wrote. Only entries carrying the schema required fields are emitted; the
-// rest are skipped (a thin, deterministic path; the discovery lane owns the
-// underlying facts).
-function buildNewModels(runDir) {
-  const file = runDir && path.join(runDir, 'reduced', 'discovery-candidates.json');
-  const data = readJsonIfPresent(file);
-  if (!data || !Array.isArray(data.candidates)) return [];
+// Builds new_models entries. Spec 0008 Phase 1: entries now come from both
+// the discovery candidate set and the deterministic model lane (verified
+// announcements of this run), and each entry carries a recency window tag
+// (hot 24h / warm 72h / catchup 30d / undated) plus a distribution_note
+// summarizing the model fan out route verdicts. No route ever reads as more
+// confirmed than the notes say: no verdict is an explicit "unconfirmed" note.
+function buildNewModels(runDir, now = new Date().toISOString()) {
   const models = [];
+  const noteKeys = new Map();
   const seen = new Set();
-  for (const candidate of data.candidates) {
-    if (candidate.reappearance) continue;
-    const facts = candidate.facts && typeof candidate.facts === 'object' ? candidate.facts : {};
-    const canonicalName = candidate.model_name || candidate.canonical_model_id;
-    if (!canonicalName || seen.has(canonicalName)) continue;
-    const officialSource = facts.endpoint_source || facts.docs_url || facts.official_source || null;
-    if (!officialSource || !/^https?:\/\//.test(officialSource)) continue;
-    seen.add(canonicalName);
-    models.push({
-      canonical_name: canonicalName,
-      aliases: [],
-      vendor: facts.model_vendor || (candidate.canonical_model_id.includes('/')
-        ? candidate.canonical_model_id.split('/')[0]
-        : candidate.provider_key) || 'unknown',
-      status: 'announced',
-      release_date: typeof facts.release_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(facts.release_date.trim())
-        ? facts.release_date.trim()
-        : null,
-      official_source: officialSource,
-      api_available: true,
-      open_weight: null,
-      known_providers: candidate.provider_key ? [candidate.provider_key] : [],
-    });
+  const push = (entry, extraKeys = []) => {
+    if (!entry || !entry.canonical_name || seen.has(entry.canonical_name)) return;
+    seen.add(entry.canonical_name);
+    models.push({ ...entry });
+    noteKeys.set(entry.canonical_name, extraKeys);
+  };
+
+  // 1. Verified announcements from this run's model lane.
+  const updates = readJsonIfPresent(runDir && path.join(runDir, 'reduced', 'model-updates.json'));
+  if (updates && Array.isArray(updates.announcements)) {
+    for (const ann of updates.announcements) {
+      push({
+        canonical_name: ann.model_name,
+        aliases: Array.isArray(ann.aliases) ? ann.aliases : [],
+        vendor: ann.vendor_key || 'unknown',
+        status: 'announced',
+        release_date: ann.release_date || null,
+        official_source: ann.source_url,
+        api_available: null,
+        open_weight: null,
+        known_providers: [],
+      }, [ann.canonical_model_id, ...(Array.isArray(ann.aliases) ? ann.aliases : [])]);
+    }
+  }
+
+  // 2. Discovery candidates (legacy path: discovery lane model facts).
+  const data = readJsonIfPresent(runDir && path.join(runDir, 'reduced', 'discovery-candidates.json'));
+  if (data && Array.isArray(data.candidates)) {
+    for (const candidate of data.candidates) {
+      if (candidate.reappearance) continue;
+      const facts = candidate.facts && typeof candidate.facts === 'object' ? candidate.facts : {};
+      const canonicalName = candidate.model_name || candidate.canonical_model_id;
+      const officialSource = facts.endpoint_source || facts.docs_url || facts.official_source || null;
+      if (!canonicalName || !officialSource || !/^https?:\/\//.test(officialSource)) continue;
+      push({
+        canonical_name: canonicalName,
+        aliases: [],
+        vendor: facts.model_vendor || (candidate.canonical_model_id.includes('/')
+          ? candidate.canonical_model_id.split('/')[0]
+          : candidate.provider_key) || 'unknown',
+        status: 'announced',
+        release_date: typeof facts.release_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(facts.release_date.trim())
+          ? facts.release_date.trim()
+          : null,
+        official_source: officialSource,
+        api_available: true,
+        open_weight: null,
+        known_providers: candidate.provider_key ? [candidate.provider_key] : [],
+      }, [candidate.canonical_model_id]);
+    }
+  }
+
+  // 3. Window tag + distribution note. Notes are keyed by model id, so each
+  // entry looks up by display name, canonical id, and all known aliases.
+  const notes = readJsonIfPresent(runDir && path.join(runDir, 'reduced', 'distribution-notes.json'));
+  const noteByModel = new Map();
+  const addNoteKey = (key, note) => {
+    const k = key.replace(/\//g, '').toLowerCase();
+    if (!k) return;
+    if (!noteByModel.has(k)) noteByModel.set(k, []);
+    noteByModel.get(k).push(note);
+  };
+  if (notes && Array.isArray(notes.notes)) {
+    for (const note of notes.notes) {
+      if (!note || typeof note.model_id !== 'string') continue;
+      addNoteKey(note.model_id, note);
+    }
+  }
+  for (const entry of models) {
+    entry.window = modelWindowTag(entry.release_date, now);
+    const noteGroups = [];
+    const seenNotes = new Set();
+    const collect = (name) => {
+      if (typeof name !== 'string' || !name) return;
+      for (const note of noteByModel.get(name.replace(/\//g, '').toLowerCase()) || []) {
+        if (seenNotes.has(note)) continue;
+        seenNotes.add(note);
+        noteGroups.push(note);
+      }
+    };
+    collect(entry.canonical_name);
+    for (const alias of entry.aliases || []) collect(alias);
+    for (const key of noteKeys.get(entry.canonical_name) || []) collect(key);
+    entry.distribution_note = noteGroups.length > 0
+      ? noteGroups.map((n) => `${n.status}: ${n.provider_key || 'unknown'}`).join('; ')
+      : 'unconfirmed (no route verification this run)';
   }
   return models;
+}
+
+// hot = 24h, warm = 72h, catchup = 30d, undated when no release date.
+function modelWindowTag(releaseDate, now) {
+  if (typeof releaseDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(releaseDate)) return 'undated';
+  const t = Date.parse(`${releaseDate}T00:00:00Z`);
+  if (Number.isNaN(t)) return 'undated';
+  const ageMs = Date.parse(now) - t;
+  if (ageMs <= 86400000) return 'hot';
+  if (ageMs <= 3 * 86400000) return 'warm';
+  if (ageMs <= 30 * 86400000) return 'catchup';
+  return 'catchup';
 }
 
 module.exports = {

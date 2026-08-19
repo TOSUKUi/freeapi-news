@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "Raw leads emitted by the community worker (spec 0008 Phase 2, schema introduced in Phase 1). Community is a discovery sensor only: claims become leads; the deterministic lead reducer owns the open/verified/dismissed/expired lifecycle. source_tier is assigned by code from URL patterns, never by the worker.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_id",
+    "status",
+    "crawled_at",
+    "leads",
+    "errors"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "number"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "partial",
+        "failed"
+      ]
+    },
+    "crawled_at": {
+      "type": "string"
+    },
+    "leads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim_text",
+          "source_url"
+        ],
+        "properties": {
+          "claim_text": {
+            "type": "string",
+            "$comment": "verbatim claim text, no paraphrase"
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri",
+            "$comment": "the page the claim was read from (community post, not the official page)"
+          },
+          "model_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provider_key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "claim_kind": {
+            "enum": [
+              "free_access",
+              "discount",
+              "new_model",
+              "removal",
+              "rate_limit",
+              "other",
+              null
+            ]
+          }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

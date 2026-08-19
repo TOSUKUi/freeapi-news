@@ -1,0 +1,279 @@
+'use strict';
+
+// Spec 0008 Phase 1 tests: the deterministic research watch. Proves the plan
+// builder, the fetch/record/triage loop with an injected fetch, the vendor
+// dispatch policy (changed only, rotation for tier 1, a quiet day costs zero
+// vendor sessions), and the news scan / community planning. No network: every
+// fetch is stubbed. State lives in a fresh temp directory per test.
+
+const { describe, it, beforeEach, afterEach } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+
+const db = require('./collector-db');
+const watch = require('./watch');
+const { validateWatchlist } = require('../../build/research-watchlist');
+
+const WATCHLIST = {
+  version: 1,
+  windows: { hot_days: 1, warm_days: 3, catchup_days: 30 },
+  frontier_vendors: ['openai', 'zai'],
+  vendors: [
+    {
+      key: 'openai', label: 'OpenAI', tier: 1,
+      channels: {
+        blog: 'https://openai.com/blog',
+        changelog: 'https://openai.com/changelog',
+        hf_org: null,
+        github_orgs: [],
+      },
+    },
+    {
+      key: 'zai', label: 'Z.ai', tier: 2,
+      channels: { changelog: 'https://z.ai/changelog' },
+    },
+    {
+      key: 'mistral', label: 'Mistral', tier: 3,
+      channels: { blog: 'https://mistral.ai/news' },
+    },
+  ],
+  provider_monitors: [
+    { provider_key: 'openrouter', watch: { new_models: 'https://openrouter.ai/models' } },
+    { provider_key: 'groq', watch: { pricing: 'https://groq.com/pricing' } },
+  ],
+  community: [
+    {
+      kind: 'reddit',
+      subreddits: ['LocalLLaMA', 'OpenRouter'],
+      keywords: ['free', '$0', 'discount'],
+    },
+  ],
+  coding_products: [],
+  credit_programs: [],
+};
+
+let root;
+let stateDir;
+let options;
+
+beforeEach(() => {
+  root = fs.mkdtempSync(path.join(os.tmpdir(), 'watch-test-'));
+  stateDir = path.join(root, 'state');
+  fs.mkdirSync(stateDir, { recursive: true });
+  options = { projectRoot: root, stateDir };
+  db.applyMigrations(options);
+});
+
+afterEach(() => {
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+function makeFetch(bodies) {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    const entry = bodies[url];
+    if (entry === undefined) {
+      return { ok: false, status: 404, text: async () => 'not found' };
+    }
+    const body = typeof entry === 'string' ? entry : entry.body;
+    const status = typeof entry === 'object' && entry.status ? entry.status : 200;
+    return { ok: status >= 200 && status < 300, status, text: async () => body };
+  };
+  return { fetchImpl, calls };
+}
+
+function startWatchRun(runId) {
+  const plan = watch.buildWatchPlan(WATCHLIST);
+  const runDir = path.join(root, 'runs', runId);
+  fs.mkdirSync(runDir, { recursive: true });
+  db.startRun(runId, [], options);
+  db.addRunTasks(runId, plan, options);
+  return { plan, runDir };
+}
+
+function allBodies(overrides = {}) {
+  return {
+    'https://openai.com/blog': 'openai blog v1',
+    'https://openai.com/changelog': 'openai changelog v1',
+    'https://z.ai/changelog': 'zai changelog v1',
+    'https://mistral.ai/news': 'mistral news v1',
+    'https://openrouter.ai/models': JSON.stringify({ data: [{ id: 'acme/fresh' }] }),
+    'https://groq.com/pricing': 'groq pricing v1',
+    'https://www.reddit.com/r/LocalLLaMA/new.json?limit=50': JSON.stringify({ data: { children: [{ data: { id: 'r1', title: 'free tier rumor' } }] } }),
+    'https://www.reddit.com/r/OpenRouter/new.json?limit=50': JSON.stringify({ data: { children: [] } }),
+    'https://huggingface.co/api/models?sort=createdAt&direction=-1&limit=200': JSON.stringify({
+      data: [{ id: 'org/new-model' }],
+    }),
+    ...overrides,
+  };
+}
+
+describe('watchlist fixture', () => {
+  it('is a valid operator watchlist', () => {
+    assert.equal(validateWatchlist(WATCHLIST).ok, true, JSON.stringify(validateWatchlist(WATCHLIST).errors));
+  });
+});
+
+describe('buildWatchPlan', () => {
+  it('emits stable ids per channel plus the fixed HF new-models feed', () => {
+    const plan = watch.buildWatchPlan(WATCHLIST);
+    const ids = plan.map((t) => t.task_id);
+    assert.ok(ids.includes('watch:vendor:openai:blog'));
+    assert.ok(ids.includes('watch:vendor:zai:changelog'));
+    assert.ok(ids.includes('watch:monitor:openrouter:new_models'));
+    assert.ok(ids.includes('watch:community:reddit-LocalLLaMA'));
+    assert.ok(ids.includes('watch:api:hf-new-models'));
+    // deterministic order for the same watchlist
+    const again = watch.buildWatchPlan(WATCHLIST);
+    assert.deepEqual(again.map((t) => t.task_id), ids);
+    const monitor = plan.find((t) => t.task_id === 'watch:monitor:openrouter:new_models');
+    assert.equal(monitor.provider_key, 'openrouter');
+    assert.equal(monitor.domain, 'provider_watch');
+    const api = plan.find((t) => t.task_id === 'watch:api:hf-new-models');
+    assert.equal(api.channel, 'hf_new_models');
+  });
+
+  it('skips null channel values (unfetchable) instead of inventing urls', () => {
+    const wl = {
+      ...WATCHLIST,
+      frontier_vendors: ['acme'],
+      vendors: [{
+        key: 'acme', label: 'Acme', tier: 3,
+        channels: { blog: 'https://acme.example/blog', changelog: null },
+      }],
+    };
+    const plan = watch.buildWatchPlan(wl);
+    const ids = plan.map((t) => t.task_id);
+    assert.ok(ids.includes('watch:vendor:acme:blog'));
+    assert.ok(!ids.some((id) => id === 'watch:vendor:acme:changelog'));
+  });
+});
+
+describe('runWatchPhase', () => {
+  it('first run: every channel is first_seen and facts are recorded', async () => {
+    const { plan, runDir } = startWatchRun('run1');
+    const { fetchImpl } = makeFetch(allBodies());
+    const result = await watch.runWatchPhase({
+      runId: 'run1', runDir, baseOpts: options, watchlist: WATCHLIST, fetchImpl,
+    });
+    assert.equal(result.summary.channels, plan.length);
+    assert.equal(result.summary.ok, plan.length);
+    assert.equal(result.summary.fetch_failed, 0);
+    for (const s of result.signals) assert.equal(s.status, 'first_seen');
+    const facts = db.latestWatchFacts(options);
+    assert.equal(facts.length, plan.length);
+    assert.ok(fs.existsSync(path.join(runDir, 'reduced', 'watch-signals.json')));
+  });
+
+  it('second run: changed content with new items is a changed signal; unchanged stays unchanged', async () => {
+    const { runDir: dir1 } = startWatchRun('run1');
+    await watch.runWatchPhase({
+      runId: 'run1', runDir: dir1, baseOpts: options, watchlist: WATCHLIST,
+      fetchImpl: makeFetch(allBodies()).fetchImpl,
+    });
+    const { runDir } = startWatchRun('run2');
+    const bodies = allBodies({
+      'https://openrouter.ai/models': JSON.stringify({
+        data: [{ id: 'acme/fresh' }, { id: 'acme/fresher', created: new Date().toISOString() }],
+      }),
+      'https://openai.com/blog': 'openai blog v1', // unchanged
+    });
+    const result2 = await watch.runWatchPhase({
+      runId: 'run2', runDir, baseOpts: options, watchlist: WATCHLIST, fetchImpl: makeFetch(bodies).fetchImpl,
+    });
+    const byEntity = new Map(result2.signals.map((s) => [s.entity_key, s]));
+    const monitor = byEntity.get('monitor:openrouter:new_models');
+    assert.equal(monitor.status, 'changed');
+    assert.ok(monitor.new_items.some((i) => i.includes('acme/fresher')));
+    assert.ok(!monitor.new_items.some((i) => i.includes('acme/fresh ')));
+    assert.equal(byEntity.get('vendor:openai:blog').status, 'unchanged');
+  });
+
+  it('fetch failures are signals, never run failures', async () => {
+    const { plan, runDir } = startWatchRun('run1');
+    const result = await watch.runWatchPhase({
+      runId: 'run1', runDir, baseOpts: options, watchlist: WATCHLIST,
+      fetchImpl: async () => { throw new Error('network down'); },
+    });
+    assert.equal(result.summary.ok, 0);
+    assert.equal(result.summary.fetch_failed, plan.length);
+    for (const s of result.signals) assert.equal(s.status, 'fetch_failed');
+  });
+});
+
+describe('vendor dispatch policy', () => {
+  it('quiet day: no signals, only the tier 1 rotation runs', () => {
+    const tasks = watch.planVendorTasks([], WATCHLIST, new Date('2026-08-05T00:00:00Z'));
+    const keys = tasks.map((t) => t.key);
+    // openai is the only tier 1 vendor in the fixture
+    assert.deepEqual(keys, ['openai']);
+    assert.equal(tasks[0].reason, 'rotation');
+    assert.deepEqual(tasks[0].changed_urls, []);
+  });
+
+  it('first_seen is not a dispatch trigger (no baseline to diff against yet)', () => {
+    const signals = [
+      { entity_key: 'vendor:zai:changelog', domain: 'vendor_channel', url: 'https://z.ai/changelog', status: 'first_seen' },
+    ];
+    const tasks = watch.planVendorTasks(signals, WATCHLIST, new Date('2026-08-05T00:00:00Z'));
+    assert.deepEqual(tasks.map((t) => t.key), ['openai']);
+  });
+
+  it('a changed vendor channel dispatches that vendor; signal and rotation merge without duplicates', () => {
+    const signals = [
+      { entity_key: 'vendor:zai:changelog', domain: 'vendor_channel', url: 'https://z.ai/changelog', status: 'changed' },
+      { entity_key: 'vendor:openai:blog', domain: 'vendor_channel', url: 'https://openai.com/blog', status: 'changed' },
+    ];
+    const tasks = watch.planVendorTasks(signals, WATCHLIST, new Date('2026-08-05T00:00:00Z'));
+    const byKey = new Map(tasks.map((t) => [t.key, t]));
+    assert.equal(byKey.get('zai').reason, 'signal');
+    assert.deepEqual(byKey.get('zai').changed_urls, ['https://z.ai/changelog']);
+    assert.ok(['signal', 'signal+rotation'].includes(byKey.get('openai').reason));
+    assert.equal(tasks.filter((t) => t.key === 'openai').length, 1);
+  });
+
+  it('respects the per day vendor task cap', () => {
+    const wl = {
+      ...WATCHLIST,
+      frontier_vendors: [],
+      vendors: Array.from({ length: 10 }, (_, i) => ({
+        key: `v${i}`, label: `V${i}`, tier: 1,
+        channels: { blog: `https://v${i}.example/blog` },
+      })),
+    };
+    const signals = wl.vendors.map((v) => ({
+      entity_key: `vendor:${v.key}:blog`,
+      domain: 'vendor_channel',
+      url: `https://${v.key}.example/blog`,
+      status: 'changed',
+    }));
+    const tasks = watch.planVendorTasks(signals, wl, new Date('2026-08-05T00:00:00Z'));
+    assert.equal(tasks.length, watch.MAX_VENDOR_TASKS_PER_DAY);
+  });
+});
+
+describe('news scan and community planning', () => {
+  it('news scan always runs once with the vendor list', () => {
+    const task = watch.planNewsScanTask(WATCHLIST);
+    assert.equal(task.kind, 'news_scan');
+    assert.equal(task.task_id, 'news_scan');
+    assert.deepEqual(task.vendor_keys, ['openai', 'zai', 'mistral']);
+  });
+
+  it('community always runs once; the prefilter carries only changed community signals', () => {
+    const task = watch.planCommunityTask([
+      { entity_key: 'community:reddit:LocalLLaMA', domain: 'community', url: 'u1', status: 'unchanged' },
+      { entity_key: 'community:reddit:OpenRouter', domain: 'community', url: 'u2', status: 'changed', new_items: ['a', 'b'] },
+      { entity_key: 'vendor:zai:changelog', domain: 'vendor_channel', url: 'u3', status: 'changed' },
+    ]);
+    assert.equal(task.kind, 'community');
+    assert.equal(task.task_id, 'community');
+    assert.equal(task.prefilter.length, 1);
+    assert.equal(task.prefilter[0].entity_key, 'community:reddit:OpenRouter');
+    const empty = watch.planCommunityTask([]);
+    assert.deepEqual(empty.prefilter, []);
+  });
+});

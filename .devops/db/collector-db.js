@@ -33,6 +33,9 @@ const RUN_TERMINAL_STATUSES = ['promoted', 'superseded', 'failed'];
 const TASK_KINDS = [
   'catalog', 'known_refresh', 'discovery',
   'benchmark_scout', 'classifier', 'editorial',
+  // Spec 0008 Phase 1: deterministic watch channel fetch + model first
+  // research workers.
+  'watch', 'news_scan', 'vendor_deep_dive', 'community', 'model_fanout',
 ];
 const TASK_STATUSES = ['pending', 'complete', 'partial', 'failed'];
 const TASK_RESULT_STATUSES = ['complete', 'partial', 'failed'];
@@ -130,6 +133,9 @@ function resolvePaths(options = {}) {
     reportPath: options.reportPath
       ? path.resolve(options.reportPath)
       : path.join(projectRoot, 'report.json'),
+    watchlistPath: options.watchlistPath
+      ? path.resolve(options.watchlistPath)
+      : path.join(projectRoot, 'build', 'research-watchlist.json'),
   };
 }
 
@@ -185,6 +191,8 @@ const ROW_JSON_COLUMNS = {
   tasks: ['assigned_json', 'result_json', 'error_json'],
   offers: ['removal_evidence_json', 'facts_json'],
   benchmarks: ['facts_json'],
+  models: ['aliases_json', 'known_providers_json'],
+  watch_facts: ['facts_json'],
 };
 
 function parseRow(table, row) {
@@ -1136,6 +1144,295 @@ function pricingHashFromText(text) {
 }
 
 // ---------------------------------------------------------------------------
+// Spec 0008: models, leads, watch facts (migration 0010)
+// ---------------------------------------------------------------------------
+
+// Upserts a model row. The model key is the canonical id; callers pass only
+// the fields they want to touch (absent fields stay as-is). Aliases and known
+// providers merge with the existing lists. Returns the stored row plus a
+// created flag.
+function upsertModel(canonicalModelIdValue, fields = {}, options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    const requested = canonicalModelId(canonicalModelIdValue);
+    if (!requested) return null;
+    // Resolve aliases to an existing canonical row first, so an alias never
+    // fragments the model into a second row.
+    let id = requested;
+    const exact = modelRowOf(database, requested);
+    if (!exact) {
+      const norm = (v) => String(v || '').replace(/\//g, '').toLowerCase();
+      const needle = norm(requested);
+      const all = database.prepare('SELECT * FROM models').all().map((row) => parseRow('models', row));
+      const hit = all.find((m) =>
+        norm(m.canonical_model_id) === needle
+        || parseJsonStringList(m.aliases_json).some((a) => norm(a) === needle));
+      if (hit) {
+        id = hit.canonical_model_id;
+        // The incoming id becomes a known alias of the canonical row.
+        fields.aliases = [...(Array.isArray(fields.aliases) ? fields.aliases : []), requested];
+      }
+    }
+    const existing = modelRowOf(database, id);
+    const now = new Date().toISOString();
+    if (!existing) {
+      database.prepare(
+        'INSERT INTO models (canonical_model_id, display_name, vendor_key, aliases_json, '
+        + 'known_providers_json, frontier, release_status, release_date, total_parameters_b, '
+        + 'active_parameters_b, open_weight, first_seen_at, last_seen_at, source_url, last_run_id) '
+        + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ).run(
+        id,
+        fields.display_name || id,
+        fields.vendor_key || null,
+        JSON.stringify(uniqueList(modelAliasValues(fields.aliases))),
+        JSON.stringify(uniqueList(modelAliasValues(fields.known_providers))),
+        fields.frontier === undefined ? 0 : (fields.frontier ? 1 : 0),
+        nullableString(fields.release_status),
+        nullableString(fields.release_date),
+        numberOrNull(fields.total_parameters_b),
+        numberOrNull(fields.active_parameters_b),
+        fields.open_weight === undefined ? null : (fields.open_weight ? 1 : 0),
+        fields.first_seen_at || now,
+        fields.last_seen_at || now,
+        nullableString(fields.source_url),
+        fields.last_run_id || null,
+      );
+      return { ...modelRowOf(database, id), created: true };
+    }
+    const sets = [];
+    const params = [];
+    const setCol = (col, value) => { sets.push(`${col} = ?`); params.push(value); };
+    if (typeof fields.display_name === 'string' && fields.display_name.trim()) setCol('display_name', fields.display_name.trim());
+    if (fields.vendor_key !== undefined) setCol('vendor_key', fields.vendor_key || null);
+    if (Array.isArray(fields.aliases)) {
+      const merged = uniqueList(modelAliasValues([
+        ...parseJsonStringList(existing.aliases_json), ...fields.aliases,
+      ]));
+      if (JSON.stringify(merged) !== existing.aliases_json) setCol('aliases_json', JSON.stringify(merged));
+    }
+    if (fields.frontier !== undefined) setCol('frontier', fields.frontier ? 1 : 0);
+    if (Array.isArray(fields.known_providers)) {
+      const merged = uniqueList(modelAliasValues([
+        ...parseJsonStringList(existing.known_providers_json), ...fields.known_providers,
+      ]));
+      if (JSON.stringify(merged) !== existing.known_providers_json) setCol('known_providers_json', JSON.stringify(merged));
+    }
+    if (fields.release_status !== undefined) setCol('release_status', nullableString(fields.release_status));
+    if (fields.release_date !== undefined) setCol('release_date', nullableString(fields.release_date));
+    if (fields.total_parameters_b !== undefined) setCol('total_parameters_b', numberOrNull(fields.total_parameters_b));
+    if (fields.active_parameters_b !== undefined) setCol('active_parameters_b', numberOrNull(fields.active_parameters_b));
+    if (fields.open_weight !== undefined) setCol('open_weight', fields.open_weight ? 1 : 0);
+    if (fields.last_seen_at) setCol('last_seen_at', fields.last_seen_at);
+    if (typeof fields.source_url === 'string' && fields.source_url.trim()) setCol('source_url', fields.source_url.trim());
+    if (fields.last_run_id) setCol('last_run_id', fields.last_run_id);
+    if (sets.length > 0) {
+      params.push(id);
+      database.prepare(`UPDATE models SET ${sets.join(', ')} WHERE canonical_model_id = ?`).run(...params);
+    }
+    return { ...modelRowOf(database, id), created: false };
+  } finally {
+    database.close();
+  }
+}
+
+function modelAliasValues(values) {
+  if (!Array.isArray(values)) return [];
+  return values.filter((v) => typeof v === 'string' && v.trim()).map((v) => v.trim());
+}
+
+function parseJsonStringList(value) {
+  if (Array.isArray(value)) return value.filter((v) => typeof v === 'string');
+  if (typeof value !== 'string' || !value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((v) => typeof v === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function nullableString(value) {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function numberOrNull(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function modelRowOf(database, id) {
+  const row = database.prepare('SELECT * FROM models WHERE canonical_model_id = ?').get(id);
+  return row ? parseRow('models', row) : null;
+}
+
+// Finds models by exact canonical id or by alias. Matching is case-insensitive
+// and ignores namespace slashes, so 'Kimi-K3' matches 'moonshotai/kimi-k3'.
+function findModelsByIds(ids = [], options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    const rows = [];
+    const all = database.prepare('SELECT * FROM models').all().map((row) => parseRow('models', row));
+    const norm = (v) => String(v || '').replace(/\//g, '').toLowerCase();
+    for (const raw of ids) {
+      const id = canonicalModelId(raw);
+      if (!id) continue;
+      const needle = norm(id);
+      const hit = all.find((m) =>
+        norm(m.canonical_model_id) === needle
+        || parseJsonStringList(m.aliases_json).some((a) => norm(a) === needle));
+      if (hit && !rows.some((r) => r.canonical_model_id === hit.canonical_model_id)) rows.push(hit);
+    }
+    return rows;
+  } finally {
+    database.close();
+  }
+}
+
+function listModels(options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    return database.prepare('SELECT * FROM models ORDER BY canonical_model_id').all()
+      .map((row) => parseRow('models', row));
+  } finally {
+    database.close();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Leads (community / news claims; spec 0008)
+// ---------------------------------------------------------------------------
+
+// Adds a lead. The lead identity is sha1(source_url + claim_text), so the same
+// claim from the same page never duplicates. A lead that already exists is
+// returned as-is (dismissed leads are never re-opened). Returns the row plus
+// a created flag.
+function addLead(lead, options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    const sourceUrl = nullableString(lead.source_url);
+    const claimText = nullableString(lead.claim_text);
+    if (!sourceUrl || !claimText || !lead.run_id) throw new Error('addLead requires run_id, source_url, claim_text');
+    const leadId = crypto.createHash('sha1').update(`${sourceUrl}\u0000${claimText}`).digest('hex');
+    const existing = parseRow('leads', database.prepare('SELECT * FROM leads WHERE lead_id = ?').get(leadId));
+    if (existing) return { ...existing, created: false };
+    const detectedAt = lead.detected_at || new Date().toISOString();
+    database.prepare(
+      "INSERT INTO leads (lead_id, run_id, detected_at, source_url, source_tier, claim_text, "
+      + "model_name, provider_key, status, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', ?)"
+    ).run(
+      leadId, lead.run_id, detectedAt, sourceUrl,
+      Number.isInteger(lead.source_tier) ? lead.source_tier : 3,
+      claimText, nullableString(lead.model_name), nullableString(lead.provider_key),
+      nullableString(lead.note),
+    );
+    return { ...parseRow('leads', database.prepare('SELECT * FROM leads WHERE lead_id = ?').get(leadId)), created: true };
+  } finally {
+    database.close();
+  }
+}
+
+// Moves an open lead to verified / dismissed / expired. Returns true when a
+// transition happened.
+function resolveLead(leadId, resolution = {}, options = {}) {
+  const status = resolution.status;
+  if (!['verified', 'dismissed', 'expired'].includes(status)) {
+    throw new Error(`resolveLead: unknown status ${status}`);
+  }
+  const database = openCollectorDb(options);
+  try {
+    const result = database.prepare(
+      "UPDATE leads SET status = ?, resolved_at = ?, note = COALESCE(?, note), "
+      + 'linked_offer_key = ? WHERE lead_id = ? AND status = \'open\''
+    ).run(
+      status,
+      resolution.resolved_at || new Date().toISOString(),
+      nullableString(resolution.note),
+      nullableString(resolution.linked_offer_key),
+      leadId,
+    );
+    return result.changes > 0;
+  } finally {
+    database.close();
+  }
+}
+
+function listOpenLeads(options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    return database.prepare(
+      "SELECT * FROM leads WHERE status = 'open' ORDER BY detected_at ASC, lead_id ASC"
+    ).all().map((row) => parseRow('leads', row));
+  } finally {
+    database.close();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Watch facts (per-run deterministic triage snapshots; spec 0008)
+// ---------------------------------------------------------------------------
+
+// Records one fetched watch channel snapshot for this run. The primary key
+// includes run_id, so history is preserved. Returns the previous latest row
+// for the same (domain, entity_key) (null on first fetch) so the caller can
+// derive change signals deterministically.
+function recordWatchFact(fact, options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    if (!fact.domain || !fact.entity_key || !fact.run_id) {
+      throw new Error('recordWatchFact requires domain, entity_key, run_id');
+    }
+    const previous = parseRow('watch_facts', database.prepare(
+      'SELECT * FROM watch_facts WHERE domain = ? AND entity_key = ? AND run_id != ? '
+      + 'ORDER BY run_id DESC LIMIT 1'
+    ).get(fact.domain, fact.entity_key, fact.run_id));
+    database.prepare(
+      'INSERT OR REPLACE INTO watch_facts (domain, entity_key, url, run_id, fetched_at, http_status, content_hash, facts_json) '
+      + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(
+      fact.domain, fact.entity_key, nullableString(fact.url), fact.run_id,
+      fact.fetched_at || new Date().toISOString(),
+      Number.isInteger(fact.http_status) ? fact.http_status : null,
+      nullableString(fact.content_hash),
+      fact.facts_json === undefined ? null : JSON.stringify(fact.facts_json),
+    );
+    return { previous: previous || null };
+  } finally {
+    database.close();
+  }
+}
+
+// The latest row per (domain, entity_key). Run ids are ISO timestamps, so
+// lexicographic order is chronological order.
+function latestWatchFacts(options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    return database.prepare(
+      'SELECT wf.* FROM watch_facts wf '
+      + 'JOIN (SELECT domain, entity_key, MAX(run_id) AS m FROM watch_facts GROUP BY domain, entity_key) t '
+      + 'ON wf.domain = t.domain AND wf.entity_key = t.entity_key AND wf.run_id = t.m '
+      + 'ORDER BY wf.domain, wf.entity_key'
+    ).all().map((row) => parseRow('watch_facts', row));
+  } finally {
+    database.close();
+  }
+}
+
+function uniqueList(values) {
+  const seen = new Set();
+  const out = [];
+  for (const v of values) {
+    const k = typeof v === 'string' ? v.trim() : v;
+    if (k === null || k === undefined || k === '') continue;
+    const key = String(k);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(k);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Run directory task artifact layout (shared by the lane and catalog modules)
 // ---------------------------------------------------------------------------
 
@@ -1463,6 +1760,15 @@ module.exports = {
   benchmarkVersion,
   pricingHash,
   pricingHashFromText,
+  // spec 0008: models, leads, watch facts
+  upsertModel,
+  findModelsByIds,
+  listModels,
+  addLead,
+  resolveLead,
+  listOpenLeads,
+  recordWatchFact,
+  latestWatchFacts,
   // run directory layout
   sanitizeTaskId,
   artifactPathFor,

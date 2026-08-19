@@ -40,6 +40,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const db = require('./collector-db');
+const watch = require('./watch');
+const { loadWatchlist } = require('../../build/research-watchlist');
 const { isPriceEligible: isSharedPriceEligible } = require('../../build/ranking-policy');
 
 // Run four moves a stale offer to the caution section (AC-3). Runs one
@@ -105,6 +107,20 @@ function buildDiscoveryTasks() {
     });
   }
   return tasks;
+}
+
+// Spec 0008: the deterministic watch plan becomes run tasks. A missing or
+// invalid watchlist degrades to an empty plan (the watch lane is addition
+// only; the rest of the pipeline is unaffected).
+function buildWatchTasks(options = {}) {
+  const paths = db.resolvePaths(options);
+  try {
+    if (!fs.existsSync(paths.watchlistPath)) return [];
+    const watchlist = loadWatchlist(paths.watchlistPath);
+    return watch.buildWatchPlan(watchlist);
+  } catch (err) {
+    return [];
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -198,6 +214,12 @@ function buildLaneManifest(options = {}) {
   const discoveryTasks = buildDiscoveryTasks();
   tasks.push(...discoveryTasks);
 
+  // Spec 0008: deterministic watch tasks. Fetched in process (no LLM); the
+  // plan is tracked as run tasks so artifacts and watch_facts history stay
+  // comparable across runs.
+  const watchTasks = buildWatchTasks(options);
+  tasks.push(...watchTasks);
+
   tasks.sort((a, b) => a.task_id.localeCompare(b.task_id));
 
   return {
@@ -211,6 +233,9 @@ function buildLaneManifest(options = {}) {
       discovery: {
         assigned: discoveryTasks.length,
         goals: DISCOVERY_GOALS,
+      },
+      watch: {
+        channels: watchTasks.length,
       },
       catalog: { providers: [...catalogKeys].sort() },
     },
@@ -846,7 +871,11 @@ function reduceLanes(runId, runDir, options = {}) {
 
   const catalogTasks = tasks.filter((t) => t.kind === 'catalog');
   const knownTasks = tasks.filter((t) => t.kind === 'known_refresh');
-  const discoveryTasks = tasks.filter((t) => t.kind === 'discovery');
+  // Spec 0008: the model-first lanes (news_scan, vendor deep dive, model
+  // fan out) emit crawl-facts shaped offer facts in models[] and take the
+  // same discovery-lane treatment: addition only, known offers never mutated.
+  const discoveryTasks = tasks.filter((t) =>
+    ['discovery', 'news_scan', 'vendor_deep_dive', 'model_fanout'].includes(t.kind));
 
   // ── Catalog lane (AC-6, AC-5) ──────────────────────────────────
   for (const task of catalogTasks) {

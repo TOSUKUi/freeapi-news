@@ -116,8 +116,8 @@ test('migrations create the tables and are idempotent', (t) => {
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
 
   const first = db.applyMigrations(ctx.options);
-  assert.deepEqual(first.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-  assert.equal(first.schemaVersion, 10);
+  assert.deepEqual(first.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+  assert.equal(first.schemaVersion, 11);
 
   const raw = openRaw(ctx);
   let names;
@@ -131,6 +131,7 @@ test('migrations create the tables and are idempotent', (t) => {
   for (const table of [
     'schema_migrations', 'runs', 'tasks', 'offers',
     'benchmarks', 'benchmark_searches', 'source_cache',
+    'models', 'leads', 'watch_facts',
   ]) {
     assert.ok(names.includes(table), `missing table ${table}`);
   }
@@ -141,7 +142,7 @@ test('migrations create the tables and are idempotent', (t) => {
 
   const second = db.applyMigrations(ctx.options);
   assert.deepEqual(second.applied, []);
-  assert.equal(second.schemaVersion, 10);
+  assert.equal(second.schemaVersion, 11);
 });
 
 test('operator hidden flag survives catalog upserts and can be changed explicitly', (t) => {
@@ -733,7 +734,7 @@ test('getStatus reports schema, runs, and copies', (t) => {
   const mid = db.getStatus(ctx.options);
   assert.equal(mid.dbExists, true);
   assert.equal(mid.integrityOk, true);
-  assert.equal(mid.schemaVersion, 10);
+  assert.equal(mid.schemaVersion, 11);
   assert.equal(mid.currentRun.run_id, 'run-1');
   assert.equal(mid.lastPromotedRun, null);
   assert.equal(mid.copies.length, 1);
@@ -995,6 +996,26 @@ test('migration 0004 backfills per-token catalog rows and strips facts (AC-3, AC
     database.exec(`
       CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT);
       INSERT INTO schema_migrations (version, applied_at) VALUES (1, 'x'), (2, 'x'), (3, 'x');
+      CREATE TABLE runs (
+        run_id TEXT PRIMARY KEY,
+        status TEXT NOT NULL DEFAULT 'collecting',
+        started_at TEXT NOT NULL,
+        finished_at TEXT,
+        candidate_hash TEXT,
+        error TEXT
+      );
+      CREATE TABLE tasks (
+        run_id TEXT NOT NULL REFERENCES runs(run_id),
+        task_id TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        provider_key TEXT,
+        assigned_json TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        result_json TEXT,
+        error_json TEXT,
+        completed_at TEXT,
+        PRIMARY KEY (run_id, task_id)
+      );
       CREATE TABLE search_terms (
         category TEXT NOT NULL,
         locale TEXT NOT NULL,

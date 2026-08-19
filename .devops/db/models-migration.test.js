@@ -86,10 +86,11 @@ test('0010 creates models, leads and watch_facts and backfills models from offer
     dbo.close();
   }
 
-  // Now apply the real migrations directory: only 0010 is new.
+  // Now apply the real migrations directory: 0010 (model lane) and 0011
+  // (research task kinds) are new for this v9 database.
   const r10 = db.applyMigrations({ dbPath: ctx.dbPath, migrationsDir: MIGRATIONS_DIR });
-  assert.deepEqual(r10.applied, [10]);
-  assert.equal(r10.schemaVersion, 10);
+  assert.deepEqual(r10.applied, [10, 11]);
+  assert.equal(r10.schemaVersion, 11);
 
   const t = db.openDatabaseFile(ctx.dbPath);
   try {
@@ -162,7 +163,7 @@ test('leads enforces the status lifecycle and watch_facts enforces domains', () 
   }
 });
 
-test('db status reports the watch summary on a v10 database', () => {
+test('db status reports the watch summary on a v11 database', () => {
   const ctx = tmpProject();
   db.applyMigrations({ dbPath: ctx.dbPath, migrationsDir: MIGRATIONS_DIR });
   const t = db.openDatabaseFile(ctx.dbPath);
@@ -179,7 +180,7 @@ test('db status reports the watch summary on a v10 database', () => {
     t.close();
   }
   const status = db.getStatus({ dbPath: ctx.dbPath, stateDir: ctx.stateDir });
-  assert.equal(status.schemaVersion, 10);
+  assert.equal(status.schemaVersion, 11);
   assert.equal(status.watch.leads_open, 1);
   assert.deepEqual(
     status.watch.leads.map((r) => ({ status: r.status, c: r.c })).sort((a, b) => a.status.localeCompare(b.status)),
@@ -188,5 +189,24 @@ test('db status reports the watch summary on a v10 database', () => {
       { status: 'verified', c: 1 },
     ]
   );
-  assert.equal(status.watch.contradictions_open, null, 'contradictions table arrives in 0011');
+  assert.equal(status.watch.contradictions_open, null, 'contradictions table arrives in Phase 2');
+});
+
+test('0011 extends tasks.kind with the spec 0008 research kinds', () => {
+  const ctx = tmpProject();
+  db.applyMigrations({ dbPath: ctx.dbPath, migrationsDir: MIGRATIONS_DIR });
+  const t = db.openDatabaseFile(ctx.dbPath);
+  try {
+    t.prepare("INSERT INTO runs (run_id, status, started_at) VALUES ('run1', 'collecting', '2026-08-05T00:00:00.000Z')").run();
+    for (const kind of ['watch', 'news_scan', 'vendor_deep_dive', 'community', 'model_fanout']) {
+      t.prepare('INSERT INTO tasks (run_id, task_id, kind) VALUES (?, ?, ?)').run('run1', `${kind}-task`, kind);
+    }
+    const kinds = t.prepare('SELECT kind FROM tasks ORDER BY kind').all().map((r) => r.kind);
+    assert.deepEqual(kinds, ['community', 'model_fanout', 'news_scan', 'vendor_deep_dive', 'watch']);
+    assert.throws(() => {
+      t.prepare('INSERT INTO tasks (run_id, task_id, kind) VALUES (?, ?, ?)').run('run1', 'bad', 'not_a_kind');
+    }, /CHECK constraint/);
+  } finally {
+    t.close();
+  }
 });

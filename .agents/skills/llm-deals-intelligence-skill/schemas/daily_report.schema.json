@@ -196,6 +196,20 @@
           "items": {
             "type": "string"
           }
+        },
+        "window": {
+          "type": "string",
+          "enum": [
+            "hot",
+            "warm",
+            "catchup",
+            "undated"
+          ],
+          "$comment": "spec 0008: recency tag from release_date (hot 24h / warm 72h / catchup 30d)"
+        },
+        "distribution_note": {
+          "type": "string",
+          "$comment": "spec 0008: model fan out route verdicts summary (served / not_served / unconfirmed per provider)"
         }
       },
       "additionalProperties": false
