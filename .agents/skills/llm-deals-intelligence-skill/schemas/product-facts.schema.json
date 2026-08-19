@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "product_monitor の出力 (spec 0008 §5.3)。hash 変化した製品チャネルのページを閲覧し、構造化された製品事実だけを書く。key は watchlist の coding_products.key をそのまま使う。",
+  "type": "object",
+  "required": ["schema_version", "task_id", "status", "crawled_at", "products"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "task_id": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["complete", "partial", "failed"] },
+    "crawled_at": { "type": "string" },
+    "provider_key": { "type": ["string", "null"] },
+    "products": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "source_url", "pricing_text"],
+        "properties": {
+          "key": { "type": "string", "minLength": 1 },
+          "access_kinds": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "external_api", "product_internal", "subscription",
+                "free_calls", "credit_multiplier", "off_peak", "model_lock"
+              ]
+            }
+          },
+          "free_calls": { "type": ["string", "null"], "description": "無料呼び出し・試用枠の verbatim 記述" },
+          "credit_multiplier": { "type": ["string", "null"], "description": "クレジット倍率の verbatim 記述" },
+          "off_peak": { "type": ["string", "null"], "description": "オフピーク料率の verbatim 記述" },
+          "model_lock": { "type": ["string", "null"], "description": "モデル固定・指定モデルのみ等の verbatim 記述" },
+          "promo_text": { "type": ["string", "null"], "description": "プロモーション本文の verbatim 記述" },
+          "pricing_text": { "type": "string", "minLength": 1, "description": "料率ページの verbatim 記述" },
+          "source_url": { "type": "string", "format": "uri" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "program_monitor の出力 (spec 0008 §5.3)。hash 変化したクレジットプログラムページを閲覧し、構造化されたプログラム事実だけを書く。key は watchlist の credit_programs.key をそのまま使う。",
+  "type": "object",
+  "required": ["schema_version", "task_id", "status", "crawled_at", "programs"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "task_id": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["complete", "partial", "failed"] },
+    "crawled_at": { "type": "string" },
+    "provider_key": { "type": ["string", "null"] },
+    "programs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "source_url"],
+        "properties": {
+          "key": { "type": "string", "minLength": 1 },
+          "max_credit": { "type": ["string", "null"], "description": "最大クレジット額の verbatim 記述" },
+          "currency": { "type": ["string", "null"] },
+          "eligibility": { "type": ["string", "null"], "description": "応募条件の verbatim 記述" },
+          "deadline": { "type": ["string", "null"], "description": "期限の verbatim 記述" },
+          "usable_services": { "type": ["string", "null"], "description": "使えるサービスの verbatim 記述" },
+          "prepaid_conditions": { "type": ["string", "null"], "description": "前払い・条件の verbatim 記述" },
+          "terms_text": { "type": ["string", "null"], "description": "利用条款の verbatim 記述" },
+          "source_url": { "type": "string", "format": "uri" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

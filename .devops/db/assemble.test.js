@@ -744,3 +744,153 @@ test('crawl facts schema rejects unknown fact type and typed price properties', 
   };
   assert.equal(validate(omittedEnd), false, 'a supplied discount start requires an end');
 });
+
+// ── Phase 3: classifier suspicion wiring (spec §12) ─────────────────────
+
+test('classifier suspicion 5 excludes the offer with the reason (Phase 3 wiring)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [offerSeed({})],
+    benchmarks: [benchRow('acme/a', 70)],
+  });
+  const runDir = runDirFor(ctx, 'run-susp-5');
+  fs.mkdirSync(path.join(runDir, 'reduced'), { recursive: true });
+  fs.writeFileSync(path.join(runDir, 'reduced', 'classifications.json'), JSON.stringify({
+    classifications: [{
+      offer_key: 'openrouter/acme/a:free',
+      classification: 'A_TRUE_FREE',
+      suspicion_score: 5,
+      reasoning: 'quota wording implies paid after first month',
+    }],
+  }));
+  const { report } = assemble.assembleReport('run-susp-5', runDir, ctx.options);
+  assert.equal(report.ranked_offers.length, 0, 'suspicion 5 never ranks');
+  assert.equal(report.excluded_offers.length, 1);
+  assert.match(report.excluded_offers[0].reason, /\[suspicion\] suspicion 5 >= 4 never ranks/);
+});
+
+test('classifier suspicion 2 is adopted on the ranked offer with its reason', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [offerSeed({})],
+    benchmarks: [benchRow('acme/a', 70)],
+  });
+  const runDir = runDirFor(ctx, 'run-susp-2');
+  fs.mkdirSync(path.join(runDir, 'reduced'), { recursive: true });
+  fs.writeFileSync(path.join(runDir, 'reduced', 'classifications.json'), JSON.stringify({
+    classifications: [{
+      offer_key: 'openrouter/acme/a:free',
+      classification: 'A_TRUE_FREE',
+      suspicion_score: 2,
+      reasoning: 'quota caps are unusually low',
+    }],
+  }));
+  const { report } = assemble.assembleReport('run-susp-2', runDir, ctx.options);
+  assert.equal(report.ranked_offers.length, 1);
+  assert.equal(report.ranked_offers[0].suspicion_score, 2);
+  assert.deepEqual(report.ranked_offers[0].suspicion_reasons, ['quota caps are unusually low']);
+});
+
+test('an out of scale classifier suspicion is clamped, never trusted above 5', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [offerSeed({})],
+    benchmarks: [benchRow('acme/a', 70)],
+  });
+  const runDir = runDirFor(ctx, 'run-susp-clamp');
+  fs.mkdirSync(path.join(runDir, 'reduced'), { recursive: true });
+  fs.writeFileSync(path.join(runDir, 'reduced', 'classifications.json'), JSON.stringify({
+    classifications: [{
+      offer_key: 'openrouter/acme/a:free',
+      classification: 'A_TRUE_FREE',
+      suspicion_score: 97,
+      reasoning: 'legacy 0-100 scale artifact',
+    }],
+  }));
+  const { report } = assemble.assembleReport('run-susp-clamp', runDir, ctx.options);
+  assert.equal(report.ranked_offers.length, 0);
+  assert.match(report.excluded_offers[0].reason, /\[suspicion\] suspicion 5 >= 4 never ranks/);
+});
+
+// ── Phase 3: data policy storage, display, and change detection ──────────
+
+test('data policy change is detected from the hash and carries text excerpts', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    runId: 'prior',
+    offers: [offerSeed({
+      facts_json: { model_name: 'A', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' },
+    })],
+    benchmarks: [benchRow('acme/a', 70)],
+  });
+  db.setOfferConditionFacts('openrouter', 'acme/a:free', {
+    data_policy_json: { text: 'We may use your prompts to improve the model.', url: 'https://platform.openai.com/docs/guides/your-data' },
+    data_policy_hash: db.pricingHashFromText('We may use your prompts to improve the model.'),
+    data_policy_verified_at: '2026-08-01T00:00:00.000Z',
+  }, ctx.options);
+  const runDir = runDirFor(ctx, 'run-dp');
+  db.copyDatabaseForRun('run-dp', ctx.options);
+  seed(ctx, {
+    runId: 'current',
+    offers: [offerSeed({
+      facts_json: { model_name: 'A', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' },
+    })],
+    benchmarks: [benchRow('acme/a', 70)],
+  });
+  const newText = 'We do not use your data for training on this endpoint.';
+  db.setOfferConditionFacts('openrouter', 'acme/a:free', {
+    data_policy_json: { text: newText, url: 'https://platform.openai.com/docs/guides/your-data' },
+    data_policy_hash: db.pricingHashFromText(newText),
+    data_policy_verified_at: '2026-08-19T00:00:00.000Z',
+  }, ctx.options);
+
+  const { report } = assemble.assembleReport('run-dp', runDir, ctx.options);
+  const change = report.changes.find((c) => c.change_type === 'data_policy_change');
+  assert.ok(change, 'a data_policy_change record exists');
+  assert.equal(change.field, 'data_policy');
+  assert.equal(change.before.text, 'We may use your prompts to improve the model.');
+  assert.equal(change.after.text, newText);
+  // The offer card shows the new policy text and its verified source.
+  const offer = report.ranked_offers.find((o) => o.model_id === 'acme/a:free');
+  assert.ok(offer, 'offer still ranks');
+  assert.equal(offer.data_policy, newText);
+  assert.equal(offer.data_policy_source, 'https://platform.openai.com/docs/guides/your-data');
+});
+
+test('an unchanged data policy produces no change record', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    runId: 'prior',
+    offers: [offerSeed({
+      facts_json: { model_name: 'A', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' },
+    })],
+    benchmarks: [benchRow('acme/a', 70)],
+  });
+  const hash = db.pricingHashFromText('No training use on this endpoint.');
+  db.setOfferConditionFacts('openrouter', 'acme/a:free', {
+    data_policy_json: { text: 'No training use on this endpoint.', url: 'https://platform.openai.com/docs/guides/your-data' },
+    data_policy_hash: hash,
+    data_policy_verified_at: '2026-08-01T00:00:00.000Z',
+  }, ctx.options);
+  const runDir = runDirFor(ctx, 'run-dp-same');
+  db.copyDatabaseForRun('run-dp-same', ctx.options);
+  seed(ctx, {
+    runId: 'current',
+    offers: [offerSeed({
+      facts_json: { model_name: 'A', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' },
+    })],
+    benchmarks: [benchRow('acme/a', 70)],
+  });
+  const { report } = assemble.assembleReport('run-dp-same', runDir, ctx.options);
+  assert.equal(report.changes.filter((c) => c.change_type === 'data_policy_change').length, 0);
+});

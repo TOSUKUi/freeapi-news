@@ -242,14 +242,6 @@ function gate3Evidence(candidate) {
   return candidate.status === 'verified' ? 'official docs / pricing fetch verified this run' : null;
 }
 
-// Suspicion: the classifier value (Phase 3 wiring) or the deterministic
-// floor for unregistered providers (spec §4.7: unregistered = minimum 2).
-function finalSuspicion(candidate, registered) {
-  const base = Number.isInteger(candidate.suspicion_score) ? candidate.suspicion_score : 0;
-  if (!registered) return Math.max(base, rankingPolicy.SUSPICION_UNREGISTERED_FLOOR);
-  return base;
-}
-
 // ---------------------------------------------------------------------------
 // Candidate view (deterministic facts for the Editor and the assembler)
 // ---------------------------------------------------------------------------
@@ -420,6 +412,7 @@ function buildCandidateView(options = {}) {
       api_calls_30d: Number.isInteger(offer.api_calls_30d) ? offer.api_calls_30d : null,
       frontier: frontierModel,
       data_policy: offerDataPolicy(offer),
+      data_policy_source: offerDataPolicySource(offer),
       // For router cards the exact model page is the primary citation. It is
       // generated from the registry template, while only fetched URLs enter
       // source_cache and endpoint evidence.
@@ -444,6 +437,23 @@ function offerDataPolicy(offer) {
         : (typeof parsed.value === 'string' ? parsed.value : null);
     }
     return typeof parsed === 'string' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+// The verified data policy page (data_policy_json.url), when stored.
+function offerDataPolicySource(offer) {
+  if (!offer.data_policy_json) return null;
+  try {
+    const parsed = typeof offer.data_policy_json === 'string'
+      ? JSON.parse(offer.data_policy_json)
+      : offer.data_policy_json;
+    if (parsed && typeof parsed === 'object' && typeof parsed.url === 'string' &&
+        /^https?:\/\//.test(parsed.url)) {
+      return parsed.url;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -817,10 +827,20 @@ function computeChanges(currentOffers, priorOffers) {
       changes.push({ offer_key: key, offer_name: name, change_type: 'rate_limit_change', field: 'free_quota', before: priorFacts.free_quota_text || priorFacts.free_limits || null, after: curFacts.free_quota_text || curFacts.free_limits || null });
     }
 
-    // Data policy hash.
+    // Data policy hash. before / after carry the verbatim text excerpt so
+    // the report can show what the policy said before and after (spec §4.6).
     if ((prior.data_policy_hash || null) !== (current.data_policy_hash || null) &&
         (prior.data_policy_hash || current.data_policy_hash)) {
-      changes.push({ offer_key: key, offer_name: name, change_type: 'data_policy_change', field: 'data_policy', before: prior.data_policy_hash || null, after: current.data_policy_hash || null });
+      const policyTextOf = (o) => {
+        const p = o.data_policy_json;
+        return p && typeof p === 'object' && typeof p.text === 'string' ? p.text : null;
+      };
+      const excerpt = (text) => (text === null ? null : text.slice(0, 160) + (text.length > 160 ? '…' : ''));
+      changes.push({
+        offer_key: key, offer_name: name, change_type: 'data_policy_change', field: 'data_policy',
+        before: { hash: prior.data_policy_hash || null, text: excerpt(policyTextOf(prior)) },
+        after: { hash: current.data_policy_hash || null, text: excerpt(policyTextOf(current)) },
+      });
     }
 
     // Capability (tool calling / structured output) turns on or off.
@@ -947,13 +967,13 @@ function toPublicOffer(candidate, classification, prose, rank) {
     discount_rates: null,
     data_retention: null,
     data_policy: candidate.data_policy || null,
-    data_policy_source: null,
+    data_policy_source: candidate.data_policy_source || null,
     free_endpoint_status: candidate.free_endpoint_status || null,
     operational_evidence: gate3Evidence(candidate),
     activity: candidate.activity_evidence || null,
     training_use: candidate.training_use || null,
     suspicion_score: candidate.suspicion_score,
-    suspicion_reasons: [],
+    suspicion_reasons: Array.isArray(candidate.suspicion_reasons) ? candidate.suspicion_reasons : [],
     information_confidence: deriveInformationConfidence(candidate),
     operational_confidence: deriveOperationalConfidence(candidate),
     ranking_eligible: false,
@@ -976,6 +996,23 @@ function toPublicOffer(candidate, classification, prose, rank) {
     benchmark_key: candidate.benchmark_key,
   };
   return offer;
+}
+
+// Loads the current offer state and the pre run backup state for the
+// deterministic diff. The candidate view step uses this to write the
+// changes preview the editor reads; assembleReport uses it for the final
+// change records. Same inputs, same deterministic output.
+function loadOfferDiffInputs(runDir, options = {}) {
+  const priorOffers = loadOffersFromBackup(runDir);
+  const database = db.openCollectorDb(options);
+  let currentOffers;
+  try {
+    currentOffers = database.prepare('SELECT * FROM offers ORDER BY provider_key, exact_model_id')
+      .all().map((row) => db.parseRow('offers', row));
+  } finally {
+    database.close();
+  }
+  return { currentOffers, priorOffers };
 }
 
 // Assembles the full staged daily report from SQLite current state, the
@@ -1005,11 +1042,13 @@ function assembleReport(runId, runDir, options = {}) {
   // `model` and `model:free` with the same name but different prices.
   const classificationByKey = new Map();
   const legacyClassificationsByName = new Map();
+  const classifierEntryByKey = new Map();
   if (classifications && Array.isArray(classifications.classifications)) {
     for (const entry of classifications.classifications) {
       if (!entry || typeof entry.classification !== 'string') continue;
       if (typeof entry.offer_key === 'string' && entry.offer_key.length > 0) {
         classificationByKey.set(entry.offer_key, entry.classification);
+        classifierEntryByKey.set(entry.offer_key, entry);
       }
       // Read old artifacts without allowing an ambiguous display name to
       // classify multiple exact offers. New schema output never uses this
@@ -1023,6 +1062,22 @@ function assembleReport(runId, runDir, options = {}) {
   }
 
   // Classify each candidate: the classifier overrides the provisional call.
+  // Phase 3 wiring (spec §12): the classifier's suspicion_score and
+  // reasoning are adopted by the assembler. The classifier value can only
+  // raise the deterministic base (offer column + unregistered floor), it is
+  // clamped to the 0..5 scale, and 4-5 never ranks (decideEligibility).
+  const adoptClassifierSuspicion = (candidate) => {
+    const entry = classifierEntryByKey.get(candidate.offer_key);
+    if (!entry) return;
+    const raw = Number(entry.suspicion_score);
+    if (Number.isFinite(raw)) {
+      const clamped = Math.max(0, Math.min(5, Math.round(raw)));
+      if (clamped > candidate.suspicion_score) candidate.suspicion_score = clamped;
+    }
+    if (typeof entry.reasoning === 'string' && entry.reasoning.trim()) {
+      candidate.suspicion_reasons = [entry.reasoning.trim()];
+    }
+  };
   const ranked = [];
   const conditional = [];
   const caution = [];
@@ -1030,6 +1085,7 @@ function assembleReport(runId, runDir, options = {}) {
 
   for (const candidate of view.candidates) {
     const prose = proseByKey.get(candidate.offer_key) || null;
+    adoptClassifierSuspicion(candidate);
     const legacyValues = legacyClassificationsByName.get(candidate.name);
     const legacyClassification = legacyValues && legacyValues.length === 1
       ? legacyValues[0]
@@ -1132,15 +1188,7 @@ function assembleReport(runId, runDir, options = {}) {
   } catch { /* table absent in very old fixtures: no contradictions */ }
 
   // Change records: deterministic diff plus editorial Japanese summaries.
-  const priorOffers = loadOffersFromBackup(runDir);
-  const database = db.openCollectorDb(options);
-  let currentOffers;
-  try {
-    currentOffers = database.prepare('SELECT * FROM offers ORDER BY provider_key, exact_model_id')
-      .all().map((row) => db.parseRow('offers', row));
-  } finally {
-    database.close();
-  }
+  const { currentOffers, priorOffers } = loadOfferDiffInputs(runDir, options);
   const rawChanges = computeChanges(currentOffers, priorOffers);
   // Persist the structured diff to the changes table (per-run append; the
   // durable audit trail behind the report's change section, spec §4.6).
@@ -1182,6 +1230,19 @@ function assembleReport(runId, runDir, options = {}) {
 
   // New models from the discovery candidate set (best effort, deterministic).
   const newModels = buildNewModels(runDir);
+
+  // Spec 0008 Phase 3: product / program monitor sections. The observe
+  // phase already applied the worker artifacts (watchlist-key filtered);
+  // an empty entries array is the legitimate "no change" day and the site
+  // renders the explicit no-change line for it.
+  const productUpdatesPayload = readJsonIfPresent(runDir && path.join(runDir, 'reduced', 'product-updates.json'));
+  const startupCreditsPayload = readJsonIfPresent(runDir && path.join(runDir, 'reduced', 'startup-credits.json'));
+  const productUpdates = Array.isArray(productUpdatesPayload && productUpdatesPayload.entries)
+    ? productUpdatesPayload.entries
+    : [];
+  const startupCredits = Array.isArray(startupCreditsPayload && startupCreditsPayload.entries)
+    ? startupCreditsPayload.entries
+    : [];
 
   // Top level sources: union of offer sources and benchmark sources.
   const sourceSet = new Map();
@@ -1231,6 +1292,8 @@ function assembleReport(runId, runDir, options = {}) {
     changes,
     ranked_offers: rankedOffers,
     discount_offers: discountOffers,
+    product_updates: productUpdates,
+    startup_credits: startupCredits,
     conditional_credits: conditional,
     caution_offers: caution,
     excluded_offers: excluded,
@@ -1399,6 +1462,7 @@ module.exports = {
   decideEligibility,
   compareRanked,
   loadOffersFromBackup,
+  loadOfferDiffInputs,
   computeChanges,
   toPublicOffer,
   assembleReport,

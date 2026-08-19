@@ -22,6 +22,9 @@ const WATCHLIST_VERSION = 1;
 const CHANNEL_KEYS = [
   'blog', 'x', 'changelog', 'pricing', 'model_catalog',
   'hf_org', 'github_orgs', 'event_page', 'banner_url',
+  // Official data policy page, re-checked by known_refresh for free /
+  // contributor / trial endpoints (spec 0008 §4.4, Phase 3).
+  'data_policy',
 ];
 
 const DOMAIN_KEYS = [

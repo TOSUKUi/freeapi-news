@@ -126,6 +126,64 @@
         ]
       }
     },
+    "product_updates": {
+      "$comment": "Spec 0008 Phase 3: coding product / in-product free changes. Empty array = no change this run (the site renders the explicit no-change line).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "facts": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "startup_credits": {
+      "$comment": "Spec 0008 Phase 3: startup credit program news (new or changed only). Empty array = \"no change from the previous run\" (the site renders the explicit no-change line).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "label"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "facts": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
     "contradictions": {
       "type": "array",
       "items": {

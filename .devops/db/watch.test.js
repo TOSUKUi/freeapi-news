@@ -277,3 +277,65 @@ describe('news scan and community planning', () => {
     assert.deepEqual(empty.prefilter, []);
   });
 });
+
+describe('product / program monitor planning (spec 0008 Phase 3)', () => {
+  const WL = {
+    ...WATCHLIST,
+    coding_products: [
+      { key: 'claude_code', label: 'Claude Code', pricing_url: 'https://www.anthropic.com/pricing', changelog_url: 'https://docs.anthropic.com/en/release-notes' },
+      { key: 'codex', label: 'Codex', pricing_url: 'https://openai.com/codex/pricing', changelog_url: 'https://github.com/openai/codex/releases' },
+    ],
+    credit_programs: [
+      { key: 'google_for_startups', label: 'Google for Startups Cloud', url: 'https://cloud.google.com/startup' },
+    ],
+  };
+
+  it('no hash change means zero product or program LLM tasks (AC)', () => {
+    const signals = [
+      { entity_key: 'product:claude_code:pricing', domain: 'product', url: 'https://www.anthropic.com/pricing', status: 'unchanged' },
+      { entity_key: 'product:codex:changelog', domain: 'product', url: 'https://github.com/openai/codex/releases', status: 'first_seen' },
+      { entity_key: 'program:google_for_startups', domain: 'program', url: 'https://cloud.google.com/startup', status: 'unchanged' },
+      { entity_key: 'vendor:openai:blog', domain: 'vendor_channel', url: 'https://openai.com/blog', status: 'changed' },
+    ];
+    assert.deepEqual(watch.planProductProgramTasks(signals, WL), []);
+  });
+
+  it('all changed product channels bundle into one product_monitor task', () => {
+    const signals = [
+      { entity_key: 'product:claude_code:pricing', domain: 'product', url: 'https://www.anthropic.com/pricing', status: 'changed', new_items: ['Free plan now includes 50 messages', 'x'] },
+      { entity_key: 'product:codex:changelog', domain: 'product', url: 'https://github.com/openai/codex/releases', status: 'changed', new_items: ['v0.49.0'] },
+      { entity_key: 'product:claude_code:changelog', domain: 'product', url: 'https://docs.anthropic.com/en/release-notes', status: 'changed' },
+    ];
+    const tasks = watch.planProductProgramTasks(signals, WL);
+    assert.equal(tasks.length, 1);
+    assert.equal(tasks[0].kind, 'product_monitor');
+    assert.equal(tasks[0].task_id, 'product_monitor');
+    assert.equal(tasks[0].search_budget, 0);
+    assert.equal(tasks[0].visit_budget, 8);
+    assert.deepEqual(tasks[0].entries.map((e) => e.key), ['claude_code', 'codex', 'claude_code']);
+    const cc = tasks[0].entries[0];
+    assert.equal(cc.label, 'Claude Code');
+    assert.equal(cc.channel, 'pricing');
+    assert.equal(cc.watchlist_urls.changelog_url, 'https://docs.anthropic.com/en/release-notes');
+    assert.deepEqual(cc.new_items, ['Free plan now includes 50 messages', 'x']);
+  });
+
+  it('a changed program channel yields one program_monitor task with the watchlist entry', () => {
+    const signals = [
+      { entity_key: 'program:google_for_startups', domain: 'program', url: 'https://cloud.google.com/startup', status: 'changed', new_items: ['$300 -> $500'] },
+    ];
+    const tasks = watch.planProductProgramTasks(signals, WL);
+    assert.equal(tasks.length, 1);
+    assert.equal(tasks[0].kind, 'program_monitor');
+    assert.equal(tasks[0].entries[0].key, 'google_for_startups');
+    assert.equal(tasks[0].entries[0].label, 'Google for Startups Cloud');
+    assert.equal(tasks[0].entries[0].watchlist_urls.url, 'https://cloud.google.com/startup');
+  });
+
+  it('fetch_failed product channels are not a dispatch trigger', () => {
+    const signals = [
+      { entity_key: 'product:claude_code:pricing', domain: 'product', url: 'https://www.anthropic.com/pricing', status: 'fetch_failed' },
+    ];
+    assert.deepEqual(watch.planProductProgramTasks(signals, WL), []);
+  });
+});

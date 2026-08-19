@@ -31,7 +31,9 @@
             ]
           },
           "suspicion_score": {
-            "type": "number"
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
           },
           "information_confidence": {
             "enum": [

@@ -337,6 +337,31 @@ function leadsFailureArtifact(taskId) {
   };
 }
 
+// Spec 0008 Phase 3: failure artifacts for the product / program monitors.
+function productFactsFailureArtifact(taskId) {
+  return {
+    schema_version: 1,
+    task_id: taskId,
+    status: 'failed',
+    crawled_at: nowIso(),
+    provider_key: null,
+    products: [],
+    errors: ['worker did not produce conforming output'],
+  };
+}
+
+function programFactsFailureArtifact(taskId) {
+  return {
+    schema_version: 1,
+    task_id: taskId,
+    status: 'failed',
+    crawled_at: nowIso(),
+    provider_key: null,
+    programs: [],
+    errors: ['worker did not produce conforming output'],
+  };
+}
+
 function benchmarkScoutModelTasks(queue) {
   return queue.queue.map((model, index) => ({
     task_id: `benchmark_scout:model-${index + 1}-${db.sanitizeTaskId(model.canonical_model_id)}`,
@@ -847,6 +872,9 @@ async function runPipeline(options = {}) {
       const discountSignals = observe.catalogDiscountSignals(
         catalogArtifacts, db.knownNormalPricesByCanonical(baseOpts));
       researchTasks.push(...watch.planProviderMonitorTasks(watchlist, watchSignals, discountSignals));
+      // Spec 0008 Phase 3: product / program monitors run only when the
+      // deterministic watch found a hash change (one bundled session each).
+      researchTasks.push(...watch.planProductProgramTasks(watchSignals, watchlist));
       researchTasks.push(...fanoutTasks);
     }
 
@@ -1001,6 +1029,29 @@ async function runPipeline(options = {}) {
           + JSON.stringify(task.discount_signals || [], null, 1) + '\n'
           + 'Report only changed or newly evidenced facts with verbatim pricing text and the fetched source URL. '
           + 'For discount claims report normal and effective amounts separately.';
+      } else if (task.kind === 'product_monitor' || task.kind === 'program_monitor') {
+        const isProduct = task.kind === 'product_monitor';
+        roleFile = isProduct ? 'product-monitor.md' : 'program-monitor.md';
+        schemaName = isProduct ? 'product-facts.schema.json' : 'program-facts.schema.json';
+        transport = 'discovery';
+        searchBudget = 0;
+        visitBudget = 8;
+        timeoutSeconds = opts.discoveryTimeout;
+        failureArtifact = isProduct
+          ? productFactsFailureArtifact(task.task_id)
+          : programFactsFailureArtifact(task.task_id);
+        const entryLines = (task.entries || [])
+          .map((e) => `- ${e.key} (${e.label}): ${e.url} [${e.channel}]`)
+          .join('\n');
+        const diffLines = (task.entries || [])
+          .flatMap((e) => (e.new_items || []).map((n) => `  ${e.key}: ${n}`))
+          .join('\n');
+        runtime = `Task: ${task.task_id}. Changed ${isProduct ? 'product' : 'program'} channels this run:\n`
+          + entryLines + '\n'
+          + (diffLines ? `Deterministic diff (hints of what changed):\n${diffLines}\n` : '')
+          + 'Watchlist entries (extra URLs you may visit):\n'
+          + JSON.stringify((task.entries || []).map((e) => ({ key: e.key, ...e.watchlist_urls })), null, 1) + '\n'
+          + `Emit one ${isProduct ? 'products[]' : 'programs[]'} entry per changed key, with the watchlist key verbatim and the fetched source_url.`;
       } else if (task.kind === 'nim_verify') {
         roleFile = 'nim-verify.md';
         schemaName = 'crawl-facts.schema.json';
@@ -1234,7 +1285,8 @@ async function runPipeline(options = {}) {
         schemaFile: path.join(dirs.schemasDir, 'editorial.schema.json'),
         outputFile: path.join(runDir, 'candidate', 'editorial.json'),
         logFile: path.join(runDir, 'logs', 'editorial.log'),
-        runtime: `Candidate view: ${path.join(runDir, 'reduced', 'candidate-view.json')}. `
+        runtime: `Candidate view: ${path.join(runDir, 'reduced', 'candidate-view.json')} (the final observed offer state; read it, do not modify it). `
+          + `Changes preview: ${path.join(runDir, 'reduced', 'changes-preview.json')} (structured before / after values for this run's change records; write change_prose from these values only). `
           + `Coverage: ${path.join(runDir, 'reduced', 'lane-coverage.json')}. `
           + `Discovery: ${path.join(runDir, 'reduced', 'discovery-candidates.json')}. `
           + `Pricing news: ${path.join(runDir, 'reduced', 'discovery-news.json')} (known-offer price/free-tier change news from the discovery pricing crawler; usable in change_prose, never offer data). `

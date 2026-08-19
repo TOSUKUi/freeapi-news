@@ -34,7 +34,8 @@
         "hf_org": "openai",
         "github_orgs": [],
         "event_page": null,
-        "banner_url": null
+        "banner_url": null,
+        "data_policy": "https://platform.openai.com/docs/guides/your-data"
       }
     },
     {

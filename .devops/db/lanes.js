@@ -1112,6 +1112,25 @@ function reduceLanes(runId, runDir, options = {}) {
           if (typeof model.pricing_text === 'string' && model.pricing_text.trim()) {
             change.pricing_hash = db.pricingHashFromText(model.pricing_text);
           }
+          // Spec 0008 Phase 3: the data policy is re-verified by the
+          // known_refresh worker on every run for free / contributor / trial
+          // endpoints and stored as typed condition facts. The hash (same
+          // normalization as pricing_hash) drives data_policy_change
+          // detection; an absent report keeps the prior value (fail-safe
+          // carry over, no stale marking).
+          const policyText = typeof model.data_policy_text === 'string' ? model.data_policy_text.trim() : '';
+          const policyUrl = typeof model.data_policy_url === 'string' ? model.data_policy_url.trim() : '';
+          if (policyText || policyUrl) {
+            const policyJson = {
+              text: policyText || (change.facts_json && change.facts_json.data_policy_text) || null,
+              url: policyUrl || (change.facts_json && change.facts_json.data_policy_url) || null,
+            };
+            db.setOfferConditionFacts(providerKey, exactId, {
+              data_policy_json: policyJson,
+              data_policy_hash: policyText ? db.pricingHashFromText(policyText) : null,
+              data_policy_verified_at: now,
+            }, options);
+          }
           coverage.known.verified += 1;
         } else {
           // Omitted from a partial result, or the task failed: carry forward

@@ -671,3 +671,135 @@ test('a discount price returning to normal ends the campaign via the pre run bac
   assert.equal(second.ended, 0, 'a live discount is not ended');
   assert.equal(db.getOffer('google', 'frontier-y', ctx.options).status, 'verified');
 });
+
+// ── Product / program monitors (spec 0008 Phase 3) ───────────────────────
+
+const PHASE3_WATCHLIST = {
+  version: 1,
+  windows: { hot_days: 1, warm_days: 3, catchup_days: 30 },
+  frontier_vendors: [],
+  vendors: [],
+  provider_monitors: [],
+  community: [],
+  coding_products: [
+    { key: 'claude_code', label: 'Claude Code', pricing_url: 'https://www.anthropic.com/pricing', changelog_url: 'https://docs.anthropic.com/en/release-notes' },
+  ],
+  credit_programs: [
+    { key: 'google_for_startups', label: 'Google for Startups Cloud', url: 'https://cloud.google.com/startup' },
+  ],
+};
+
+test('product / program monitor artifacts are filtered by watchlist keys (AC)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  db.startRun('run-pp', [], ctx.options);
+  db.addRunTasks('run-pp', [
+    { task_id: 'product_monitor', kind: 'product_monitor', provider_key: null },
+    { task_id: 'program_monitor', kind: 'program_monitor', provider_key: null },
+  ], ctx.options);
+  db.recordTaskResult('run-pp', 'product_monitor', {
+    status: 'complete',
+    result: {
+      schema_version: 1,
+      task_id: 'product_monitor',
+      status: 'complete',
+      crawled_at: '2026-08-19T00:00:00.000Z',
+      provider_key: null,
+      products: [
+        {
+          key: 'claude_code',
+          access_kinds: ['free_calls'],
+          free_calls: 'Free plan includes 50 messages per 5 hours',
+          pricing_text: 'Free plan: 50 messages per 5 hours',
+          source_url: 'https://www.anthropic.com/pricing',
+        },
+        {
+          key: 'invented_key',
+          pricing_text: 'should be dropped',
+          source_url: 'https://evil.example/pricing',
+        },
+      ],
+      errors: [],
+    },
+  }, ctx.options);
+  db.recordTaskResult('run-pp', 'program_monitor', {
+    status: 'complete',
+    result: {
+      schema_version: 1,
+      task_id: 'program_monitor',
+      status: 'complete',
+      crawled_at: '2026-08-19T00:00:00.000Z',
+      provider_key: null,
+      programs: [
+        {
+          key: 'google_for_startups',
+          max_credit: '$500 in credits',
+          currency: 'USD',
+          eligibility: 'Early-stage startup',
+          source_url: 'https://cloud.google.com/startup',
+        },
+      ],
+      errors: [],
+    },
+  }, ctx.options);
+
+  const runDir = runDirFor(ctx, 'run-pp');
+  const out = observe.applyProductProgramFacts('run-pp', runDir, ctx.options, { watchlist: PHASE3_WATCHLIST });
+  assert.equal(out.product_monitor.entries, 1);
+  assert.equal(out.product_monitor.dropped, 1, 'the invented key is dropped');
+  assert.equal(out.program_monitor.entries, 1);
+
+  const productPayload = JSON.parse(fs.readFileSync(path.join(runDir, 'reduced', 'product-updates.json'), 'utf8'));
+  assert.equal(productPayload.entries.length, 1);
+  assert.equal(productPayload.entries[0].key, 'claude_code');
+  assert.equal(productPayload.entries[0].label, 'Claude Code');
+  assert.equal(productPayload.task_status, 'complete');
+  const programPayload = JSON.parse(fs.readFileSync(path.join(runDir, 'reduced', 'startup-credits.json'), 'utf8'));
+  assert.equal(programPayload.entries[0].key, 'google_for_startups');
+
+  // The report surfaces both sections from the reduced files.
+  const { report } = assemble.assembleReport('run-pp', runDir, ctx.options);
+  assert.equal(report.product_updates.length, 1);
+  assert.equal(report.product_updates[0].key, 'claude_code');
+  assert.equal(report.product_updates[0].facts.free_calls, 'Free plan includes 50 messages per 5 hours');
+  assert.equal(report.startup_credits.length, 1);
+  assert.equal(report.startup_credits[0].facts.max_credit, '$500 in credits');
+});
+
+test('a quiet day (no product or program task) yields empty sections with the no-change marker', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  db.startRun('run-pp-quiet', [], ctx.options);
+  const runDir = runDirFor(ctx, 'run-pp-quiet');
+  const out = observe.applyProductProgramFacts('run-pp-quiet', runDir, ctx.options, { watchlist: PHASE3_WATCHLIST });
+  assert.equal(out.product_monitor.entries, 0);
+  assert.equal(out.program_monitor.entries, 0);
+  const productPayload = JSON.parse(fs.readFileSync(path.join(runDir, 'reduced', 'product-updates.json'), 'utf8'));
+  assert.deepEqual(productPayload.entries, []);
+  assert.equal(productPayload.task_status, null);
+  const { report } = assemble.assembleReport('run-pp-quiet', runDir, ctx.options);
+  assert.deepEqual(report.product_updates, []);
+  assert.deepEqual(report.startup_credits, []);
+});
+
+test('a failed product monitor task yields zero entries, not a run failure', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  db.startRun('run-pp-fail', [], ctx.options);
+  db.addRunTasks('run-pp-fail', [
+    { task_id: 'product_monitor', kind: 'product_monitor', provider_key: null },
+  ], ctx.options);
+  db.recordTaskResult('run-pp-fail', 'product_monitor', {
+    status: 'failed',
+    error: { message: 'browser session crashed' },
+  }, ctx.options);
+  const runDir = runDirFor(ctx, 'run-pp-fail');
+  const out = observe.applyProductProgramFacts('run-pp-fail', runDir, ctx.options, { watchlist: PHASE3_WATCHLIST });
+  assert.equal(out.product_monitor.entries, 0);
+  const productPayload = JSON.parse(fs.readFileSync(path.join(runDir, 'reduced', 'product-updates.json'), 'utf8'));
+  assert.equal(productPayload.task_status, 'failed');
+  assert.deepEqual(productPayload.entries, []);
+});

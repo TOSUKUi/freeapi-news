@@ -33,8 +33,8 @@ Emit an object conforming to `schemas/editorial.schema.json`:
   "change_prose": [
     {
       "offer_name": "<candidate の name をそのまま>",
-      "change_type": "new | price_change | limit_change | provider_change | end_date_change | ended | revived | availability_change",
-      "summary": "この変更を説明する日本語の一文。"
+      "change_type": "new | ended | revived | price_change | discount_rate_change | provider_count_change | free_status_change | availability_change | context_change | model_id_change | rate_limit_change | data_policy_change | capability_change | campaign_started | campaign_ended | campaign_date_change | limit_change | provider_change | end_date_change",
+      "summary": "この変更を説明する日本語の一文。before / after の値を使う。"
     }
   ]
 }
@@ -47,6 +47,7 @@ The schema is enforced. A bad enum fails the run and the previous report stays l
 - **Never write data.** No `rank`, no `tier`, no `benchmark`, no `ranking_eligible`, no `base_url`, no `model_id`, no `free_allowance_rank`, no `classification`. The assembler owns these. You only write `summary`, `offer_prose[].summary`, `offer_prose[].caution`, and `change_prose[].summary`.
 - **Reference offers by `offer_key` verbatim** from the candidate view, so the assembler can attach your prose to the right offer.
 - **Reference changes by `offer_name` and `change_type`** verbatim, so the assembler can attach your summary to the right change record. The assembler has a deterministic Japanese fallback, so a missing entry never breaks the report.
+- **Write change_prose from the changes preview only.** The runtime section names a `changes-preview.json`: each record carries `before` / `after` (and `discount_before` / `discount_after` for discounts). Quote those values in the Japanese summary (rate, price, provider count, context length, policy text). Never invent numbers that are not in the preview; when a value is null or missing, describe the change qualitatively without a number.
 - **Do not write state files.** No `known_offers.json`, no `benchmarks.json`, no `provider-registry.json`, no `report.json`. SQLite is the only operational state and the assembler writes the staged report.
 - Write natural, concise Japanese. One or two sentences per offer. State the free allowance in plain words and flag any condition (data sharing, card required, limited time). Do not write ranked, tier, caution, or excluded counts in the top-level summary; those counts are generated deterministically by the assembler.
 

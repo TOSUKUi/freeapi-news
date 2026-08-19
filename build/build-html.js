@@ -474,6 +474,10 @@ function offerIdRows(o, tz) {
     ['期限', o.end_at ? `<span class="id-val-plain train-yes">⏳ ${fmtDate(o.end_at, tz)}まで${o.end_timezone_known ? '' : ' (タイムゾーン不明)'}</span>` : null],
     ['レート', o.rate_limits ? `<span class="id-val-plain">${esc(o.rate_limits)}</span>` : null],
     ['データ利用', o.training_use ? `<span class="id-val-plain ${/なし|no/i.test(o.training_use) ? 'train-no' : 'train-yes'}">${esc(o.training_use)}</span>` : null],
+    ['データポリシー', o.data_policy ? `<span class="id-val-plain">${o.data_policy_source ? `<a href="${esc(o.data_policy_source)}" target="_blank" rel="noopener noreferrer">${esc(o.data_policy)} ↗</a>` : esc(o.data_policy)}</span>` : null],
+    ['怪し度', typeof o.suspicion_score === 'number' && o.suspicion_score > 0
+      ? `<span class="id-val-plain train-yes">${o.suspicion_score}/5${Array.isArray(o.suspicion_reasons) && o.suspicion_reasons.length ? ` ・ ${esc(o.suspicion_reasons.join(' / '))}` : ''}</span>`
+      : null],
   ];
   return rows
     .filter((row) => row[1] !== null)

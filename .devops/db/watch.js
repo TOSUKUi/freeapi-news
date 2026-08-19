@@ -926,6 +926,73 @@ function planProviderMonitorTasks(watchlist, signals, discountSignals = {}, opts
   return tasks;
 }
 
+// ---------------------------------------------------------------------------
+// Product / program monitor planning (spec 0008 Phase 3): a coding-product or
+// credit-program channel whose content hash changed this run triggers ONE
+// bundled LLM session per domain (all changed entries in one task, 0 search /
+// 8 visits). No hash change means no task at all.
+// ---------------------------------------------------------------------------
+
+function planProductProgramTasks(signals, watchlist) {
+  const tasks = [];
+  const productSignals = (signals || [])
+    .filter((s) => s.domain === 'product' && s.status === 'changed');
+  const programSignals = (signals || [])
+    .filter((s) => s.domain === 'program' && s.status === 'changed');
+  if (productSignals.length > 0) {
+    const products = (watchlist.coding_products || []).filter((p) => p && p.key);
+    tasks.push({
+      task_id: 'product_monitor',
+      kind: 'product_monitor',
+      provider_key: null,
+      assigned_model_ids: [],
+      domain: 'product',
+      entries: productSignals.map((s) => {
+        const key = (s.entity_key || '').split(':')[1] || null;
+        const product = products.find((p) => p.key === key) || {};
+        return {
+          key,
+          label: product.label || key,
+          url: s.url,
+          channel: s.channel || ((s.entity_key || '').split(':').pop() || null),
+          watchlist_urls: {
+            pricing_url: product.pricing_url || null,
+            changelog_url: product.changelog_url || null,
+          },
+          new_items: (s.new_items || []).slice(0, 10),
+        };
+      }).filter((e) => e.key),
+      search_budget: 0,
+      visit_budget: 8,
+    });
+  }
+  if (programSignals.length > 0) {
+    const programs = (watchlist.credit_programs || []).filter((p) => p && p.key);
+    tasks.push({
+      task_id: 'program_monitor',
+      kind: 'program_monitor',
+      provider_key: null,
+      assigned_model_ids: [],
+      domain: 'program',
+      entries: programSignals.map((s) => {
+        const key = (s.entity_key || '').split(':')[1] || null;
+        const program = programs.find((p) => p.key === key) || {};
+        return {
+          key,
+          label: program.label || key,
+          url: s.url,
+          channel: s.channel || ((s.entity_key || '').split(':').pop() || null),
+          watchlist_urls: { url: program.url || null },
+          new_items: (s.new_items || []).slice(0, 10),
+        };
+      }).filter((e) => e.key),
+      search_budget: 0,
+      visit_budget: 8,
+    });
+  }
+  return tasks;
+}
+
 module.exports = {
   FIXED_API_CHANNELS,
   buildWatchPlan,
@@ -953,4 +1020,6 @@ module.exports = {
   prefilterCommunity,
   PROVIDER_MONITOR_MAX_SESSIONS,
   planProviderMonitorTasks,
+  // spec 0008 Phase 3 product / program monitors
+  planProductProgramTasks,
 };

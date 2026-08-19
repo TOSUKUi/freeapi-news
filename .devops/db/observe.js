@@ -508,6 +508,72 @@ function readBackupOffers(runDir) {
   }
 }
 
+// ── Product / program monitors (spec 0008 Phase 3) ─────────────────────
+
+// Applies the product_monitor / program_monitor worker artifacts.
+// Deterministic filtering: only entries whose key exists in the watchlist
+// survive (the LLM never invents product or program identity). Writes
+// reduced/product-updates.json and reduced/startup-credits.json.
+// No task this run means no hash change, which is a legitimate quiet day:
+// the reduced file still exists with zero entries so the report can show
+// the explicit "no change" line.
+function applyProductProgramFacts(runId, runDir, baseOpts = {}, inputs = {}) {
+  const { watchlist = null, now } = inputs;
+  const stampedNow = now || new Date().toISOString();
+  const { tasks } = db.loadRunCandidate(runId, baseOpts);
+  const out = {};
+  const specs = [
+    {
+      taskId: 'product_monitor', fileName: 'product-updates.json',
+      listField: 'products',
+      knownKeys: new Set(((watchlist && watchlist.coding_products) || [])
+        .map((p) => p && p.key).filter(Boolean)),
+      labels: Object.fromEntries(((watchlist && watchlist.coding_products) || [])
+        .filter((p) => p && p.key).map((p) => [p.key, p.label || p.key])),
+    },
+    {
+      taskId: 'program_monitor', fileName: 'startup-credits.json',
+      listField: 'programs',
+      knownKeys: new Set(((watchlist && watchlist.credit_programs) || [])
+        .map((p) => p && p.key).filter(Boolean)),
+      labels: Object.fromEntries(((watchlist && watchlist.credit_programs) || [])
+        .filter((p) => p && p.key).map((p) => [p.key, p.label || p.key])),
+    },
+  ];
+  for (const spec of specs) {
+    const task = tasks.find((t) => t.task_id === spec.taskId);
+    const artifact = task && task.status !== 'failed' ? task.result_json : null;
+    const raw = artifact && Array.isArray(artifact[spec.listField]) ? artifact[spec.listField] : [];
+    const entries = [];
+    const dropped = [];
+    for (const item of raw) {
+      if (!item || typeof item.key !== 'string' || !item.key) { dropped.push('(no key)'); continue; }
+      if (!spec.knownKeys.has(item.key)) { dropped.push(item.key); continue; }
+      entries.push({
+        key: item.key,
+        label: spec.labels[item.key] || item.key,
+        source_url: typeof item.source_url === 'string' ? item.source_url : null,
+        facts: item,
+      });
+    }
+    const payload = {
+      run_id: runId,
+      generated_at: stampedNow,
+      task_status: task ? (artifact ? artifact.status : 'failed') : null,
+      entries,
+      dropped_keys: dropped,
+      errors: (artifact && Array.isArray(artifact.errors)) ? artifact.errors : (task && !artifact ? ['worker failed'] : []),
+    };
+    if (runDir) {
+      const reducedDir = path.join(runDir, 'reduced');
+      fs.mkdirSync(reducedDir, { recursive: true });
+      fs.writeFileSync(path.join(runDir, 'reduced', spec.fileName), `${JSON.stringify(payload, null, 2)}\n`);
+    }
+    out[spec.taskId] = { entries: entries.length, dropped: dropped.length };
+  }
+  return out;
+}
+
 // ── Phase driver ─────────────────────────────────────────────────────────
 
 function runObservationPhase(runId, runDir, baseOpts = {}, inputs = {}) {
@@ -535,6 +601,10 @@ function runObservationPhase(runId, runDir, baseOpts = {}, inputs = {}) {
   summary.discounted = applyDiscountedOffers(runId, runDir, baseOpts, { watchlist });
   log(`  observe discounted: ${summary.discounted.admitted} admitted, ${summary.discounted.ended} campaign ended`);
 
+  summary.product_program = applyProductProgramFacts(runId, runDir, baseOpts, { watchlist, now: stampedNow });
+  log(`  observe product_program: product ${summary.product_program.product_monitor ? summary.product_program.product_monitor.entries : 0} entr(ies), `
+    + `program ${summary.product_program.program_monitor ? summary.product_program.program_monitor.entries : 0} entr(ies)`);
+
   if (runDir) {
     const reducedDir = path.join(runDir, 'reduced');
     fs.mkdirSync(reducedDir, { recursive: true });
@@ -550,6 +620,7 @@ module.exports = {
   catalogDiscountSignals,
   applyOrEndpointObservations,
   applyNimVerification,
+  applyProductProgramFacts,
   detectContradictions,
   rederiveFrontier,
   deriveDiscountPrices,

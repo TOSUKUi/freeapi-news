@@ -192,7 +192,7 @@ function parseJsonColumn(value) {
 
 const ROW_JSON_COLUMNS = {
   tasks: ['assigned_json', 'result_json', 'error_json'],
-  offers: ['removal_evidence_json', 'facts_json'],
+  offers: ['removal_evidence_json', 'facts_json', 'data_policy_json'],
   benchmarks: ['facts_json'],
   models: ['aliases_json', 'known_providers_json'],
   watch_facts: ['facts_json'],
@@ -1503,7 +1503,17 @@ function setOfferConditionFacts(providerKey, exactModelId, facts = {}, options =
   try {
     const result = database.prepare(
       `UPDATE offers SET ${assignments} WHERE provider_key = ? AND exact_model_id = ?`
-    ).run(...keys.map((column) => facts[column] === undefined ? null : facts[column]), providerKey, exactModelId);
+    ).run(
+      ...keys.map((column) => {
+        const value = facts[column];
+        if (value === undefined || value === null) return null;
+        // JSON columns (data_policy_json) arrive as objects; SQLite binds
+        // only primitives, so stringify on the way in. parseRow handles the
+        // read side via ROW_JSON_COLUMNS.
+        return (typeof value === 'object') ? JSON.stringify(value) : value;
+      }),
+      providerKey, exactModelId
+    );
     return { updated: result.changes > 0 };
   } finally {
     database.close();

@@ -1382,3 +1382,74 @@ test('a catalog model at per-token prices that normalize over the limit is never
   assert.equal(row, null);
   assert.equal(reduce.offerChanges.length, 0);
 });
+
+// ── Data policy re-verification (spec 0008 Phase 3) ──────────────────────
+
+test('known refresh stores data policy condition facts on verification', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [offerSeed({})]);
+  const policy = 'We may use prompts to improve the service on free tier.';
+  runCycle(ctx, 'run-dp-store', {
+    'known:google': knownArtifact({
+      models: [knownModel('gemini-2.5-pro-free', {
+        data_policy_text: policy,
+        data_policy_url: 'https://ai.google.dev/gemini-api/docs/data-governance',
+      })],
+    }),
+    discovery: { task_id: 'discovery', status: 'complete', models: [] },
+  });
+  const row = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
+  assert.equal(row.status, 'verified');
+  assert.equal(row.data_policy_hash, db.pricingHashFromText(policy));
+  assert.deepEqual(row.data_policy_json, {
+    text: policy,
+    url: 'https://ai.google.dev/gemini-api/docs/data-governance',
+  });
+  assert.equal(row.data_policy_verified_at, '2026-07-31T00:00:00.000Z');
+});
+
+test('an omitted data policy keeps the prior value (fail-safe carry over)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [offerSeed({})]);
+  const priorPolicy = 'No training use, one year retention.';
+  db.setOfferConditionFacts('google', 'gemini-2.5-pro-free', {
+    data_policy_json: { text: priorPolicy, url: 'https://ai.google.dev/gemini-api/docs/data-governance' },
+    data_policy_hash: db.pricingHashFromText(priorPolicy),
+    data_policy_verified_at: '2026-07-20T00:00:00.000Z',
+  }, ctx.options);
+  runCycle(ctx, 'run-dp-carry', {
+    'known:google': knownArtifact({
+      models: [knownModel('gemini-2.5-pro-free')],
+    }),
+    discovery: { task_id: 'discovery', status: 'complete', models: [] },
+  });
+  const row = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
+  assert.equal(row.status, 'verified');
+  assert.equal(row.data_policy_hash, db.pricingHashFromText(priorPolicy), 'prior hash carried over');
+  assert.equal(row.data_policy_json.text, priorPolicy, 'prior text carried over');
+  assert.equal(row.data_policy_verified_at, '2026-07-20T00:00:00.000Z', 'verification date unchanged');
+});
+
+test('a failed known refresh keeps the data policy and marks stale', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [offerSeed({})]);
+  const priorPolicy = 'No training use, one year retention.';
+  db.setOfferConditionFacts('google', 'gemini-2.5-pro-free', {
+    data_policy_json: { text: priorPolicy, url: 'https://ai.google.dev/gemini-api/docs/data-governance' },
+    data_policy_hash: db.pricingHashFromText(priorPolicy),
+    data_policy_verified_at: '2026-07-20T00:00:00.000Z',
+  }, ctx.options);
+  runCycle(ctx, 'run-dp-fail', {
+    'known:google': { task_id: 'known:google', status: 'failed', error: { message: 'fetch failed' } },
+    discovery: { task_id: 'discovery', status: 'complete', models: [] },
+  });
+  const row = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
+  assert.equal(row.status, 'stale');
+  assert.equal(row.data_policy_hash, db.pricingHashFromText(priorPolicy));
+});
