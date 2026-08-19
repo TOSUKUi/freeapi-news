@@ -466,6 +466,8 @@ function connectionAccordion(o) {
 // whitespace only lines.
 function offerIdRows(o, tz) {
   const rows = [
+    ['Context', o.context_tokens ? `<span class="id-val-plain">${Number(o.context_tokens).toLocaleString('en-US')} tokens</span>` : null],
+    ['Tool calling', o.tool_calling === true ? `<span class="id-val-plain train-no">対応</span>` : o.tool_calling === false ? `<span class="id-val-plain">非対応</span>` : null],
     ['Base URL', o.base_url ? `<code class="id-val">${esc(o.base_url)}</code>` : null],
     ['Model ID', o.model_id ? `<code class="id-val">${esc(o.model_id)}</code>` : null],
     ['価格確認日', o.price_verified_at ? `<span class="id-val-plain">${fmtDate(o.price_verified_at, tz)}</span>` : null],
@@ -572,6 +574,190 @@ function snapshotStrip(report, offers) {
       <span class="snap-label">期限付き</span>
     </div>
   </div>`;
+}
+
+// ── Report sections (spec 0008 Phase 4) ───────────────────────────
+// The page is one scroll with fixed h2 blocks in report order. Empty
+// sections keep the DOM (a one line "none today") so the scheme is stable.
+const CHANGE_TYPE_JA = {
+  new: '新規', ended: '終了', revived: '復活', price_change: '価格変更',
+  discount_rate_change: '割引率変更', provider_count_change: 'プロバイダ数変更',
+  free_status_change: '無料状態変更', availability_change: '利用状態変更',
+  context_change: 'コンテキスト変更', model_id_change: 'モデルID変更',
+  rate_limit_change: 'レート変更', data_policy_change: 'データポリシー変更',
+  capability_change: '機能変更', campaign_started: 'キャンペーン開始',
+  campaign_ended: 'キャンペーン終了', campaign_date_change: 'キャンペーン期間変更',
+  limit_change: '利用制限変更', provider_change: 'プロバイダ変更',
+  end_date_change: '終了日変更',
+};
+
+function changeValueHtml(value) {
+  if (value === null || value === undefined) return '<span class="id-val-plain" style="opacity:.55">—</span>';
+  if (typeof value === 'object') {
+    if (typeof value.text === 'string' && value.text.length > 0) {
+      return `<span class="id-val-plain">${esc(value.text)}</span>`;
+    }
+    const parts = Object.entries(value).filter(([, v]) => v !== null && v !== undefined);
+    if (parts.length === 0) return '<span class="id-val-plain" style="opacity:.55">—</span>';
+    return `<span class="id-val-plain">${parts.map(([k, v]) => `${esc(k)}=${esc(typeof v === 'object' ? JSON.stringify(v) : v)}`).join('，')}</span>`;
+  }
+  return `<span class="id-val-plain">${esc(String(value))}</span>`;
+}
+
+function sectionShell(id, title, count, bodyHtml, emptyText = '本日なし') {
+  const inner = count > 0
+    ? bodyHtml
+    : `<p class="empty-line">${esc(emptyText)}</p>`;
+  return `<section id="${id}" class="report-section" aria-labelledby="${id}-h">
+      <div class="flex items-end justify-between gap-4 mb-1">
+        <h2 id="${id}-h" class="font-display text-2xl sm:text-3xl font-bold">${esc(title)}</h2>
+        ${count > 0 ? `<span class="font-display text-sm text-muted-foreground whitespace-nowrap">${count} 件</span>` : ''}
+      </div>
+      ${inner}
+    </section>`;
+}
+
+function changesSection(report) {
+  const changes = Array.isArray(report.changes) ? report.changes : [];
+  const rows = changes.map((c) => {
+    const label = CHANGE_TYPE_JA[c.change_type] || c.change_type || '';
+    const hasValues = c.before !== undefined || c.after !== undefined;
+    return `<li class="change-row">
+        <div class="change-head">
+          <span class="change-type">${esc(label)}</span>
+          <span class="change-name">${esc(c.offer_name)}</span>
+          ${c.field ? `<span class="change-field">${esc(c.field)}</span>` : ''}
+        </div>
+        ${hasValues ? `<div class="change-values"><span class="change-val">${changeValueHtml(c.before)}</span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val">${changeValueHtml(c.after)}</span></div>` : ''}
+        ${c.summary ? `<p class="change-summary">${esc(c.summary)}</p>` : ''}
+      </li>`;
+  }).join('\n      ');
+  const body = `<ul class="change-list">${rows}</ul>`;
+  return sectionShell('changes', '今日の重要差分', changes.length, body);
+}
+
+function contradictionsNote(report) {
+  const items = Array.isArray(report.contradictions) ? report.contradictions : [];
+  if (items.length === 0) return '';
+  const rows = items.map((c) => `<li><strong>${esc(c.offer_name || '')}</strong> ${esc(c.fact || '')}：複数の情報源で値が異なるため、最も確実性の高い情報源の値を採用しています (${esc(c.adopted_value == null ? '未定' : String(c.adopted_value))})</li>`).join('\n      ');
+  return `<div class="contradictions-note" role="note">
+      <p class="contradictions-title">不一致注記 (${items.length})</p>
+      <ul>${rows}</ul>
+    </div>`;
+}
+
+const WINDOW_TAG_JA = { hot: '24時間以内', warm: '72時間以内', catchup: '30日以内', undated: '日付未確認' };
+const MODEL_STATUS_JA = { announced: '発表済み', preview: 'プレビュー', beta: 'ベータ', ga: '正式提供', open_weight_planned: 'オープンウェイト予定', deprecated: '非推奨' };
+
+function newModelsSection(report) {
+  const models = Array.isArray(report.new_models) ? report.new_models : [];
+  const cards = models.map((m, i) => `<li class="model-card reveal" aria-labelledby="model-${i}">
+      <div class="model-head">
+        <h3 id="model-${i}" class="model-name">${esc(m.canonical_name || '')}</h3>
+        ${m.window ? `<span class="model-window">${esc(WINDOW_TAG_JA[m.window] || m.window)}</span>` : ''}
+        ${m.status ? `<span class="model-candidate">${esc(MODEL_STATUS_JA[m.status] || m.status)}</span>` : ''}
+      </div>
+      ${m.aliases && m.aliases.length ? `<p class="model-aliases">別名: ${m.aliases.map(esc).join(' / ')}</p>` : ''}
+      ${m.known_providers && m.known_providers.length ? `<p class="model-aliases">提供: ${m.known_providers.map(esc).join(' / ')}</p>` : ''}
+      ${m.distribution_note ? `<p class="model-dist">配信: ${esc(m.distribution_note)}</p>` : ''}
+      ${m.official_source ? `<p class="model-src"><a href="${esc(m.official_source)}" target="_blank" rel="noopener noreferrer">公式ソース ↗</a></p>` : ''}
+    </li>`).join('\n    ');
+  const body = `<ul class="model-list">${cards}</ul>`;
+  return sectionShell('new-models', '新モデル / 新サービス', models.length, body);
+}
+
+function discountValue(v) {
+  if (v == null) return '未取得';
+  if (v === 0) return '$0';
+  return fmtPrice(v);
+}
+
+function discountCard(o, tz) {
+  const normal = o.normal_price_per_million || {};
+  const effective = o.effective_price_per_million || {};
+  const rates = o.discount_rates || {};
+  const normalText = (normal.input == null && normal.output == null) ? '未取得' : `${discountValue(normal.input)} / ${discountValue(normal.output)}`;
+  const effText = `${discountValue(effective.input)} / ${discountValue(effective.output)}`;
+  const rateParts = [];
+  if (rates.input != null) rateParts.push(`入力 ${rates.input}%`);
+  if (rates.output != null) rateParts.push(`出力 ${rates.output}%`);
+  const windowText = o.window && o.window.start
+    ? `${fmtDate(o.window.start, tz)} 〜 ${o.window.end ? fmtDate(o.window.end, tz) : '期限不明'}`
+    : (o.discount_end_at ? `${fmtDate(o.discount_end_at, tz)} まで` : '期間 未確認');
+  return `<article class="discount-card reveal">
+      <div class="offer-badges">
+        <span class="badge badge-d">DISCOUNTED</span>
+        ${o.benchmark ? tierBadge(o.benchmark.tier) : ''}
+      </div>
+      <h3 class="offer-name" style="font-size:1.2rem">${esc(o.name)}</h3>
+      <p class="offer-meta">${o.provider ? `by <strong>${esc(o.provider)}</strong>` : ''}</p>
+      <div class="discount-grid">
+        <div class="stat"><div class="stat-label">通常価格 / 1M</div><div class="stat-value"><span class="price">${normalText}</span></div><div class="stat-sub">入力 / 出力</div></div>
+        <div class="stat"><div class="stat-label">現在価格 / 1M</div><div class="stat-value"><span class="price">${effText}</span></div><div class="stat-sub">入力 / 出力</div></div>
+        <div class="stat"><div class="stat-label">割引率</div><div class="stat-value"><span class="price price-free">${rateParts.length ? esc(rateParts.join(' / ')) : '—'}</span></div></div>
+      </div>
+      <div class="offer-ids">
+        <div class="id-row"><span class="id-key">期間</span><span class="id-val-plain">${esc(windowText)}</span></div>
+        ${o.model_id ? `<div class="id-row"><span class="id-key">Model ID</span><code class="id-val">${esc(o.model_id)}</code></div>` : ''}
+        ${o.base_url ? `<div class="id-row"><span class="id-key">Base URL</span><code class="id-val">${esc(o.base_url)}</code></div>` : ''}
+      </div>
+      ${connectionAccordion(o)}
+    </article>`;
+}
+
+function discountSection(report, tz) {
+  const offers = Array.isArray(report.discount_offers) ? report.discount_offers : [];
+  const body = `<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">${offers.map((o) => discountCard(o, tz)).join('\n      ')}</div>`;
+  return sectionShell('discount', 'フロンティア割引', offers.length, body);
+}
+
+function updatesSection(id, title, items, emptyText) {
+  const cards = (Array.isArray(items) ? items : []).map((item, i) => `<li class="update-card" aria-labelledby="${id}-${i}">
+      <div class="update-head">
+        <h3 id="${id}-${i}" class="update-name">${esc(item.label || item.key)}</h3>
+        ${item.facts && item.facts.date ? `<span class="update-date">${esc(item.facts.date)}</span>` : ''}
+      </div>
+      ${item.facts && item.facts.title ? `<p class="update-title">${esc(item.facts.title)}</p>` : ''}
+      ${item.facts && item.facts.excerpt ? `<p class="update-excerpt">${esc(item.facts.excerpt)}</p>` : ''}
+      ${item.facts && item.facts.url ? `<p class="model-src"><a href="${esc(item.facts.url)}" target="_blank" rel="noopener noreferrer">ソース ↗</a></p>` : ''}
+      ${item.source_url ? `<p class="model-src"><a href="${esc(item.source_url)}" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>` : ''}
+    </li>`).join('\n    ');
+  const body = `<ul class="update-list">${cards}</ul>`;
+  return sectionShell(id, title, (Array.isArray(items) ? items : []).length, body, emptyText);
+}
+
+function simpleOfferList(id, title, offers, renderRow) {
+  const body = `<ul class="simple-list">${offers.map(renderRow).join('\n      ')}</ul>`;
+  return sectionShell(id, title, offers.length, body);
+}
+
+function newSourcesSection(report) {
+  const items = Array.isArray(report.new_sources) ? report.new_sources : [];
+  const rows = items.map((s, i) => `<li class="source-proposal">
+      <div class="update-head">
+        <h3 class="update-name">${esc(s.label || s.provider_key)}</h3>
+        <span class="model-candidate">承認待ち</span>
+      </div>
+      ${s.base_url ? `<p class="model-id">${esc(s.base_url)}</p>` : ''}
+      ${s.docs_url ? `<p class="model-src"><a href="${esc(s.docs_url)}" target="_blank" rel="noopener noreferrer">ドキュメント ↗</a></p>` : ''}
+      <p class="acc-note">承認するとウォッチ対象に追加されます:</p>
+      <pre class="agent-code">${esc(s.add_command || '')}</pre>
+    </li>`).join('\n    ');
+  const body = `<ul class="update-list">${rows}</ul>`;
+  return sectionShell('new-sources', '新規情報源の提案', items.length, body);
+}
+
+function sourcesSection(report) {
+  const seen = new Set();
+  const sources = (Array.isArray(report.sources) ? report.sources : [])
+    .filter((s) => {
+      if (!s || !s.url || seen.has(s.url)) return false;
+      seen.add(s.url);
+      return true;
+    });
+  const rows = sources.map((s) => `<li class="src-row"><span class="src-type">${esc(s.source_type || 'other')}</span> <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" class="src-url">${esc(s.url)}</a></li>`).join('\n      ');
+  const body = `<ul class="src-list">${rows}</ul>`;
+  return sectionShell('sources', 'データソース', sources.length, body);
 }
 
 // ── Theme tokens (spec 0002 AC-1, AC-2) ───────────────────────────
@@ -890,6 +1076,91 @@ details.acc[open] .chev { transform: rotate(180deg); }
 .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
 .btn-primary:hover { opacity: 0.85; }
 
+/* Report sections (spec 0008 Phase 4): fixed h2 blocks, one scroll. */
+.report-section { margin-top: 2.5rem; }
+.empty-line { font-size: 0.9rem; color: hsl(var(--muted-foreground)); padding: 0.9rem 0; }
+
+/* Today's changes. */
+.change-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.7rem; }
+.change-row {
+  background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+  border-radius: var(--radius); padding: 0.85rem 1.1rem;
+}
+.change-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; }
+.change-type {
+  font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem;
+  border-radius: 999px; background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--foreground)); white-space: nowrap;
+}
+.change-name { font-weight: 700; font-size: 0.92rem; }
+.change-field { font-size: 0.72rem; color: hsl(var(--muted-foreground)); }
+.change-values { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.45rem; }
+.change-val { max-width: 100%; }
+.change-arrow { color: hsl(var(--muted-foreground)); font-weight: 700; }
+.change-summary { margin-top: 0.4rem; font-size: 0.85rem; color: hsl(var(--muted-foreground)); }
+
+/* Contradictions note. */
+.contradictions-note {
+  margin: 1.1rem 0 0; padding: 0.85rem 1.1rem;
+  border: 1px dashed hsl(var(--warning) / 0.55); border-radius: var(--radius);
+  background: hsl(var(--warning) / 0.06); font-size: 0.82rem;
+}
+.contradictions-title { font-weight: 700; margin-bottom: 0.35rem; color: hsl(var(--warning)); }
+.contradictions-note ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.2rem; }
+
+/* New models / new services. */
+.model-list, .update-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 0.7rem; }
+@media (min-width: 768px) { .model-list, .update-list { grid-template-columns: 1fr 1fr; } }
+.model-card, .update-card, .source-proposal {
+  background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+  border-radius: var(--radius); padding: 0.95rem 1.15rem;
+}
+.model-head, .update-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.model-name, .update-name { font-family: "Space Grotesk", "Noto Sans JP", sans-serif; font-size: 1.02rem; font-weight: 700; margin: 0; }
+.model-window {
+  font-size: 0.68rem; font-weight: 700; padding: 0.12rem 0.5rem;
+  border-radius: 999px; background: hsl(var(--tier-a) / 0.12); color: hsl(var(--tier-a));
+}
+.model-candidate {
+  font-size: 0.68rem; font-weight: 700; padding: 0.12rem 0.5rem;
+  border-radius: 999px; background: hsl(var(--warning) / 0.14); color: hsl(var(--warning));
+}
+.model-id { margin: 0.35rem 0 0; font-family: "JetBrains Mono", monospace; font-size: 0.75rem; color: hsl(var(--muted-foreground)); word-break: break-all; }
+.model-aliases { margin: 0.2rem 0 0; font-size: 0.75rem; color: hsl(var(--muted-foreground)); }
+.model-dist { margin: 0.4rem 0 0; font-size: 0.8rem; }
+.model-src { margin: 0.4rem 0 0; font-size: 0.78rem; }
+.model-src a { color: hsl(var(--foreground)); }
+
+/* Frontier discount cards. */
+.discount-card {
+  position: relative; background: hsl(var(--card));
+  border: 1px solid hsl(var(--border)); border-radius: var(--radius);
+  padding: 1.2rem 1.35rem;
+  display: flex; flex-direction: column;
+}
+.discount-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: 0.7rem; margin-top: 0.9rem; }
+
+/* Product updates / startup credits / simple lists. */
+.update-date { font-size: 0.7rem; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+.update-title { margin: 0.35rem 0 0; font-size: 0.88rem; font-weight: 600; }
+.update-excerpt { margin: 0.3rem 0 0; font-size: 0.8rem; color: hsl(var(--muted-foreground)); }
+.simple-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.45rem; }
+.simple-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.6rem; font-size: 0.85rem; padding: 0.55rem 0.8rem; border: 1px solid hsl(var(--border)); border-radius: calc(var(--radius) - 2px); background: hsl(var(--card)); }
+.simple-row-caution { border-color: hsl(var(--warning) / 0.45); background: hsl(var(--warning) / 0.05); }
+.simple-name { font-weight: 700; }
+.simple-meta { color: hsl(var(--muted-foreground)); font-size: 0.8rem; flex: 1; min-width: 12rem; }
+.simple-src { font-size: 0.78rem; }
+
+/* New source proposals. */
+.src-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.3rem; }
+.src-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.55rem; font-size: 0.78rem; }
+.src-type {
+  font-size: 0.65rem; font-weight: 700; padding: 0.1rem 0.45rem;
+  border-radius: 999px; background: hsl(var(--muted)); color: hsl(var(--muted-foreground));
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.src-url { word-break: break-all; }
+
 /* Snapshot strip. */
 .snapshot {
   display: grid; grid-template-columns: repeat(2, 1fr);
@@ -951,6 +1222,17 @@ function generateHTML(report) {
   const offers = selectRankedOffers(report);
   const cards = offers.map((o, i) => offerCard(o, i, generatedAt, tz)).join('\n');
   const snapshot = snapshotStrip(report, offers);
+  const conditional = Array.isArray(report.conditional_credits) ? report.conditional_credits : [];
+  const caution = Array.isArray(report.caution_offers) ? report.caution_offers : [];
+  const excluded = Array.isArray(report.excluded_offers) ? report.excluded_offers : [];
+  const rankedSection = `<section id="ranked" class="report-section" aria-labelledby="ranked-h">
+      <div class="flex items-end justify-between gap-4 mb-1">
+        <h2 id="ranked-h" class="font-display text-2xl sm:text-3xl font-bold">無料・激安APIランキング</h2>
+        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">${offers.length} 件</span>
+      </div>
+      <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">ティア</strong> → アクセス区分 (FREE/ULTRA_LOW) → 同じ Terminal Bench 版のスコア → 価格確認日 → 名前の順。無料枠の余裕度は表示のみです。</p>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">${cards}</div>
+    </section>`;
 
   return `<!DOCTYPE html>
 <html lang="ja">
@@ -1075,14 +1357,36 @@ function generateHTML(report) {
 
     ${snapshot}
 
-    <section id="ranked" class="mt-10 mb-14" aria-labelledby="ranked-h">
-      <div class="flex items-end justify-between gap-4 mb-1">
-        <h2 id="ranked-h" class="font-display text-2xl sm:text-3xl font-bold">無料・激安APIランキング</h2>
-        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">${offers.length} 件</span>
-      </div>
-      <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">ティア</strong> → アクセス区分 (FREE/ULTRA_LOW) → 同じ Terminal Bench 版のスコア → 価格確認日 → 名前の順。無料枠の余裕度は表示のみです。</p>
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">${cards}</div>
-    </section>
+    ${report.summary ? `<section id="summary" class="report-section" aria-labelledby="summary-h">
+      <h2 id="summary-h" class="font-display text-2xl sm:text-3xl font-bold mb-3">本日のサマリー</h2>
+      <p class="text-sm leading-relaxed">${esc(report.summary)}</p>
+    </section>` : sectionShell('summary', '本日のサマリー', 0, '', '本日のサマリーはありません')}
+
+    ${changesSection(report)}
+    ${contradictionsNote(report)}
+    ${newModelsSection(report)}
+
+    ${rankedSection}
+
+    ${discountSection(report, tz)}
+    ${updatesSection('product-updates', 'Coding Agent / 製品内無料', report.product_updates, '前回と変更なし。')}
+    ${updatesSection('startup-credits', 'Startup Credits', report.startup_credits, '前回と変更なし。')}
+    ${simpleOfferList('conditional', '条件付き無料 (データ共有など)', conditional, (o) => `<li class="simple-row">
+        <span class="simple-name">${esc(o.name)}</span>
+        <span class="simple-meta">${o.provider ? esc(o.provider) : ''}${o.free_limits ? ` ・ ${esc(o.free_limits)}` : ''}${o.registration_conditions && o.registration_conditions.length ? ` ・ ${o.registration_conditions.map(esc).join(' / ')}` : ''}</span>
+        <span class="simple-src">${o.sources && o.sources[0] ? `<a href="${esc(o.sources[0])}" target="_blank" rel="noopener noreferrer">ソース ↗</a>` : ''}</span>
+      </li>`)}
+    ${simpleOfferList('caution', '注意 (連続で検証できず)', caution, (o) => `<li class="simple-row simple-row-caution">
+        <span class="simple-name">${esc(o.name)}</span>
+        <span class="simple-meta">${esc(o.caution_reason || '連続失敗のため表示を保留')}</span>
+        <span class="simple-src">${o.source_url ? `<a href="${esc(o.source_url)}" target="_blank" rel="noopener noreferrer">ソース ↗</a>` : ''}</span>
+      </li>`)}
+    ${simpleOfferList('ended-excluded', '終了 / 除外', excluded, (o) => `<li class="simple-row">
+        <span class="simple-name">${esc(o.name)}</span>
+        <span class="simple-meta">${esc(o.reason || '')}${o.last_known_status ? ` (最終状態: ${esc(o.last_known_status)})` : ''}</span>
+      </li>`)}
+    ${newSourcesSection(report)}
+    ${sourcesSection(report)}
 
     <footer class="border-t pt-8 pb-4 text-center text-sm text-muted-foreground">
       <p class="mb-2"><strong class="text-foreground">無料LLM API速報</strong> ・ 毎日11:00 JST自動更新</p>

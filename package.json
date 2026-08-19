@@ -24,7 +24,9 @@
     "promote": "node .devops/db/cli.js promote",
     "recover": "node .devops/db/cli.js recover",
     "cleanup": "node .devops/db/cli.js cleanup",
-    "test": "node --test '.devops/db/*.test.js' 'build/*.test.js'"
+    "test": "node --test '.devops/db/*.test.js' 'build/*.test.js'",
+    "leads:list": "node .devops/db/cli.js leads:list",
+    "leads:resolve": "node .devops/db/cli.js leads:resolve"
   },
   "devDependencies": {
     "ajv": "^8.20.0",

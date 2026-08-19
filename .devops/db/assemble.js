@@ -964,7 +964,8 @@ function toPublicOffer(candidate, classification, prose, rank) {
     normal_price_per_million: candidate.normal_price_per_million || null,
     effective_price_per_million: candidate.effective_price_per_million || null,
     effective_discount_percent: null,
-    discount_rates: null,
+    discount_rates: candidate.access_kind === 'DISCOUNTED' ? (candidate.discount_rates || null) : null,
+    window: candidate.access_kind === 'DISCOUNTED' ? (candidate.discount_window || null) : null,
     data_retention: null,
     data_policy: candidate.data_policy || null,
     data_policy_source: candidate.data_policy_source || null,
@@ -1161,6 +1162,9 @@ function assembleReport(runId, runDir, options = {}) {
     offer.discount_rates = rankingPolicy.discountRates(
       normal.input, normal.output, effective.input, effective.output
     );
+    offer.window = (candidate.discount_start_at && candidate.discount_end_at)
+      ? { start: candidate.discount_start_at, end: candidate.discount_end_at }
+      : null;
     discountOffers.push(offer);
   }
 
@@ -1260,21 +1264,30 @@ function assembleReport(runId, runDir, options = {}) {
   // Registry changes; they surface in the reduced provider-candidates.json
   // for the operator.
   const providerCandidateEntries = [];
-  const seedCandidates = [];
   const providerCandidates = readJsonIfPresent(runDir && path.join(runDir, 'reduced', 'provider-candidates.json'));
   if (providerCandidates && Array.isArray(providerCandidates.candidates)) {
     for (const candidate of providerCandidates.candidates) {
       if (candidate && candidate.accepted === true && candidate.entry && candidate.entry.key) {
         providerCandidateEntries.push(candidate.entry);
-        seedCandidates.push({
-          name: candidate.entry.label,
-          type: 'provider',
-          recommend_add: true,
-          reason: `registered from ${candidate.entry.added_from}`,
-        });
       }
     }
   }
+
+  // New sources (spec 0008 Phase 4): accepted provider registration
+  // candidates are shown with the approval flow (watch:add) so the operator
+  // can decide whether to watch the provider. The report never auto-adds
+  // watchlist entries.
+  const newSources = providerCandidateEntries.map((entry) => ({
+    provider_key: entry.key,
+    label: entry.label || entry.key,
+    base_url: typeof entry.base_url === 'string' ? entry.base_url : null,
+    docs_url: (typeof entry.docs === 'string' ? entry.docs : entry.docs_url) || null,
+    status: 'proposed',
+    add_command: `npm run watch:add -- provider_monitors '${JSON.stringify({
+      provider_key: entry.key,
+      watch: { docs: (typeof entry.docs === 'string' ? entry.docs : entry.docs_url) || entry.base_url },
+    })}'`,
+  }));
 
   // Summary counts are code-owned; staged editorial.summary is intentionally
   // ignored so LLM-authored counts cannot reach the public report.
@@ -1297,7 +1310,8 @@ function assembleReport(runId, runDir, options = {}) {
     conditional_credits: conditional,
     caution_offers: caution,
     excluded_offers: excluded,
-    new_seed_candidates: seedCandidates,
+    new_sources: newSources,
+    new_seed_candidates: newSources.length > 0 ? [] : undefined,
     contradictions,
     sources: [...sourceSet.values()],
   };

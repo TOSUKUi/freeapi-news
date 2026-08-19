@@ -27,6 +27,8 @@
 - `npm run build` … 現行の公開スナップショットから `dist/index.html` / `dist/og-image.png` を生成 (canonical は直接触らない)。`npm run promote:dist` で公開位置へ反映。
 - `npm run db:status` … SQLite スキーマ・実行状態を表示。`db:migrate` / `db:bootstrap` / `db:import-legacy` / `db:restore` 等の副コマンドあり。
 - `npm run set-hidden -- <provider_key> <exact_model_id> <true|false>` … 運用者が特定 offer の公開・非表示を切り替える。カタログ更新では解除されない。
+- `npm run watch:list` / `watch:add -- <domain> <json>` / `watch:remove -- <domain> <key>` … `build/research-watchlist.json` (人間管理のウォッチリスト) の管理。`watch:add` は新規情報源の承認フローにも使う。
+- `npm run leads:list` / `leads:resolve -- <lead_id> <verified|dismissed|expired>` … モデル探索リードの閲覧・処分 (spec 0008)。
 - `npm run validate-candidate` … 候補ディレクトリの report / HTML / OGP を検証。
 - `npm run promote` … 検証済み候補を昇格 (公開物を一括置換)。
 - `npm run recover` … 中断された昇格・展開状態を復旧。
@@ -65,11 +67,13 @@
 - report.json のスキーマは `.agents/skills/llm-deals-intelligence-skill/schemas/daily_report.schema.json` (draft-07)。ランキング対象オファーは `last_verified` に加え、`provider_key`、`canonical_model_id`、`access_kind` (FREE/ULTRA_LOW)、`effective_price_per_million`、`price_source`、`price_verified_at`、`endpoint_source` が必須。`free_model_names` は削除済み (spec 0004 AC-2)。
 - `base_url` と `model_id` は毎回公式ドキュメントを取得して書く (記憶からの記入は禁止)。ランキング対象オファーは `endpoint_source` が必須。`npm run validate` はレジストリ整合性を検査し、引用先ページをバリデータ自身が再取得して base_url を明記していなければハードフェイルする。未登録プロバイダーはワーカーの提案を決定的証拠監査で候補化し、canonical registry への反映は昇格段階だけで行う。
 - 無料アプリ/チャットアクセスは無料 API ではない (API が有料ならランキング対象外)。データ共有 opt-in の無料枠は `conditional_credits` (`F_CONDITIONAL`)。
+- フロンティア割引 (`access_kind: DISCOUNTED`) は `ranked_offers` には入れず `discount_offers` 専用セクションに出す (spec 0008 §4.11)。通常価格と現在価格の両方が取得済みで通常 > 現在、かつ割引証拠 (期間または通常価格の引用) がある場合のみ掲載し、通常価格・現在価格・割引率・期間を必ず決定的に表示する。
+- report のページ構成は固定の h2 セクション順 (summary / changes / new_models / ranked_offers / discount_offers / product_updates / startup_credits / conditional_credits / caution_offers / ended_excluded / new_sources / sources)。空セクションは「本日なし」1 行で DOM を残す。
 - 収集スキルは `.agents/skills/llm-deals-intelligence-skill/`。UI 参照スキルは `.agents/skills/shadcn/` (skills-lock.json で固定)。
 
 ## State and git tracking
 
-- **公開物 (git で追跡)**: `report.json`, `index.html`, `og-image.png`, `build/provider-registry.json` (人間が管理するレジストリ)。これだけが配布物であり、昇格時にのみ書き換わる。`index.html` / `og-image.png` は `npm run build` (出力は `dist/`) + `npm run promote:dist` でのみ更新し、手編集しない。
+- **公開物 (git で追跡)**: `report.json`, `index.html`, `og-image.png`, `build/provider-registry.json` (人間が管理するレジストリ), `build/research-watchlist.json` (人間が管理するウォッチリスト、運用状態ではない)。これだけが配布物であり、昇格時にのみ書き換わる。`index.html` / `og-image.png` は `npm run build` (出力は `dist/`) + `npm run promote:dist` でのみ更新し、手編集しない。
 - **運用状態 (git で追跡しない)**: SQLite (`.agents/skills/llm-deals-intelligence-skill/state/collector.sqlite`) が唯一の運用状態。旧来の `known_offers.json` / `benchmarks.json` / `page_cache.json` は廃止済み。DB と実行ディレクトリ (manifest / artifacts / candidate / DB コピー / promotion manifest / logs) はすべてローカルのみ・`.gitignore` 対象。検証済み DB コピーが通常の復旧入力。`report.json` は非常時の bootstrap 源にすぎない。`offers.hidden` はカタログや worker が上書きしない運用者管理の公開抑止フラグで、非表示 offer は候補 report と benchmark queue から除外する。
 
 ## Notes for agents

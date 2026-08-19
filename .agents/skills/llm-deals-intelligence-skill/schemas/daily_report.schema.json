@@ -999,6 +999,28 @@
             "number",
             "null"
           ]
+        },
+        "window": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "start": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "end": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "$comment": "spec 0008: discount campaign window, DISCOUNTED offers only"
         }
       },
       "allOf": [
