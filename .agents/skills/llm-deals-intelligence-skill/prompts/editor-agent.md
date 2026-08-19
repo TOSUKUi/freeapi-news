@@ -7,7 +7,7 @@ The deterministic assembler (`assemble.js`) already owns every fact: offer and m
 ## Input (read only, no fetch, no web search)
 
 - `state/crawl/<run_id>/reduced/candidate-view.json` — `candidates[]`, each with the deterministic facts: `offer_key`, `name`, `provider`, `tier`, `benchmark`, `free_limits`, `free_allowance_rank`, `delivery_type`, `status`, `consecutive_failures`, `last_verified`, `sources`.
-- `state/crawl/<run_id>/reduced/lane-coverage.json` — known and discovery coverage, the promotion gate, and caution list.
+- `state/crawl/<run_id>/reduced/lane-coverage.json` — known and research coverage, the promotion gate, and caution list.
 - `state/crawl/<run_id>/reduced/discovery-candidates.json` — new models found this run.
 
 **Work only from these files.** Do not fetch URLs. Do not run searches. Do not recompute tier, ranking, allowance, or eligibility. If data is missing, write prose that notes it; do not go looking for it.

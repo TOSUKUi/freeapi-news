@@ -63,52 +63,6 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-// ---------------------------------------------------------------------------
-// Discovery goal crawlers (spec 0007; supersedes the spec 0005 source/term
-// pool, budgets, chunking, and daily rotation)
-// ---------------------------------------------------------------------------
-
-// The discovery lane is two fixed goal crawlers per run, each one pi session
-// that web-searches for its goal, opens the most promising official pages in
-// the browser, and reports raw facts only:
-//   discovery:new      newly announced models / API launches in the window
-//   discovery:pricing  pricing, free-tier, and promo changes for known offers
-// No source or term pool exists: candidates are found live each run, so a
-// run costs a bounded two sessions instead of rotating a stale pool.
-// Discovery stays addition-only and nonfatal (AC-2): a failed crawler never
-// touches a known offer, and promotion never depends on discovery success.
-const DISCOVERY_GOALS = ['new', 'pricing'];
-
-function discoveryGoalOfTask(task) {
-  if (!task) return 'new';
-  if (task.assigned_json && typeof task.assigned_json === 'object' && !Array.isArray(task.assigned_json) &&
-      (task.assigned_json.goal === 'new' || task.assigned_json.goal === 'pricing')) {
-    return task.assigned_json.goal;
-  }
-  return task.task_id === 'discovery:pricing' ? 'pricing' : 'new';
-}
-
-function buildDiscoveryTasks() {
-  const tasks = [];
-  for (const goal of DISCOVERY_GOALS) {
-    const taskId = `discovery:${goal}`;
-    tasks.push({
-      task_id: taskId,
-      kind: 'discovery',
-      provider_key: null,
-      provider_label: null,
-      base_url: null,
-      docs_url: null,
-      api_catalog_url: null,
-      assigned_model_ids: [],
-      cached_urls: [],
-      discovery_goal: goal,
-      output: `artifacts/${db.sanitizeTaskId(taskId)}.json`,
-    });
-  }
-  return tasks;
-}
-
 // Spec 0008: the deterministic watch plan becomes run tasks. A missing or
 // invalid watchlist degrades to an empty plan (the watch lane is addition
 // only; the rest of the pipeline is unaffected).
@@ -131,8 +85,9 @@ function buildWatchTasks(options = {}) {
 //   known:<key>     one per provider with known offers and no catalog.
 //                   Carries cached_urls from source_cache so workers try
 //                   known good pages first.
-//   discovery       two fixed goal crawlers (spec 0007): discovery:new and
-//                   discovery:pricing. Addition only; no pool assignment.
+// The legacy discovery goal crawlers (spec 0007) are retired; the model-first
+// research sessions (news scan, vendor deep dive, community, model fan out)
+// are planned at runtime in collect.js and registered on top of this manifest.
 // confirmed_removed offers are never assigned; a catalog can still surface
 // them again, which the reducer turns back into verified (AC-5).
 function buildLaneManifest(options = {}) {
@@ -210,10 +165,6 @@ function buildLaneManifest(options = {}) {
     });
   }
 
-  // Spec 0007: two fixed goal crawlers per run (see buildDiscoveryTasks).
-  const discoveryTasks = buildDiscoveryTasks();
-  tasks.push(...discoveryTasks);
-
   // Spec 0008: deterministic watch tasks. Fetched in process (no LLM); the
   // plan is tracked as run tasks so artifacts and watch_facts history stay
   // comparable across runs.
@@ -229,10 +180,6 @@ function buildLaneManifest(options = {}) {
       known: {
         assigned_offers: known.length,
         providers: [...new Set(known.map((o) => o.provider_key))].sort(),
-      },
-      discovery: {
-        assigned: discoveryTasks.length,
-        goals: DISCOVERY_GOALS,
       },
       watch: {
         channels: watchTasks.length,
@@ -250,10 +197,7 @@ function toStartRunTasks(manifest) {
     task_id: task.task_id,
     kind: task.kind,
     provider_key: task.provider_key ?? undefined,
-    assigned_model_ids: task.kind === 'discovery' ? undefined : task.assigned_model_ids,
-    assigned_json: task.kind === 'discovery'
-      ? { goal: task.discovery_goal }
-      : undefined,
+    assigned_model_ids: task.assigned_model_ids,
   }));
 }
 
@@ -786,11 +730,10 @@ function reduceLanes(runId, runDir, options = {}) {
   const sourceCache = [];
   const discoveryCandidates = [];
   const providerCandidates = [];
-  const discoveryNews = [];
   const knownProviderKeys = new Set(providers.map((p) => p.key));
   const coverage = {
     known: { assigned: 0, verified: 0, stale: 0, removed: 0, failed: 0 },
-    discovery: { assigned: 0, complete: 0, partial: 0, failed: 0 },
+    research: { assigned: 0, complete: 0, partial: 0, failed: 0 },
     catalog: { available: [], unavailable: [] },
   };
 
@@ -875,7 +818,7 @@ function reduceLanes(runId, runDir, options = {}) {
   // fan out) emit crawl-facts shaped offer facts in models[] and take the
   // same discovery-lane treatment: addition only, known offers never mutated.
   const discoveryTasks = tasks.filter((t) =>
-    ['discovery', 'news_scan', 'vendor_deep_dive', 'model_fanout'].includes(t.kind));
+    ['news_scan', 'vendor_deep_dive', 'model_fanout'].includes(t.kind));
 
   // ── Catalog lane (AC-6, AC-5) ──────────────────────────────────
   for (const task of catalogTasks) {
@@ -1165,19 +1108,19 @@ function reduceLanes(runId, runDir, options = {}) {
     }
   }
 
-  // ── Discovery lane (AC-2: nonfatal, addition only) ─────────────
-  // Spec 0007: the two goal crawlers can report the same model; the first
-  // occurrence wins. Known-offer facts from the pricing crawler become
-  // editorial news (discoveryNews), never offer state.
-  const seenDiscovery = new Set();
-  const seenNews = new Set();
+  // ── Research lanes (spec 0008; AC-2 carried over: addition only, known
+  // offers never mutated, failure is nonfatal) ─────────────────────
+  // news_scan, vendor deep dive, and model fan out report crawl-facts shaped
+  // offer facts. Live ids (verified or stale) are owned by their own lanes
+  // and skipped. A removed id resurfaces as a reappearance candidate so the
+  // official lanes can reverify it (AC-5).
+  const seenResearch = new Set();
   for (const task of discoveryTasks) {
-    coverage.discovery.assigned += 1;
-    if (task.status === 'complete') coverage.discovery.complete += 1;
-    else if (task.status === 'partial') coverage.discovery.partial += 1;
-    else coverage.discovery.failed += 1;
+    coverage.research.assigned += 1;
+    if (task.status === 'complete') coverage.research.complete += 1;
+    else if (task.status === 'partial') coverage.research.partial += 1;
+    else coverage.research.failed += 1;
 
-    const goal = discoveryGoalOfTask(task);
     const result = task.result_json;
     if ((task.status === 'complete' || task.status === 'partial') &&
         result && Array.isArray(result.models)) {
@@ -1186,43 +1129,19 @@ function reduceLanes(runId, runDir, options = {}) {
         const providerKey = typeof model.provider_key === 'string' && model.provider_key
           ? model.provider_key
           : null;
-        // Discovery never mutates known offers: live ids (verified or
-        // stale) are owned by their own lane and skipped. A removed id
-        // resurfaces as a reappearance candidate so later stages can
-        // reverify it (AC-5), still without any offer mutation here (AC-2).
-        // The pricing crawler's known-offer facts become editorial news
-        // before candidate dedupe, so the new goal cannot shadow them.
         const existing = providerKey
           ? offerByKey.get(offerChangeKey(providerKey, model.model_id))
           : null;
-        if (existing && existing.status !== 'confirmed_removed') {
-          if (goal === 'pricing') {
-            const newsKey = `news\u0000${providerKey}\u0000${model.model_id}`;
-            if (!seenNews.has(newsKey)) {
-              seenNews.add(newsKey);
-              discoveryNews.push({
-                provider_key: existing.provider_key,
-                exact_model_id: existing.exact_model_id,
-                model_name: model.model_name || existing.exact_model_id,
-                pricing_text: typeof model.pricing_text === 'string' && model.pricing_text.trim() ? model.pricing_text : null,
-                free_quota_text: typeof model.free_quota_text === 'string' && model.free_quota_text.trim() ? model.free_quota_text : null,
-                docs_url: typeof model.docs_url === 'string' && model.docs_url.trim() ? model.docs_url : null,
-                task_id: task.task_id,
-                detected_at: now,
-              });
-            }
-          }
-          continue;
-        }
+        if (existing && existing.status !== 'confirmed_removed') continue;
         const dedupeKey = `${providerKey || ''}\u0000${model.model_id}`;
-        if (seenDiscovery.has(dedupeKey)) continue;
-        seenDiscovery.add(dedupeKey);
+        if (seenResearch.has(dedupeKey)) continue;
+        seenResearch.add(dedupeKey);
         discoveryCandidates.push({
           provider_key: providerKey,
           exact_model_id: model.model_id,
           canonical_model_id: db.canonicalModelId(model.model_id),
           model_name: model.model_name || model.model_id,
-          source: 'discovery',
+          source: 'research',
           reappearance: existing ? true : false,
           facts: model,
           detected_at: now,
@@ -1304,15 +1223,6 @@ function reduceLanes(runId, runDir, options = {}) {
       }, null, 2)}\n`
     );
     fs.writeFileSync(
-      path.join(reducedDir, 'discovery-news.json'),
-      `${JSON.stringify({
-        run_id: runId,
-        generated_at: now,
-        note: 'Pricing, free-tier, and promo change news about known offers from the discovery pricing crawler. Editorial change_prose input only; never offer state.',
-        news: discoveryNews,
-      }, null, 2)}\n`
-    );
-    fs.writeFileSync(
       path.join(reducedDir, 'provider-candidates.json'),
       `${JSON.stringify({
         run_id: runId,
@@ -1330,7 +1240,6 @@ function reduceLanes(runId, runDir, options = {}) {
     gateReason,
     offerChanges,
     discoveryCandidates,
-    discoveryNews,
     providerCandidates,
     sourceCache,
   };
@@ -1339,7 +1248,6 @@ function reduceLanes(runId, runDir, options = {}) {
 module.exports = {
   CAUTION_FAILURES,
   buildLaneManifest,
-  buildDiscoveryTasks,
   toStartRunTasks,
   validateTaskArtifact,
   ingestTaskArtifacts,
@@ -1352,6 +1260,4 @@ module.exports = {
   applyStructuredPrices,
   validateProviderCandidate,
   collectProviderCandidates,
-  DISCOVERY_GOALS,
-  discoveryGoalOfTask,
 };

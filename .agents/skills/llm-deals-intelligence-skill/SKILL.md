@@ -52,9 +52,29 @@ Do not require user credentials. Never request session cookies, browser tokens, 
 
 ## Core workflow
 
-### Phase 0 — Discover newly announced models and services
+The automated pipeline (Collection pipeline architecture below) is the primary
+path: `npm run collect` runs every phase in order, fail-safe. The phases below
+document what each stage does, and double as the manual fallback when running
+the skill by hand.
 
-Search the last 24 hours, 72 hours, and 30 days for newly announced models, previews, betas, open-weight plans, API launches, pricing changes, provider additions, and deprecations.
+### Phase 0 — Model first discovery (spec 0008)
+
+Discovery is model first: the pipeline watches a deterministic channel list
+(`build/research-watchlist.json`: frontier vendor blogs, changelogs, pricing
+pages, Hugging Face feeds, community feeds) and runs bounded research sessions
+instead of free-form crawls.
+
+- `news_scan` runs once a day over the `DISCOVERY_WINDOW_DAYS` window (default
+  7) with bounded web search + browser, finding newly announced models,
+  previews, betas, open-weight plans, API launches, pricing changes, provider
+  additions, and deprecations.
+- `vendor_deep_dive` runs per vendor on a changed watch signal, plus the
+  tier-1 7 day rotation.
+- `model_fanout` opens a bounded session for each genuinely new, dated, in
+  window model (max 3 per day) and records where it can actually be used
+  (distribution verdicts; `unconfirmed` is a real answer and is shown as such).
+- `community_leads` treats community feeds as a discovery sensor only: claims
+  become leads that the official lanes back-check.
 
 Search official sources before community sources. Check:
 
@@ -70,7 +90,8 @@ Search official sources before community sources. Check:
 
 Do not trust a static model list as the sole source of truth.
 
-For every newly found model or service, create a normalized discovery record:
+For every newly found model or service, the pipeline writes a normalized
+model row (SQLite `models` table):
 
 - canonical model name
 - aliases
@@ -109,7 +130,7 @@ Run searches in English, Japanese, and Chinese where relevant.
 
 ### Phase 2 — Search known providers and aggregators
 
-Check the registered providers in `build/provider-registry.json` (the canonical list of providers the collector knows about). Discovery no longer keeps a source/term pool (spec 0007): the collector runs two fixed goal crawlers (`discovery:new`, `discovery:pricing`) with web search + browser, and new sources are proposed per-run via the deterministic evidence audit. Use `npm run db:status` to inspect collector state.
+Check the registered providers in `build/provider-registry.json` (the canonical list of providers the collector knows about). The collector's model-first research sessions (news scan, vendor deep dive, community, model fan out; spec 0008) do the open-ended discovery with bounded web search + browser, and new sources are proposed per-run via the deterministic evidence audit. Use `npm run db:status` to inspect collector state and `npm run watch:list` for the research watchlist.
 
 For routers and marketplaces, inspect:
 
@@ -369,26 +390,41 @@ The daily collection (`.devops/db/collect.js`, driven by `npm run collect` / `fu
 2. Pre run DB copy        copy the closed DB into the ignored run directory
 3. Manifest + start run   build lane manifest from SQLite + registry
 4. Catalog (deterministic)  providers with api_catalog_url fetched from their API
-5. Lane workers (LLM)     known_refresh + discovery, parallel (GLOBAL_CONCURRENCY)
-6. Lane reduction         liveness + enums + promotion gate (zero verified blocks)
-7. Bulk benchmark ingestion (deterministic)  fetch Terminal-Bench 2.0 and 2.1 once each, parse and match all rows
-8. Benchmark scout (LLM)  unresolved aliases only; proposals validated
-9. Candidate view         deterministic input for classifier + editor
-10. Classifier + editor   final classification; Japanese prose only
-11. Assembly              deterministic report.json from SQLite + prose
-12. Validation + build    schema + live citation re-fetch; HTML + OG in candidate/
-13. Promotion + deploy    phased manifest; canonical files change only after all
-                          checks pass; push failure keeps validated_not_deployed
+5. Watch fetch (deterministic)  research-watchlist channels fetched; failures
+                                become signals, never run failures
+6. Observation (deterministic)  OpenRouter endpoint probe, NIM verify (LLM
+                                browser when the page is client rendered),
+                                product/program facts applied
+7. Lane workers (LLM)     known_refresh + research sessions (news scan,
+                                vendor deep dive, community, model fan out),
+                                parallel (GLOBAL_CONCURRENCY)
+8. Lane reduction         liveness + enums + research candidates + promotion
+                                gate (zero verified known blocks)
+9. Bulk benchmark ingestion (deterministic)  fetch Terminal-Bench 2.0 and 2.1
+                                once each, parse and match all rows
+10. Benchmark scout (LLM)  unresolved aliases only; proposals validated
+11. Candidate view         deterministic input for classifier + editor, plus
+                            a before/after changes preview
+12. Classifier + editor   final classification; Japanese prose only
+13. Assembly              deterministic report.json from SQLite + prose
+14. Validation + build    schema + live citation re-fetch; HTML + OG in candidate/
+15. Promotion + deploy    phased manifest; canonical files change only after all
+                            checks pass; push failure keeps validated_not_deployed
 ```
 
 ### Workers
 
 1. `crawl-worker` (prompts/crawl-worker.md): per-provider facts. Handles known_refresh (re-verify known offers). Emits `crawl-facts.schema.json` facts.
-2. `discovery-agent` (prompts/discovery-agent.md): finds new models and providers. Emits facts; failure never mutates known offers.
-3. Bulk benchmark ingestion (`.devops/db/benchmarks.js`): fetches the official Terminal-Bench 2.0 and 2.1 leaderboards once each, records body hashes, parses all rows, and accepts only deterministic alias matches through the normal evidence validator.
-4. `benchmark-scout` (prompts/benchmark-scout.md): handles unresolved aliases only. A completed search is reused even when all proposals are rejected; metadata changes or explicit force flags are required to search again. Emits proposals (`benchmark-scout.schema.json`), confirmed by evidence before becoming facts.
-5. `classifier-agent` (prompts/classifier-agent.md): final classification per candidate. Does NOT fetch.
-6. `editor-agent` (prompts/editor-agent.md): writes Japanese prose only (`editorial.json`). Does NOT fetch, does NOT write data.
+2. `news-scan` (prompts/news-scan.md): the daily frontier news session. Bounded web search + browser. Emits `vendor-facts.schema.json`.
+3. `vendor-deep-dive` (prompts/vendor-deep-dive.md): signal driven deep dive into one vendor. Emits `vendor-facts.schema.json`.
+4. `community-leads` (prompts/community-leads.md): community feeds are a discovery sensor only. Emits `leads.schema.json`; never verifies claims as fact.
+5. `model-fanout` (prompts/model-fanout.md): bounded per-new-model session (max 3/day). Emits `vendor-facts.schema.json` offer facts + distribution verdicts.
+6. `provider-monitor` / `product-monitor` / `program-monitor` (prompts/*.md): watchlist driven monitors; run only on deterministic changed signals. Emits vendor-facts / product-facts / program-facts.
+7. `nim-verify` (prompts/nim-verify.md): browser verification of client rendered NIM pages.
+8. Bulk benchmark ingestion (`.devops/db/benchmarks.js`): fetches the official Terminal-Bench 2.0 and 2.1 leaderboards once each, records body hashes, parses all rows, and accepts only deterministic alias matches through the normal evidence validator.
+9. `benchmark-scout` (prompts/benchmark-scout.md): handles unresolved aliases only. A completed search is reused even when all proposals are rejected; metadata changes or explicit force flags are required to search again. Emits proposals (`benchmark-scout.schema.json`), confirmed by evidence before becoming facts.
+10. `classifier-agent` (prompts/classifier-agent.md): final classification per candidate. Does NOT fetch.
+11. `editor-agent` (prompts/editor-agent.md): writes Japanese prose only (`editorial.json`). Does NOT fetch, does NOT write data.
 
 ### Fail-safe guarantees
 

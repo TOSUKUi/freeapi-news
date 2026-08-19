@@ -37,14 +37,16 @@
 
 ## Architecture — collection pipeline
 
-`.devops/db/collect.js` がフェイルセーフのパイプラインを回す。SQLite (`.agents/skills/llm-deals-intelligence-skill/state/collector.sqlite`) が唯一の運用状態。既知オファーの確認 (known lane) と新規探索 (discovery lane) を分け、失敗した収集が前回の公開を壊さない。機械的な作業はコード、LLM は事実抽出と分類・執筆だけ (ローカルモデル前提、各呼び出しは軽い)。
+`.devops/db/collect.js` がフェイルセーフのパイプラインを回す。SQLite (`.agents/skills/llm-deals-intelligence-skill/state/collector.sqlite`) が唯一の運用状態。既知オファーの確認 (known lane) と新規探索 (research セッション) を分け、失敗した収集が前回の公開を壊さない。機械的な作業はコード、LLM は事実抽出と分類・執筆だけ (ローカルモデル前提、各呼び出しは軽い)。
 
 1. **catalog** (決定的, `.devops/db/catalog.js`) … `api_catalog_url` を持つプロバイダー (例: OpenRouter `GET /api/v1/models`) を公式 API から直接列挙。LLM フォールバックなし。失敗時は前回オファーを保持。
-2. **known_refresh / discovery ワーカー** (LLM, 並列, `GLOBAL_CONCURRENCY` でスロットル) … 公式ドキュメントから**生の事実のみ**を抽出し `schemas/crawl-facts.schema.json` で `json_output`。enum は書かない。discovery の失敗は既知オファーに影響しない。discovery レーンは固定のゴールクローラー 2 本 (`discovery:new` = 期間内の新規モデル・launch 探索、`discovery:pricing` = 既知 offer の価格・フリートイヤー・プロモ変更の追跡) のみ (spec 0007)。ソース/タームプール・予算・チャンク・ローテーションは廃止された。各クローラーは web-search-plus 検索 (≤ 4 回) と browser 閲覧 (≤ 8 ページ) で調査し、pricing クローラーが既知 offer について報告した fact は `reduced/discovery-news.json` として change_prose へ流れる (オファー状態は変更しない)。調査期間は `DISCOVERY_WINDOW_DAYS` (既定 7) のみ。
-3. **lane reduce** (決定的, `.devops/db/lanes.js`) … facts からライブネス (`verified` / `stale` / `confirmed_removed`) と enum を導出。検証失敗は前回事実を `stale` として持ち越し、4 連続失敗で caution。既知 verified ゼロは昇格をブロック。
-4. **benchmark bulk + benchmark_scout** + **benchmark reduce** (決定的優先, `.devops/db/benchmarks.js`) … Terminal-Bench 2.0/2.1 の公式 leaderboard を各1回取得し、全行を決定的に parse して current model と一括照合する。公式ページで明確に照合できない別名だけを `benchmark_scout` (LLM) に回す。完了済み検索は、メタデータ変更または明示的な force 指定がない限り再調査しない。LLM の結果は**提案**であり、証拠検証 (テキストは本文確認、画像は HIGH confidence) を通ったものだけ不変の事実行になる。
-5. **classifier / editor** (LLM) … classifier は `classification` の最終判定、editor は日本語本文のみを `editorial.json` に書く。データ状態は一切書かない。
-6. **assemble / validate / promote / deploy** (決定的, `.devops/db/assemble.js` + `publication.js`) … SQLite の候補ビューと本文から `report.json` を決定論的に組み、候補ディレクトリで検証・ビルド。全チェック通過後にのみ昇格し、コミット & プッシュ。プッシュ失敗は `validated_not_deployed` で保持。
+2. **watch fetch** (決定的, `.devops/db/watch.js`) … `build/research-watchlist.json` (人間管理・git 追跡) の全チャネルを fetch。失敗はシグナル (`fetch_failed`) 化して研究セッションへ渡すだけ、run 失敗にはしない。
+3. **observation** (決定的 + 限定 LLM, `.devops/db/observe.js`) … OpenRouter エンドポイント探査 (1 日 120 回・250ms 間隔・24h キャッシュ)、NIM 検証 (クライアントレンダリングページは `nim_verify` ブラウザセッション)、product/program fact の適用。
+4. **known_refresh / 研究セッション ワーカー** (LLM, 並列, `GLOBAL_CONCURRENCY` でスロットル) … known_refresh は公式ドキュメントから**生の事実のみ**を抽出し `schemas/crawl-facts.schema.json` で `json_output`。研究セッション (spec 0008, spec 0007 のゴールクローラー 2 本は廃止) は news_scan (毎日 1 回) / vendor_deep_dive (シグナル駆動 + 7 日ローテーション) / community_leads (毎日 1 回) / model_fanout (1 日最大 3 本) のみ。それぞれ `vendor-facts` / `leads` スキーマの `json_output`。web-search-plus 検索と browser 閲覧は各セッションの限定予算内で実施。研究セッションの失敗・産物は既知オファーを変更しない (spec 0007 AC-2 を継承)。
+5. **lane reduce** (決定的, `.devops/db/lanes.js`) … facts からライブネス (`verified` / `stale` / `confirmed_removed`) と enum を導出。検証失敗は前回事実を `stale` として持ち越し、4 連続失敗で caution。既知 verified ゼロは昇格をブロック。
+6. **benchmark bulk + benchmark_scout** + **benchmark reduce** (決定的優先, `.devops/db/benchmarks.js`) … Terminal-Bench 2.0/2.1 の公式 leaderboard を各1回取得し、全行を決定的に parse して current model と一括照合する。公式ページで明確に照合できない別名だけを `benchmark_scout` (LLM) に回す。完了済み検索は、メタデータ変更または明示的な force 指定がない限り再調査しない。LLM の結果は**提案**であり、証拠検証 (テキストは本文確認、画像は HIGH confidence) を通ったものだけ不変の事実行になる。
+7. **classifier / editor** (LLM) … classifier は `classification` の最終判定、editor は日本語本文のみを `editorial.json` に書く。データ状態は一切書かない。
+8. **assemble / validate / promote / deploy** (決定的, `.devops/db/assemble.js` + `publication.js`) … SQLite の候補ビューと本文から `report.json` を決定論的に組み、候補ディレクトリで検証・ビルド。全チェック通過後にのみ昇格し、コミット & プッシュ。プッシュ失敗は `validated_not_deployed` で保持。
 
 **核心原則**: enum とランキングは LLM に書かせない。機械的に導出できるものはコードが決定的に出す。全 LLM 呼び出しは `--json-schema` / `--json-output` で縛り、スキーマ違反の実行は失敗させて前回レポートを生存させる。ベンチマークの提案は事実ではない。既存の検証済みベンチマーク行は不変。
 

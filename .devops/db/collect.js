@@ -135,15 +135,13 @@ function discoverySearchTimeRange(env = process.env) {
   return windowFromDays(discoveryWindowDays(env));
 }
 
-// Spec 0007: the two discovery goal crawlers investigate with web search
-// (web-search-plus CLI) and a real browser (pi `browser` tool on the camofox
-// server). The transport text is appended to the role prompt at runtime; the
-// prompt file owns the output contract and the worker budget.
-// Spec 0008: the discovery-style transport (bounded web search + real
-// browser) is shared by the discovery goal crawlers and the model-first
-// research workers (news scan, vendor deep dive, community, model fan out).
+// The research web sessions (news scan, vendor deep dive, community, model
+// fan out, provider monitor, product/program monitor, nim verify) investigate
+// with web search (web-search-plus CLI) and a real browser (pi `browser` tool
+// on the camofox server). The transport text is appended to the role prompt
+// at runtime; the prompt file owns the output contract and the worker budget.
 function isDiscoveryTransport(spec) {
-  return spec.taskId.startsWith('discovery:') || spec.transport === 'discovery';
+  return spec.transport === 'discovery';
 }
 
 function discoveryTransportText(spec) {
@@ -904,26 +902,7 @@ async function runPipeline(options = {}) {
       let visitBudget = undefined;
       let searchTimeRange = undefined;
       let timeoutSeconds = opts.piTimeout;
-      const discoveryWindow = discoveryWindowDays();
-      const pricingTargets = manifest.tasks
-        .filter((t) => (t.kind === 'known_refresh' || t.kind === 'catalog') && (t.assigned_model_ids || []).length > 0)
-        .map((t) => ({ provider: t.provider_key, models: t.assigned_model_ids }));
-      if (task.kind === 'discovery') {
-        roleFile = 'discovery-agent.md';
-        transport = 'discovery';
-        searchTimeRange = discoverySearchTimeRange();
-        timeoutSeconds = opts.discoveryTimeout;
-        failureArtifact = factsFailureArtifact(task.task_id, task.provider_key);
-        runtime = `Task: ${task.task_id}. Manifest: ${path.join(runDir, 'manifest.json')}.\n`
-          + 'This is one of two daily discovery crawler sessions; cover exactly this goal and emit one small conforming output.\n'
-          + `Recency window: the last ${discoveryWindow} days only. Facts outside the window do not count.\n`
-          + (task.discovery_goal === 'pricing'
-            ? `Goal: find pricing, free-tier, or promo changes announced within the window for these known providers and models: ${JSON.stringify(pricingTargets)}. `
-              + 'Report each changed model with the new pricing text verbatim. '
-            : 'Goal: find LLM models, API access, or free-tier programs newly announced or newly launched within the window (new provider launches, new model releases, new free access). ')
-          + 'For any unregistered API provider you find, report a provider_candidate with the fetched official base_url, docs_url, and model id form (AC-11). '
-          + 'Do not search benchmark sources or emit benchmark_finds; the dedicated benchmark_scout stage handles benchmark lookup after lane reduction.';
-      } else if (task.kind === 'news_scan') {
+      if (task.kind === 'news_scan') {
         roleFile = 'news-scan.md';
         schemaName = 'vendor-facts.schema.json';
         transport = 'discovery';
@@ -1289,7 +1268,6 @@ async function runPipeline(options = {}) {
           + `Changes preview: ${path.join(runDir, 'reduced', 'changes-preview.json')} (structured before / after values for this run's change records; write change_prose from these values only). `
           + `Coverage: ${path.join(runDir, 'reduced', 'lane-coverage.json')}. `
           + `Discovery: ${path.join(runDir, 'reduced', 'discovery-candidates.json')}. `
-          + `Pricing news: ${path.join(runDir, 'reduced', 'discovery-news.json')} (known-offer price/free-tier change news from the discovery pricing crawler; usable in change_prose, never offer data). `
           + 'Write the Japanese prose to editorial.json via json_output conforming to schemas/editorial.schema.json.',
         failureArtifact: null,
       },

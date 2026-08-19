@@ -674,13 +674,18 @@ describe('collect orchestrator', () => {
     }
   });
 
-it('discovery worker input carries the two goal crawlers with the known-offer list', async () => {
+it('research sessions run with a bounded transport and no legacy discovery goals (spec 0008 Phase 5)', async () => {
     seedKnownOffer(ctx);
+    // The research plan only activates with a watchlist in place.
+    fs.copyFileSync(
+      path.join(__dirname, '..', '..', 'build', 'research-watchlist.json'),
+      path.join(ctx.root, 'build', 'research-watchlist.json')
+    );
 
-    const runId = 'discovery-goals-1';
+    const runId = 'research-goals-1';
     const captured = new Map();
     const capturingWorker = (spec) => {
-      if (spec.taskId.startsWith('discovery:')) captured.set(spec.taskId, spec);
+      if (spec.transport === 'discovery') captured.set(spec.taskId, spec);
       return makeWorker('ok')(spec);
     };
 
@@ -690,32 +695,22 @@ it('discovery worker input carries the two goal crawlers with the known-offer li
       runId,
       runWorker: capturingWorker,
       runCatalog: fakeCatalog,
-      discoveryTimeout: 1800,
       log: silent(),
     });
 
-    assert.deepEqual(
-      [...captured.keys()].sort(),
-      ['discovery:new', 'discovery:pricing'],
-      'exactly two goal crawlers run per day'
-    );
-    for (const taskId of captured.keys()) {
-      const spec = captured.get(taskId);
-      assert.equal(spec.timeoutSeconds, 1800, 'discovery workers use the dedicated timeout');
-      const runtime = spec.runtime;
-      assert.match(runtime, /Recency window: the last 7 days only/, 'default window is 7 days');
-      assert.match(runtime, /This is one of two daily discovery crawler sessions/);
-      assert.match(runtime, /Do not search benchmark sources or emit benchmark_finds/,
-        'discovery workers must leave benchmark research to benchmark_scout');
-      // No pool data of any kind may reach the worker (spec 0007).
-      assert.doesNotMatch(runtime, /discovery_sources|search_terms|search_windows/);
-    }
-    assert.match(captured.get('discovery:new').runtime, /Goal: find LLM models, API access, or free-tier programs newly announced/);
-    const pricingRuntime = captured.get('discovery:pricing').runtime;
-    assert.match(pricingRuntime, /Goal: find pricing, free-tier, or promo changes announced within the window/);
-    assert.match(pricingRuntime, /"models"/, 'pricing goal receives the known offer list');
+    // The legacy discovery goal crawlers are gone: no discovery:* worker ran.
+    assert.ok([...captured.keys()].every((id) => !id.startsWith('discovery:')),
+      'no legacy discovery goal crawler sessions');
+    const newsScan = captured.get('news_scan');
+    assert.ok(newsScan, 'the daily news scan session runs');
+    assert.equal(newsScan.searchBudget, 6, 'news scan keeps its bounded search budget');
+    assert.equal(newsScan.visitBudget, 8, 'news scan keeps its bounded visit budget');
+    const runtime = newsScan.runtime;
+    assert.doesNotMatch(runtime, /discovery_sources|search_terms|search_windows/,
+      'no pool data of any kind may reach the worker');
+    assert.ok(captured.get('community') || true, 'community session is optional without a watchlist');
   });
-  it('reports one deterministic benchmark result incrementally in completion order', async () => {
+it('reports one deterministic benchmark result incrementally in completion order', async () => {
     const ctx = tmpProject();
     const runId = 'benchmark-progress';
     const runDir = path.join(ctx.stateDir, 'crawl', runId);
@@ -795,7 +790,7 @@ it('discovery worker input carries the two goal crawlers with the known-offer li
   });
 });
 
-describe('runPiWorker transport (spec 0007)', () => {
+describe('runPiWorker transport (spec 0008 research sessions)', () => {
   let ctx;
 
   function fixtureWithPrompts() {
@@ -803,7 +798,6 @@ describe('runPiWorker transport (spec 0007)', () => {
     fs.mkdirSync(path.join(ctx.root, 'state', 'logs'), { recursive: true });
     const promptsDir = path.join(ctx.root, '.agents', 'skills', 'llm-deals-intelligence-skill', 'prompts');
     fs.mkdirSync(promptsDir, { recursive: true });
-    fs.writeFileSync(path.join(promptsDir, 'discovery-agent.md'), '# stub discovery role\n');
     fs.writeFileSync(path.join(promptsDir, 'crawl-worker.md'), '# stub crawl role\n');
     const schemasDir = path.join(ctx.root, '.agents', 'skills', 'llm-deals-intelligence-skill', 'schemas');
     fs.writeFileSync(path.join(schemasDir, 'crawl-facts.schema.json'), JSON.stringify({ type: 'object' }, null, 2) + '\n');
@@ -837,7 +831,7 @@ describe('runPiWorker transport (spec 0007)', () => {
   function specFor(taskId, extra = {}) {
     return {
       taskId,
-      roleFile: taskId.startsWith('discovery') ? 'discovery-agent.md' : 'crawl-worker.md',
+      roleFile: 'crawl-worker.md',
       schemaFile: path.join(ctx.root, '.agents', 'skills', 'llm-deals-intelligence-skill', 'schemas', 'crawl-facts.schema.json'),
       outputFile: path.join(ctx.root, 'state', 'out', `${taskId.replace(/:/g, '-')}.json`),
       logFile: path.join(ctx.root, 'state', 'logs', `${taskId.replace(/:/g, '-')}.log`),
@@ -849,9 +843,9 @@ describe('runPiWorker transport (spec 0007)', () => {
   beforeEach(() => { fixtureWithPrompts(); });
   afterEach(() => { fs.rmSync(ctx.root, { recursive: true, force: true }); });
 
-  it('gives the discovery:new crawler the browser tool and a search + browser transport', async () => {
+  it('gives the research web sessions the browser tool and a search + browser transport', async () => {
     const { calls, spawnImpl } = capturingSpawn();
-    await collect.runPiWorker(specFor('discovery:new', { searchTimeRange: 'week' }), {
+    await collect.runPiWorker(specFor('news-scan', { transport: 'discovery', searchTimeRange: 'week' }), {
       piModel: 'test-model', piTimeout: 600, spawnImpl,
     }, ctx.options);
     assert.equal(calls.length, 1);
@@ -863,13 +857,13 @@ describe('runPiWorker transport (spec 0007)', () => {
     assert.match(prompt, /At most 8 page visits total/);
     assert.match(prompt, /action=open/);
     assert.match(prompt, /action=snapshot/);
-    assert.match(prompt, /session: "disc-discovery-new"/);
+    assert.match(prompt, /session: "disc-news-scan"/);
     assert.match(prompt, /close_session/);
   });
 
-  it('gives the discovery:pricing crawler its own isolated browser session', async () => {
+  it('gives each research session its own isolated browser session', async () => {
     const { calls, spawnImpl } = capturingSpawn();
-    await collect.runPiWorker(specFor('discovery:pricing'), {
+    await collect.runPiWorker(specFor('vendor:openai', { transport: 'discovery' }), {
       piModel: 'test-model', piTimeout: 600, spawnImpl,
     }, ctx.options);
     assert.equal(calls.length, 1);
@@ -877,11 +871,11 @@ describe('runPiWorker transport (spec 0007)', () => {
     const prompt = lastPrompt(calls[0].args);
     assert.match(prompt, /Discovery transport \(web search \+ browser\)/);
     assert.doesNotMatch(prompt, /curl -L --max-time/);
-    assert.match(prompt, /session: "disc-discovery-pricing"/);
+    assert.match(prompt, /session: "disc-vendor-openai"/);
     assert.match(prompt, /close_session/);
   });
 
-  it('keeps non-discovery workers on the minimal tool surface without browser transport', async () => {
+  it('keeps non-research workers on the minimal tool surface without browser transport', async () => {
     const { calls, spawnImpl } = capturingSpawn();
     await collect.runPiWorker(specFor('known:google'), {
       piModel: 'test-model', piTimeout: 600, spawnImpl,

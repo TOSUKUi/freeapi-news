@@ -112,15 +112,7 @@ function runCycle(ctx, runId, artifactsByTask, options = {}) {
   fs.writeFileSync(path.join(runDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
   db.startRun(runId, lanes.toStartRunTasks(manifest), ctx.options);
   for (const [taskId, artifact] of Object.entries(artifactsByTask)) {
-    if (taskId === 'discovery') {
-      // Spec 0005: the discovery lane is chunked; the legacy single artifact
-      // applies to every discovery chunk task, re-stamped with each task id.
-      for (const task of manifest.tasks.filter((t) => t.kind === 'discovery')) {
-        writeArtifact(ctx, runDir, task.task_id, { ...artifact, task_id: task.task_id });
-      }
-    } else {
-      writeArtifact(ctx, runDir, taskId, artifact);
-    }
+    writeArtifact(ctx, runDir, taskId, artifact);
   }
   const ingest = lanes.ingestTaskArtifacts(runId, runDir, ctx.options);
   const reduce = lanes.reduceLanes(runId, runDir, {
@@ -198,7 +190,7 @@ function knownModel(id, overrides = {}) {
 
 // ── Manifest ─────────────────────────────────────────────────────
 
-test('buildLaneManifest splits catalog, known refresh, and discovery lanes', (t) => {
+test('buildLaneManifest splits catalog and known refresh lanes only (spec 0008 Phase 5)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
@@ -225,23 +217,16 @@ test('buildLaneManifest splits catalog, known refresh, and discovery lanes', (t)
   const manifest = lanes.buildLaneManifest(ctx.options);
   const byId = Object.fromEntries(manifest.tasks.map((task) => [task.task_id, task]));
 
-  // Spec 0007: the discovery lane is two fixed goal crawlers.
-  const discoveryIds = manifest.tasks
-    .filter((task) => task.kind === 'discovery')
-    .map((task) => task.task_id)
-    .sort();
-  assert.deepEqual(discoveryIds, ['discovery:new', 'discovery:pricing']);
+  // Spec 0008 Phase 5: the legacy discovery goal crawlers are retired; the
+  // research sessions (news scan, vendor deep dive, model fan out) are
+  // planned at runtime and registered after the static manifest.
+  assert.equal(manifest.tasks.filter((task) => task.kind === 'discovery').length, 0,
+    'no legacy discovery tasks in the manifest');
+  assert.ok(!('discovery' in manifest.lanes), 'no discovery lane in the manifest');
   assert.deepEqual(
     Object.keys(byId).sort(),
-    ['catalog:openrouter', 'known:google', ...discoveryIds].sort()
+    ['catalog:openrouter', 'known:google'].sort()
   );
-  assert.deepEqual(byId['discovery:new'].discovery_goal, 'new');
-  assert.deepEqual(byId['discovery:pricing'].discovery_goal, 'pricing');
-  for (const id of discoveryIds) {
-    assert.equal(byId[id].kind, 'discovery');
-    assert.deepEqual(byId[id].assigned_model_ids, []);
-    assert.equal(byId[id].output, `artifacts/${id.replace(/:/g, '-')}.json`);
-  }
 
   assert.equal(byId['catalog:openrouter'].kind, 'catalog');
   assert.deepEqual(byId['catalog:openrouter'].assigned_model_ids, ['acme/a:free', 'acme/b:free'], 'stale offers are still assigned');
@@ -254,81 +239,76 @@ test('buildLaneManifest splits catalog, known refresh, and discovery lanes', (t)
 
   assert.equal(manifest.lanes.known.assigned_offers, 3);
   assert.deepEqual(manifest.lanes.catalog.providers, ['openrouter']);
-  assert.equal(manifest.lanes.discovery.assigned, 2, 'two goal crawlers per run');
-  assert.deepEqual(manifest.lanes.discovery.goals, ['new', 'pricing']);
   // startRun accepts the slim rows.
   db.startRun('manifest-run', lanes.toStartRunTasks(manifest), ctx.options);
   const { tasks } = db.loadRunCandidate('manifest-run', ctx.options);
-  assert.equal(tasks.length, 2 + discoveryIds.length);
+  assert.equal(tasks.length, 2);
   const known = tasks.find((task) => task.task_id === 'known:google');
   assert.deepEqual(known.assigned_json, ['gemini-2.5-pro-free']);
-  const newTask = tasks.find((task) => task.task_id === 'discovery:new');
-  assert.deepEqual(newTask.assigned_json, { goal: 'new' }, 'goal persists through the slim row');
-  const pricingTask = tasks.find((task) => task.task_id === 'discovery:pricing');
-  assert.deepEqual(pricingTask.assigned_json, { goal: 'pricing' });
 });
 
 
-test('buildDiscoveryTasks returns exactly the two goal crawlers (spec 0007)', () => {
-  const tasks = lanes.buildDiscoveryTasks();
-  assert.deepEqual(tasks.map((task) => task.task_id), ['discovery:new', 'discovery:pricing']);
-  assert.deepEqual(tasks.map((task) => task.discovery_goal), ['new', 'pricing']);
-  for (const task of tasks) {
-    assert.equal(task.kind, 'discovery');
-    assert.equal(task.provider_key, null);
-    assert.deepEqual(task.assigned_model_ids, []);
-    assert.equal(task.output, `artifacts/${task.task_id.replace(/:/g, '-')}.json`);
-  }
-  assert.equal(lanes.discoveryGoalOfTask({ task_id: 'discovery:pricing' }), 'pricing');
-  assert.equal(lanes.discoveryGoalOfTask({ task_id: 'discovery:pricing', assigned_json: { goal: 'new' } }), 'new');
-  assert.equal(lanes.discoveryGoalOfTask({ task_id: 'discovery:new' }), 'new');
-  assert.equal(lanes.discoveryGoalOfTask({ task_id: 'discovery:new', assigned_json: { goal: 'pricing' } }), 'pricing');
-  assert.deepEqual(lanes.DISCOVERY_GOALS, ['new', 'pricing']);
+test('the legacy discovery goal crawlers are retired (spec 0008 Phase 5)', () => {
+  assert.equal(lanes.buildDiscoveryTasks, undefined, 'buildDiscoveryTasks is removed');
+  assert.equal(lanes.discoveryGoalOfTask, undefined, 'discoveryGoalOfTask is removed');
+  assert.equal(lanes.DISCOVERY_GOALS, undefined, 'DISCOVERY_GOALS is removed');
 });
 
 
-test('pricing-crawler facts about known offers become news, never candidates or offer changes (spec 0007)', (t) => {
+test('research lane facts about a live known offer never become candidates or offer changes (spec 0007 AC-2 carried over)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
   seedOffers(ctx, [offerSeed()]);
 
-  const { runDir, reduce } = runCycle(ctx, 'run-news', {
-    'known:google': knownArtifact({ models: [knownModel('gemini-2.5-pro-free')] }),
-    discovery: {
-      task_id: 'discovery',
-      status: 'complete',
-      models: [{
-        model_id: 'gemini-2.5-pro-free',
-        provider_key: 'google',
-        model_name: 'Gemini 2.5 Pro',
-        pricing_text: 'Gemini 2.5 Pro input is now $0.50 per 1M tokens',
-        docs_url: 'https://ai.google.dev/pricing',
-      }],
-      errors: [],
-    },
+  const manifest = lanes.buildLaneManifest({ ...ctx.options, runId: 'run-research' });
+  const runDir = runDirFor(ctx, 'run-research');
+  fs.writeFileSync(path.join(runDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+  db.startRun('run-research', lanes.toStartRunTasks(manifest), ctx.options);
+  db.addRunTasks('run-research', [{
+    task_id: 'model_fanout:google/gemini-2.5-pro-free',
+    kind: 'model_fanout',
+    provider_key: null,
+    assigned_model_ids: ['gemini-2.5-pro-free'],
+  }], ctx.options);
+  writeArtifact(ctx, runDir, 'known:google', knownArtifact({ models: [knownModel('gemini-2.5-pro-free')] }));
+  writeArtifact(ctx, runDir, 'model_fanout:google/gemini-2.5-pro-free', {
+    schema_version: 1,
+    task_id: 'model_fanout:google/gemini-2.5-pro-free',
+    status: 'complete',
+    crawled_at: '2026-07-31T00:00:00.000Z',
+    vendor_key: 'google',
+    announcements: [],
+    pricing_claims: [{
+      model_id: 'gemini-2.5-pro-free',
+      provider_key: 'google',
+      pricing_text: 'Gemini 2.5 Pro input is now $0.50 per 1M tokens',
+    }],
+    distribution: [],
+    models: [{
+      model_id: 'gemini-2.5-pro-free',
+      provider_key: 'google',
+      model_name: 'Gemini 2.5 Pro',
+      pricing_text: 'Gemini 2.5 Pro input is now $0.50 per 1M tokens',
+    }],
+    leads: [],
+    errors: [],
   });
 
-  // The fact matches a known offer: it must not become a candidate.
-  assert.equal(reduce.discoveryCandidates.length, 0, 'known-offer facts never become candidates');
-  // ...but the pricing crawler turns it into editorial news (once, from the
-  // pricing goal; the new goal ignores it).
-  assert.equal(reduce.discoveryNews.length, 1, 'pricing goal emits one news entry');
-  const news = reduce.discoveryNews[0];
-  assert.equal(news.provider_key, 'google');
-  assert.equal(news.exact_model_id, 'gemini-2.5-pro-free');
-  assert.match(news.pricing_text, /\$0\.50 per 1M tokens/);
-  assert.equal(news.task_id, 'discovery:pricing');
+  lanes.ingestTaskArtifacts('run-research', runDir, ctx.options);
+  const reduce = lanes.reduceLanes('run-research', runDir, {
+    ...ctx.options,
+    now: '2026-07-31T00:00:00.000Z',
+  });
 
-  const newsFile = JSON.parse(fs.readFileSync(path.join(runDir, 'reduced', 'discovery-news.json'), 'utf8'));
-  assert.equal(newsFile.news.length, 1);
-  assert.equal(newsFile.news[0].provider_key, 'google');
-
-  // The known offer state is untouched by the discovery lane (AC-2).
+  // The fact matches a live known offer: it must not become a candidate,
+  // and the offer state must be untouched by the research lanes.
+  assert.equal(reduce.discoveryCandidates.length, 0, 'research facts about a live known offer never become candidates');
   const offer = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
   assert.equal(offer.status, 'verified');
   assert.equal(offer.consecutive_failures, 0);
 });
+
 
 test('fan out vendor-facts offers become discovery candidates (spec 0008 AC)', (t) => {
   const ctx = tmpProject();
@@ -417,11 +397,6 @@ test('ingest rejects identity mismatch and demotes incomplete complete artifacts
 
   // known:google claims the wrong task id.
   writeArtifact(ctx, runDir, 'known:google', knownArtifact({ task_id: 'known:somebody-else' }));
-  // discovery omits an assigned offer while claiming complete... discovery
-  // has no assignment; use a second run for the demotion case instead.
-  for (const task of manifest.tasks.filter((tt) => tt.kind === 'discovery')) {
-    writeArtifact(ctx, runDir, task.task_id, { task_id: task.task_id, status: 'failed', models: [], errors: ['nothing found'] });
-  }
 
   lanes.ingestTaskArtifacts('run-id', runDir, ctx.options);
   const { tasks } = db.loadRunCandidate('run-id', ctx.options);
@@ -435,9 +410,6 @@ test('ingest rejects identity mismatch and demotes incomplete complete artifacts
   writeArtifact(ctx, runDir2, 'known:google', knownArtifact({
     models: [knownModel('model-one')], // model-two omitted
   }));
-  for (const task of manifest.tasks.filter((tt) => tt.kind === 'discovery')) {
-    writeArtifact(ctx, runDir2, task.task_id, { task_id: task.task_id, status: 'complete', models: [] });
-  }
   lanes.ingestTaskArtifacts('run-2', runDir2, ctx.options);
   const { tasks: tasks2 } = db.loadRunCandidate('run-2', ctx.options);
   const known2 = tasks2.find((task) => task.task_id === 'known:google');
@@ -472,7 +444,6 @@ test('a failed known refresh carries the offer forward as stale, not removed (AC
 
   const { reduce } = runCycle(ctx, 'run-fail', {
     'known:google': knownArtifact({ status: 'failed', models: [], errors: ['page moved, search found nothing'] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   }, { now: '2026-07-31T00:00:00.000Z' });
 
   assert.equal(reduce.coverage.known.assigned, 1);
@@ -497,7 +468,6 @@ test('four consecutive failed runs move stale to caution without removal, then s
 
   const failedArtifacts = {
     'known:google': knownArtifact({ status: 'failed', models: [], errors: ['timeout'] }),
-    discovery: { task_id: 'discovery', status: 'failed', models: [], errors: [] },
   };
   const cautionStates = [];
   for (const runId of ['run-1', 'run-2', 'run-3', 'run-4']) {
@@ -517,7 +487,6 @@ test('four consecutive failed runs move stale to caution without removal, then s
   // A later successful verification resets everything.
   const { reduce } = runCycle(ctx, 'run-5', {
     'known:google': knownArtifact({ models: [knownModel('gemini-2.5-pro-free', { free_quota_text: 'free tier, 200 requests per day' })] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   }, { now: '2026-08-05T00:00:00.000Z' });
   const row = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
   assert.equal(row.status, 'verified');
@@ -543,7 +512,6 @@ test('a partial artifact verifies covered offers and stales omitted ones (AC-11)
       models: [knownModel('model-one')],
       errors: ['model-two page unreachable'],
     }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
 
   assert.equal(offerRow(ctx, 'google', 'model-one').status, 'verified');
@@ -568,7 +536,6 @@ test('a valid catalog verifies present free offers and removes omitted exact ids
 
   const { reduce } = runCycle(ctx, 'run-cat', {
     'catalog:openrouter': catalogArtifact({ models: [catalogModel('acme/a:free'), catalogModel('acme/new:free')] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   }, { now: '2026-07-31T00:00:00.000Z' });
 
   const a = offerRow(ctx, 'openrouter', 'acme/a:free');
@@ -626,7 +593,6 @@ test('a successful catalog persists typed prices on every admitted offer (AC-3)'
       catalogModel('alpha/model:free'),
       catalogModel('zeta/model:free'),
     ] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
 
   const expected = ['alpha/model:free', 'openrouter/free', 'zeta/model:free'];
@@ -652,7 +618,6 @@ test('an exact id that became paid is confirmed removed with pricing evidence (A
 
   runCycle(ctx, 'run-paid', {
     'catalog:openrouter': catalogArtifact({ models: [catalogModel('acme/a:free', { free: false })] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
 
   const row = offerRow(ctx, 'openrouter', 'acme/a:free');
@@ -677,7 +642,6 @@ test('a listed model without pricing stays stale instead of being falsely remove
   unpriced.pricing_hash = null;
   const { reduce } = runCycle(ctx, 'run-unpriced', {
     'catalog:openrouter': catalogArtifact({ models: [unpriced] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
 
   const row = offerRow(ctx, 'openrouter', 'acme/a:free');
@@ -702,7 +666,6 @@ test('a reappearing exact id returns from confirmed_removed to verified (AC-5)',
 
   runCycle(ctx, 'run-back', {
     'catalog:openrouter': catalogArtifact({ models: [catalogModel('acme/b:free')] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
 
   const row = offerRow(ctx, 'openrouter', 'acme/b:free');
@@ -721,7 +684,6 @@ test('a valid catalog with zero free offers authoritatively removes prior free o
 
   const { reduce } = runCycle(ctx, 'run-zero-free', {
     'catalog:openrouter': catalogArtifact({ models: [catalogModel('acme/a:free', { free: false }), catalogModel('acme/other', { free: false })] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
 
   assert.equal(reduce.coverage.catalog.available.length, 1, 'nonempty valid catalog stays authoritative');
@@ -738,7 +700,6 @@ test('an unavailable catalog preserves prior offers as stale and never removes (
 
   const { reduce } = runCycle(ctx, 'run-down', {
     'catalog:openrouter': catalogArtifact({ status: 'failed', available: false, models: [], errors: ['catalog fetch failed after 2 attempts: timeout'] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
 
   const row = offerRow(ctx, 'openrouter', 'acme/a:free');
@@ -770,7 +731,6 @@ test('a failed price fetch keeps the last verified price and date (AC-8)', (t) =
   // keep the typed prices and the price confirmation date.
   const { reduce } = runCycle(ctx, 'run-fetch-fail', {
     'known:google': knownArtifact({ status: 'failed', models: [], errors: ['simulated outage'] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
 
   assert.equal(reduce.canPromote, false, 'zero verified blocks promotion');
@@ -812,7 +772,6 @@ test('an expired discounted price update is rejected and the prior prices and da
       discount_start_at: '2026-07-01T00:00:00.000Z',
       discount_end_at: '2026-08-01T00:00:00.000Z',
     })], errors: [] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   }, { now: '2026-08-15T00:00:00.000Z' });
 
   assert.equal(reduce.canPromote, true);
@@ -845,14 +804,12 @@ test('a confirmed price increase removes the offer; a later decrease restores it
   // Catalog now lists the same id at a price above the ULTRA_LOW ceiling.
   runCycle(ctx, 'run-increase', {
     'catalog:openrouter': catalogArtifact({ models: [catalogModel('acme/a:free', { free: false })] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
   assert.equal(offerRow(ctx, 'openrouter', 'acme/a:free').status, 'confirmed_removed');
 
   // Later the price drops back to free: the offer returns to verified.
   runCycle(ctx, 'run-decrease', {
     'catalog:openrouter': catalogArtifact({ models: [catalogModel('acme/a:free', { free: true })] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
   const restored = offerRow(ctx, 'openrouter', 'acme/a:free');
   assert.equal(restored.status, 'verified');
@@ -870,7 +827,6 @@ test('a changed pricing hash verifies the offer and queues a pricing change cand
 
   const { reduce } = runCycle(ctx, 'run-price', {
     'catalog:openrouter': catalogArtifact({ models: [catalogModel('acme/a:free', { pricingHash: 'new'.padEnd(64, '1') })] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
 
   const row = offerRow(ctx, 'openrouter', 'acme/a:free');
@@ -900,7 +856,6 @@ test('a valid official removal statement confirms removal; an invalid one is ign
         { model_id: 'model-two', source_url: 'https://ai.google.dev/announcement', reason: 'free API ended on 2026-07-30', _evidence_verified: true },
       ],
     }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
 
   const two = offerRow(ctx, 'google', 'model-two');
@@ -919,7 +874,6 @@ test('a valid official removal statement confirms removal; an invalid one is ign
       models: [],
       removals: [{ model_id: 'model-two', source_url: 'ftp://nope.example', reason: 'ended' }],
     }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
   const row2 = offerRow(ctx2, 'google', 'model-two');
   assert.equal(row2.status, 'stale');
@@ -961,7 +915,6 @@ test('official removals pass schema, evidence audit, and reducer gates', async (
   seedOffers(ctx, [offerSeed({ exact_model_id: 'model-two', canonical_model_id: 'model-two' })]);
   runCycle(ctx, 'run-audited-removal', {
     'known:google': official,
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
   assert.equal(offerRow(ctx, 'google', 'model-two').status, 'confirmed_removed');
 
@@ -980,7 +933,6 @@ test('official removals pass schema, evidence audit, and reducer gates', async (
     seedOffers(badCtx, [offerSeed({ exact_model_id: 'model-two', canonical_model_id: 'model-two' })]);
     runCycle(badCtx, 'run-rejected-removal', {
       'known:google': bad,
-      discovery: { task_id: 'discovery', status: 'complete', models: [] },
     });
     assert.equal(offerRow(badCtx, 'google', 'model-two').status, 'stale');
     fs.rmSync(badCtx.root, { recursive: true, force: true });
@@ -995,7 +947,6 @@ test('official removals pass schema, evidence audit, and reducer gates', async (
   seedOffers(contradictionCtx, [offerSeed({ exact_model_id: 'model-two', canonical_model_id: 'model-two' })]);
   runCycle(contradictionCtx, 'run-contradictory-removal', {
     'known:google': contradictory,
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
   assert.equal(offerRow(contradictionCtx, 'google', 'model-two').status, 'stale');
   fs.rmSync(contradictionCtx.root, { recursive: true, force: true });
@@ -1003,47 +954,79 @@ test('official removals pass schema, evidence audit, and reducer gates', async (
 
 // ── Discovery isolation (AC-2) ───────────────────────────────────
 
-test('discovery failure never removes or changes a known offer (AC-2)', (t) => {
+test('research lane failure never removes or changes a known offer (spec 0007 AC-2 carried over)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
   seedOffers(ctx, [offerSeed()]);
 
-  const { reduce } = runCycle(ctx, 'run-disc-fail', {
-    'known:google': knownArtifact({ models: [knownModel('gemini-2.5-pro-free')] }),
-    discovery: { task_id: 'discovery', status: 'failed', models: [], errors: ['search quota exhausted'] },
+  const manifest = lanes.buildLaneManifest({ ...ctx.options, runId: 'run-research-fail' });
+  const runDir = runDirFor(ctx, 'run-research-fail');
+  fs.writeFileSync(path.join(runDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+  db.startRun('run-research-fail', lanes.toStartRunTasks(manifest), ctx.options);
+  db.addRunTasks('run-research-fail', [{
+    task_id: 'news_scan',
+    kind: 'news_scan',
+    provider_key: null,
+  }], ctx.options);
+  writeArtifact(ctx, runDir, 'known:google', knownArtifact({ models: [knownModel('gemini-2.5-pro-free')] }));
+  // No artifact for the research task: ingest marks it failed.
+  lanes.ingestTaskArtifacts('run-research-fail', runDir, ctx.options);
+  const reduce = lanes.reduceLanes('run-research-fail', runDir, {
+    ...ctx.options,
+    now: '2026-07-31T00:00:00.000Z',
   });
 
-  assert.ok(reduce.coverage.discovery.assigned > 0, 'chunked discovery tasks exist');
-  assert.equal(reduce.coverage.discovery.failed, reduce.coverage.discovery.assigned,
-    'every chunk failure is counted');
-  assert.equal(reduce.canPromote, true, 'discovery failure does not block promotion');
+  assert.equal(reduce.coverage.research.assigned, 1);
+  assert.equal(reduce.coverage.research.failed, 1, 'the failed research session is counted');
+  assert.equal(reduce.canPromote, true, 'research failure does not block promotion');
   const row = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
   assert.equal(row.status, 'verified');
   assert.equal(row.consecutive_failures, 0);
 });
 
-test('discovery models matching known offers are not duplicated into candidates (AC-2)', (t) => {
+test('research lane models matching known offers are not duplicated into candidates (spec 0007 AC-2 carried over)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
   seedOffers(ctx, [offerSeed()]);
 
-  const { reduce } = runCycle(ctx, 'run-disc', {
-    'known:google': knownArtifact({ models: [knownModel('gemini-2.5-pro-free')] }),
-    discovery: {
-      task_id: 'discovery',
-      status: 'complete',
-      models: [
-        { model_id: 'gemini-2.5-pro-free', provider_key: 'google', model_name: 'known one' },
-        { model_id: 'brand-new-model', provider_key: 'google', model_name: 'Brand New' },
-      ],
-    },
+  const manifest = lanes.buildLaneManifest({ ...ctx.options, runId: 'run-research-dedupe' });
+  const runDir = runDirFor(ctx, 'run-research-dedupe');
+  fs.writeFileSync(path.join(runDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+  db.startRun('run-research-dedupe', lanes.toStartRunTasks(manifest), ctx.options);
+  db.addRunTasks('run-research-dedupe', [{
+    task_id: 'vendor_deep_dive:acme',
+    kind: 'vendor_deep_dive',
+    provider_key: null,
+  }], ctx.options);
+  writeArtifact(ctx, runDir, 'known:google', knownArtifact({ models: [knownModel('gemini-2.5-pro-free')] }));
+  writeArtifact(ctx, runDir, 'vendor_deep_dive:acme', {
+    schema_version: 1,
+    task_id: 'vendor_deep_dive:acme',
+    status: 'complete',
+    crawled_at: '2026-07-31T00:00:00.000Z',
+    vendor_key: 'google',
+    announcements: [],
+    pricing_claims: [],
+    distribution: [],
+    models: [
+      { model_id: 'gemini-2.5-pro-free', provider_key: 'google', model_name: 'known one' },
+      { model_id: 'brand-new-model', provider_key: 'google', model_name: 'Brand New' },
+    ],
+    leads: [],
+    errors: [],
   });
 
-  assert.equal(reduce.discoveryCandidates.length, 1);
+  lanes.ingestTaskArtifacts('run-research-dedupe', runDir, ctx.options);
+  const reduce = lanes.reduceLanes('run-research-dedupe', runDir, {
+    ...ctx.options,
+    now: '2026-07-31T00:00:00.000Z',
+  });
+
+  assert.equal(reduce.discoveryCandidates.length, 1, 'only the genuinely new model becomes a candidate');
   assert.equal(reduce.discoveryCandidates[0].exact_model_id, 'brand-new-model');
-  assert.equal(reduce.discoveryCandidates[0].source, 'discovery');
+  assert.equal(reduce.discoveryCandidates[0].source, 'research');
 });
 
 // ── Promotion gate (AC-4) ────────────────────────────────────────
@@ -1056,7 +1039,6 @@ test('zero verified known offers with assignments blocks promotion but persists 
 
   const { reduce } = runCycle(ctx, 'run-gate', {
     'known:google': knownArtifact({ status: 'failed', models: [], errors: ['all pages down'] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
 
   assert.equal(reduce.canPromote, false);
@@ -1074,7 +1056,6 @@ test('a bootstrap run with no known offers needs deterministic catalog success (
 
   const ok = runCycle(ctx, 'run-boot-ok', {
     'catalog:openrouter': catalogArtifact({ models: [catalogModel('acme/a:free')] }),
-    discovery: { task_id: 'discovery', status: 'failed', models: [], errors: [] },
   });
   assert.equal(ok.manifest.lanes.known.assigned_offers, 0);
   assert.equal(ok.reduce.canPromote, true);
@@ -1085,7 +1066,6 @@ test('a bootstrap run with no known offers needs deterministic catalog success (
   setup(ctx2);
   const bad = runCycle(ctx2, 'run-boot-bad', {
     'catalog:openrouter': catalogArtifact({ status: 'failed', available: false, models: [], errors: ['HTTP 500'] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
   assert.equal(bad.reduce.canPromote, false);
   assert.match(bad.reduce.gateReason, /catalog success/);
@@ -1103,10 +1083,35 @@ test('reduceLanes writes the coverage report and discovery candidates to the run
     offerSeed({ exact_model_id: 'model-one' }),
   ]);
 
-  const { manifest, runDir, reduce } = runCycle(ctx, 'run-out', {
-    'catalog:openrouter': catalogArtifact({ models: [catalogModel('acme/a:free')] }),
-    'known:google': knownArtifact({ models: [knownModel('model-one')] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [{ model_id: 'fresh', provider_key: 'google' }] },
+  const manifest = lanes.buildLaneManifest({ ...ctx.options, runId: 'run-out' });
+  const runDir = runDirFor(ctx, 'run-out');
+  fs.writeFileSync(path.join(runDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+  db.startRun('run-out', lanes.toStartRunTasks(manifest), ctx.options);
+  db.addRunTasks('run-out', [{
+    task_id: 'model_fanout:acme/new',
+    kind: 'model_fanout',
+    provider_key: null,
+    assigned_model_ids: ['acme/new'],
+  }], ctx.options);
+  writeArtifact(ctx, runDir, 'catalog:openrouter', catalogArtifact({ models: [catalogModel('acme/a:free')] }));
+  writeArtifact(ctx, runDir, 'known:google', knownArtifact({ models: [knownModel('model-one')] }));
+  writeArtifact(ctx, runDir, 'model_fanout:acme/new', {
+    schema_version: 1,
+    task_id: 'model_fanout:acme/new',
+    status: 'complete',
+    crawled_at: '2026-07-31T00:00:00.000Z',
+    vendor_key: 'acme',
+    announcements: [],
+    pricing_claims: [],
+    distribution: [],
+    models: [{ model_id: 'fresh', provider_key: 'google' }],
+    leads: [],
+    errors: [],
+  });
+  lanes.ingestTaskArtifacts('run-out', runDir, ctx.options);
+  const reduce = lanes.reduceLanes('run-out', runDir, {
+    ...ctx.options,
+    now: '2026-07-31T00:00:00.000Z',
   });
 
   const coverageFile = path.join(runDir, 'reduced', 'lane-coverage.json');
@@ -1117,10 +1122,7 @@ test('reduceLanes writes the coverage report and discovery candidates to the run
   const coverage = JSON.parse(fs.readFileSync(coverageFile, 'utf8'));
   assert.equal(coverage.can_promote, true);
   assert.deepEqual(coverage.coverage.known, { assigned: 2, verified: 2, stale: 0, removed: 0, failed: 0 });
-  const discoveryCount = manifest.tasks.filter((task) => task.kind === 'discovery').length;
-  assert.deepEqual(coverage.coverage.discovery, {
-    assigned: discoveryCount, complete: discoveryCount, partial: 0, failed: 0,
-  });
+  assert.deepEqual(coverage.coverage.research, { assigned: 1, complete: 1, partial: 0, failed: 0 });
   assert.deepEqual(coverage.coverage.catalog.available, ['openrouter']);
 
   const candidates = JSON.parse(fs.readFileSync(candidatesFile, 'utf8'));
@@ -1140,9 +1142,8 @@ test('a valid unregistered provider candidate is accepted and written to the run
   ]);
 
   const { runDir, reduce } = runCycle(ctx, 'run-provider', {
-    'known:google': knownArtifact({ models: [knownModel('model-one')] }),
-    discovery: {
-      task_id: 'discovery', status: 'complete', models: [],
+    'known:google': knownArtifact({
+      models: [knownModel('model-one')],
       provider_candidates: [{
         provider_key: 'neonstack',
         label: 'NeonStack AI',
@@ -1151,7 +1152,7 @@ test('a valid unregistered provider candidate is accepted and written to the run
         model_id_pattern: '^neonstack/[a-z0-9-]+$',
         delivery_type: 'official',
       }],
-    },
+    }),
   });
 
   assert.equal(reduce.providerCandidates.length, 1);
@@ -1177,16 +1178,15 @@ test('a malformed provider candidate is rejected and never touches the canonical
   ]);
 
   const { reduce } = runCycle(ctx, 'run-bad-provider', {
-    'known:google': knownArtifact({ models: [knownModel('model-one')] }),
-    discovery: {
-      task_id: 'discovery', status: 'complete', models: [],
+    'known:google': knownArtifact({
+      models: [knownModel('model-one')],
       provider_candidates: [
         { provider_key: 'no-label', base_url: 'https://x.example/v1', docs_url: 'https://docs.x.example', model_id_pattern: '^x/' },
         { provider_key: 'Bad Key!', label: 'Bad', base_url: 'https://bad.example/v1', docs_url: 'https://docs.bad.example', model_id_pattern: '^bad/' },
         { provider_key: 'openrouter', label: 'Duplicate', base_url: 'https://openrouter.ai/api/v1', docs_url: 'https://openrouter.ai/docs/quickstart', model_id_pattern: '^openrouter/' },
         { provider_key: 'nobase', label: 'No Base', base_url: 'not-a-url', docs_url: 'https://docs.nobase.example', model_id_pattern: '^nb/' },
       ],
-    },
+    }),
   });
 
   assert.equal(reduce.providerCandidates.length, 4);
@@ -1374,7 +1374,6 @@ test('a catalog model at per-token prices that normalize over the limit is never
         pricing_hash: 'x'.repeat(64),
       },
     ] }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
 
   // No offer row is created for a model whose normalized price is over limit.
@@ -1398,7 +1397,6 @@ test('known refresh stores data policy condition facts on verification', (t) => 
         data_policy_url: 'https://ai.google.dev/gemini-api/docs/data-governance',
       })],
     }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
   const row = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
   assert.equal(row.status, 'verified');
@@ -1425,7 +1423,6 @@ test('an omitted data policy keeps the prior value (fail-safe carry over)', (t) 
     'known:google': knownArtifact({
       models: [knownModel('gemini-2.5-pro-free')],
     }),
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
   const row = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
   assert.equal(row.status, 'verified');
@@ -1447,7 +1444,6 @@ test('a failed known refresh keeps the data policy and marks stale', (t) => {
   }, ctx.options);
   runCycle(ctx, 'run-dp-fail', {
     'known:google': { task_id: 'known:google', status: 'failed', error: { message: 'fetch failed' } },
-    discovery: { task_id: 'discovery', status: 'complete', models: [] },
   });
   const row = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
   assert.equal(row.status, 'stale');
