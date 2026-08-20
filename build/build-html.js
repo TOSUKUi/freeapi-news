@@ -480,6 +480,12 @@ function offerIdRows(o, tz) {
     ['怪し度', typeof o.suspicion_score === 'number' && o.suspicion_score > 0
       ? `<span class="id-val-plain train-yes">${o.suspicion_score}/5${Array.isArray(o.suspicion_reasons) && o.suspicion_reasons.length ? ` ・ ${esc(o.suspicion_reasons.join(' / '))}` : ''}</span>`
       : null],
+    ['条件', Array.isArray(o.registration_conditions) && o.registration_conditions.length
+      ? `<span class="id-val-plain">${o.registration_conditions.map(esc).join(' / ')}</span>`
+      : null],
+    ['注意', o.caution_reason || (typeof o.exclusion_reason === 'string' && o.exclusion_reason.startsWith('[stale]')
+        ? `<span class="id-val-plain train-yes">${esc(o.exclusion_reason.replace(/^\[stale\]\s*/, ''))}</span>`
+        : null)],
   ];
   return rows
     .filter((row) => row[1] !== null)
@@ -646,26 +652,6 @@ function contradictionsNote(report) {
     </div>`;
 }
 
-const WINDOW_TAG_JA = { hot: '24時間以内', warm: '72時間以内', catchup: '30日以内', undated: '日付未確認' };
-const MODEL_STATUS_JA = { announced: '発表済み', preview: 'プレビュー', beta: 'ベータ', ga: '正式提供', open_weight_planned: 'オープンウェイト予定', deprecated: '非推奨' };
-
-function newModelsSection(report) {
-  const models = Array.isArray(report.new_models) ? report.new_models : [];
-  const cards = models.map((m, i) => `<li class="model-card reveal" aria-labelledby="model-${i}">
-      <div class="model-head">
-        <h3 id="model-${i}" class="model-name">${esc(m.canonical_name || '')}</h3>
-        ${m.window ? `<span class="model-window">${esc(WINDOW_TAG_JA[m.window] || m.window)}</span>` : ''}
-        ${m.status ? `<span class="model-candidate">${esc(MODEL_STATUS_JA[m.status] || m.status)}</span>` : ''}
-      </div>
-      ${m.aliases && m.aliases.length ? `<p class="model-aliases">別名: ${m.aliases.map(esc).join(' / ')}</p>` : ''}
-      ${m.known_providers && m.known_providers.length ? `<p class="model-aliases">提供: ${m.known_providers.map(esc).join(' / ')}</p>` : ''}
-      ${m.distribution_note ? `<p class="model-dist">配信: ${esc(m.distribution_note)}</p>` : ''}
-      ${m.official_source ? `<p class="model-src"><a href="${esc(m.official_source)}" target="_blank" rel="noopener noreferrer">公式ソース ↗</a></p>` : ''}
-    </li>`).join('\n    ');
-  const body = `<ul class="model-list">${cards}</ul>`;
-  return sectionShell('new-models', '新モデル / 新サービス', models.length, body);
-}
-
 function discountValue(v) {
   if (v == null) return '未取得';
   if (v === 0) return '$0';
@@ -703,6 +689,40 @@ function discountCard(o, tz) {
       </div>
       ${connectionAccordion(o)}
     </article>`;
+}
+
+function offerSlot(id, title, offers, generatedAt, tz) {
+  if (!offers.length) {
+    return `<div id="${id}" class="offer-slot">
+        <h3 class="slot-title">${title}</h3>
+        <p class="text-sm text-muted-foreground">本日なし</p>
+      </div>`;
+  }
+  const cards = offers.map((o, i) => offerCard(o, i, generatedAt, tz)).join('\n      ');
+  return `<div id="${id}" class="offer-slot">
+      <div class="flex items-end justify-between gap-4 mb-3">
+        <h3 class="slot-title">${title}</h3>
+        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">${offers.length} 件</span>
+      </div>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">${cards}</div>
+    </div>`;
+}
+
+function discountSlot(offers, tz) {
+  if (!offers.length) {
+    return `<div id="slot-discount" class="offer-slot">
+        <h3 class="slot-title">フロンティア割引</h3>
+        <p class="text-sm text-muted-foreground">本日なし</p>
+      </div>`;
+  }
+  const cards = offers.map((o) => discountCard(o, tz)).join('\n      ');
+  return `<div id="slot-discount" class="offer-slot">
+      <div class="flex items-end justify-between gap-4 mb-3">
+        <h3 class="slot-title">フロンティア割引</h3>
+        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">${offers.length} 件</span>
+      </div>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">${cards}</div>
+    </div>`;
 }
 
 function discountSection(report, tz) {
@@ -1162,12 +1182,30 @@ details.acc[open] .chev { transform: rotate(180deg); }
 .src-url { word-break: break-all; }
 
 /* Snapshot strip. */
+.offer-slot { margin-bottom: 2.5rem; }
+.offer-slot:last-child { margin-bottom: 0; }
+.slot-title {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  padding-left: 0.65rem;
+  border-left: 3px solid var(--primary, #f5a623);
+}
 .snapshot {
   display: grid; grid-template-columns: repeat(2, 1fr);
   border: 1px solid hsl(var(--border)); border-radius: var(--radius);
   background: hsl(var(--card)); overflow: hidden;
 }
-@media (min-width: 768px) { .snapshot { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 768px) { .offer-slot { margin-bottom: 2.5rem; }
+.offer-slot:last-child { margin-bottom: 0; }
+.slot-title {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  padding-left: 0.65rem;
+  border-left: 3px solid var(--primary, #f5a623);
+}
+.snapshot { grid-template-columns: repeat(4, 1fr); } }
 .snap-cell {
   padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.15rem;
   border-right: 1px solid hsl(var(--border)); border-bottom: 1px solid hsl(var(--border));
@@ -1219,19 +1257,25 @@ function generateHTML(report) {
   const ogDesc = '検証済みの無料・割引LLM APIを、性能と鮮度で毎日ランキング。pi / Claude Code / OpenCode / Codex 向けの接続例も掲載。';
   const ogImageAlt = '無料LLM API速報 — 検証済み無料APIを性能×鮮度でランキング（毎日11:00 JST更新）';
 
-  const offers = selectRankedOffers(report);
-  const cards = offers.map((o, i) => offerCard(o, i, generatedAt, tz)).join('\n');
-  const snapshot = snapshotStrip(report, offers);
+  const ranked = selectRankedOffers(report);
+  const snapshot = snapshotStrip(report, ranked);
   const conditional = Array.isArray(report.conditional_credits) ? report.conditional_credits : [];
   const caution = Array.isArray(report.caution_offers) ? report.caution_offers : [];
-  const excluded = Array.isArray(report.excluded_offers) ? report.excluded_offers : [];
-  const rankedSection = `<section id="ranked" class="report-section" aria-labelledby="ranked-h">
-      <div class="flex items-end justify-between gap-4 mb-1">
-        <h2 id="ranked-h" class="font-display text-2xl sm:text-3xl font-bold">無料・激安APIランキング</h2>
-        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">${offers.length} 件</span>
-      </div>
-      <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">ティア</strong> → アクセス区分 (FREE/ULTRA_LOW) → 同じ Terminal Bench 版のスコア → 価格確認日 → 名前の順。無料枠の余裕度は表示のみです。</p>
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">${cards}</div>
+  const discount = Array.isArray(report.discount_offers) ? report.discount_offers : [];
+  // One offer section with three slots (operator decision 2026-08-19):
+  // 完全無料 (FREE) / 超激安 (ULTRA_LOW) / フロンティア割引 (DISCOUNTED).
+  // Conditional and caution offers are regular cards in their slot with the
+  // condition / warning written on the card (id rows), never a hidden list.
+  const freeSlot = ranked.filter((o) => o.access_kind === 'FREE');
+  const ultraSlot = ranked.filter((o) => o.access_kind !== 'FREE');
+  for (const o of conditional) (o.access_kind === 'ULTRA_LOW' ? ultraSlot : freeSlot).push(o);
+  for (const o of caution) (o.access_kind === 'ULTRA_LOW' ? ultraSlot : freeSlot).push(o);
+  const offersSection = `<section id="offers" class="report-section" aria-labelledby="offers-h">
+      <h2 id="offers-h" class="font-display text-2xl sm:text-3xl font-bold mb-1">今日のオファー</h2>
+      <p class="text-sm text-muted-foreground mb-6">完全無料 / 超激安 / フロンティア割引 の 3 枠。枠内は <strong class="text-foreground">ティア</strong> → 同じ Terminal Bench 版のスコア → 価格確認日 → 名前の順。条件付き・注意のオファーはカードに条件・注意を併記します。</p>
+      ${offerSlot('slot-free', '完全無料', freeSlot, generatedAt, tz)}
+      ${offerSlot('slot-ultra', '超激安', ultraSlot, generatedAt, tz)}
+      ${discountSlot(discount, tz)}
     </section>`;
 
   return `<!DOCTYPE html>
@@ -1364,27 +1408,11 @@ function generateHTML(report) {
 
     ${changesSection(report)}
     ${contradictionsNote(report)}
-    ${newModelsSection(report)}
 
-    ${rankedSection}
+    ${offersSection}
 
-    ${discountSection(report, tz)}
-    ${updatesSection('product-updates', 'Coding Agent / 製品内無料', report.product_updates, '前回と変更なし。')}
-    ${updatesSection('startup-credits', 'Startup Credits', report.startup_credits, '前回と変更なし。')}
-    ${simpleOfferList('conditional', '条件付き無料 (データ共有など)', conditional, (o) => `<li class="simple-row">
-        <span class="simple-name">${esc(o.name)}</span>
-        <span class="simple-meta">${o.provider ? esc(o.provider) : ''}${o.free_limits ? ` ・ ${esc(o.free_limits)}` : ''}${o.registration_conditions && o.registration_conditions.length ? ` ・ ${o.registration_conditions.map(esc).join(' / ')}` : ''}</span>
-        <span class="simple-src">${o.sources && o.sources[0] ? `<a href="${esc(o.sources[0])}" target="_blank" rel="noopener noreferrer">ソース ↗</a>` : ''}</span>
-      </li>`)}
-    ${simpleOfferList('caution', '注意 (連続で検証できず)', caution, (o) => `<li class="simple-row simple-row-caution">
-        <span class="simple-name">${esc(o.name)}</span>
-        <span class="simple-meta">${esc(o.caution_reason || '連続失敗のため表示を保留')}</span>
-        <span class="simple-src">${o.source_url ? `<a href="${esc(o.source_url)}" target="_blank" rel="noopener noreferrer">ソース ↗</a>` : ''}</span>
-      </li>`)}
-    ${simpleOfferList('ended-excluded', '終了 / 除外', excluded, (o) => `<li class="simple-row">
-        <span class="simple-name">${esc(o.name)}</span>
-        <span class="simple-meta">${esc(o.reason || '')}${o.last_known_status ? ` (最終状態: ${esc(o.last_known_status)})` : ''}</span>
-      </li>`)}
+    ${Array.isArray(report.product_updates) && report.product_updates.length ? updatesSection('product-updates', 'Coding Agent / 製品内無料', report.product_updates, '前回と変更なし。') : ''}
+    ${Array.isArray(report.startup_credits) && report.startup_credits.length ? updatesSection('startup-credits', 'Startup Credits', report.startup_credits, '前回と変更なし。') : ''}
     ${newSourcesSection(report)}
     ${sourcesSection(report)}
 

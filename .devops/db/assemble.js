@@ -656,7 +656,14 @@ function loadOffersFromBackup(runDir) {
 // values; the assembler keeps a deterministic fallback so changes never
 // depend on prose. Returns one record per (offer, type) so a single offer
 // can produce both a price_change and a campaign_date_change.
-function computeChanges(currentOffers, priorOffers) {
+// visibleKeys: when given, a change record is emitted only for offers that
+// actually appear in this report (ranked / discount / conditional / caution
+// cards). Attribute changes of a non-shown offer are noise — there is no card
+// for the reader to reconcile them against (operator decision 2026-08-20,
+// extending the 2026-08-19 'new' rule). Exception: 'ended' / 'campaign_ended'
+// for offers that WERE visible in the previous generation (priorVisibleKeys):
+// a listed offer disappearing is news even though its card is now gone.
+function computeChanges(currentOffers, priorOffers, visibleKeys = null, priorVisibleKeys = null) {
   const priorByKey = new Map(priorOffers.map((o) => [offerKey(o.provider_key, o.exact_model_id), o]));
   const currentByKey = new Map(currentOffers.map((o) => [offerKey(o.provider_key, o.exact_model_id), o]));
   const changes = [];
@@ -710,7 +717,8 @@ function computeChanges(currentOffers, priorOffers) {
     const prior = priorByKey.get(key);
     const name = nameOf(current);
     if (!prior) {
-      if (current.status !== 'confirmed_removed' && !renamedCurrent.has(key)) {
+      if (current.status !== 'confirmed_removed' && !renamedCurrent.has(key) &&
+          (visibleKeys === null || visibleKeys.has(key))) {
         const p = pricePair(current);
         const newFree = isFreePair(p) ||
           (p.input !== null && p.input <= 0.2 && p.output !== null && p.output <= 0.4);
@@ -870,6 +878,18 @@ function computeChanges(currentOffers, priorOffers) {
     if (prior.status === 'confirmed_removed') continue;
     const type = prior.discount_start_at || prior.discount_end_at ? 'campaign_ended' : 'ended';
     changes.push({ offer_key: key, offer_name: nameOf(prior), change_type: type, field: 'liveness', before: prior.status, after: 'confirmed_removed' });
+  }
+
+  // Visibility filter (see function doc): the change section only talks
+  // about offers the page shows — or just stopped showing.
+  if (visibleKeys !== null || priorVisibleKeys !== null) {
+    const visibleNow = (k) => visibleKeys === null || visibleKeys.has(k);
+    const visibleBefore = (k) => priorVisibleKeys === null || priorVisibleKeys.has(k);
+    const ENDED_TYPES = new Set(['ended', 'campaign_ended']);
+    const kept = changes.filter((c) =>
+      ENDED_TYPES.has(c.change_type) ? visibleBefore(c.offer_key) : visibleNow(c.offer_key));
+    changes.length = 0;
+    changes.push(...kept);
   }
 
   // Deterministic report ordering by priority class.
@@ -1083,6 +1103,10 @@ function assembleReport(runId, runDir, options = {}) {
   const conditional = [];
   const caution = [];
   const excluded = [];
+  // Offers that actually appear in this report (ranked + discount). The
+  // diff engine uses this set so first-time tracking of excluded offers
+  // never shows up as "new" news.
+  const visibleOfferKeys = new Set();
 
   for (const candidate of view.candidates) {
     const prose = proseByKey.get(candidate.offer_key) || null;
@@ -1100,6 +1124,7 @@ function assembleReport(runId, runDir, options = {}) {
       const cautionOffer = toPublicOffer(candidate, classification, prose, null);
       cautionOffer.ranking_eligible = false;
       cautionOffer.exclusion_reason = `[stale] ${candidate.consecutive_failures} consecutive failed verifications; moved to caution (AC-3)`;
+      visibleOfferKeys.add(candidate.offer_key);
       caution.push(cautionOffer);
       continue;
     }
@@ -1122,6 +1147,7 @@ function assembleReport(runId, runDir, options = {}) {
 
     const offer = toPublicOffer(candidate, classification, prose, null);
     offer.ranking_eligible = true;
+    visibleOfferKeys.add(candidate.offer_key);
 
     if (classification === 'F_CONDITIONAL') {
       // Data sharing opt in free tiers are conditional credits (AGENTS.md).
@@ -1157,6 +1183,7 @@ function assembleReport(runId, runDir, options = {}) {
     const offer = toPublicOffer(candidate, classification, prose, null);
     offer.ranking_eligible = false;
     offer.access_kind = 'DISCOUNTED';
+    visibleOfferKeys.add(candidate.offer_key);
     const normal = candidate.normal_price_per_million || {};
     const effective = candidate.effective_price_per_million || {};
     offer.discount_rates = rankingPolicy.discountRates(
@@ -1193,7 +1220,24 @@ function assembleReport(runId, runDir, options = {}) {
 
   // Change records: deterministic diff plus editorial Japanese summaries.
   const { currentOffers, priorOffers } = loadOfferDiffInputs(runDir, options);
-  const rawChanges = computeChanges(currentOffers, priorOffers);
+  // Offers shown in the previous generation (canonical report about to be
+  // replaced): the 'ended' visibility test. Unreadable or missing (first
+  // run) means nothing was shown before.
+  const priorVisibleKeys = new Set();
+  try {
+    if (fs.existsSync(paths.reportPath)) {
+      const priorReport = JSON.parse(fs.readFileSync(paths.reportPath, 'utf8'));
+      for (const list of [priorReport.ranked_offers, priorReport.discount_offers, priorReport.conditional_credits]) {
+        for (const o of Array.isArray(list) ? list : []) {
+          if (!o || typeof o.provider_key !== 'string') continue;
+          for (const mid of [o.model_id, o.canonical_model_id]) {
+            if (typeof mid === 'string' && mid) priorVisibleKeys.add(`${o.provider_key}/${mid}`);
+          }
+        }
+      }
+    }
+  } catch { /* first run / unreadable prior report: no prior visibility */ }
+  const rawChanges = computeChanges(currentOffers, priorOffers, visibleOfferKeys, priorVisibleKeys);
   // Persist the structured diff to the changes table (per-run append; the
   // durable audit trail behind the report's change section, spec §4.6).
   for (const change of rawChanges) {
@@ -1232,8 +1276,11 @@ function assembleReport(runId, runDir, options = {}) {
       return record;
     });
 
-  // New models from the discovery candidate set (best effort, deterministic).
-  const newModels = buildNewModels(runDir);
+  // Operator decision (2026-08-19): the report no longer publishes a
+  // new-models section. New models stay tracked internally (models table,
+  // leads, fan out) and surface through the change records and ranking
+  // gates when they become offers. The key stays for schema stability.
+  const newModels = [];
 
   // Spec 0008 Phase 3: product / program monitor sections. The observe
   // phase already applied the worker artifacts (watchlist-key filtered);

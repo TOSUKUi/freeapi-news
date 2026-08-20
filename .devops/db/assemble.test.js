@@ -678,6 +678,16 @@ test('change records diff against the pre run DB copy (spec value sourcing)', (t
   const runDir = runDirFor(ctx, 'run-changes');
   // Copy the prior state as the pre run backup.
   db.copyDatabaseForRun('run-changes', ctx.options);
+  // The previous generation's page showed Old and Kept: 'ended' is news
+  // only for offers that were visible before (operator decision 2026-08-20).
+  fs.writeFileSync(path.join(ctx.root, 'report.json'), JSON.stringify({
+    ranked_offers: [
+      { provider_key: 'openrouter', model_id: 'acme/old:free', canonical_model_id: 'acme/old' },
+      { provider_key: 'openrouter', model_id: 'acme/kept:free', canonical_model_id: 'acme/kept' },
+    ],
+    discount_offers: [],
+    conditional_credits: [],
+  }));
   // Current state: acme/old removed, acme/kept pricing changed, acme/new added.
   seed(ctx, {
     runId: 'current',
@@ -701,6 +711,76 @@ test('change records diff against the pre run DB copy (spec value sourcing)', (t
   for (const change of report.changes) {
     assert.ok(change.summary && change.summary.length > 0);
   }
+});
+
+test('first-time tracking of an excluded offer produces no new change (operator decision 2026-08-19)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  // Prior state: one kept offer.
+  seed(ctx, {
+    runId: 'prior',
+    offers: [
+      offerSeed({ exact_model_id: 'acme/kept:free', canonical_model_id: 'acme/kept',
+        facts_json: { model_name: 'Kept', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+    ],
+    benchmarks: [benchRow('acme/kept', 70)],
+  });
+  const runDir = runDirFor(ctx, 'run-changes-novel');
+  db.copyDatabaseForRun('run-changes-novel', ctx.options);
+  // Current: a brand new offer with no Terminal Bench score: it is excluded
+  // (benchmark-pending) and must NOT surface as "new" news.
+  seed(ctx, {
+    runId: 'current',
+    offers: [
+      offerSeed({ exact_model_id: 'acme/kept:free', canonical_model_id: 'acme/kept',
+        facts_json: { model_name: 'Kept', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+      offerSeed({ exact_model_id: 'acme/v3.1', canonical_model_id: 'acme/v3.1',
+        facts_json: { model_name: 'V3.1', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+    ],
+    benchmarks: [benchRow('acme/kept', 70)],
+  });
+  const { report } = assemble.assembleReport('run-changes-novel', runDir, ctx.options);
+  assert.equal(report.changes.length, 0, 'no change records for a quiet run');
+  const excludedNames = report.excluded_offers.map((o) => o.name);
+  assert.ok(excludedNames.includes('V3.1'), 'the offer is still disclosed in the exclusion list');
+});
+
+test('attribute changes of a non-shown offer are not reported (operator decision 2026-08-20)', (t) => {
+  // A price change on an offer with no Terminal Bench score is real data,
+  // but the offer is not on the page — the change section only talks about
+  // offers the reader can see. (The DeepSeek V4 Flash "Latest" vs "0731"
+  // case: a tag route repriced while the listed card stayed put.)
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    runId: 'prior',
+    offers: [
+      offerSeed({ exact_model_id: 'acme/kept:free', canonical_model_id: 'acme/kept',
+        facts_json: { model_name: 'Kept', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+      offerSeed({ exact_model_id: 'acme/hidden:free', canonical_model_id: 'acme/hidden',
+        effective_input_price_usd: 5, effective_output_price_usd: 10,
+        facts_json: { model_name: 'Hidden', free_quota_text: 'paid', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+    ],
+    benchmarks: [benchRow('acme/kept', 70)],
+  });
+  const runDir = runDirFor(ctx, 'run-changes-hidden');
+  db.copyDatabaseForRun('run-changes-hidden', ctx.options);
+  seed(ctx, {
+    runId: 'current',
+    offers: [
+      offerSeed({ exact_model_id: 'acme/kept:free', canonical_model_id: 'acme/kept',
+        facts_json: { model_name: 'Kept', free_quota_text: 'free', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+      offerSeed({ exact_model_id: 'acme/hidden:free', canonical_model_id: 'acme/hidden',
+        effective_input_price_usd: 2, effective_output_price_usd: 4,
+        facts_json: { model_name: 'Hidden', free_quota_text: 'paid', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+    ],
+    benchmarks: [benchRow('acme/kept', 70)],
+  });
+  const { report } = assemble.assembleReport('run-changes-hidden', runDir, ctx.options);
+  assert.equal(report.changes.length, 0,
+    'the non-shown offer\u2019s price change does not surface; kept is unchanged');
 });
 
 // ── Schema conformance ───────────────────────────────────────────

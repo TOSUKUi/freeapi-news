@@ -70,7 +70,7 @@
 - `base_url` と `model_id` は毎回公式ドキュメントを取得して書く (記憶からの記入は禁止)。ランキング対象オファーは `endpoint_source` が必須。`npm run validate` はレジストリ整合性を検査し、引用先ページをバリデータ自身が再取得して base_url を明記していなければハードフェイルする。未登録プロバイダーはワーカーの提案を決定的証拠監査で候補化し、canonical registry への反映は昇格段階だけで行う。
 - 無料アプリ/チャットアクセスは無料 API ではない (API が有料ならランキング対象外)。データ共有 opt-in の無料枠は `conditional_credits` (`F_CONDITIONAL`)。
 - フロンティア割引 (`access_kind: DISCOUNTED`) は `ranked_offers` には入れず `discount_offers` 専用セクションに出す (spec 0008 §4.11)。通常価格と現在価格の両方が取得済みで通常 > 現在、かつ割引証拠 (期間または通常価格の引用) がある場合のみ掲載し、通常価格・現在価格・割引率・期間を必ず決定的に表示する。
-- report のページ構成は固定の h2 セクション順 (summary / changes / new_models / ranked_offers / discount_offers / product_updates / startup_credits / conditional_credits / caution_offers / ended_excluded / new_sources / sources)。空セクションは「本日なし」1 行で DOM を残す。
+- report のページ構成は固定の h2 セクション順 (summary / changes / ranked_offers / discount_offers / product_updates / startup_credits / conditional_credits / caution_offers / ended_excluded / new_sources / sources)。空セクションは「本日なし」1 行で DOM を残す。新モデルセクションは廃止 (2026-08-19 運用者判断): 新モデルは report.json の `new_models` (常に空配列・スキーマ安定性のため残す) に出さず、変更記録とランキングゲートの経由のみで公開する。また重要差分 (changes) は実際にページに表示される offer (ranked / discount / conditional / caution のカード) についてのみ出す。非表示 offer の価格・割引・ポリシー等の属性変更は差分に出さない (2026-08-20 運用者判断、DeepSeek V4 Flash "Latest" と "0731" の混同が動機)。「ended」/「campaign_ended」のみ例外で、前回のページに表示されていた offer の終了は出す (表示中のオファーが消えたことはニュースのため)。「new」は表示 offer の初出現のみに限定し、除外 offer の初回トラッキングは差分に出さない。
 - 収集スキルは `.agents/skills/llm-deals-intelligence-skill/`。UI 参照スキルは `.agents/skills/shadcn/` (skills-lock.json で固定)。
 
 ## State and git tracking

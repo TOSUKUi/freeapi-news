@@ -248,6 +248,13 @@ test('a price returned to normal ends the campaign (campaign_ended)', (t) => {
   });
   const runDir = runDirFor(ctx, 'run-ended');
   db.copyDatabaseForRun('run-ended', ctx.options);
+  // The previous generation's page showed the live discount: 'campaign_ended'
+  // is news only for offers that were visible before (operator decision 2026-08-20).
+  fs.writeFileSync(path.join(ctx.root, 'report.json'), JSON.stringify({
+    ranked_offers: [],
+    discount_offers: [{ provider_key: 'google', model_id: 'frontier-x', canonical_model_id: 'acme/frontier-x' }],
+    conditional_credits: [],
+  }));
   // Current run: the observe phase set the price back to normal and marked
   // the offer confirmed_removed (campaign liveness).
   seed(ctx, {

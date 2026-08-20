@@ -676,11 +676,20 @@ describe('collect orchestrator', () => {
 
 it('research sessions run with a bounded transport and no legacy discovery goals (spec 0008 Phase 5)', async () => {
     seedKnownOffer(ctx);
-    // The research plan only activates with a watchlist in place.
-    fs.copyFileSync(
-      path.join(__dirname, '..', '..', 'build', 'research-watchlist.json'),
-      path.join(ctx.root, 'build', 'research-watchlist.json')
-    );
+    // The research plan only activates with a watchlist in place. Use a
+    // tiny fixture (one vendor channel + one community feed) instead of the
+    // production watchlist so the test stays fast and does not hammer ~160
+    // real endpoints per run.
+    fs.writeFileSync(path.join(ctx.root, 'build', 'research-watchlist.json'), JSON.stringify({
+      version: 1,
+      windows: { hot_days: 1, warm_days: 3, catchup_days: 30 },
+      frontier_vendors: ['acme'],
+      vendors: [{ key: 'acme', label: 'Acme AI', tier: 1, channels: { blog: 'https://blog.acme.example/updates' }, notes: null }],
+      provider_monitors: [],
+      community: [{ key: 'hn', label: 'Hacker News', kind: 'hn', url: 'https://news.ycombinator.com', queries: ['LLM free API'] }],
+      coding_products: [],
+      credit_programs: [],
+    }, null, 2) + '\n');
 
     const runId = 'research-goals-1';
     const captured = new Map();
