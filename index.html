@@ -482,12 +482,30 @@ details.acc[open] .chev { transform: rotate(180deg); }
 .src-url { word-break: break-all; }
 
 /* Snapshot strip. */
+.offer-slot { margin-bottom: 2.5rem; }
+.offer-slot:last-child { margin-bottom: 0; }
+.slot-title {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  padding-left: 0.65rem;
+  border-left: 3px solid var(--primary, #f5a623);
+}
 .snapshot {
   display: grid; grid-template-columns: repeat(2, 1fr);
   border: 1px solid hsl(var(--border)); border-radius: var(--radius);
   background: hsl(var(--card)); overflow: hidden;
 }
-@media (min-width: 768px) { .snapshot { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 768px) { .offer-slot { margin-bottom: 2.5rem; }
+.offer-slot:last-child { margin-bottom: 0; }
+.slot-title {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  padding-left: 0.65rem;
+  border-left: 3px solid var(--primary, #f5a623);
+}
+.snapshot { grid-template-columns: repeat(4, 1fr); } }
 .snap-cell {
   padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.15rem;
   border-right: 1px solid hsl(var(--border)); border-bottom: 1px solid hsl(var(--border));
@@ -552,7 +570,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
 
     <div class="mb-5 text-sm text-muted-foreground flex items-center gap-2">
       <span>最終更新</span>
-      <time datetime="2026-08-19T15:09:26.856Z" class="font-medium text-foreground">2026年8月20日</time>
+      <time datetime="2026-08-20T02:52:21.663Z" class="font-medium text-foreground">2026年8月20日</time>
       <span aria-hidden="true">·</span>
       <span>Asia/Tokyo</span>
     </div>
@@ -584,70 +602,16 @@ details.acc[open] .chev { transform: rotate(180deg); }
     <section id="changes" class="report-section" aria-labelledby="changes-h">
       <div class="flex items-end justify-between gap-4 mb-1">
         <h2 id="changes-h" class="font-display text-2xl sm:text-3xl font-bold">今日の重要差分</h2>
-        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">9 件</span>
+        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">3 件</span>
       </div>
       <ul class="change-list"><li class="change-row">
-        <div class="change-head">
-          <span class="change-type">新規</span>
-          <span class="change-name">DeepSeek-V3.1</span>
-          
-        </div>
-        <div class="change-values"><span class="change-val"><span class="id-val-plain" style="opacity:.55">—</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">free=true</span></span></div>
-        <p class="change-summary">DeepSeek-V3.1 が新たにランキング対象になりました。</p>
-      </li>
-      <li class="change-row">
-        <div class="change-head">
-          <span class="change-type">新規</span>
-          <span class="change-name">DeepSeek-V3.2</span>
-          
-        </div>
-        <div class="change-values"><span class="change-val"><span class="id-val-plain" style="opacity:.55">—</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">free=true</span></span></div>
-        <p class="change-summary">DeepSeek-V3.2 が新たにランキング対象になりました。</p>
-      </li>
-      <li class="change-row">
-        <div class="change-head">
-          <span class="change-type">新規</span>
-          <span class="change-name">Meta-Llama-3.3-70B-Instruct</span>
-          
-        </div>
-        <div class="change-values"><span class="change-val"><span class="id-val-plain" style="opacity:.55">—</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">free=true</span></span></div>
-        <p class="change-summary">Meta-Llama-3.3-70B-Instruct が新たにランキング対象になりました。</p>
-      </li>
-      <li class="change-row">
-        <div class="change-head">
-          <span class="change-type">新規</span>
-          <span class="change-name">MiniMax-M2.7</span>
-          
-        </div>
-        <div class="change-values"><span class="change-val"><span class="id-val-plain" style="opacity:.55">—</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">free=true</span></span></div>
-        <p class="change-summary">MiniMax-M2.7 が新たにランキング対象になりました。</p>
-      </li>
-      <li class="change-row">
-        <div class="change-head">
-          <span class="change-type">新規</span>
-          <span class="change-name">gemma-4-31B-it</span>
-          
-        </div>
-        <div class="change-values"><span class="change-val"><span class="id-val-plain" style="opacity:.55">—</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">free=true</span></span></div>
-        <p class="change-summary">gemma-4-31B-it が新たにランキング対象になりました。</p>
-      </li>
-      <li class="change-row">
-        <div class="change-head">
-          <span class="change-type">新規</span>
-          <span class="change-name">gpt-oss-120b</span>
-          
-        </div>
-        <div class="change-values"><span class="change-val"><span class="id-val-plain" style="opacity:.55">—</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">free=true</span></span></div>
-        <p class="change-summary">gpt-oss-120b が新たにランキング対象になりました。</p>
-      </li>
-      <li class="change-row">
         <div class="change-head">
           <span class="change-type">レート変更</span>
           <span class="change-name">Gemini 2.5 Pro</span>
           <span class="change-field">free_quota</span>
         </div>
-        <div class="change-values"><span class="change-val"><span class="id-val-plain">Standard Free Tier: Input price Free of charge, Output price (including thinking tokens) Free of charge, Context caching price Not available, Used to improve our products Yes</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">Free of charge</span></span></div>
-        <p class="change-summary">Gemini 2.5 Pro のレート制限・無料枠条件が変わりました。</p>
+        <div class="change-values"><span class="change-val"><span class="id-val-plain">Free of charge</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">Standard | Free Tier | Paid Tier, per 1M tokens in USD | Input price | Free of charge | $1.25, prompts $2.50, prompts &gt; 200k tokens | Output price (including thinking tokens) | Free of charge | $10.00, prompts $15.00, prompts &gt; 200k</span></span></div>
+        <p class="change-summary">Gemini 2.5 Pro の無料枠の記載が、単なる「Free of charge」から Free Tier と Paid Tier を併記した価格表の抜粋に更新されました。Free Tier の入出力（思考トークン含む）は引き続き「Free of charge」で、無料提供の条件自体は変わりません。新しい抜粋には Paid Tier の単価（入力 $1.25/M、200k トークン超プロンプト $2.50/M、出力 $10.00/M、200k トークン超 $15.00/M）も含まれます。</p>
       </li>
       <li class="change-row">
         <div class="change-head">
@@ -655,99 +619,287 @@ details.acc[open] .chev { transform: rotate(180deg); }
           <span class="change-name">Gemini 2.5 Pro</span>
           <span class="change-field">data_policy</span>
         </div>
-        <div class="change-values"><span class="change-val"><span class="id-val-plain" style="opacity:.55">—</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">Used to improve our products: Yes</span></span></div>
-        <p class="change-summary">Gemini 2.5 Pro のデータ利用条件が変わりました。</p>
+        <div class="change-values"><span class="change-val"><span class="id-val-plain">Used to improve our products: Yes</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">New accounts begin on the Free Tier, which allows access to certain models in the Gemini API and AI Studio, up to the models&#39; free tier rate limits. To access h…</span></span></div>
+        <p class="change-summary">Gemini 2.5 Pro のデータポリシーの記載が「Used to improve our products: Yes」からより詳しい文言に更新されました。新規アカウントは Free Tier から始まり、より高いレート制限・高度なモデルの利用やプロンプト・レスポンスの Google 製品改善への利用を避けるには請求先アカウントと Prepay を連携して Paid Tier へ移行できると明記され、「Used to improve our products — Free Tier: Yes / Paid Tier: No」と Free と Paid で取り扱いが異なることが確認できます。</p>
       </li>
       <li class="change-row">
         <div class="change-head">
-          <span class="change-type">利用状態変更</span>
-          <span class="change-name">Nemotron 3 Ultra</span>
-          <span class="change-field">liveness</span>
+          <span class="change-type">割引率変更</span>
+          <span class="change-name">DeepSeek V4 Flash Latest</span>
+          <span class="change-field">effective_price_per_million</span>
         </div>
-        <div class="change-values"><span class="change-val"><span class="id-val-plain">verified</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">stale</span></span></div>
-        <p class="change-summary">Nemotron 3 Ultra の提供状況が変わりました。</p>
+        <div class="change-values"><span class="change-val"><span class="id-val-plain">input=0.0765，output=0.153</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">input=0.065，output=0.18</span></span></div>
+        <p class="change-summary">OpenRouter の DeepSeek V4 Flash Latest の単価が調整されました。入力は 1M トークンあたり $0.0765 から $0.065 へ（約 15% 引き下げ）、出力は $0.153 から $0.18 へ（約 18% 引き上げ）です。変更前後とも割引は適用されていません（割引率 0%）。</p>
       </li></ul>
     </section>
     
-    <section id="new-models" class="report-section" aria-labelledby="new-models-h">
-      <div class="flex items-end justify-between gap-4 mb-1">
-        <h2 id="new-models-h" class="font-display text-2xl sm:text-3xl font-bold">新モデル / 新サービス</h2>
-        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">6 件</span>
-      </div>
-      <ul class="model-list"><li class="model-card reveal" aria-labelledby="model-0">
-      <div class="model-head">
-        <h3 id="model-0" class="model-name">Grok 4.6</h3>
-        <span class="model-window">24時間以内</span>
-        <span class="model-candidate">発表済み</span>
-      </div>
-      
-      
-      <p class="model-dist">配信: unconfirmed (no route verification this run)</p>
-      <p class="model-src"><a href="https://aws.amazon.com/about-aws/whats-new/2026/08/amazon-bedrock-grok-4-6/" target="_blank" rel="noopener noreferrer">公式ソース ↗</a></p>
-    </li>
-    <li class="model-card reveal" aria-labelledby="model-1">
-      <div class="model-head">
-        <h3 id="model-1" class="model-name">Kimi K3</h3>
-        <span class="model-window">日付未確認</span>
-        <span class="model-candidate">発表済み</span>
-      </div>
-      <p class="model-aliases">別名: kimi-k3</p>
-      
-      <p class="model-dist">配信: unconfirmed (no route verification this run)</p>
-      <p class="model-src"><a href="https://platform.kimi.com/docs/pricing/chat-k3" target="_blank" rel="noopener noreferrer">公式ソース ↗</a></p>
-    </li>
-    <li class="model-card reveal" aria-labelledby="model-2">
-      <div class="model-head">
-        <h3 id="model-2" class="model-name">nemotron-3.5-lightning-30b-a3b</h3>
-        <span class="model-window">日付未確認</span>
-        <span class="model-candidate">発表済み</span>
-      </div>
-      
-      
-      <p class="model-dist">配信: served: nvidia; served: bitdeer</p>
-      <p class="model-src"><a href="https://build.nvidia.com/nvidia/nemotron-3.5-lightning-30b-a3b" target="_blank" rel="noopener noreferrer">公式ソース ↗</a></p>
-    </li>
-    <li class="model-card reveal" aria-labelledby="model-3">
-      <div class="model-head">
-        <h3 id="model-3" class="model-name">GPT-5.6 Cyber</h3>
-        <span class="model-window">30日以内</span>
-        <span class="model-candidate">発表済み</span>
-      </div>
-      <p class="model-aliases">別名: daybreak-red-latest</p>
-      
-      <p class="model-dist">配信: unconfirmed (no route verification this run)</p>
-      <p class="model-src"><a href="https://developers.openai.com/api/docs/changelog" target="_blank" rel="noopener noreferrer">公式ソース ↗</a></p>
-    </li>
-    <li class="model-card reveal" aria-labelledby="model-4">
-      <div class="model-head">
-        <h3 id="model-4" class="model-name">GPT Transcribe</h3>
-        <span class="model-window">30日以内</span>
-        <span class="model-candidate">発表済み</span>
-      </div>
-      <p class="model-aliases">別名: gpt-transcribe</p>
-      
-      <p class="model-dist">配信: unconfirmed (no route verification this run)</p>
-      <p class="model-src"><a href="https://developers.openai.com/api/docs/changelog" target="_blank" rel="noopener noreferrer">公式ソース ↗</a></p>
-    </li>
-    <li class="model-card reveal" aria-labelledby="model-5">
-      <div class="model-head">
-        <h3 id="model-5" class="model-name">GPT Live Transcribe</h3>
-        <span class="model-window">30日以内</span>
-        <span class="model-candidate">発表済み</span>
-      </div>
-      <p class="model-aliases">別名: gpt-live-transcribe</p>
-      
-      <p class="model-dist">配信: unconfirmed (no route verification this run)</p>
-      <p class="model-src"><a href="https://developers.openai.com/api/docs/changelog" target="_blank" rel="noopener noreferrer">公式ソース ↗</a></p>
-    </li></ul>
-    </section>
 
-    <section id="ranked" class="report-section" aria-labelledby="ranked-h">
-      <div class="flex items-end justify-between gap-4 mb-1">
-        <h2 id="ranked-h" class="font-display text-2xl sm:text-3xl font-bold">無料・激安APIランキング</h2>
-        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">9 件</span>
+    <section id="offers" class="report-section" aria-labelledby="offers-h">
+      <h2 id="offers-h" class="font-display text-2xl sm:text-3xl font-bold mb-1">今日のオファー</h2>
+      <p class="text-sm text-muted-foreground mb-6">完全無料 / 超激安 / フロンティア割引 の 3 枠。枠内は <strong class="text-foreground">ティア</strong> → 同じ Terminal Bench 版のスコア → 価格確認日 → 名前の順。条件付き・注意のオファーはカードに条件・注意を併記します。</p>
+      <div id="slot-free" class="offer-slot">
+      <div class="flex items-end justify-between gap-4 mb-3">
+        <h3 class="slot-title">完全無料</h3>
+        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">2 件</span>
       </div>
-      <p class="text-sm text-muted-foreground mb-6">運用確認済み ・ ベンチマーク上位 (S/A/B) のみ掲載。<strong class="text-foreground">ティア</strong> → アクセス区分 (FREE/ULTRA_LOW) → 同じ Terminal Bench 版のスコア → 価格確認日 → 名前の順。無料枠の余裕度は表示のみです。</p>
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2"><article class="offer-card reveal tier-accent-a" aria-labelledby="offer-0">
+    <div class="card-accent" aria-hidden="true"></div>
+    <span class="rank-watermark" aria-hidden="true">01</span>
+    <div class="offer-inner">
+      <div class="offer-main">
+        <div class="offer-badges">
+          <span class="badge badge-b">B. 恒久無料枠</span>
+          <span class="badge badge-a" title="実効入力・出力価格が 0ドル / 百万トークン">無料</span>
+          <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
+        </div>
+        <h3 id="offer-0" class="offer-name">Gemini 2.5 Pro</h3>
+        <p class="offer-meta">by <strong>Google Gemini</strong> ・ Gemini 2.5 Pro</p>
+
+        <div class="offer-stats">
+          <div class="stat">
+      <div class="stat-label">ベンチマーク</div>
+      <div class="stat-value"><span class="bench-tier tier-a">A</span><span class="bench-score">59%</span></div>
+      <div class="stat-sub">Terminal Bench 2.1 (2.1)</div>
+    </div>
+          <div class="stat">
+            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
+            <div class="stat-value"><span class="price price-free">$0</span></div>
+            <div class="stat-sub">入力 / 出力</div>
+          </div>
+          <div class="stat">
+      <div class="stat-label">運用信頼度</div>
+      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
+      <div class="stat-sub">Gemini API の無料枠で Gemini 2.5 Pro が入出力（思考トークンを含む）ともに無償で使えます。1M トークンのコンテキストを備え、長文書やコードベースの解析、推論・コーディング支援に無料で使えます。</div>
+    </div>
+        </div>
+
+        <div class="offer-ids">
+          <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">1,048,576 tokens</span></div>
+          <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
+          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://generativelanguage.googleapis.com/v1beta</code></div>
+          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">gemini-2.5-pro</code></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月1日</span></div>
+          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">Standard | Free Tier | Paid Tier, per 1M tokens in USD | Input price | Free of charge | $1.25, prompts $2.50, prompts &gt; 200k tokens | Output price (including thinking tokens) | Free of charge | $10.00, prompts $15.00, prompts &gt; 200k</span></div>
+          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">To access higher rate limits, use advanced models, and ensure your prompts and responses are not used to improve Google products *, you can link a billing account and Prepay to move to the Paid Tiers.</span></div>
+          <div class="id-row"><span class="id-key">データポリシー</span><span class="id-val-plain"><a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer">New accounts begin on the Free Tier, which allows access to certain models in the Gemini API and AI Studio, up to the models&#39; free tier rate limits. To access higher rate limits, use advanced models, and ensure your prompts and responses are not used to improve Google products *, you can link a billing account and Prepay to move to the Paid Tiers. * Enterprise-grade data privacy: For more information on data use for paid services, see the Terms of Service. Pricing page (gemini-2.5-pro, Standard): &#39;Used to improve our products — Free Tier: Yes — Paid Tier: No&#39;. ↗</a></span></div>
+        </div>
+
+        <details class="bench-details">
+      <summary class="bench-summary">
+        <span class="bench-summary-label">ベンチマーク詳細</span>
+        <span class="bench-summary-count">7件</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="bench-list"><div class="bench-row"><span class="bench-name">AIME (OTIS Mock)</span><span class="bench-val">84.2%</span></div><div class="bench-row"><span class="bench-name">GPQA Diamond</span><span class="bench-val">85.3%</span></div><div class="bench-row"><span class="bench-name">Humanity&#39;s Last Exam</span><span class="bench-val">21.64%</span></div><div class="bench-row"><span class="bench-name">MMLU-Pro</span><span class="bench-val">86.2%</span></div><div class="bench-row"><span class="bench-name">MMMU-Pro</span><span class="bench-val">68%</span></div><div class="bench-row"><span class="bench-name">SWE-bench Verified</span><span class="bench-val">96%</span></div><div class="bench-row"><span class="bench-name">Terminal Bench 2.1 (2.1)</span><span class="bench-val">59%</span></div></div>
+    </details>
+        <details class="acc">
+      <summary class="acc-summary" aria-label="接続方法を表示">
+        <span class="acc-title">
+          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
+          接続方法
+        </span>
+        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="acc-body">
+        <p class="acc-note">テンプレート版本 2026.08.1 ・ エンドポイントは provider-registry.json (公式ドキュメント由来) で検証済み。Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
+        <div class="agent-grid"><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code>// ~/.pi/agent/models.json にプロバイダを登録
+{
+  &quot;providers&quot;: {
+    &quot;google&quot;: {
+      &quot;baseUrl&quot;: &quot;https://generativelanguage.googleapis.com/v1beta&quot;,
+      &quot;api&quot;: &quot;google-generative-ai&quot;,
+      &quot;apiKey&quot;: &quot;$GEMINI_API_KEY&quot;,
+      &quot;models&quot;: [
+        { &quot;id&quot;: &quot;gemini-2.5-pro&quot;, &quot;reasoning&quot;: false }
+      ]
+    }
+  }
+}
+
+export GEMINI_API_KEY=xxxxxxxxxxxxxxxx
+
+# 起動 (または .pi/settings.json の defaultProvider/defaultModel)
+pi --model google/gemini-2.5-pro</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># Claude Code は Gemini を Google Vertex AI 経由で利用できます。
+export CLAUDE_CODE_USE_VERTEX=1
+export CLOUD_ML_REGION=global
+export ANTHROPIC_VERTEX_PROJECT_ID=&lt;GCPプロジェクトID&gt;
+
+claude --model gemini-2.5-pro</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code>// opencode.json
+{
+  &quot;provider&quot;: {
+    &quot;google&quot;: {
+      &quot;npm&quot;: &quot;@ai-sdk/google&quot;,
+      &quot;models&quot;: { &quot;gemini-2.5-pro&quot;: {} }
+    }
+  }
+}
+
+export GEMINI_API_KEY=xxxxxxxxxxxxxxxx
+# または opencode 起動後 → /connect google</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># ~/.codex/config.toml
+[model_providers.google]
+name = &quot;Google Gemini&quot;
+base_url = &quot;https://generativelanguage.googleapis.com/v1beta/openai&quot;
+env_key = &quot;GEMINI_API_KEY&quot;
+wire_api = &quot;chat&quot;
+
+[profiles.google]
+provider = &quot;google&quot;
+model = &quot;gemini-2.5-pro&quot;
+
+# 起動
+codex --profile google</code></pre>
+      </div></div>
+      </div>
+    </details>
+
+        <div class="offer-links">
+          <a class="btn btn-primary" href="https://ai.google.dev/gemini-api/docs/openai" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </article>
+      <article class="offer-card reveal tier-accent-a" aria-labelledby="offer-1">
+    <div class="card-accent" aria-hidden="true"></div>
+    <span class="rank-watermark" aria-hidden="true">02</span>
+    <div class="offer-inner">
+      <div class="offer-main">
+        <div class="offer-badges">
+          <span class="badge badge-b">B. 恒久無料枠</span>
+          <span class="badge badge-a" title="実効入力・出力価格が 0ドル / 百万トークン">無料</span>
+          <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
+        </div>
+        <h3 id="offer-1" class="offer-name">NVIDIA: Nemotron 3 Ultra</h3>
+        <p class="offer-meta">by <strong>OpenRouter</strong> ・ NVIDIA: Nemotron 3 Ultra</p>
+
+        <div class="offer-stats">
+          <div class="stat">
+      <div class="stat-label">ベンチマーク</div>
+      <div class="stat-value"><span class="bench-tier tier-a">A</span><span class="bench-score">56.4%</span></div>
+      <div class="stat-sub">Terminal-Bench 2.1 (2.1)</div>
+    </div>
+          <div class="stat">
+            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
+            <div class="stat-value"><span class="price price-free">$0</span></div>
+            <div class="stat-sub">入力 / 出力</div>
+          </div>
+          <div class="stat">
+      <div class="stat-label">運用信頼度</div>
+      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
+      <div class="stat-sub">NVIDIA の 550B MoE（55B アクティブ） Nemotron 3 Ultra を OpenRouter の :free ルートで無償利用できます。1M トークンのコンテキストを備え、NIM アカウント登録なしで最先端クラスのエージェントモデルを試せます。</div>
+    </div>
+        </div>
+
+        <div class="offer-ids">
+          <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">1,000,000 tokens</span></div>
+          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
+          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">nvidia/nemotron-3-ultra-550b-a55b:free</code></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月20日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ OpenRouter free endpoint: genuinely $0 API access with recurring daily request limits; not app-only, not a trial.</span></div>
+        </div>
+
+        <details class="bench-details">
+      <summary class="bench-summary">
+        <span class="bench-summary-label">ベンチマーク詳細</span>
+        <span class="bench-summary-count">1件</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="bench-list"><div class="bench-row"><span class="bench-name">Terminal-Bench 2.1 (2.1)</span><span class="bench-val">56.4%</span></div></div>
+    </details>
+        <details class="acc">
+      <summary class="acc-summary" aria-label="接続方法を表示">
+        <span class="acc-title">
+          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
+          接続方法
+        </span>
+        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="acc-body">
+        <p class="acc-note">テンプレート版本 2026.08.1 ・ エンドポイントは provider-registry.json (公式ドキュメント由来) で検証済み。Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
+        <div class="agent-grid"><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># pi は OpenRouter をビルトインでサポート (pi docs: providers.md)
+# 方法A: 対話モードで登録
+pi
+/login openrouter   # キーを貼付 (sk-or-v1-...)
+
+# 方法B: 環境変数
+# ~/.bashrc などに追記
+export OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxx
+
+# 起動 (または ~/.pi/agent/settings.json の defaultProvider)
+pi --model openrouter/nvidia/nemotron-3-ultra-550b-a55b:free</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># Claude Code は Anthropic Messages 互換エンドポイントに直接接続 (プロキシ不要)
+# 公式手順: https://openrouter.ai/docs/cookbook/coding-agents/claude-code-integration
+export ANTHROPIC_BASE_URL=https://openrouter.ai/api
+export ANTHROPIC_AUTH_TOKEN=sk-or-v1-xxxxxxxxxxxxxxxx
+export ANTHROPIC_API_KEY=&quot;&quot;   # 明示的に空にする (Anthropic 直結と競合しないように)
+
+claude --model nvidia/nemotron-3-ultra-550b-a55b:free</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># opencode は OpenRouter をビルトインでサポート (公式 docs: providers)
+# 1. opencode 起動
+opencode
+# 2. /connect → OpenRouter を選択 → APIキー (sk-or-v1-...) を貼付
+#    (キーは ~/.local/share/opencode/auth.json に保存)
+# 3. /models でモデル選択 (openrouter/nvidia/nemotron-3-ultra-550b-a55b:free)
+
+# 設定ファイルで明示する場合 (opencode.json)
+{
+  &quot;provider&quot;: {
+    &quot;openrouter&quot;: {
+      &quot;models&quot;: { &quot;nvidia/nemotron-3-ultra-550b-a55b:free&quot;: {} }
+    }
+  }
+}</code></pre>
+      </div><div class="agent-block">
+        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
+        <pre class="agent-code"><code># ~/.codex/config.toml
+[model_providers.openrouter]
+name = &quot;OpenRouter&quot;
+base_url = &quot;https://openrouter.ai/api/v1&quot;
+env_key = &quot;OPENROUTER_API_KEY&quot;
+wire_api = &quot;chat&quot;
+
+[profiles.openrouter]
+provider = &quot;openrouter&quot;
+model = &quot;nvidia/nemotron-3-ultra-550b-a55b:free&quot;
+
+# 起動
+codex --profile openrouter</code></pre>
+      </div></div>
+      </div>
+    </details>
+
+        <div class="offer-links">
+          <a class="btn btn-primary" href="https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b:free" target="_blank" rel="noopener noreferrer">モデルページ <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </article></div>
+    </div>
+      <div id="slot-ultra" class="offer-slot">
+      <div class="flex items-end justify-between gap-4 mb-3">
+        <h3 class="slot-title">超激安</h3>
+        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">7 件</span>
+      </div>
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2"><article class="offer-card reveal tier-accent-s" aria-labelledby="offer-0">
     <div class="card-accent" aria-hidden="true"></div>
     <span class="rank-watermark" aria-hidden="true">01</span>
@@ -757,7 +909,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
           <span class="badge badge-e">E. 割引</span>
           <span class="badge badge-c" title="入力 0.2ドル以下 ・ 出力 0.4ドル以下 / 百万トークン">激安</span>
           <span class="tier tier-s" title="性能ティア"><span class="tier-letter">S</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>昨日 確認</span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
         <h3 id="offer-0" class="offer-name">DeepSeek V4 Flash 0731</h3>
         <p class="offer-meta">by <strong>NanoGPT</strong> ・ DeepSeek V4 Flash 0731</p>
@@ -776,7 +928,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">DeepSeek V4 Flash の再ポストトレーニング版で、コーディング・推論・エージェント用途に特化。NanoGPT では入力 $0.14 / 出力 $0.28 (1M トークンあたり) という超低価格で、コンテキストは 1M トークン。無料枠ではなく有料ですが、高性能帯モデルとしては最も安い価格帯の一つです。</div>
+      <div class="stat-sub">DeepSeek V4 Flash の再ポストトレーニング版 0731。1M トークンコンテキストの MoE（13B アクティブ / 284B 総パラメータ）で、コーディング・推論・エージェント用途に強く、NanoGPT では入力 $0.14/M・出力 $0.28/M の超低価格で使えます。</div>
     </div>
         </div>
 
@@ -785,8 +937,8 @@ details.acc[open] .chev { transform: rotate(180deg); }
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">deepseek/deepseek-v4-flash-0731</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月19日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ Paid NanoGPT router access at ultra-low per-token price; cheap but not free, and no data policy is published.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月20日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid NanoGPT-router API at ultra-low price; paid access, not free or a genuine discount.</span></div>
         </div>
 
         <details class="bench-details">
@@ -877,7 +1029,7 @@ codex --profile nanogpt</code></pre>
       </div>
     </div>
   </article>
-<article class="offer-card reveal tier-accent-s" aria-labelledby="offer-1">
+      <article class="offer-card reveal tier-accent-s" aria-labelledby="offer-1">
     <div class="card-accent" aria-hidden="true"></div>
     <span class="rank-watermark" aria-hidden="true">02</span>
     <div class="offer-inner">
@@ -886,7 +1038,7 @@ codex --profile nanogpt</code></pre>
           <span class="badge badge-e">E. 割引</span>
           <span class="badge badge-c" title="入力 0.2ドル以下 ・ 出力 0.4ドル以下 / 百万トークン">激安</span>
           <span class="tier tier-s" title="性能ティア"><span class="tier-letter">S</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>昨日 確認</span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
         <h3 id="offer-1" class="offer-name">DeepSeek: DeepSeek V4 Flash 0731</h3>
         <p class="offer-meta">by <strong>OpenRouter</strong> ・ DeepSeek: DeepSeek V4 Flash 0731</p>
@@ -905,7 +1057,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">同じ DeepSeek V4 Flash 0731 の OpenRouter ルート。284B 総パラメータ・アクティブ 13B のスパース MoE で、コンテキストは約 131 万トークン。NanoGPT と同じく $0.14 / $0.28 (1M トークンあたり) です。OpenRouter を既に使っているならこちらが手軽です。</div>
+      <div class="stat-sub">同じ DeepSeek V4 Flash 0731（13B アクティブ / 284B MoE）の OpenRouter ルート。入力 $0.14/M・出力 $0.28/M・約 1.3M のコンテキスト。複数のプロバイダ間でルーティングされるため、NanoGPT 単独ルートより供給の安定性を重視したい場面に向いています。</div>
     </div>
         </div>
 
@@ -913,7 +1065,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">1,310,720 tokens</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">deepseek/deepseek-v4-flash-0731</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月19日</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月20日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ Paid OpenRouter API at ultra-low price; paid access with no free quota or discount window.</span></div>
         </div>
 
         <details class="bench-details">
@@ -999,7 +1152,7 @@ codex --profile openrouter</code></pre>
       </div>
     </div>
   </article>
-<article class="offer-card reveal tier-accent-s" aria-labelledby="offer-2">
+      <article class="offer-card reveal tier-accent-s" aria-labelledby="offer-2">
     <div class="card-accent" aria-hidden="true"></div>
     <span class="rank-watermark" aria-hidden="true">03</span>
     <div class="offer-inner">
@@ -1008,7 +1161,7 @@ codex --profile openrouter</code></pre>
           <span class="badge badge-e">E. 割引</span>
           <span class="badge badge-c" title="入力 0.2ドル以下 ・ 出力 0.4ドル以下 / 百万トークン">激安</span>
           <span class="tier tier-s" title="性能ティア"><span class="tier-letter">S</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>昨日 確認</span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
         <h3 id="offer-2" class="offer-name">MiMo V2.5</h3>
         <p class="offer-meta">by <strong>NanoGPT</strong> ・ MiMo V2.5</p>
@@ -1027,7 +1180,7 @@ codex --profile openrouter</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">Xiaomi のオムニモーダルモデルで、ツールコール・構造化出力・Web 検索に対応しコンテキストは 1M トークン。NanoGPT では $0.14 / $0.28 (1M トークンあたり) という超低価格。エージェント中心のワークフローで高性价比です。</div>
+      <div class="stat-sub">Xiaomi のフルモダリティ対応エージェント向けモデル MiMo V2.5。最大約 1M のコンテキストでツール呼び出し・構造化出力・ウェブ検索をサポートします。NanoGPT では入力 $0.14/M・出力 $0.28/M の超低価格で、エージェント用途のコストパフォーマンスが良い選択肢です。</div>
     </div>
         </div>
 
@@ -1036,8 +1189,8 @@ codex --profile openrouter</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">xiaomi/mimo-v2.5</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月19日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ Paid NanoGPT router access at ultra-low per-token price; cheap but not free, and no data policy is published.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月20日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid NanoGPT-router API at ultra-low price; paid access, not free or a genuine discount.</span></div>
         </div>
 
         <details class="bench-details">
@@ -1128,7 +1281,7 @@ codex --profile nanogpt</code></pre>
       </div>
     </div>
   </article>
-<article class="offer-card reveal tier-accent-s" aria-labelledby="offer-3">
+      <article class="offer-card reveal tier-accent-s" aria-labelledby="offer-3">
     <div class="card-accent" aria-hidden="true"></div>
     <span class="rank-watermark" aria-hidden="true">04</span>
     <div class="offer-inner">
@@ -1137,7 +1290,7 @@ codex --profile nanogpt</code></pre>
           <span class="badge badge-e">E. 割引</span>
           <span class="badge badge-c" title="入力 0.2ドル以下 ・ 出力 0.4ドル以下 / 百万トークン">激安</span>
           <span class="tier tier-s" title="性能ティア"><span class="tier-letter">S</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>昨日 確認</span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
         <h3 id="offer-3" class="offer-name">Xiaomi: MiMo-V2.5</h3>
         <p class="offer-meta">by <strong>OpenRouter</strong> ・ Xiaomi: MiMo-V2.5</p>
@@ -1156,7 +1309,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">同じ MiMo V2.5 の OpenRouter ルート。コンテキストは約 105 万トークンで、NanoGPT と同じ $0.14 / $0.28 (1M トークンあたり)。Pro 級のエージェント性能を半額の推論コストで、と説明されるモデルです。</div>
+      <div class="stat-sub">MiMo V2.5 の OpenRouter ルート（入力 $0.14/M・出力 $0.28/M・約 1.05M コンテキスト）。Xiaomi のオムニモーダルモデルを OpenRouter の決済・ルーティングで使えるのが便利です。</div>
     </div>
         </div>
 
@@ -1164,7 +1317,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">1,050,000 tokens</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">xiaomi/mimo-v2.5</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月19日</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月20日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ Paid OpenRouter API at ultra-low price; paid access with no free quota or discount window.</span></div>
         </div>
 
         <details class="bench-details">
@@ -1250,271 +1404,18 @@ codex --profile openrouter</code></pre>
       </div>
     </div>
   </article>
-<article class="offer-card reveal tier-accent-a" aria-labelledby="offer-4">
+      <article class="offer-card reveal tier-accent-a" aria-labelledby="offer-4">
     <div class="card-accent" aria-hidden="true"></div>
     <span class="rank-watermark" aria-hidden="true">05</span>
-    <div class="offer-inner">
-      <div class="offer-main">
-        <div class="offer-badges">
-          <span class="badge badge-b">B. 恒久無料枠</span>
-          <span class="badge badge-a" title="実効入力・出力価格が 0ドル / 百万トークン">無料</span>
-          <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>昨日 確認</span>
-        </div>
-        <h3 id="offer-4" class="offer-name">Gemini 2.5 Pro</h3>
-        <p class="offer-meta">by <strong>Google Gemini</strong> ・ Gemini 2.5 Pro</p>
-
-        <div class="offer-stats">
-          <div class="stat">
-      <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-a">A</span><span class="bench-score">59%</span></div>
-      <div class="stat-sub">Terminal Bench 2.1 (2.1)</div>
-    </div>
-          <div class="stat">
-            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price price-free">$0</span></div>
-            <div class="stat-sub">入力 / 出力</div>
-          </div>
-          <div class="stat">
-      <div class="stat-label">運用信頼度</div>
-      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">Google フラグシップの思考モデル。Gemini API の無料枠で完全に無料で使え、100万トークンコンテキスト、ツールコール、構造化出力、画像・動画・音声入力に対応。コーディング・数学・長文書解析の定番として、無料でこれだけ使えてしまうのが最大の特徴です。</div>
-    </div>
-        </div>
-
-        <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">1,048,576 tokens</span></div>
-          <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://generativelanguage.googleapis.com/v1beta</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">gemini-2.5-pro</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月1日</span></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">Free of charge</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-yes">Used to improve our products: Yes</span></div>
-          <div class="id-row"><span class="id-key">データポリシー</span><span class="id-val-plain"><a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener noreferrer">Used to improve our products: Yes ↗</a></span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ Official Gemini API free tier with recurring rate-limited free quota (real API, not app-only); caveat: free-tier data is used to improve Google products.</span></div>
-        </div>
-
-        <details class="bench-details">
-      <summary class="bench-summary">
-        <span class="bench-summary-label">ベンチマーク詳細</span>
-        <span class="bench-summary-count">7件</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="bench-list"><div class="bench-row"><span class="bench-name">AIME (OTIS Mock)</span><span class="bench-val">84.2%</span></div><div class="bench-row"><span class="bench-name">GPQA Diamond</span><span class="bench-val">85.3%</span></div><div class="bench-row"><span class="bench-name">Humanity&#39;s Last Exam</span><span class="bench-val">21.64%</span></div><div class="bench-row"><span class="bench-name">MMLU-Pro</span><span class="bench-val">86.2%</span></div><div class="bench-row"><span class="bench-name">MMMU-Pro</span><span class="bench-val">68%</span></div><div class="bench-row"><span class="bench-name">SWE-bench Verified</span><span class="bench-val">96%</span></div><div class="bench-row"><span class="bench-name">Terminal Bench 2.1 (2.1)</span><span class="bench-val">59%</span></div></div>
-    </details>
-        <details class="acc">
-      <summary class="acc-summary" aria-label="接続方法を表示">
-        <span class="acc-title">
-          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
-          接続方法
-        </span>
-        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="acc-body">
-        <p class="acc-note">テンプレート版本 2026.08.1 ・ エンドポイントは provider-registry.json (公式ドキュメント由来) で検証済み。Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
-        <div class="agent-grid"><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// ~/.pi/agent/models.json にプロバイダを登録
-{
-  &quot;providers&quot;: {
-    &quot;google&quot;: {
-      &quot;baseUrl&quot;: &quot;https://generativelanguage.googleapis.com/v1beta&quot;,
-      &quot;api&quot;: &quot;google-generative-ai&quot;,
-      &quot;apiKey&quot;: &quot;$GEMINI_API_KEY&quot;,
-      &quot;models&quot;: [
-        { &quot;id&quot;: &quot;gemini-2.5-pro&quot;, &quot;reasoning&quot;: false }
-      ]
-    }
-  }
-}
-
-export GEMINI_API_KEY=xxxxxxxxxxxxxxxx
-
-# 起動 (または .pi/settings.json の defaultProvider/defaultModel)
-pi --model google/gemini-2.5-pro</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># Claude Code は Gemini を Google Vertex AI 経由で利用できます。
-export CLAUDE_CODE_USE_VERTEX=1
-export CLOUD_ML_REGION=global
-export ANTHROPIC_VERTEX_PROJECT_ID=&lt;GCPプロジェクトID&gt;
-
-claude --model gemini-2.5-pro</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code>// opencode.json
-{
-  &quot;provider&quot;: {
-    &quot;google&quot;: {
-      &quot;npm&quot;: &quot;@ai-sdk/google&quot;,
-      &quot;models&quot;: { &quot;gemini-2.5-pro&quot;: {} }
-    }
-  }
-}
-
-export GEMINI_API_KEY=xxxxxxxxxxxxxxxx
-# または opencode 起動後 → /connect google</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.codex/config.toml
-[model_providers.google]
-name = &quot;Google Gemini&quot;
-base_url = &quot;https://generativelanguage.googleapis.com/v1beta/openai&quot;
-env_key = &quot;GEMINI_API_KEY&quot;
-wire_api = &quot;chat&quot;
-
-[profiles.google]
-provider = &quot;google&quot;
-model = &quot;gemini-2.5-pro&quot;
-
-# 起動
-codex --profile google</code></pre>
-      </div></div>
-      </div>
-    </details>
-
-        <div class="offer-links">
-          <a class="btn btn-primary" href="https://ai.google.dev/gemini-api/docs/openai" target="_blank" rel="noopener noreferrer">公式サイト <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-    </div>
-  </article>
-<article class="offer-card reveal tier-accent-a" aria-labelledby="offer-5">
-    <div class="card-accent" aria-hidden="true"></div>
-    <span class="rank-watermark" aria-hidden="true">06</span>
-    <div class="offer-inner">
-      <div class="offer-main">
-        <div class="offer-badges">
-          <span class="badge badge-b">B. 恒久無料枠</span>
-          <span class="badge badge-a" title="実効入力・出力価格が 0ドル / 百万トークン">無料</span>
-          <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>昨日 確認</span>
-        </div>
-        <h3 id="offer-5" class="offer-name">NVIDIA: Nemotron 3 Ultra</h3>
-        <p class="offer-meta">by <strong>OpenRouter</strong> ・ NVIDIA: Nemotron 3 Ultra</p>
-
-        <div class="offer-stats">
-          <div class="stat">
-      <div class="stat-label">ベンチマーク</div>
-      <div class="stat-value"><span class="bench-tier tier-a">A</span><span class="bench-score">56.4%</span></div>
-      <div class="stat-sub">Terminal-Bench 2.1 (2.1)</div>
-    </div>
-          <div class="stat">
-            <div class="stat-label">実効価格 <span class="stat-unit">/ 1M tokens</span></div>
-            <div class="stat-value"><span class="price price-free">$0</span></div>
-            <div class="stat-sub">入力 / 出力</div>
-          </div>
-          <div class="stat">
-      <div class="stat-label">運用信頼度</div>
-      <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">Nemotron 3 Ultra の OpenRouter 無料ルート。550B MoE のフロンティアモデルを 1M コンテキストで 0 円使える、NIM トライアルのキーが手に入らない場合の代替として最適な一本です。</div>
-    </div>
-        </div>
-
-        <div class="offer-ids">
-          <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">1,000,000 tokens</span></div>
-          <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
-          <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">nvidia/nemotron-3-ultra-550b-a55b:free</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月19日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ OpenRouter free variant: recurring daily-limited free inference through the router; availability and rate limits fluctuate.</span></div>
-        </div>
-
-        <details class="bench-details">
-      <summary class="bench-summary">
-        <span class="bench-summary-label">ベンチマーク詳細</span>
-        <span class="bench-summary-count">1件</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="bench-list"><div class="bench-row"><span class="bench-name">Terminal-Bench 2.1 (2.1)</span><span class="bench-val">56.4%</span></div></div>
-    </details>
-        <details class="acc">
-      <summary class="acc-summary" aria-label="接続方法を表示">
-        <span class="acc-title">
-          <svg class="acc-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14l-1 7a5 5 0 0 1-5 4h-2a5 5 0 0 1-5-4L5 8Zm3 12v2"/></svg>
-          接続方法
-        </span>
-        <span class="acc-agents">pi · Claude Code · OpenCode · Codex</span>
-        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="acc-body">
-        <p class="acc-note">テンプレート版本 2026.08.1 ・ エンドポイントは provider-registry.json (公式ドキュメント由来) で検証済み。Base URL と Model ID はこのカードの値から生成。APIキーはプレースホルダーです。</p>
-        <div class="agent-grid"><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">pi</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># pi は OpenRouter をビルトインでサポート (pi docs: providers.md)
-# 方法A: 対話モードで登録
-pi
-/login openrouter   # キーを貼付 (sk-or-v1-...)
-
-# 方法B: 環境変数
-# ~/.bashrc などに追記
-export OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxx
-
-# 起動 (または ~/.pi/agent/settings.json の defaultProvider)
-pi --model openrouter/nvidia/nemotron-3-ultra-550b-a55b:free</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Claude Code</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># Claude Code は Anthropic Messages 互換エンドポイントに直接接続 (プロキシ不要)
-# 公式手順: https://openrouter.ai/docs/cookbook/coding-agents/claude-code-integration
-export ANTHROPIC_BASE_URL=https://openrouter.ai/api
-export ANTHROPIC_AUTH_TOKEN=sk-or-v1-xxxxxxxxxxxxxxxx
-export ANTHROPIC_API_KEY=&quot;&quot;   # 明示的に空にする (Anthropic 直結と競合しないように)
-
-claude --model nvidia/nemotron-3-ultra-550b-a55b:free</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">OpenCode</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># opencode は OpenRouter をビルトインでサポート (公式 docs: providers)
-# 1. opencode 起動
-opencode
-# 2. /connect → OpenRouter を選択 → APIキー (sk-or-v1-...) を貼付
-#    (キーは ~/.local/share/opencode/auth.json に保存)
-# 3. /models でモデル選択 (openrouter/nvidia/nemotron-3-ultra-550b-a55b:free)
-
-# 設定ファイルで明示する場合 (opencode.json)
-{
-  &quot;provider&quot;: {
-    &quot;openrouter&quot;: {
-      &quot;models&quot;: { &quot;nvidia/nemotron-3-ultra-550b-a55b:free&quot;: {} }
-    }
-  }
-}</code></pre>
-      </div><div class="agent-block">
-        <div class="agent-head"><span class="agent-name">Codex</span><span class="agent-tag agent-tag-ok">設定例</span></div>
-        <pre class="agent-code"><code># ~/.codex/config.toml
-[model_providers.openrouter]
-name = &quot;OpenRouter&quot;
-base_url = &quot;https://openrouter.ai/api/v1&quot;
-env_key = &quot;OPENROUTER_API_KEY&quot;
-wire_api = &quot;chat&quot;
-
-[profiles.openrouter]
-provider = &quot;openrouter&quot;
-model = &quot;nvidia/nemotron-3-ultra-550b-a55b:free&quot;
-
-# 起動
-codex --profile openrouter</code></pre>
-      </div></div>
-      </div>
-    </details>
-
-        <div class="offer-links">
-          <a class="btn btn-primary" href="https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b:free" target="_blank" rel="noopener noreferrer">モデルページ <span aria-hidden="true">↗</span></a>
-        </div>
-      </div>
-    </div>
-  </article>
-<article class="offer-card reveal tier-accent-a" aria-labelledby="offer-6">
-    <div class="card-accent" aria-hidden="true"></div>
-    <span class="rank-watermark" aria-hidden="true">07</span>
     <div class="offer-inner">
       <div class="offer-main">
         <div class="offer-badges">
           <span class="badge badge-e">E. 割引</span>
           <span class="badge badge-c" title="入力 0.2ドル以下 ・ 出力 0.4ドル以下 / 百万トークン">激安</span>
           <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>昨日 確認</span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
-        <h3 id="offer-6" class="offer-name">DeepSeek V4 Flash</h3>
+        <h3 id="offer-4" class="offer-name">DeepSeek V4 Flash</h3>
         <p class="offer-meta">by <strong>NanoGPT</strong> ・ DeepSeek V4 Flash</p>
 
         <div class="offer-stats">
@@ -1531,7 +1432,7 @@ codex --profile openrouter</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">DeepSeek の効率最適化 MoE モデルで、1M トークンコンテキスト、高速推論・高スループット・推論・コーディング・エージェントワークロードをカバー。NanoGPT では $0.14 / $0.28 (1M トークンあたり) という超低価格です。</div>
+      <div class="stat-sub">DeepSeek V4 Flash は 1M コンテキストの効率最適化 MoE モデルで、高スループットな推論・コーディング・エージェント用途向け。NanoGPT 経由で入力 $0.14/M・出力 $0.28/M の超低価格で使えます。</div>
     </div>
         </div>
 
@@ -1540,8 +1441,8 @@ codex --profile openrouter</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">deepseek/deepseek-v4-flash</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月19日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ Paid NanoGPT router access at ultra-low per-token price; cheap but not free, and no data policy is published.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月20日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid NanoGPT-router API at ultra-low price; paid access, not free or a genuine discount.</span></div>
         </div>
 
         <details class="bench-details">
@@ -1632,18 +1533,18 @@ codex --profile nanogpt</code></pre>
       </div>
     </div>
   </article>
-<article class="offer-card reveal tier-accent-a" aria-labelledby="offer-7">
+      <article class="offer-card reveal tier-accent-a" aria-labelledby="offer-5">
     <div class="card-accent" aria-hidden="true"></div>
-    <span class="rank-watermark" aria-hidden="true">08</span>
+    <span class="rank-watermark" aria-hidden="true">06</span>
     <div class="offer-inner">
       <div class="offer-main">
         <div class="offer-badges">
           <span class="badge badge-e">E. 割引</span>
           <span class="badge badge-c" title="入力 0.2ドル以下 ・ 出力 0.4ドル以下 / 百万トークン">激安</span>
           <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>昨日 確認</span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
-        <h3 id="offer-7" class="offer-name">Ling 3.0 Flash</h3>
+        <h3 id="offer-5" class="offer-name">Ling 3.0 Flash</h3>
         <p class="offer-meta">by <strong>NanoGPT</strong> ・ Ling 3.0 Flash</p>
 
         <div class="offer-stats">
@@ -1660,7 +1561,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">inclusionAI 製 124B パラメータ MoE (トークンあたり約 5.1B 活性化) で、トークン効率と本番規模のエージェント推論に特化。NanoGPT では $0.075 / $0.22 (1M トークンあたり)、コンテキスト 262K。コーディングやツール利用エージェントが予算内でより多くの仕事を終わらせたい場合に向いています。</div>
+      <div class="stat-sub">inclusionAI の 124B MoE モデル Ling 3.0 Flash。トークンあたり約 5.1B パラメータをアクティブにし、トークン効率と本番規模のエージェント推論を最適化しています。256K コンテキストで、NanoGPT では入力 $0.075/M・出力 $0.22/M の超低価格です。</div>
     </div>
         </div>
 
@@ -1669,8 +1570,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">inclusionai/ling-3.0-flash</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月19日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ Paid NanoGPT router access at ultra-low per-token price; cheap but not free, and no data policy is published.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月20日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid NanoGPT-router API at ultra-low price; paid access, not free or a genuine discount.</span></div>
         </div>
 
         <details class="bench-details">
@@ -1761,18 +1662,18 @@ codex --profile nanogpt</code></pre>
       </div>
     </div>
   </article>
-<article class="offer-card reveal tier-accent-a" aria-labelledby="offer-8">
+      <article class="offer-card reveal tier-accent-a" aria-labelledby="offer-6">
     <div class="card-accent" aria-hidden="true"></div>
-    <span class="rank-watermark" aria-hidden="true">09</span>
+    <span class="rank-watermark" aria-hidden="true">07</span>
     <div class="offer-inner">
       <div class="offer-main">
         <div class="offer-badges">
           <span class="badge badge-e">E. 割引</span>
           <span class="badge badge-c" title="入力 0.2ドル以下 ・ 出力 0.4ドル以下 / 百万トークン">激安</span>
           <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>昨日 確認</span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>今日 確認</span>
         </div>
-        <h3 id="offer-8" class="offer-name">Ling-3.0-flash</h3>
+        <h3 id="offer-6" class="offer-name">Ling-3.0-flash</h3>
         <p class="offer-meta">by <strong>OpenRouter</strong> ・ Ling-3.0-flash</p>
 
         <div class="offer-stats">
@@ -1789,7 +1690,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">同じ Ling-3.0-flash の OpenRouter ルート。$0.021 / $0.063 (1M トークンあたり) と NanoGPT ルートより安く、このモデルを使うなら最安ルートになります。コンテキストは 262K。</div>
+      <div class="stat-sub">Ling-3.0-flash の OpenRouter ルートは入力 $0.021/M・出力 $0.063/M で、NanoGPT ルート（$0.075 / $0.22）より単価が安いのが特徴です。同じ 124B MoE・256K コンテキストのモデルなので、トークン効率重視のエージェント推論ではこのルートが単価で有利です。</div>
     </div>
         </div>
 
@@ -1797,7 +1698,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">262,144 tokens</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">inclusionai/ling-3.0-flash</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月19日</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月20日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ Paid OpenRouter API at ultra-low price; paid access with no free quota or discount window.</span></div>
         </div>
 
         <details class="bench-details">
@@ -1883,780 +1785,144 @@ codex --profile openrouter</code></pre>
       </div>
     </div>
   </article></div>
+    </div>
+      <div id="slot-discount" class="offer-slot">
+        <h3 class="slot-title">フロンティア割引</h3>
+        <p class="text-sm text-muted-foreground">本日なし</p>
+      </div>
     </section>
 
-    <section id="discount" class="report-section" aria-labelledby="discount-h">
-      <div class="flex items-end justify-between gap-4 mb-1">
-        <h2 id="discount-h" class="font-display text-2xl sm:text-3xl font-bold">フロンティア割引</h2>
-        
-      </div>
-      <p class="empty-line">本日なし</p>
-    </section>
     <section id="product-updates" class="report-section" aria-labelledby="product-updates-h">
       <div class="flex items-end justify-between gap-4 mb-1">
         <h2 id="product-updates-h" class="font-display text-2xl sm:text-3xl font-bold">Coding Agent / 製品内無料</h2>
+        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">8 件</span>
+      </div>
+      <ul class="update-list"><li class="update-card" aria-labelledby="product-updates-0">
+      <div class="update-head">
+        <h3 id="product-updates-0" class="update-name">Cline</h3>
         
       </div>
-      <p class="empty-line">前回と変更なし。</p>
+      
+      
+      
+      <p class="model-src"><a href="https://github.com/cline/cline/releases" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li>
+    <li class="update-card" aria-labelledby="product-updates-1">
+      <div class="update-head">
+        <h3 id="product-updates-1" class="update-name">Codex</h3>
+        
+      </div>
+      
+      
+      
+      <p class="model-src"><a href="https://developers.openai.com/api/docs/pricing" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li>
+    <li class="update-card" aria-labelledby="product-updates-2">
+      <div class="update-head">
+        <h3 id="product-updates-2" class="update-name">Continue</h3>
+        
+      </div>
+      
+      
+      
+      <p class="model-src"><a href="https://github.com/continuedev/continue/releases" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li>
+    <li class="update-card" aria-labelledby="product-updates-3">
+      <div class="update-head">
+        <h3 id="product-updates-3" class="update-name">Cursor</h3>
+        
+      </div>
+      
+      
+      
+      <p class="model-src"><a href="https://cursor.com/changelog" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li>
+    <li class="update-card" aria-labelledby="product-updates-4">
+      <div class="update-head">
+        <h3 id="product-updates-4" class="update-name">JetBrains AI</h3>
+        
+      </div>
+      
+      
+      
+      <p class="model-src"><a href="https://blog.jetbrains.com/ai/" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li>
+    <li class="update-card" aria-labelledby="product-updates-5">
+      <div class="update-head">
+        <h3 id="product-updates-5" class="update-name">Kilo Code</h3>
+        
+      </div>
+      
+      
+      
+      <p class="model-src"><a href="https://kilocode.ai/pricing" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li>
+    <li class="update-card" aria-labelledby="product-updates-6">
+      <div class="update-head">
+        <h3 id="product-updates-6" class="update-name">OpenCode</h3>
+        
+      </div>
+      
+      
+      
+      <p class="model-src"><a href="https://opencode.ai/docs/" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li>
+    <li class="update-card" aria-labelledby="product-updates-7">
+      <div class="update-head">
+        <h3 id="product-updates-7" class="update-name">Windsurf</h3>
+        
+      </div>
+      
+      
+      
+      <p class="model-src"><a href="https://windsurf.com/pricing" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li></ul>
     </section>
     <section id="startup-credits" class="report-section" aria-labelledby="startup-credits-h">
       <div class="flex items-end justify-between gap-4 mb-1">
         <h2 id="startup-credits-h" class="font-display text-2xl sm:text-3xl font-bold">Startup Credits</h2>
+        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">4 件</span>
+      </div>
+      <ul class="update-list"><li class="update-card" aria-labelledby="startup-credits-0">
+      <div class="update-head">
+        <h3 id="startup-credits-0" class="update-name">Accelerator / Student / Research Programs</h3>
         
       </div>
-      <p class="empty-line">前回と変更なし。</p>
-    </section>
-    <section id="conditional" class="report-section" aria-labelledby="conditional-h">
-      <div class="flex items-end justify-between gap-4 mb-1">
-        <h2 id="conditional-h" class="font-display text-2xl sm:text-3xl font-bold">条件付き無料 (データ共有など)</h2>
+      
+      
+      
+      <p class="model-src"><a href="https://cloud.google.com/startup/ai" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li>
+    <li class="update-card" aria-labelledby="startup-credits-1">
+      <div class="update-head">
+        <h3 id="startup-credits-1" class="update-name">Cloudflare for Startups</h3>
         
       </div>
-      <p class="empty-line">本日なし</p>
-    </section>
-    <section id="caution" class="report-section" aria-labelledby="caution-h">
-      <div class="flex items-end justify-between gap-4 mb-1">
-        <h2 id="caution-h" class="font-display text-2xl sm:text-3xl font-bold">注意 (連続で検証できず)</h2>
+      
+      
+      
+      <p class="model-src"><a href="https://www.cloudflare.com/startups/" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li>
+    <li class="update-card" aria-labelledby="startup-credits-2">
+      <div class="update-head">
+        <h3 id="startup-credits-2" class="update-name">Microsoft for Startups</h3>
         
       </div>
-      <p class="empty-line">本日なし</p>
-    </section>
-    <section id="ended-excluded" class="report-section" aria-labelledby="ended-excluded-h">
-      <div class="flex items-end justify-between gap-4 mb-1">
-        <h2 id="ended-excluded-h" class="font-display text-2xl sm:text-3xl font-bold">終了 / 除外</h2>
-        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">183 件</span>
+      
+      
+      
+      <p class="model-src"><a href="https://www.microsoft.com/startups" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li>
+    <li class="update-card" aria-labelledby="startup-credits-3">
+      <div class="update-head">
+        <h3 id="startup-credits-3" class="update-name">Oracle for Startups</h3>
+        
       </div>
-      <ul class="simple-list"><li class="simple-row">
-        <span class="simple-name">Baichuan 4 Air</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">MythoMax 13B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Llama 3.1 8B (decentralized)</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">DeepSeek V4 Flash TEE</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GLM 4 32B 0414</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GLM 4 9B 0414</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GLM Z1 9B 0414</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">The Drummer Cydonia 24B v2</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">The Drummer Cydonia 24B v4.3</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">The Drummer Magidonia 24B v4.3</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Amazon Nova Lite 1.0</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Amazon Nova Micro 1.0</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Auto model</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Doubao Seed Character</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Mistral Small 3.2 24b Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">DeepSeek V4 Flash 0731 (Thinking)</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">DeepSeek V4 Flash Latest</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">DeepSeek V4 Flash (Thinking)</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">DMind-1-Mini</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Dots3-Note Preview</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Doubao 1.5 Pro 32k</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Doubao Seed 1.6 Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Gemini 2.5 Flash Lite</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Gemini 2.5 Flash Lite Preview (09/2025)</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Gemini 2.5 Flash Lite Preview (09/2025) – Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Gemma 4 12B Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Gemma 4 E2B Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Gemma 4 E4B Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GLM 4 Air 0111</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GLM-4 Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GLM Z1 Air</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Gemma 4 26B A4B</span>
-        <span class="simple-meta">[benchmark-gate] only verified Terminal Bench 2.0/2.1 at or above 50 admits; other benchmarks and lower scores do not substitute (AC-5, AC-6) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Gemma 4 26B A4B Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Gemma 4 31B</span>
-        <span class="simple-meta">[benchmark-gate] only verified Terminal Bench 2.0/2.1 at or above 50 admits; other benchmarks and lower scores do not substitute (AC-5, AC-6) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Gemma 4 31B Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Hunyuan Turbo S</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Granite 4.1 8B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Ling 2.6 Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Ling 3.0 Flash Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">LFM2.5 2.6B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Manta Flash 1.0</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Manta Mini 1.0</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Llama 3.1 8b Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Llama 3.2 3b Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Llama 3.3 70b Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Muse Spark 1.2 Contributor (Data Used for Training)</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Mistral Small 31 24b Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Mistral Devstral Small 2505</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Mistral Nemo</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Ministral 14B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Ministral 3 14B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Ministral 3B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Ministral 8B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">NanoGPT Help</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Coding Router Low</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Coding Router Medium</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Nex N2 Mini</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Nvidia Nemotron Super 49B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Nvidia Nemotron 3 Super 120B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Nvidia Nemotron 3 Super 120B Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Nvidia Nemotron 3.5 Lightning</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Nvidia Nemotron 3.5 Lightning Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GPT 4.1 Nano</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GPT 5 Nano</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GPT OSS 20B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GPT OSS Safeguard 20B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">OpenReasoning Nemotron 32B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Phi 4 Multimodal</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Laguna M.1</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Laguna S 2.1</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Laguna S 2.1 Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen Turbo</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen 3 14b</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen3 30B A3B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen 3 32b</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen3.5 9B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen3 Coder 30B A3B Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen3.5 0.8B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen3.5 2B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen3.5 4B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen3.5 Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen3.5 Flash Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen3.7 Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen3.7 Flash Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Sarvam 105B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Sarvam 30B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Step 3.5 Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Step 3.5 Flash 2603</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Tencent Hy3</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Solar Pro 4</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Solar Pro 4 Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">MiMo V2.5 Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GLM 4.6V Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GLM 4.7 Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GLM 4.7 Flash Original</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GLM 4.7 Flash Original Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">GLM 4.7 Flash Thinking</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Nemotron 3 Ultra</span>
-        <span class="simple-meta">[gate3] operational confidence LOW: no fresh operational evidence this run (最終状態: stale)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Amazon: Nova Lite 1.0</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Amazon: Nova Micro 1.0</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">ByteDance Seed: Seed 1.6 Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">ByteDance Seed: Seed-2.0-Mini</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">ByteDance: UI-TARS 7B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Cohere: Command R7B (12-2024)</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Cohere: North Mini Code</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Dots Studio: Dots3-Note Preview</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Google: Gemini 2.5 Flash Lite</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Google: Gemini 2.5 Flash Lite (batch)</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Google: Gemma 3 12B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Google: Gemma 3 4B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Google: Gemma 3n 4B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Google: Gemma 4 26B A4B</span>
-        <span class="simple-meta">[benchmark-gate] only verified Terminal Bench 2.0/2.1 at or above 50 admits; other benchmarks and lower scores do not substitute (AC-5, AC-6) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Google: Gemma 4 26B A4B</span>
-        <span class="simple-meta">[benchmark-gate] only verified Terminal Bench 2.0/2.1 at or above 50 admits; other benchmarks and lower scores do not substitute (AC-5, AC-6) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Google: Gemma 4 31B</span>
-        <span class="simple-meta">[benchmark-gate] only verified Terminal Bench 2.0/2.1 at or above 50 admits; other benchmarks and lower scores do not substitute (AC-5, AC-6) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Google: Gemma 4 31B</span>
-        <span class="simple-meta">[benchmark-gate] only verified Terminal Bench 2.0/2.1 at or above 50 admits; other benchmarks and lower scores do not substitute (AC-5, AC-6) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Google: Lyria 3 Clip Preview</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Google: Lyria 3 Pro Preview</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">MythoMax 13B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">IBM: Granite 4.0 Micro</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">IBM: Granite 4.1 8B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">inclusionAI: Ling-2.6-flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">LiquidAI: LFM2.5-2.6B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Meta: Llama 3.1 8B Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Meta: Llama 3.2 1B Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Meta: Llama 3.2 3B Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Meta: Llama 3.3 70B Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Meta: Llama 4 Scout</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Meta: Llama Guard 4 12B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Microsoft: Phi 4</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Mistral: Ministral 3 14B 2512</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Mistral: Ministral 3 3B 2512</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Mistral: Ministral 3 8B 2512</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Mistral: Mistral Nemo</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Mistral: Mistral Small 3</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Mistral: Mistral Small 3.2 24B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Mistral: Voxtral Small 24B 2507</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Nex AGI: Nex-N2-Mini</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Nous: Hermes 4 70B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">NVIDIA: Nemotron 3 Nano 30B A3B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">NVIDIA: Nemotron 3 Nano 30B A3B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">NVIDIA: Nemotron 3 Nano Omni</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">NVIDIA: Nemotron 3 Super</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">NVIDIA: Nemotron 3 Super</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">NVIDIA: Nemotron 3.5 Content Safety</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">NVIDIA: Nemotron 3.5 Lightning</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">NVIDIA: Nemotron 3.5 Lightning</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">NVIDIA: Nemotron Nano 12B 2 VL</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">NVIDIA: Nemotron Nano 9B V2</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">OpenAI: GPT-4.1 Nano</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">OpenAI: GPT-4.1 Nano (batch)</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">OpenAI: GPT-4o-mini (batch)</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">OpenAI: GPT-5 Nano</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">OpenAI: GPT-5 Nano (batch)</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">OpenAI: gpt-oss-120b</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">OpenAI: gpt-oss-20b</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">OpenAI: gpt-oss-20b</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">OpenAI: gpt-oss-safeguard-20b</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Free Models Router</span>
-        <span class="simple-meta">[gate3] no operational evidence: the offer is not currently operable (provider_count 0 at $0, deprecated endpoint, or unverified) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Poolside: Laguna S 2.1</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Poolside: Laguna S 2.1</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Poolside: Laguna XS 2.1</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Poolside: Laguna XS 2.1</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen: Qwen2.5 7B Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen: Qwen3 14B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen: Qwen3 30B A3B Instruct 2507</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen: Qwen3 32B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen: Qwen3 Coder 30B A3B Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen: Qwen3.5-9B</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen: Qwen3.5-Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Qwen: Qwen3.7 Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Reka Edge</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Reka Flash 3</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Sao10K: Llama 3 8B Lunaris</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">StepFun: Step 3.5 Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Upstage: Solar Pro 4</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Z.ai: GLM 4.7 Flash</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Z.ai: GLM 5.2</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">DeepSeek-V3.1</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">DeepSeek-V3.2</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">Meta-Llama-3.3-70B-Instruct</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">MiniMax-M2.7</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">gemma-4-31B-it</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li>
-      <li class="simple-row">
-        <span class="simple-name">gpt-oss-120b</span>
-        <span class="simple-meta">[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5) (最終状態: verified)</span>
-      </li></ul>
+      
+      
+      
+      <p class="model-src"><a href="https://www.oracle.com/startup/" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li></ul>
     </section>
     <section id="new-sources" class="report-section" aria-labelledby="new-sources-h">
       <div class="flex items-end justify-between gap-4 mb-1">
