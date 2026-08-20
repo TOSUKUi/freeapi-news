@@ -710,34 +710,9 @@ function simpleOfferList(id, title, offers, renderRow) {
   return sectionShell(id, title, offers.length, body);
 }
 
-function newSourcesSection(report) {
-  const items = Array.isArray(report.new_sources) ? report.new_sources : [];
-  const rows = items.map((s, i) => `<li class="source-proposal">
-      <div class="update-head">
-        <h3 class="update-name">${esc(s.label || s.provider_key)}</h3>
-        <span class="model-candidate">承認待ち</span>
-      </div>
-      ${s.base_url ? `<p class="model-id">${esc(s.base_url)}</p>` : ''}
-      ${s.docs_url ? `<p class="model-src"><a href="${esc(s.docs_url)}" target="_blank" rel="noopener noreferrer">ドキュメント ↗</a></p>` : ''}
-      <p class="acc-note">承認するとウォッチ対象に追加されます:</p>
-      <pre class="agent-code">${esc(s.add_command || '')}</pre>
-    </li>`).join('\n    ');
-  const body = `<ul class="update-list">${rows}</ul>`;
-  return sectionShell('new-sources', '新規情報源の提案', items.length, body);
-}
-
-function sourcesSection(report) {
-  const seen = new Set();
-  const sources = (Array.isArray(report.sources) ? report.sources : [])
-    .filter((s) => {
-      if (!s || !s.url || seen.has(s.url)) return false;
-      seen.add(s.url);
-      return true;
-    });
-  const rows = sources.map((s) => `<li class="src-row"><span class="src-type">${esc(s.source_type || 'other')}</span> <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" class="src-url">${esc(s.url)}</a></li>`).join('\n      ');
-  const body = `<ul class="src-list">${rows}</ul>`;
-  return sectionShell('sources', 'データソース', sources.length, body);
-}
+// The new-source proposals and the source list are no longer rendered on
+// the page (operator decision 2026-08-20: watch list and data sources are
+// operational state, not reader content). The data stays in report.json.
 
 // ── Theme tokens (spec 0002 AC-1, AC-2) ───────────────────────────
 // One source of truth: CSS variables in :root and .dark, with the Tailwind
@@ -1352,8 +1327,6 @@ function generateHTML(report) {
 
     ${Array.isArray(report.product_updates) && report.product_updates.length ? updatesSection('product-updates', 'Coding Agent / 製品内無料', report.product_updates, '前回と変更なし。') : ''}
     ${Array.isArray(report.startup_credits) && report.startup_credits.length ? updatesSection('startup-credits', 'Startup Credits', report.startup_credits, '前回と変更なし。') : ''}
-    ${newSourcesSection(report)}
-    ${sourcesSection(report)}
 
     <footer class="border-t pt-8 pb-4 text-center text-sm text-muted-foreground">
       <p class="mb-2"><strong class="text-foreground">無料LLM API速報</strong> ・ 毎日11:00 JST自動更新</p>
