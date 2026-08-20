@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-08-20T02:52:21.663Z",
+  "generated_at": "2026-08-20T19:40:10.166Z",
   "timezone": "Asia/Tokyo",
-  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 9 件（S 4、A 5、B 0）、無料 2 件、激安 7 件、注意 0 件、対象外 183 件。",
+  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 9 件（S 4、A 5、B 0）、無料 2 件、激安 7 件、注意 0 件、対象外 191 件。",
   "new_models": [],
   "changes": [
     {
       "offer_name": "Gemini 2.5 Pro",
       "change_type": "rate_limit_change",
-      "summary": "Gemini 2.5 Pro の無料枠の記載が、単なる「Free of charge」から Free Tier と Paid Tier を併記した価格表の抜粋に更新されました。Free Tier の入出力（思考トークン含む）は引き続き「Free of charge」で、無料提供の条件自体は変わりません。新しい抜粋には Paid Tier の単価（入力 $1.25/M、200k トークン超プロンプト $2.50/M、出力 $10.00/M、200k トークン超 $15.00/M）も含まれます。",
+      "summary": "Gemini 2.5 Pro のレート制限・無料枠条件が変わりました。",
       "field": "free_quota",
       "before": "Free of charge",
       "after": "Standard | Free Tier | Paid Tier, per 1M tokens in USD | Input price | Free of charge | $1.25, prompts $2.50, prompts > 200k tokens | Output price (including thinking tokens) | Free of charge | $10.00, prompts $15.00, prompts > 200k"
@@ -15,7 +15,7 @@
     {
       "offer_name": "Gemini 2.5 Pro",
       "change_type": "data_policy_change",
-      "summary": "Gemini 2.5 Pro のデータポリシーの記載が「Used to improve our products: Yes」からより詳しい文言に更新されました。新規アカウントは Free Tier から始まり、より高いレート制限・高度なモデルの利用やプロンプト・レスポンスの Google 製品改善への利用を避けるには請求先アカウントと Prepay を連携して Paid Tier へ移行できると明記され、「Used to improve our products — Free Tier: Yes / Paid Tier: No」と Free と Paid で取り扱いが異なることが確認できます。",
+      "summary": "Gemini 2.5 Pro のデータ利用条件が変わりました。",
       "field": "data_policy",
       "before": {
         "hash": "2233ab91763b3261ee73ae3c864a59e9fca037385ae6fe1447a154df1cd9ffbb",
@@ -27,20 +27,12 @@
       }
     },
     {
-      "offer_name": "DeepSeek V4 Flash Latest",
-      "change_type": "discount_rate_change",
-      "summary": "OpenRouter の DeepSeek V4 Flash Latest の単価が調整されました。入力は 1M トークンあたり $0.0765 から $0.065 へ（約 15% 引き下げ）、出力は $0.153 から $0.18 へ（約 18% 引き上げ）です。変更前後とも割引は適用されていません（割引率 0%）。",
-      "field": "effective_price_per_million",
-      "before": {
-        "input": 0.0765,
-        "output": 0.153
-      },
-      "after": {
-        "input": 0.065,
-        "output": 0.18
-      },
-      "discount_before": 0,
-      "discount_after": 0
+      "offer_name": "GPT-5.6 Sol",
+      "change_type": "new",
+      "summary": "GPT-5.6 Sol が新たにランキング対象になりました。",
+      "field": null,
+      "before": null,
+      "after": null
     }
   ],
   "ranked_offers": [
@@ -51,7 +43,7 @@
       "provider": "NanoGPT",
       "model_vendor": "deepseek",
       "delivery_type": "router",
-      "classification": "E_DISCOUNT",
+      "classification": "G_FREE_LIKE",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -72,7 +64,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "deepseek/deepseek-v4-flash-0731",
       "provider_count": null,
-      "recent_activity": "DeepSeek V4 Flash の再ポストトレーニング版 0731。1M トークンコンテキストの MoE（13B アクティブ / 284B 総パラメータ）で、コーディング・推論・エージェント用途に強く、NanoGPT では入力 $0.14/M・出力 $0.28/M の超低価格で使えます。",
+      "recent_activity": "DeepSeek V4 Flash 0731 is a re-post-trained Mixture-of-Experts model with a 1M-token context window, built for coding, reasoning, and agent workflows.",
       "normal_price_per_million": {
         "input": 0.13999999999999999,
         "output": 0.27999999999999997
@@ -91,10 +83,8 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 2,
-      "suspicion_reasons": [
-        "Paid NanoGPT-router API at ultra-low price; paid access, not free or a genuine discount."
-      ],
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
@@ -205,7 +195,7 @@
       "provider": "OpenRouter",
       "model_vendor": "deepseek",
       "delivery_type": "router",
-      "classification": "E_DISCOUNT",
+      "classification": "G_FREE_LIKE",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -226,7 +216,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "deepseek/deepseek-v4-flash-0731",
       "provider_count": 28,
-      "recent_activity": "同じ DeepSeek V4 Flash 0731（13B アクティブ / 284B MoE）の OpenRouter ルート。入力 $0.14/M・出力 $0.28/M・約 1.3M のコンテキスト。複数のプロバイダ間でルーティングされるため、NanoGPT 単独ルートより供給の安定性を重視したい場面に向いています。",
+      "recent_activity": "DeepSeek V4 Flash 0731 is a sparse mixture-of-experts model from DeepSeek, with 13B active parameters out of 284B total. This re-post-trained revision is suited for coding, reasoning, and agent workflows....",
       "normal_price_per_million": {
         "input": 0.14,
         "output": 0.28
@@ -245,10 +235,8 @@
       "operational_evidence": "router: 28 provider(s), 1d uptime 99.9%",
       "activity": "top provider Cloudflare, 1d uptime 99.9%",
       "training_use": null,
-      "suspicion_score": 1,
-      "suspicion_reasons": [
-        "Paid OpenRouter API at ultra-low price; paid access with no free quota or discount window."
-      ],
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
@@ -359,7 +347,7 @@
       "provider": "NanoGPT",
       "model_vendor": "xiaomi",
       "delivery_type": "router",
-      "classification": "E_DISCOUNT",
+      "classification": "G_FREE_LIKE",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -380,7 +368,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "xiaomi/mimo-v2.5",
       "provider_count": null,
-      "recent_activity": "Xiaomi のフルモダリティ対応エージェント向けモデル MiMo V2.5。最大約 1M のコンテキストでツール呼び出し・構造化出力・ウェブ検索をサポートします。NanoGPT では入力 $0.14/M・出力 $0.28/M の超低価格で、エージェント用途のコストパフォーマンスが良い選択肢です。",
+      "recent_activity": "MiMo V2.5 is Xiaomi's full-modal understanding model for agent workflows. It supports tool calling, structured outputs, and web search with up to 1M context.",
       "normal_price_per_million": {
         "input": 0.13999999999999999,
         "output": 0.27999999999999997
@@ -399,10 +387,8 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 2,
-      "suspicion_reasons": [
-        "Paid NanoGPT-router API at ultra-low price; paid access, not free or a genuine discount."
-      ],
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
@@ -449,7 +435,7 @@
       "provider": "OpenRouter",
       "model_vendor": "xiaomi",
       "delivery_type": "router",
-      "classification": "E_DISCOUNT",
+      "classification": "G_FREE_LIKE",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -470,7 +456,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "xiaomi/mimo-v2.5",
       "provider_count": 5,
-      "recent_activity": "MiMo V2.5 の OpenRouter ルート（入力 $0.14/M・出力 $0.28/M・約 1.05M コンテキスト）。Xiaomi のオムニモーダルモデルを OpenRouter の決済・ルーティングで使えるのが便利です。",
+      "recent_activity": "MiMo-V2.5 is a native omnimodal model by Xiaomi. It delivers Pro-level agentic performance at roughly half the inference cost, while surpassing MiMo-V2-Omni in multimodal perception across image and video understanding...",
       "normal_price_per_million": {
         "input": 0.14,
         "output": 0.28
@@ -489,10 +475,8 @@
       "operational_evidence": "router: 5 provider(s), 1d uptime 98.3%",
       "activity": "top provider Novita, 1d uptime 98.3%",
       "training_use": null,
-      "suspicion_score": 1,
-      "suspicion_reasons": [
-        "Paid OpenRouter API at ultra-low price; paid access with no free quota or discount window."
-      ],
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
@@ -560,7 +544,7 @@
       "base_url": "https://generativelanguage.googleapis.com/v1beta",
       "model_id": "gemini-2.5-pro",
       "provider_count": null,
-      "recent_activity": "Gemini API の無料枠で Gemini 2.5 Pro が入出力（思考トークンを含む）ともに無償で使えます。1M トークンのコンテキストを備え、長文書やコードベースの解析、推論・コーディング支援に無料で使えます。",
+      "recent_activity": "Our state-of-the-art thinking model, capable of reasoning over complex problems in code, math, and STEM, as well as analyzing large datasets, codebases, and documents using long context.",
       "normal_price_per_million": {
         "input": 1.25,
         "output": 10
@@ -580,9 +564,7 @@
       "activity": null,
       "training_use": "To access higher rate limits, use advanced models, and ensure your prompts and responses are not used to improve Google products *, you can link a billing account and Prepay to move to the Paid Tiers.",
       "suspicion_score": 0,
-      "suspicion_reasons": [
-        "Official Google Gemini free tier: ongoing rate-limited free quota (free-tier data may be used for product improvement)."
-      ],
+      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
@@ -675,7 +657,7 @@
       "provider": "OpenRouter",
       "model_vendor": "nvidia",
       "delivery_type": "router",
-      "classification": "B_PERMANENT_FREE_TIER",
+      "classification": "G_FREE_LIKE",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -696,7 +678,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
       "provider_count": 1,
-      "recent_activity": "NVIDIA の 550B MoE（55B アクティブ） Nemotron 3 Ultra を OpenRouter の :free ルートで無償利用できます。1M トークンのコンテキストを備え、NIM アカウント登録なしで最先端クラスのエージェントモデルを試せます。",
+      "recent_activity": "NVIDIA Nemotron 3 Ultra is an open frontier-reasoning and orchestration model from NVIDIA, with 55B active parameters out of 550B total (MoE). Built on a hybrid Transformer-Mamba mixture-of-experts architecture, it...",
       "normal_price_per_million": {
         "input": 0,
         "output": 0
@@ -715,10 +697,8 @@
       "operational_evidence": "router: 1 provider(s), 1d uptime 99.6%",
       "activity": "top provider Nvidia, 1d uptime 99.6%",
       "training_use": null,
-      "suspicion_score": 1,
-      "suspicion_reasons": [
-        "OpenRouter free endpoint: genuinely $0 API access with recurring daily request limits; not app-only, not a trial."
-      ],
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
@@ -765,7 +745,7 @@
       "provider": "NanoGPT",
       "model_vendor": "deepseek",
       "delivery_type": "router",
-      "classification": "E_DISCOUNT",
+      "classification": "G_FREE_LIKE",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -786,7 +766,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "deepseek/deepseek-v4-flash",
       "provider_count": null,
-      "recent_activity": "DeepSeek V4 Flash は 1M コンテキストの効率最適化 MoE モデルで、高スループットな推論・コーディング・エージェント用途向け。NanoGPT 経由で入力 $0.14/M・出力 $0.28/M の超低価格で使えます。",
+      "recent_activity": "DeepSeek V4 Flash is an efficiency-optimized Mixture-of-Experts model from DeepSeek with a 1M-token context window, built for fast inference, high-throughput workloads, reasoning, coding, and agent workflows.",
       "normal_price_per_million": {
         "input": 0.13999999999999999,
         "output": 0.27999999999999997
@@ -805,10 +785,8 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 2,
-      "suspicion_reasons": [
-        "Paid NanoGPT-router API at ultra-low price; paid access, not free or a genuine discount."
-      ],
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
@@ -879,7 +857,7 @@
       "provider": "NanoGPT",
       "model_vendor": "inclusionai",
       "delivery_type": "router",
-      "classification": "E_DISCOUNT",
+      "classification": "G_FREE_LIKE",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -900,7 +878,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "inclusionai/ling-3.0-flash",
       "provider_count": null,
-      "recent_activity": "inclusionAI の 124B MoE モデル Ling 3.0 Flash。トークンあたり約 5.1B パラメータをアクティブにし、トークン効率と本番規模のエージェント推論を最適化しています。256K コンテキストで、NanoGPT では入力 $0.075/M・出力 $0.22/M の超低価格です。",
+      "recent_activity": "Ling-3.0-flash is a 124B-parameter Mixture-of-Experts model with approximately 5.1B parameters active per token. It prioritizes token efficiency and production-scale agentic inference, helping coding and tool-using agents complete more work within constrained latency and serving budgets.",
       "normal_price_per_million": {
         "input": 0.075,
         "output": 0.22
@@ -919,10 +897,8 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 2,
-      "suspicion_reasons": [
-        "Paid NanoGPT-router API at ultra-low price; paid access, not free or a genuine discount."
-      ],
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
@@ -1041,7 +1017,7 @@
       "provider": "OpenRouter",
       "model_vendor": "inclusionai",
       "delivery_type": "router",
-      "classification": "E_DISCOUNT",
+      "classification": "G_FREE_LIKE",
       "start_at": null,
       "end_at": null,
       "end_timezone_known": false,
@@ -1062,7 +1038,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "inclusionai/ling-3.0-flash",
       "provider_count": 2,
-      "recent_activity": "Ling-3.0-flash の OpenRouter ルートは入力 $0.021/M・出力 $0.063/M で、NanoGPT ルート（$0.075 / $0.22）より単価が安いのが特徴です。同じ 124B MoE・256K コンテキストのモデルなので、トークン効率重視のエージェント推論ではこのルートが単価で有利です。",
+      "recent_activity": "*Ling-3.0-flash* is a *124B-parameter Mixture-of-Experts (MoE) model*, with approximately *5.1B parameters activated per token*. The model is designed with *token efficiency and production-scale agentic inference* as key priorities, enabling developers...",
       "normal_price_per_million": {
         "input": 0.020999999999999998,
         "output": 0.063
@@ -1081,10 +1057,8 @@
       "operational_evidence": "router: 2 provider(s), 1d uptime 100%",
       "activity": "top provider Novita, 1d uptime 100%",
       "training_use": null,
-      "suspicion_score": 1,
-      "suspicion_reasons": [
-        "Paid OpenRouter API at ultra-low price; paid access with no free quota or discount window."
-      ],
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
@@ -1197,194 +1171,149 @@
       "benchmark_key": "terminal_bench_2_1"
     }
   ],
-  "discount_offers": [],
-  "product_updates": [
+  "discount_offers": [
     {
-      "key": "cline",
-      "label": "Cline",
-      "source_url": "https://github.com/cline/cline/releases",
-      "facts": {
-        "key": "cline",
-        "source_url": "https://github.com/cline/cline/releases",
-        "pricing_text": "Desktop v0.0.14 Latest — github-actions released this (tag desktop-v0.0.14, commit f80e6a5), released 2026-08-19. Release notes (verbatim excerpt): \"The app now posts native macOS notifications when a task finishes or needs your input, so you can leave Cline working in the background. Configure them under Settings → Notifications. … Models that support image generation can now produce images during a task, and they render inline in the transcript. … There is now a separate \"Cline Code Beta\" app that installs side by side with this one and tracks the experimental branch. It identifies itself as beta in the sidebar, Settings, window title, and tray, so you always know which build you are in.\" Also on page: pre-release \"Desktop v0.0.14-beta.1\" (\"First beta release. Cline Code Beta installs side by side with the stable app so you can compare the two, and updates automatically from its own beta channel — stable installs are unaffected.\"). No pricing or free-access statement on this page; the change is a Cline Code desktop app release.",
-        "access_kinds": [
-          "product_internal"
-        ]
-      }
-    },
-    {
-      "key": "codex",
-      "label": "Codex",
-      "source_url": "https://developers.openai.com/api/docs/pricing",
-      "facts": {
-        "key": "codex",
-        "source_url": "https://developers.openai.com/api/docs/pricing",
-        "pricing_text": "Specialized models — Prices per 1M tokens (Standard / Fast mode tabs): \"ChatGPT chat-latest $5.00 $0.50 $30.00 | Codex gpt-5.3-codex $1.75 $0.175 $14.00\" (columns: Input, Cached input, Output). Flagship models — Prices per 1M tokens (Standard, Short context): \"gpt-5.6-sol $5.00 $0.50 $6.25 $30.00; gpt-5.6-terra $2.00 $0.20 $2.50 $12.00; gpt-5.6-luna $0.20 $0.02 $0.25 $1.20\" (Input / Cached input / Cache writes / Output). Cyber models: \"gpt-5.6-cyber $12.50 $1.25 $15.625 $75.00\" (short context). Verbatim notes: \"Priority processing was renamed Fast mode on July 30, 2026. You can use either service_tier: \"priority\" or service_tier: \"fast\" in your API requests.\" and \"daybreak-blue-latest and daybreak-red-latest are aliases that currently point to gpt-5.6-sol and gpt-5.6-cyber, respectively.\" Also: \"OpenAI is winding down the fine-tuning platform. The platform is no longer accessible to new users.\"",
-        "access_kinds": [
-          "external_api"
-        ]
-      }
-    },
-    {
-      "key": "continue",
-      "label": "Continue",
-      "source_url": "https://github.com/continuedev/continue/releases",
-      "facts": {
-        "key": "continue",
-        "source_url": "https://github.com/continuedev/continue/releases",
-        "pricing_text": "Latest releases (verbatim, both released 2026-06-19): \"v2.1.0-vscode Pre-release … chore: vscode 2.1.0\" and \"v2.0.0-vscode Latest … chore: vscode 2.0.0\" (both \"Co-authored-by: Cursor <cursoragent@cursor.com>\"). Older entry on page: \"v1.2.24-vscode … Stable release of the Continue VS Code extension (final release): removes the CLI-install banner and Generate Rule feature, switches onboarding and the new-config template to explicit model definitions (no Hub slugs), and updates the deprecation banner export link.\" No pricing or free-access statement on this page.",
-        "access_kinds": [
-          "product_internal"
-        ]
-      }
-    },
-    {
-      "key": "cursor",
-      "label": "Cursor",
-      "source_url": "https://cursor.com/changelog",
-      "facts": {
-        "key": "cursor",
-        "source_url": "https://cursor.com/changelog",
-        "pricing_text": "Aug 19, 2026 — \"Cloud Agents and Cursor Harness Improvements\": \"Cursor can now monitor your PRs, watch a Slack thread, or run scheduled tasks. … Subscriptions are available for cloud agents only, for now.\" Aug 17, 2026 — \"Origin Code Hosting\": \"Origin begins rolling out today in early beta on all paid plans. We're starting with the essentials, designed for agent scale: repos, pull requests, code browsing, and GitHub sync.\" and \"Origin is rolling out in early beta to all paid plan users starting today, except enterprise orgs whose admins opt out.\" Aug 13, 2026 — \"Cloud Agents Start 3x Faster with Builds\": \"This release introduces builds: ready-to-use copies of your development environment that Cursor prepares in the background. … Builds are included with Cloud Agents at no additional cost.\"",
-        "access_kinds": [
-          "product_internal",
-          "subscription"
-        ]
-      }
-    },
-    {
-      "key": "jetbrains_ai",
-      "label": "JetBrains AI",
-      "source_url": "https://blog.jetbrains.com/ai/",
-      "facts": {
-        "key": "jetbrains_ai",
-        "source_url": "https://blog.jetbrains.com/ai/",
-        "pricing_text": "Latest post on page (verbatim): \"New in Air: Claude Subscriptions, Multiproject View, and Improved Markdown — Air now works with your existing Claude Pro, Max, or Team subscription, adds a multiproject view, and renders Markdown files like documents.\" (Vladimir Gromozdin, August 19, 2026). Other recent posts: \"What's new: Air gets more agents, local models, and Java/Kotlin code intelligence — Air now supports GitHub Copilot, OpenCode, Pi, Cline, and other ACP agents, adds Java and Kotlin IDE intelligence, and runs Windows tasks in Docker.\" (July 21, 2026). No standalone pricing statement on this page.",
-        "access_kinds": [
-          "subscription"
-        ]
-      }
-    },
-    {
-      "key": "kilo_code",
-      "label": "Kilo Code",
-      "source_url": "https://kilocode.ai/pricing",
-      "facts": {
-        "key": "kilo_code",
-        "source_url": "https://kilocode.ai/pricing",
-        "pricing_text": "\"Start free as an individual, then add team collaboration or enterprise governance when you need it.\" Free plan: \"Free — Usage is billed separately — Open source VS Code, JetBrains & CLI extensions — Agentic coding assistant — Code completion & generation — Works with any AI model\". Teams: \"$15 /user/month — 14-day free trial\". Enterprise: \"Custom\". \"Platform plan: Free for individuals. Teams and Enterprise add collaboration, security, governance, and support.\" Inference: \"Use free or local models, pay as you go through Kilo Gateway, bring your own provider keys, or subscribe to Kilo Pass for bonus credits.\" Auto Free: \"$0 /mo — No hosted credit required — Auto Free routes to free models through Kilo Gateway where available — Bring your own Anthropic, OpenAI, Google, Azure, AWS Bedrock, or other provider keys — Run local models with Ollama or LM Studio\". Kilo Gateway: \"$0 /mo + usage — Exact provider rates — 500+ models across 60+ providers — Pay exact provider rates with no markup\". Kilo Pass: \"$19 /mo — Up to 50% bonus credits — Monthly AI credit subscription for regular usage — Earn up to 50% bonus credits on top of your subscribed credits\"; tiers: \"Starter $19/mo Up to $26.60/mo in credits; Pro $49/mo Up to $68.60/mo in credits; Expert $199/mo Up to $278.60/mo in credits\"; annual: \"Annual 50% bonus $588/year\". Cloud compute: \"Gas Town $1.20 / hour; Code Review $0.33 / hour; Cloud Agent — Docker $0.60 / hour; Cloud Agent — Small $0.60 / hour; Cloud Agent — Standard $1.20 / hour. Billed per second. No rounding up or minimum usage charge.\" Pricing summary: \"Credit purchase processing fee 5%\".",
-        "access_kinds": [
-          "product_internal",
-          "subscription",
-          "free_calls",
-          "credit_multiplier"
-        ],
-        "free_calls": "14-day free trial",
-        "credit_multiplier": "Up to 50% bonus credits — Earn up to 50% bonus credits on top of your subscribed credits; Starter $19/mo Up to $26.60/mo in credits; Pro $49/mo Up to $68.60/mo in credits; Expert $199/mo Up to $278.60/mo in credits; Annual 50% bonus $588/year",
-        "promo_text": "Month 1: 50% welcome bonus\nMonth 8: 40% max bonus unlocked"
-      }
-    },
-    {
-      "key": "opencode",
-      "label": "OpenCode",
-      "source_url": "https://opencode.ai/docs/",
-      "facts": {
-        "key": "opencode",
-        "source_url": "https://opencode.ai/docs/",
-        "pricing_text": "Fetched page is the OpenCode docs index (\"Last updated: Aug 20, 2026\") with no pricing/free-access statement. Verbatim product statements on the page: \"OpenCode is an open source AI coding agent. It's available as a terminal-based interface, desktop app, or IDE extension.\" / \"With OpenCode you can use any LLM provider by configuring their API keys.\" / \"If you are new to using LLM providers, we recommend using OpenCode Zen. It's a curated list of models that have been tested and verified by the OpenCode team.\" / (Zen setup) \"Sign in, add your billing details, and copy your API key.\"",
-        "access_kinds": [
-          "product_internal"
-        ]
-      }
-    },
-    {
-      "key": "windsurf",
-      "label": "Windsurf",
-      "source_url": "https://windsurf.com/pricing",
-      "facts": {
-        "key": "windsurf",
-        "source_url": "https://windsurf.com/pricing",
-        "pricing_text": "Page served at https://devin.ai/pricing (windsurf.com/pricing redirects there), title \"Plans and Pricing | Devin\": \"SWE 1.7, OUR LATEST MODEL, IS NOW AVAILABLE\". Free $0: \"Light quota to code with agents — Limited model availability — Unlimited inline edits — Unlimited Tab completions\". Pro $20 PER MONTH: \"EVERYTHING IN FREE, PLUS: Increased quotas, including access to OpenAI, Claude, and Gemini frontier models — Full model availability — Free use of SWE 1.7 and leading open source models — Access to cloud agents (Devin Cloud) — Purchase extra usage at API pricing\". Max NEW $200 PER MONTH: \"EVERYTHING IN PRO, PLUS: Significantly higher quotas\". Teams: \"$80 /MONTH FOR TEAM PLAN + $40/MO PER FULL DEV SEAT\". Enterprise: \"Let's talk\". FAQ (verbatim): \"Each paid plan comes with a usage allowance that refreshes automatically on a daily and weekly basis. For the majority of users, this quota will be enough to fully cover all agent usage. Cost per message varies based on the model used, the task size and complexity, and the reasoning required.\" / \"If you do go beyond your included usage on a paid plan, you can purchase extra usage which is consumed at API pricing.\" / \"The Free plan includes a light quota to code with agents, limited model availability, unlimited inline edits, and unlimited Tab completions.\"",
-        "access_kinds": [
-          "product_internal",
-          "subscription",
-          "free_calls",
-          "model_lock"
-        ],
-        "free_calls": "The Free plan includes a light quota to code with agents, limited model availability, unlimited inline edits, and unlimited Tab completions.",
-        "model_lock": "Limited model availability (Free plan)"
-      }
+      "rank": null,
+      "name": "GPT-5.6 Sol",
+      "model_name": "GPT-5.6 Sol",
+      "provider": "Vercel AI Gateway",
+      "model_vendor": "openai",
+      "delivery_type": "router",
+      "classification": "G_FREE_LIKE",
+      "start_at": null,
+      "end_at": null,
+      "end_timezone_known": false,
+      "regions": [],
+      "registration_conditions": [],
+      "card_required": null,
+      "minimum_deposit": null,
+      "kyc_required": null,
+      "auto_renewal": null,
+      "refund_policy": null,
+      "free_limits": null,
+      "rate_limits": null,
+      "context_tokens": 1050000,
+      "max_output_tokens": null,
+      "tool_calling": null,
+      "structured_output": null,
+      "image_input": null,
+      "base_url": "https://ai-gateway.vercel.sh/v1",
+      "model_id": "openai/gpt-5.6-sol",
+      "provider_count": null,
+      "recent_activity": null,
+      "normal_price_per_million": {
+        "input": 5,
+        "output": 30
+      },
+      "effective_price_per_million": {
+        "input": 2.5,
+        "output": 15
+      },
+      "effective_discount_percent": null,
+      "discount_rates": {
+        "input": 50,
+        "output": 50
+      },
+      "window": null,
+      "data_retention": null,
+      "data_policy": null,
+      "data_policy_source": null,
+      "free_endpoint_status": null,
+      "operational_evidence": "official docs / pricing fetch verified this run",
+      "activity": null,
+      "training_use": null,
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": false,
+      "exclusion_reason": null,
+      "last_verified": "2026-08-20T19:40:04.819Z",
+      "endpoint_source": "https://vercel.com/docs/ai-gateway/models/openai",
+      "provider_key": "vercel",
+      "canonical_model_id": "openai/gpt-5.6-sol",
+      "access_kind": "DISCOUNTED",
+      "price_source": "https://llmpricing.dev/m/openai/gpt-5.6-sol/",
+      "price_verified_at": "2026-08-20T19:40:04.819Z",
+      "discount_start_at": null,
+      "discount_end_at": null,
+      "free_allowance_rank": "NORMAL",
+      "total_parameters_b": null,
+      "active_parameters_b": null,
+      "sources": [
+        "https://llmpricing.dev/m/openai/gpt-5.6-sol/",
+        "https://vercel.com/docs/ai-gateway/models/openai",
+        "https://www.mangomindbd.com/blog/july-2026-ai-benchmarks",
+        "https://www.morphllm.com/best-ai-model-for-coding",
+        "https://www.mangomindbd.com/blog/july-2026-ai-benchmarks"
+      ],
+      "benchmark": {
+        "score": 91.9,
+        "benchmark_name": "Terminal-Bench 2.1",
+        "version": "2.1",
+        "tier": "S"
+      },
+      "benchmarks": [
+        {
+          "name": "GPQA Diamond",
+          "score": 95.2,
+          "version": "",
+          "source_url": "https://www.mangomindbd.com/blog/july-2026-ai-benchmarks",
+          "verified_at": "2026-07-30T02:10:32Z"
+        },
+        {
+          "name": "SWE-bench Verified",
+          "score": 96.2,
+          "version": "",
+          "source_url": "https://www.morphllm.com/best-ai-model-for-coding",
+          "verified_at": "2026-07-30T02:10:32Z"
+        },
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 91.9,
+          "version": "2.1",
+          "source_url": "https://www.mangomindbd.com/blog/july-2026-ai-benchmarks",
+          "verified_at": "2026-07-30T02:10:32Z"
+        }
+      ],
+      "benchmark_key": "terminal_bench_2_1"
     }
   ],
-  "startup_credits": [
-    {
-      "key": "accelerator_student_research",
-      "label": "Accelerator / Student / Research Programs",
-      "source_url": "https://cloud.google.com/startup/ai",
-      "facts": {
-        "key": "accelerator_student_research",
-        "source_url": "https://cloud.google.com/startup/ai",
-        "max_credit": "Receive up to $350,000 Google Cloud Credits to support your development costs over 2 years",
-        "currency": "USD",
-        "eligibility": "Eligibility requirements — For VC-funded startups ready to Grow and Scale: Startups that use or plan to use Gemini Enterprise Agent Platform or Gemini to deploy AI services as a foundation of their primary product or solution offering; Designed for startups that raised Pre-Seed/Seed rounds within the last five years, and Series A rounds within the last 12 months; Founded within the last five years; Not yet received more than $5,000 in Google Cloud credits; Eligibility at the discretion of Google Cloud.",
-        "deadline": null,
-        "usable_services": "Program credits cover Google's state-of-the-art models like Gemini and Gemma. [5] 1. Credits can be applied toward Google Cloud Services and Select Google Cloud offerings, subject to the Google for Startups Cloud Program-Startup Terms.",
-        "prepaid_conditions": "Up to $200,000 USD in Google Cloud (up to $350,000 USD for AI startups)[4]: Year 1: 100% up to $100,000 USD in Google Cloud credits [1]; For AI-first startups: 100% up to $250,000 USD in Google Cloud credits [1]; Year 2: 20% up to an additional $100,000 USD in Google Cloud credits [1]. Note: Third-party models are billed directly and are not covered by the program credits.",
-        "terms_text": "1. Credits can be applied toward Google Cloud Services and Select Google Cloud offerings, subject to the Google for Startups Cloud Program-Startup Terms. Acceptance into this program is at the discretion of Google Cloud. We are unable to accept companies that have IPO'd or been acquired, educational institutions, government entities, nonprofits, personal blogs or content, dev shops, consultancies, or agencies, cryptocurrency mining company, or a company distributing tokens contrary to regulatory guidance in your jurisdiction."
-      }
-    },
-    {
-      "key": "cloudflare_for_startups",
-      "label": "Cloudflare for Startups",
-      "source_url": "https://www.cloudflare.com/startups/",
-      "facts": {
-        "key": "cloudflare_for_startups",
-        "source_url": "https://www.cloudflare.com/startups/",
-        "max_credit": "Receive up to $350,000 in credits for a year to support your startup. (Tier 1 — $350k: Unlock $350k maximum credits, Office Hours with experts, and priority technical support to scale globally.)",
-        "currency": "USD",
-        "eligibility": "You qualify if your startup meets all of the following: Founded within the last 10 years (Your company was incorporated no more than 10 years ago); Funded up to Series B (Funded within the last 12 months); Building a technology product (Actively developing a technology product); Has a valid, publicly accessible website (Your startup has a live website we can verify); Active on LinkedIn, X (Twitter), or GitHub (Your startup has a public social media presence); Has not previously been approved into the program (First-time applicants only); For-profit business with a business email matching your domain (Business email required — no personal email addresses). Tier criteria: Tier 3 — Bootstrapped or self-funded, Under $1M raised; Tier 2 — Under $5M raised, Funded by an affiliated partner; Tier 1 — $5M+ raised, Funded by an affiliated partner.",
-        "deadline": null,
-        "usable_services": "Credits cover usage-based services. Core security and networking features are included at no cost, regardless of tier. Covered by Credits: Compute — Workers, Workers for Platforms, Durable Objects, Workflows; AI — Workers AI (up to $50,000); Storage & Data — Workers KV, D1, Queues, Vectorize, R2 (up to $10,000); Delivery — Pages, Images and Stream, Cache Reserve, Argo Smart Routing.",
-        "prepaid_conditions": "Once your credits are confirmed, all eligible usage-based features will be automatically deducted from your credit balance or applied at no cost as a program benefit. Product-Specific Caps & Exclusions: R2 Object Storage: Covered up to a $10,000 cap. Workers AI: Covered up to a $2,500 cap for Tier 3, $10,000 for Tier 2, and $50,000 for Tier 1 (standard partner model pricing applies). AI Gateway: Temporarily not covered by credits. We are actively working to make it accessible.",
-        "terms_text": "We recently updated our program tiers, increasing Tier 3 from $5,000 to $10,000 to give early-stage founders even more runway, and increasing Tier 1 from $250,000 to $350,000 to better support our fastest-scaling startups. If approved for an upgrade, please note that this does not reset your 1-year program expiration date. The additional credits will still expire at the end of your original 12-month cohort window."
-      }
-    },
-    {
-      "key": "microsoft_for_startups",
-      "label": "Microsoft for Startups",
-      "source_url": "https://www.microsoft.com/startups",
-      "facts": {
-        "key": "microsoft_for_startups",
-        "source_url": "https://www.microsoft.com/startups",
-        "max_credit": "最大 15 万米国ドル分のクレジット",
-        "currency": "USD",
-        "eligibility": null,
-        "deadline": null,
-        "usable_services": "無料の Azure クレジット: スタートアップ企業は、Azure プラットフォーム上でソリューションを迅速かつ効率的に構築するのに役立つ Azure クレジットを受け取ります。AI ツールへのアクセス: スタートアップ企業は、業界をリードする AI サービスとツールを活用して、革新的でインテリジェントなアプリケーションを作成できます。",
-        "prepaid_conditions": null,
-        "terms_text": null
-      }
-    },
-    {
-      "key": "oracle_for_startups",
-      "label": "Oracle for Startups",
-      "source_url": "https://www.oracle.com/startup/",
-      "facts": {
-        "key": "oracle_for_startups",
-        "source_url": "https://www.oracle.com/startup/",
-        "max_credit": null,
-        "currency": null,
-        "eligibility": null,
-        "deadline": null,
-        "usable_services": null,
-        "prepaid_conditions": null,
-        "terms_text": null
-      }
-    }
-  ],
+  "product_updates": [],
+  "startup_credits": [],
   "conditional_credits": [],
   "caution_offers": [],
   "excluded_offers": [
+    {
+      "name": "GPT-4o",
+      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
+      "last_known_status": "verified"
+    },
+    {
+      "name": "GPT-4o mini",
+      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
+      "last_known_status": "verified"
+    },
+    {
+      "name": "MiniMax-M2.1",
+      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
+      "last_known_status": "verified"
+    },
+    {
+      "name": "MiniMax-M2.5",
+      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
+      "last_known_status": "verified"
+    },
+    {
+      "name": "MiniMax-M2.7",
+      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
+      "last_known_status": "verified"
+    },
+    {
+      "name": "MiniMax-M3",
+      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
+      "last_known_status": "verified"
+    },
     {
       "name": "Baichuan 4 Air",
       "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
@@ -2299,11 +2228,26 @@
       "name": "gpt-oss-120b",
       "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
       "last_known_status": "verified"
+    },
+    {
+      "name": "Gemini 3.6 Flash",
+      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
+      "last_known_status": "verified"
+    },
+    {
+      "name": "Kimi K2 Thinking",
+      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
+      "last_known_status": "verified"
     }
   ],
   "new_sources": [],
   "contradictions": [],
   "sources": [
+    {
+      "url": "https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/",
+      "source_type": "official",
+      "accessed_at": "2026-08-20T19:40:04.819Z"
+    },
     {
       "url": "https://ai.google.dev/gemini-api/docs/openai",
       "source_type": "official",
@@ -2323,6 +2267,16 @@
       "url": "https://ai.google.dev/gemini-api/docs/pricing",
       "source_type": "official",
       "accessed_at": "2026-08-20T02:41:00.889Z"
+    },
+    {
+      "url": "https://platform.minimax.io/docs/guides/quickstart-preparation",
+      "source_type": "official",
+      "accessed_at": "2026-08-20T19:40:04.819Z"
+    },
+    {
+      "url": "https://www.tbench.ai/leaderboard/terminal-bench/2.0",
+      "source_type": "official",
+      "accessed_at": "2026-08-20T19:40:04.819Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/Baichuan4-Air",
@@ -3200,11 +3154,6 @@
       "accessed_at": "2026-08-20T02:41:00.889Z"
     },
     {
-      "url": "https://www.tbench.ai/leaderboard/terminal-bench/2.0",
-      "source_type": "official",
-      "accessed_at": "2026-08-20T02:41:00.889Z"
-    },
-    {
       "url": "https://openrouter.ai/openai/gpt-oss-20b",
       "source_type": "official",
       "accessed_at": "2026-08-20T02:41:00.889Z"
@@ -3343,6 +3292,36 @@
       "url": "https://api.sambanova.ai/v1/models",
       "source_type": "official",
       "accessed_at": "2026-08-20T02:41:00.889Z"
+    },
+    {
+      "url": "https://llmpricing.dev/m/google/gemini-3.6-flash/",
+      "source_type": "official",
+      "accessed_at": "2026-08-20T19:40:04.819Z"
+    },
+    {
+      "url": "https://vercel.com/docs/ai-gateway/models/openai",
+      "source_type": "official",
+      "accessed_at": "2026-08-20T19:40:04.819Z"
+    },
+    {
+      "url": "https://llmpricing.dev/m/moonshotai/kimi-k2-thinking/",
+      "source_type": "official",
+      "accessed_at": "2026-08-20T19:40:04.819Z"
+    },
+    {
+      "url": "https://llmpricing.dev/m/openai/gpt-5.6-sol/",
+      "source_type": "official",
+      "accessed_at": "2026-08-20T19:40:04.819Z"
+    },
+    {
+      "url": "https://www.mangomindbd.com/blog/july-2026-ai-benchmarks",
+      "source_type": "official",
+      "accessed_at": "2026-08-20T19:40:04.819Z"
+    },
+    {
+      "url": "https://www.morphllm.com/best-ai-model-for-coding",
+      "source_type": "official",
+      "accessed_at": "2026-08-20T19:40:04.819Z"
     }
   ]
 }

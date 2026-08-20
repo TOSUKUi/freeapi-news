@@ -35,6 +35,7 @@ const benchmarks = require('./benchmarks');
 const assemble = require('./assemble');
 const publication = require('./publication');
 const catalog = require('./catalog');
+const priceIndex = require('./price-index');
 const evidence = require('./evidence');
 const watch = require('./watch');
 const modelsLane = require('./models');
@@ -475,7 +476,8 @@ async function runCatalogInProcess(manifest, runDir, baseOpts, log) {
   const regByKey = Object.fromEntries((providers || []).map((p) => [p.key, p]));
 
   const catalogTasks = (manifest.tasks || []).filter((t) => t.kind === 'catalog');
-  if (catalogTasks.length === 0) return;
+  const priceIndexTasks = (manifest.tasks || []).filter((t) => t.kind === 'price_index');
+  if (catalogTasks.length === 0 && priceIndexTasks.length === 0) return;
   fs.mkdirSync(path.join(runDir, 'artifacts'), { recursive: true });
   for (const task of catalogTasks) {
     let artifact;
@@ -508,6 +510,34 @@ async function runCatalogInProcess(manifest, runDir, baseOpts, log) {
       log(`  ✅ ${task.provider_key}: ${artifact.models.length} model(s), ${free} free`);
     } else {
       log(`  ❌ ${task.provider_key}: catalog unavailable (${artifact.errors[0] || 'unknown'}); prior offers preserved`);
+    }
+  }
+
+  // 0013 price-index lane: static llmpricing.dev fetches, pure code (no LLM).
+  for (const task of priceIndexTasks) {
+    let artifact;
+    try {
+      artifact = await priceIndex.fetchPriceIndex({});
+    } catch (err) {
+      artifact = {
+        schema_version: 1,
+        task_id: task.task_id,
+        kind: 'price_index',
+        provider_key: null,
+        status: 'failed',
+        available: false,
+        models: [],
+        fetches: [],
+        errors: [err.message],
+      };
+    }
+    artifact.task_id = task.task_id;
+    const outPath = db.artifactPathFor(runDir, task.task_id);
+    fs.writeFileSync(outPath, `${JSON.stringify(artifact, null, 2)}\n`);
+    if (artifact.available) {
+      log(`  ✅ price_index: ${artifact.models.length} model page(s) from ${artifact.index_model_count} indexed`);
+    } else {
+      log(`  ❌ price_index unavailable (${artifact.errors[0] || 'unknown'}); prior offers preserved`);
     }
   }
 }

@@ -469,6 +469,31 @@
       "added_at": "2026-08-20",
       "added_from": "https://docs.sambanova.ai/docs/en/get-started/api-keys-urls",
       "api_catalog_url": "https://api.sambanova.ai/v1/models"
+    },
+    {
+      "key": "vercel",
+      "label": "Vercel AI Gateway",
+      "match": [
+        "vercel"
+      ],
+      "base_url": "https://ai-gateway.vercel.sh/v1",
+      "base_url_pattern": "^https://ai-gateway.vercel.sh/v1/?$",
+      "openai_base_url": null,
+      "api_type": "openai-completions",
+      "delivery_type": "router",
+      "env": "AI_GATEWAY_API_KEY",
+      "openai": true,
+      "docs_url": "https://vercel.com/docs/ai-gateway/models/openai",
+      "agents": [
+        "pi",
+        "claude_code",
+        "opencode",
+        "codex"
+      ],
+      "notes": "Vercel AI Gateway: OpenAI-compatible routed endpoint, token-priced (per 1M tokens). Model pages list current prices and limited-time discounts (e.g. GPT-5.6 Sol 50% off, 2026-08-17 to 2026-09-18).",
+      "added_at": "2026-08-20",
+      "added_from": "https://apidog.com/docs/ai/gpt-5.6-sol-50-off-vercel-ai-gateway",
+      "model_page_template": "https://llmpricing.dev/m/{model_id}/"
     }
   ]
 }

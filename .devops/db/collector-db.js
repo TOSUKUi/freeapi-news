@@ -39,6 +39,8 @@ const TASK_KINDS = [
   // Spec 0008 Phase 2: operational evidence workers (Phase 3 reservation
   // for product / program monitors lives here so 0012 rebuilds tasks once).
   'provider_monitor', 'nim_verify', 'product_monitor', 'program_monitor',
+  // 0013: deterministic llmpricing.dev price index + quote fetch (no LLM).
+  'price_index',
 ];
 const TASK_STATUSES = ['pending', 'complete', 'partial', 'failed'];
 const TASK_RESULT_STATUSES = ['complete', 'partial', 'failed'];
@@ -2063,6 +2065,66 @@ function bootstrapFromReport(options = {}) {
   }
 }
 
+// ── llmpricing.dev quote snapshot (0013 price-index lane) ────────────
+// The latest quote per (model, provider) from the static llmpricing.dev
+// index. Deterministic diff input for the next run: a previously discounted
+// quote that is no longer below the official reference ends the discount.
+function upsertLlmpricingQuotes(modelId, quotes = [], sourceUrl, now, runId, options = {}) {
+  if (typeof modelId !== 'string' || !modelId) return 0;
+  const database = openCollectorDb(options);
+  let written = 0;
+  try {
+    const official = (quotes.find((q) => q && q.official === true) || null);
+    const refIn = official && typeof official.input === 'number' ? official.input : null;
+    const refOut = official && typeof official.output === 'number' ? official.output : null;
+    const stmt = database.prepare(
+      'INSERT INTO llmpricing_quotes (model_id, provider, quote_model_id, input_price_usd, output_price_usd, '
+      + 'cache_read_usd, official, reference_input_usd, reference_output_usd, source_url, observed_at, run_id) '
+      + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) '
+      + 'ON CONFLICT(model_id, provider) DO UPDATE SET quote_model_id = excluded.quote_model_id, '
+      + 'input_price_usd = excluded.input_price_usd, output_price_usd = excluded.output_price_usd, '
+      + 'cache_read_usd = excluded.cache_read_usd, official = excluded.official, '
+      + 'reference_input_usd = excluded.reference_input_usd, reference_output_usd = excluded.reference_output_usd, '
+      + 'source_url = excluded.source_url, observed_at = excluded.observed_at, run_id = excluded.run_id'
+    );
+    for (const q of quotes) {
+      if (!q || typeof q.provider !== 'string' || !q.provider) continue;
+      stmt.run(
+        modelId,
+        q.provider,
+        typeof q.modelId === 'string' ? q.modelId : null,
+        typeof q.input === 'number' && Number.isFinite(q.input) ? q.input : null,
+        typeof q.output === 'number' && Number.isFinite(q.output) ? q.output : null,
+        typeof q.cacheRead === 'number' && Number.isFinite(q.cacheRead) ? q.cacheRead : null,
+        q.official === true ? 1 : 0,
+        refIn, refOut,
+        sourceUrl || null,
+        now,
+        runId || null,
+      );
+      written += 1;
+    }
+  } finally {
+    database.close();
+  }
+  return written;
+}
+
+function listDiscountedLlmpricingQuotes(options = {}) {
+  const database = openCollectorDb(options);
+  try {
+    return database.prepare(
+      'SELECT model_id, provider, quote_model_id, input_price_usd, output_price_usd, '
+      + 'reference_input_usd, reference_output_usd, source_url, observed_at '
+      + 'FROM llmpricing_quotes '
+      + 'WHERE official = 0 AND reference_input_usd IS NOT NULL AND reference_output_usd IS NOT NULL '
+      + 'AND (input_price_usd < reference_input_usd * 0.9 OR output_price_usd < reference_output_usd * 0.9)'
+    ).all();
+  } finally {
+    database.close();
+  }
+}
+
 module.exports = {
   // constants
   RUN_STATUSES,
@@ -2117,6 +2179,8 @@ module.exports = {
   pricingHashFromText,
   // spec 0008: models, leads, watch facts
   upsertModel,
+  upsertLlmpricingQuotes,
+  listDiscountedLlmpricingQuotes,
   findModelsByIds,
   listModels,
   addLead,

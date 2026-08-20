@@ -36,6 +36,13 @@ const FIXTURE_REGISTRY = {
       base_url: 'https://generativelanguage.googleapis.com/v1beta',
       docs_url: 'https://ai.google.dev/gemini-api/docs',
     },
+    {
+      key: 'vercel',
+      label: 'Vercel AI Gateway',
+      match: ['vercel'],
+      base_url: 'https://ai-gateway.vercel.sh/v1',
+      docs_url: 'https://vercel.com/docs/ai-gateway',
+    },
   ],
 };
 
@@ -225,7 +232,7 @@ test('buildLaneManifest splits catalog and known refresh lanes only (spec 0008 P
   assert.ok(!('discovery' in manifest.lanes), 'no discovery lane in the manifest');
   assert.deepEqual(
     Object.keys(byId).sort(),
-    ['catalog:openrouter', 'known:google'].sort()
+    ['catalog:openrouter', 'known:google', 'price_index:llmpricing'].sort()
   );
 
   assert.equal(byId['catalog:openrouter'].kind, 'catalog');
@@ -242,7 +249,7 @@ test('buildLaneManifest splits catalog and known refresh lanes only (spec 0008 P
   // startRun accepts the slim rows.
   db.startRun('manifest-run', lanes.toStartRunTasks(manifest), ctx.options);
   const { tasks } = db.loadRunCandidate('manifest-run', ctx.options);
-  assert.equal(tasks.length, 2);
+  assert.equal(tasks.length, 3);
   const known = tasks.find((task) => task.task_id === 'known:google');
   assert.deepEqual(known.assigned_json, ['gemini-2.5-pro-free']);
 });
@@ -1196,7 +1203,7 @@ test('a malformed provider candidate is rejected and never touches the canonical
   const registry = JSON.parse(fs.readFileSync(
     path.join(ctx.root, 'build', 'provider-registry.json'), 'utf8'
   ));
-  assert.equal(registry.providers.length, 2, 'canonical registry unchanged');
+  assert.equal(registry.providers.length, 3, 'canonical registry unchanged');
   assert.equal(registry.providers.some((p) => p.key === 'Bad Key!'), false);
 });
 
@@ -1448,4 +1455,161 @@ test('a failed known refresh keeps the data policy and marks stale', (t) => {
   const row = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
   assert.equal(row.status, 'stale');
   assert.equal(row.data_policy_hash, db.pricingHashFromText(priorPolicy));
+});
+
+// ── 0013 price-index lane (deterministic discount lane, no LLM) ──────
+
+function priceIndexArtifact({ vercelInput, vercelOutput } = {}) {
+  const vi = vercelInput === undefined ? 2.5 : vercelInput;
+  const vo = vercelOutput === undefined ? 15 : vercelOutput;
+  return {
+    schema_version: 1,
+    task_id: 'price_index:llmpricing',
+    kind: 'price_index',
+    provider_key: null,
+    status: 'complete',
+    available: true,
+    source: 'https://llmpricing.dev/api/models.json',
+    synced_at: '2026-08-20T02:00:00.000Z',
+    license: 'CC-BY-4.0',
+    index_model_count: 1,
+    models: [{
+      model_id: 'openai/gpt-5.6-sol',
+      name: 'GPT-5.6 Sol',
+      lab: 'openai',
+      url: 'https://llmpricing.dev/m/openai%2Fgpt-5.6-sol/',
+      release_date: '2026-07-09',
+      usage_rank: 5,
+      reference: { provider: 'openai', input: 5, output: 30 },
+      cheapest: { provider: 'vercel', input: vi, output: vo, official: false },
+      quotes: [
+        { provider: 'openai', modelId: 'gpt-5.6-sol', input: 5, output: 30, cacheRead: 0.5, official: true, context: 1050000 },
+        { provider: 'vercel', modelId: 'openai/gpt-5.6-sol', input: vi, output: vo, cacheRead: 0.25, official: false, context: 1050000 },
+        // Catalog-owned provider (openrouter) and unregistered host quotes
+        // must never create or mutate offers here.
+        { provider: 'openrouter', modelId: 'openai/gpt-5.6-sol', input: 2.5, output: 15, official: false },
+        { provider: 'unknown-host', modelId: 'openai/gpt-5.6-sol', input: 0.5, output: 2, official: false },
+      ],
+    }],
+    fetches: [],
+    errors: [],
+  };
+}
+
+function priceIndexEmptyArtifact() {
+  return {
+    schema_version: 1,
+    task_id: 'price_index:llmpricing',
+    kind: 'price_index',
+    provider_key: null,
+    status: 'complete',
+    available: true,
+    source: 'https://llmpricing.dev/api/models.json',
+    synced_at: '2026-08-21T02:00:00.000Z',
+    license: 'CC-BY-4.0',
+    index_model_count: 0,
+    models: [],
+    fetches: [],
+    errors: [],
+  };
+}
+
+function solSeed(overrides = {}) {
+  return {
+    provider_key: 'vercel',
+    exact_model_id: 'openai/gpt-5.6-sol',
+    canonical_model_id: 'openai/gpt-5.6-sol',
+    source_kind: 'price_index',
+    status: 'confirmed_removed',
+    consecutive_failures: 0,
+    first_seen_at: '2026-08-01T00:00:00.000Z',
+    last_attempted_at: '2026-08-01T00:00:00.000Z',
+    last_verified_at: null,
+    pricing_hash: null,
+    removal_evidence_json: {
+      reason: 'official catalog pricing is no longer free or ultra low',
+      source_url: null,
+      task_id: 'catalog:old',
+      run_id: 'old-run',
+      observed_at: '2026-08-01T00:00:00.000Z',
+    },
+    facts_json: { name: 'GPT-5.6 Sol' },
+    ...overrides,
+  };
+}
+
+test('price index lane revives a confirmed_removed frontier offer as a verified discount', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  db.upsertModel('openai/gpt-5.6-sol', { name: 'GPT-5.6 Sol', frontier: true }, ctx.options);
+  seedOffers(ctx, [solSeed({})]);
+  runCycle(ctx, 'run-pi-revive', { 'price_index:llmpricing': priceIndexArtifact() });
+  const row = offerRow(ctx, 'vercel', 'openai/gpt-5.6-sol');
+  assert.equal(row.status, 'verified');
+  assert.equal(row.source_kind, 'price_index');
+  assert.equal(row.removal_evidence_json, null);
+  // Normal = official reference quote; effective = provider quote (per 1M).
+  assert.equal(row.normal_input_price_usd, 5);
+  assert.equal(row.normal_output_price_usd, 30);
+  assert.equal(row.effective_input_price_usd, 2.5);
+  assert.equal(row.effective_output_price_usd, 15);
+  assert.equal(row.source_unit, 'per_million_tokens');
+  assert.ok(row.price_verified_at, 'price confirmation date set on fetched quote evidence');
+  assert.match(row.facts_json.pricing_text, /llmpricing\.dev index/);
+  assert.equal(row.facts_json.endpoint_source, 'https://vercel.com/docs/ai-gateway');
+  assert.equal(row.facts_json.discount_source_url, 'https://llmpricing.dev/m/openai%2Fgpt-5.6-sol/');
+  // Catalog-owned and unregistered providers never become offers here.
+  assert.equal(offerRow(ctx, 'openrouter', 'openai/gpt-5.6-sol'), null);
+  assert.equal(offerRow(ctx, 'unknown-host', 'openai/gpt-5.6-sol'), null);
+});
+
+test('price index lane creates a new verified offer for a frontier model with no prior offer', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  db.upsertModel('openai/gpt-5.6-sol', { name: 'GPT-5.6 Sol', frontier: true }, ctx.options);
+  runCycle(ctx, 'run-pi-new', { 'price_index:llmpricing': priceIndexArtifact() });
+  const row = offerRow(ctx, 'vercel', 'openai/gpt-5.6-sol');
+  assert.equal(row.status, 'verified');
+  assert.equal(row.canonical_model_id, 'openai/gpt-5.6-sol');
+  assert.equal(row.effective_input_price_usd, 2.5);
+});
+
+test('price index lane ends a discount once the quote is no longer below the reference', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  db.upsertModel('openai/gpt-5.6-sol', { name: 'GPT-5.6 Sol', frontier: true }, ctx.options);
+  runCycle(ctx, 'run-pi-on', { 'price_index:llmpricing': priceIndexArtifact() });
+  let row = offerRow(ctx, 'vercel', 'openai/gpt-5.6-sol');
+  assert.equal(row.status, 'verified');
+  // Next run: vercel back to the official price -> the discount ended.
+  runCycle(ctx, 'run-pi-off', { 'price_index:llmpricing': priceIndexArtifact({ vercelInput: 5, vercelOutput: 30 }) });
+  row = offerRow(ctx, 'vercel', 'openai/gpt-5.6-sol');
+  assert.equal(row.status, 'confirmed_removed');
+  assert.match(row.removal_evidence_json.reason, /discount ended/);
+});
+
+test('price index lane keeps a verified discount when the model page is absent from the artifact', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  db.upsertModel('openai/gpt-5.6-sol', { name: 'GPT-5.6 Sol', frontier: true }, ctx.options);
+  runCycle(ctx, 'run-pi-on', { 'price_index:llmpricing': priceIndexArtifact() });
+  assert.equal(offerRow(ctx, 'vercel', 'openai/gpt-5.6-sol').status, 'verified');
+  // No model page this run: no evidence, the offer must survive (fail-safe).
+  // The known lane still re-verifies it like any other verified offer.
+  runCycle(ctx, 'run-pi-absent', {
+    'price_index:llmpricing': priceIndexEmptyArtifact(),
+    'known:vercel': knownArtifact({
+      task_id: 'known:vercel',
+      provider_key: 'vercel',
+      models: [knownModel('openai/gpt-5.6-sol', {
+        base_url: 'https://ai-gateway.vercel.sh/v1',
+        endpoint_source: 'https://vercel.com/docs/ai-gateway',
+      })],
+    }),
+  });
+  assert.equal(offerRow(ctx, 'vercel', 'openai/gpt-5.6-sol').status, 'verified');
 });

@@ -171,6 +171,21 @@ function buildLaneManifest(options = {}) {
   const watchTasks = buildWatchTasks(options);
   tasks.push(...watchTasks);
 
+  // 0013 deterministic price-index lane: one static llmpricing.dev index
+  // fetch + bounded model-page fetches, reduced without any LLM call.
+  tasks.push({
+    task_id: 'price_index:llmpricing',
+    kind: 'price_index',
+    provider_key: null,
+    provider_label: 'llmpricing.dev price index',
+    base_url: null,
+    docs_url: null,
+    api_catalog_url: null,
+    assigned_model_ids: [],
+    cached_urls: [],
+    output: 'artifacts/price_index.json',
+  });
+
   tasks.sort((a, b) => a.task_id.localeCompare(b.task_id));
 
   return {
@@ -735,6 +750,7 @@ function reduceLanes(runId, runDir, options = {}) {
     known: { assigned: 0, verified: 0, stale: 0, removed: 0, failed: 0 },
     research: { assigned: 0, complete: 0, partial: 0, failed: 0 },
     catalog: { available: [], unavailable: [] },
+    price_index: { models: 0, discounted: 0, ended: 0, failed: 0 },
   };
 
   function changeFor(prior) {
@@ -1146,6 +1162,203 @@ function reduceLanes(runId, runDir, options = {}) {
           facts: model,
           detected_at: now,
         });
+      }
+    }
+  }
+
+  // ── Price-index lane (0013: deterministic discount lane, no LLM) ────
+  // The static llmpricing.dev index carries the official (lab) reference
+  // price and per-provider quotes for the same model. A registered provider
+  // quoting at most 90% of the official reference for a frontier (or already
+  // tracked) model is a real discount: the offer is verified with the
+  // official quote as the normal price and the provider quote as the
+  // effective price (DISCOUNTED lane, spec 0008 §4.11 shape). A quote that
+  // carried a discount in the previous snapshot but no longer does ends the
+  // discount. The latest quotes are snapshotted for the next diff.
+  const priceIndexTasks = tasks.filter((t) => t.kind === 'price_index');
+  if (priceIndexTasks.length > 0) {
+    const normId = (s) => String(s || '').replace(/\//g, '').toLowerCase();
+    const normProvider = (s) => String(s || '').replace(/[^a-z0-9]/g, '').toLowerCase();
+    // Only providers the catalog lane does not own are price-index owned:
+    // catalog providers settle free/cheap/removal from their own catalog.
+    const regByNorm = new Map(
+      providers.filter((p) => !p.api_catalog_url).map((p) => [normProvider(p.key), p])
+    );
+    const matchReg = (providerId) => {
+      const n = normProvider(providerId);
+      if (!n) return null;
+      if (regByNorm.has(n)) return regByNorm.get(n);
+      const hit = [...regByNorm].find(([k]) => k.includes(n) || n.includes(k));
+      return hit ? hit[1] : null;
+    };
+    const trackedIds = new Set(
+      priorOffers.map((o) => o.canonical_model_id).filter(Boolean).map(normId)
+    );
+    const frontierIds = new Set();
+    try {
+      const frontierDb = db.openCollectorDb(options);
+      try {
+        for (const row of frontierDb.prepare(
+          'SELECT canonical_model_id FROM models WHERE frontier = 1'
+        ).all()) {
+          if (row.canonical_model_id) frontierIds.add(normId(row.canonical_model_id));
+        }
+      } finally {
+        frontierDb.close();
+      }
+    } catch {
+      // models table absent (old fixture): known offers still qualify.
+    }
+    const priceIndexQualifies = (modelId) => {
+      const n = normId(modelId);
+      if (!n) return false;
+      if (frontierIds.has(n)) return true;
+      return [...trackedIds].some((t) => t === n || t.endsWith(n) || n.endsWith(t));
+    };
+
+    for (const task of priceIndexTasks) {
+      const result = task.result_json;
+      const available = (task.status === 'complete' || task.status === 'partial') &&
+        !!result && result.available === true && Array.isArray(result.models);
+      if (!available) {
+        coverage.price_index.failed += 1;
+        continue;
+      }
+      const nowSeen = new Map(); // model_id -> Map(norm provider -> discounted?)
+      for (const model of result.models) {
+        if (!model || typeof model.model_id !== 'string') continue;
+        coverage.price_index.models += 1;
+        const ref = model.reference;
+        const refIn = typeof ref && typeof ref.input === 'number' ? ref.input : null;
+        const refOut = typeof ref && typeof ref.output === 'number' ? ref.output : null;
+        if (refIn === null && refOut === null) continue; // no official baseline
+        if (!priceIndexQualifies(model.model_id)) continue;
+        const seenProviders = new Map();
+        for (const q of model.quotes || []) {
+          if (!q || typeof q.provider !== 'string') continue;
+          const reg = matchReg(q.provider);
+          if (!reg) continue; // unregistered providers never become offers
+          const inBelow = refIn !== null && typeof q.input === 'number' && q.input <= refIn * 0.9;
+          const outBelow = refOut !== null && typeof q.output === 'number' && q.output <= refOut * 0.9;
+          const discounted = !q.official && (inBelow || outBelow);
+          seenProviders.set(normProvider(q.provider), discounted);
+          if (!discounted) continue;
+          const exactId = typeof q.modelId === 'string' && q.modelId ? q.modelId : model.model_id;
+          const key = offerChangeKey(reg.key, exactId);
+          const prior = offerByKey.get(key) || null;
+          const change = prior
+            ? changeFor(prior)
+            : (() => {
+              const fresh = {
+                provider_key: reg.key,
+                exact_model_id: exactId,
+                canonical_model_id: db.canonicalModelId(exactId),
+                source_kind: 'price_index',
+                status: 'new',
+                consecutive_failures: 0,
+                first_seen_at: now,
+              };
+              changes.set(key, fresh);
+              return fresh;
+            })();
+          // Normal = official reference quote; effective = provider quote.
+          if (refIn !== null) {
+            change.normal_input_price_usd = refIn;
+            change.normal_source_amount_input = refIn;
+          }
+          if (refOut !== null) {
+            change.normal_output_price_usd = refOut;
+            change.normal_source_amount_output = refOut;
+          }
+          if (typeof q.input === 'number') {
+            change.effective_input_price_usd = q.input;
+            change.source_amount_input = q.input;
+            change.effective_source_amount_input = q.input;
+          }
+          if (typeof q.output === 'number') {
+            change.effective_output_price_usd = q.output;
+            change.source_amount_output = q.output;
+            change.effective_source_amount_output = q.output;
+          }
+          change.source_currency = 'USD';
+          change.source_unit = 'per_million_tokens';
+          if (typeof model.url === 'string' && isHttpUrl(model.url)) {
+            change.price_source_url = model.url;
+          }
+          const facts = change.facts_json && typeof change.facts_json === 'object' && !Array.isArray(change.facts_json)
+            ? { ...change.facts_json }
+            : {};
+          const labName = model.lab || (ref && ref.provider) || 'official';
+          facts.name = model.name || exactId;
+          facts.model_name = model.name || exactId;
+          if (typeof q.context === 'number') facts.context_tokens = q.context;
+          facts.pricing_text =
+            `llmpricing.dev index (CC-BY-4.0): official (${labName}) ${refIn ?? '?'} / ${refOut ?? '?'} USD per 1M tokens; `
+            + `${reg.label} quote ${q.input ?? '?'} / ${q.output ?? '?'} USD per 1M tokens`;
+          if (!facts.endpoint_source && typeof reg.docs_url === 'string' && isHttpUrl(reg.docs_url)) {
+            facts.endpoint_source = reg.docs_url;
+          }
+          if (typeof model.url === 'string') facts.discount_source_url = model.url;
+          change.facts_json = facts;
+          markVerified(change, facts, 'price_index', true);
+          coverage.price_index.discounted += 1;
+          sourceCache.push({
+            url: model.url,
+            subject_key: `price_index:${model.model_id}`,
+            provider_key: reg.key,
+            exact_model_id: exactId,
+            fetched_at: now,
+            http_status: 200,
+            content_hash: null,
+          });
+        }
+        if (seenProviders.size > 0) nowSeen.set(model.model_id, seenProviders);
+      }
+      // Read the previously discounted quotes BEFORE refreshing the snapshot:
+      // the upsert below overwrites the rows with this run's latest prices,
+      // so the "previously discounted" state must be captured first.
+      let priorDiscounted = [];
+      try {
+        priorDiscounted = db.listDiscountedLlmpricingQuotes(options);
+      } catch {
+        priorDiscounted = [];
+      }
+      // Snapshot the latest quotes for the next diff (price change / ending).
+      for (const model of result.models) {
+        if (!model || typeof model.model_id !== 'string' || !Array.isArray(model.quotes)) continue;
+        try {
+          db.upsertLlmpricingQuotes(model.model_id, model.quotes, model.url, now, runId, options);
+        } catch {
+          // The snapshot is diff state, not the lane's evidence; never fail
+          // the run on it.
+        }
+      }
+      // Ending detection: a previously discounted quote for a model this run
+      // actually observed, now at or above the reference, ends the discount.
+      // No model page in this run's artifact = no evidence = keep the offer.
+      for (const prev of priorDiscounted) {
+        const seenProviders = nowSeen.get(prev.model_id);
+        if (!seenProviders) continue;
+        const reg = matchReg(prev.provider);
+        if (!reg) continue;
+        if (seenProviders.get(normProvider(prev.provider))) continue;
+        const exactId = prev.quote_model_id || prev.model_id;
+        const prior = offerByKey.get(offerChangeKey(reg.key, exactId)) || null;
+        // Price-index ownership is keyed on the price evidence source, not
+        // the current source_kind: a known_refresh re-verification may have
+        // flipped the kind to official_page in between runs.
+        if (!prior || prior.status !== 'verified') continue;
+        if (typeof prior.price_source_url !== 'string' ||
+            !prior.price_source_url.startsWith('https://llmpricing.dev/')) continue;
+        const change = changeFor(prior);
+        change.status = 'confirmed_removed';
+        change.last_attempted_at = now;
+        change.removal_evidence_json = removalEvidence(
+          'price index: provider quote no longer below the official reference (discount ended)',
+          typeof prev.source_url === 'string' ? prev.source_url : null,
+          task.task_id,
+        );
+        coverage.price_index.ended += 1;
       }
     }
   }
