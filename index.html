@@ -400,25 +400,6 @@ details.acc[open] .chev { transform: rotate(180deg); }
 .report-section { margin-top: 2.5rem; }
 .empty-line { font-size: 0.9rem; color: hsl(var(--muted-foreground)); padding: 0.9rem 0; }
 
-/* Today's changes. */
-.change-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.7rem; }
-.change-row {
-  background: hsl(var(--card)); border: 1px solid hsl(var(--border));
-  border-radius: var(--radius); padding: 0.85rem 1.1rem;
-}
-.change-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; }
-.change-type {
-  font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem;
-  border-radius: 999px; background: hsl(var(--primary) / 0.1);
-  color: hsl(var(--foreground)); white-space: nowrap;
-}
-.change-name { font-weight: 700; font-size: 0.92rem; }
-.change-field { font-size: 0.72rem; color: hsl(var(--muted-foreground)); }
-.change-values { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.45rem; }
-.change-val { max-width: 100%; }
-.change-arrow { color: hsl(var(--muted-foreground)); font-weight: 700; }
-.change-summary { margin-top: 0.4rem; font-size: 0.85rem; color: hsl(var(--muted-foreground)); }
-
 /* Contradictions note. */
 .contradictions-note {
   margin: 1.1rem 0 0; padding: 0.85rem 1.1rem;
@@ -599,39 +580,6 @@ details.acc[open] .chev { transform: rotate(180deg); }
       <p class="text-sm leading-relaxed">無料・激安 LLM API の日次ランキング。今回ランクイン 9 件（S 4、A 5、B 0）、無料 2 件、激安 7 件、注意 0 件、対象外 183 件。</p>
     </section>
 
-    <section id="changes" class="report-section" aria-labelledby="changes-h">
-      <div class="flex items-end justify-between gap-4 mb-1">
-        <h2 id="changes-h" class="font-display text-2xl sm:text-3xl font-bold">今日の重要差分</h2>
-        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">3 件</span>
-      </div>
-      <ul class="change-list"><li class="change-row">
-        <div class="change-head">
-          <span class="change-type">レート変更</span>
-          <span class="change-name">Gemini 2.5 Pro</span>
-          <span class="change-field">free_quota</span>
-        </div>
-        <div class="change-values"><span class="change-val"><span class="id-val-plain">Free of charge</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">Standard | Free Tier | Paid Tier, per 1M tokens in USD | Input price | Free of charge | $1.25, prompts $2.50, prompts &gt; 200k tokens | Output price (including thinking tokens) | Free of charge | $10.00, prompts $15.00, prompts &gt; 200k</span></span></div>
-        <p class="change-summary">Gemini 2.5 Pro の無料枠の記載が、単なる「Free of charge」から Free Tier と Paid Tier を併記した価格表の抜粋に更新されました。Free Tier の入出力（思考トークン含む）は引き続き「Free of charge」で、無料提供の条件自体は変わりません。新しい抜粋には Paid Tier の単価（入力 $1.25/M、200k トークン超プロンプト $2.50/M、出力 $10.00/M、200k トークン超 $15.00/M）も含まれます。</p>
-      </li>
-      <li class="change-row">
-        <div class="change-head">
-          <span class="change-type">データポリシー変更</span>
-          <span class="change-name">Gemini 2.5 Pro</span>
-          <span class="change-field">data_policy</span>
-        </div>
-        <div class="change-values"><span class="change-val"><span class="id-val-plain">Used to improve our products: Yes</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">New accounts begin on the Free Tier, which allows access to certain models in the Gemini API and AI Studio, up to the models&#39; free tier rate limits. To access h…</span></span></div>
-        <p class="change-summary">Gemini 2.5 Pro のデータポリシーの記載が「Used to improve our products: Yes」からより詳しい文言に更新されました。新規アカウントは Free Tier から始まり、より高いレート制限・高度なモデルの利用やプロンプト・レスポンスの Google 製品改善への利用を避けるには請求先アカウントと Prepay を連携して Paid Tier へ移行できると明記され、「Used to improve our products — Free Tier: Yes / Paid Tier: No」と Free と Paid で取り扱いが異なることが確認できます。</p>
-      </li>
-      <li class="change-row">
-        <div class="change-head">
-          <span class="change-type">割引率変更</span>
-          <span class="change-name">DeepSeek V4 Flash Latest</span>
-          <span class="change-field">effective_price_per_million</span>
-        </div>
-        <div class="change-values"><span class="change-val"><span class="id-val-plain">input=0.0765，output=0.153</span></span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val"><span class="id-val-plain">input=0.065，output=0.18</span></span></div>
-        <p class="change-summary">OpenRouter の DeepSeek V4 Flash Latest の単価が調整されました。入力は 1M トークンあたり $0.0765 から $0.065 へ（約 15% 引き下げ）、出力は $0.153 から $0.18 へ（約 18% 引き上げ）です。変更前後とも割引は適用されていません（割引率 0%）。</p>
-      </li></ul>
-    </section>
     
 
     <section id="offers" class="report-section" aria-labelledby="offers-h">

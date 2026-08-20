@@ -585,31 +585,9 @@ function snapshotStrip(report, offers) {
 // ── Report sections (spec 0008 Phase 4) ───────────────────────────
 // The page is one scroll with fixed h2 blocks in report order. Empty
 // sections keep the DOM (a one line "none today") so the scheme is stable.
-const CHANGE_TYPE_JA = {
-  new: '新規', ended: '終了', revived: '復活', price_change: '価格変更',
-  discount_rate_change: '割引率変更', provider_count_change: 'プロバイダ数変更',
-  free_status_change: '無料状態変更', availability_change: '利用状態変更',
-  context_change: 'コンテキスト変更', model_id_change: 'モデルID変更',
-  rate_limit_change: 'レート変更', data_policy_change: 'データポリシー変更',
-  capability_change: '機能変更', campaign_started: 'キャンペーン開始',
-  campaign_ended: 'キャンペーン終了', campaign_date_change: 'キャンペーン期間変更',
-  limit_change: '利用制限変更', provider_change: 'プロバイダ変更',
-  end_date_change: '終了日変更',
-};
-
-function changeValueHtml(value) {
-  if (value === null || value === undefined) return '<span class="id-val-plain" style="opacity:.55">—</span>';
-  if (typeof value === 'object') {
-    if (typeof value.text === 'string' && value.text.length > 0) {
-      return `<span class="id-val-plain">${esc(value.text)}</span>`;
-    }
-    const parts = Object.entries(value).filter(([, v]) => v !== null && v !== undefined);
-    if (parts.length === 0) return '<span class="id-val-plain" style="opacity:.55">—</span>';
-    return `<span class="id-val-plain">${parts.map(([k, v]) => `${esc(k)}=${esc(typeof v === 'object' ? JSON.stringify(v) : v)}`).join('，')}</span>`;
-  }
-  return `<span class="id-val-plain">${esc(String(value))}</span>`;
-}
-
+// The change-history section was removed from the page (operator decision
+// 2026-08-20); changes are still computed and stored in report.json / the
+// changes table as an audit trail.
 function sectionShell(id, title, count, bodyHtml, emptyText = '本日なし') {
   const inner = count > 0
     ? bodyHtml
@@ -621,25 +599,6 @@ function sectionShell(id, title, count, bodyHtml, emptyText = '本日なし') {
       </div>
       ${inner}
     </section>`;
-}
-
-function changesSection(report) {
-  const changes = Array.isArray(report.changes) ? report.changes : [];
-  const rows = changes.map((c) => {
-    const label = CHANGE_TYPE_JA[c.change_type] || c.change_type || '';
-    const hasValues = c.before !== undefined || c.after !== undefined;
-    return `<li class="change-row">
-        <div class="change-head">
-          <span class="change-type">${esc(label)}</span>
-          <span class="change-name">${esc(c.offer_name)}</span>
-          ${c.field ? `<span class="change-field">${esc(c.field)}</span>` : ''}
-        </div>
-        ${hasValues ? `<div class="change-values"><span class="change-val">${changeValueHtml(c.before)}</span><span class="change-arrow" aria-hidden="true">→</span><span class="change-val">${changeValueHtml(c.after)}</span></div>` : ''}
-        ${c.summary ? `<p class="change-summary">${esc(c.summary)}</p>` : ''}
-      </li>`;
-  }).join('\n      ');
-  const body = `<ul class="change-list">${rows}</ul>`;
-  return sectionShell('changes', '今日の重要差分', changes.length, body);
 }
 
 function contradictionsNote(report) {
@@ -1100,25 +1059,6 @@ details.acc[open] .chev { transform: rotate(180deg); }
 .report-section { margin-top: 2.5rem; }
 .empty-line { font-size: 0.9rem; color: hsl(var(--muted-foreground)); padding: 0.9rem 0; }
 
-/* Today's changes. */
-.change-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.7rem; }
-.change-row {
-  background: hsl(var(--card)); border: 1px solid hsl(var(--border));
-  border-radius: var(--radius); padding: 0.85rem 1.1rem;
-}
-.change-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; }
-.change-type {
-  font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem;
-  border-radius: 999px; background: hsl(var(--primary) / 0.1);
-  color: hsl(var(--foreground)); white-space: nowrap;
-}
-.change-name { font-weight: 700; font-size: 0.92rem; }
-.change-field { font-size: 0.72rem; color: hsl(var(--muted-foreground)); }
-.change-values { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.45rem; }
-.change-val { max-width: 100%; }
-.change-arrow { color: hsl(var(--muted-foreground)); font-weight: 700; }
-.change-summary { margin-top: 0.4rem; font-size: 0.85rem; color: hsl(var(--muted-foreground)); }
-
 /* Contradictions note. */
 .contradictions-note {
   margin: 1.1rem 0 0; padding: 0.85rem 1.1rem;
@@ -1406,7 +1346,6 @@ function generateHTML(report) {
       <p class="text-sm leading-relaxed">${esc(report.summary)}</p>
     </section>` : sectionShell('summary', '本日のサマリー', 0, '', '本日のサマリーはありません')}
 
-    ${changesSection(report)}
     ${contradictionsNote(report)}
 
     ${offersSection}
