@@ -1,97 +1,201 @@
 {
-  "generated_at": "2026-08-22T03:12:51.673Z",
+  "generated_at": "2026-08-22T05:57:27.278Z",
   "timezone": "Asia/Tokyo",
-  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 8 件（S 4、A 4、B 0）、無料 1 件、激安 7 件、注意 0 件、対象外 200 件。",
+  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 9 件（S 5、A 4、B 0）、無料 2 件、激安 7 件、注意 0 件、対象外 199 件。",
   "new_models": [],
   "changes": [
     {
-      "offer_name": "DeepSeek: DeepSeek V4 Flash 0731",
-      "change_type": "discount_rate_change",
-      "summary": "DeepSeek: DeepSeek V4 Flash 0731 の割引率が変更になりました。",
-      "field": "effective_price_per_million",
-      "before": {
-        "input": 0.14,
-        "output": 0.28
-      },
+      "offer_name": "Gemini 2.5 Pro",
+      "change_type": "new",
+      "summary": "Gemini 2.5 Pro が新たにランキング対象になりました。",
+      "field": null,
+      "before": null,
       "after": {
-        "input": 0.08,
-        "output": 0.18
-      },
-      "discount_before": 0,
-      "discount_after": 0
+        "free": true
+      }
     },
     {
-      "offer_name": "Gemini 2.5 Pro",
-      "change_type": "rate_limit_change",
-      "summary": "Gemini 2.5 Pro のレート制限・無料枠条件が変わりました。",
-      "field": "free_quota",
-      "before": "Standard | Free Tier | Paid Tier, per 1M tokens in USD | Input price | Free of charge | $1.25, prompts $2.50, prompts > 200k tokens | Output price (including thinking tokens) | Free of charge | $10.00, prompts $15.00, prompts > 200k",
-      "after": "Free Tier — Input price: Free of charge; Output price (including thinking tokens): Free of charge. Free plan: \"Free input & output tokens\""
+      "offer_name": "DeepSeek V4 Flash",
+      "change_type": "new",
+      "summary": "DeepSeek V4 Flash が新たにランキング対象になりました。",
+      "field": null,
+      "before": null,
+      "after": {
+        "free": true
+      }
     },
     {
-      "offer_name": "Gemini 2.5 Pro",
-      "change_type": "data_policy_change",
-      "summary": "Gemini 2.5 Pro のデータ利用条件が変わりました。",
-      "field": "data_policy",
-      "before": {
-        "hash": "1e72763880baf10d25859959b53cce7f68bf215fa8357be874a730567204a3f7",
-        "text": "New accounts begin on the Free Tier, which allows access to certain models in the Gemini API and AI Studio, up to the models' free tier rate limits. To access h…"
-      },
+      "offer_name": "DeepSeek V4 Flash 0731",
+      "change_type": "new",
+      "summary": "DeepSeek V4 Flash 0731 が新たにランキング対象になりました。",
+      "field": null,
+      "before": null,
       "after": {
-        "hash": "73ca8d2c70bcc3d623e0b06802ae150dbb6deb84798024063df85d81d4b24d76",
-        "text": "When you use Unpaid Services, including, for example, Google AI Studio and the unpaid quota on Gemini API, Google uses the content you submit to the Services an…"
+        "free": true
+      }
+    },
+    {
+      "offer_name": "Ling 3.0 Flash",
+      "change_type": "new",
+      "summary": "Ling 3.0 Flash が新たにランキング対象になりました。",
+      "field": null,
+      "before": null,
+      "after": {
+        "free": true
+      }
+    },
+    {
+      "offer_name": "MiMo V2.5",
+      "change_type": "new",
+      "summary": "MiMo V2.5 が新たにランキング対象になりました。",
+      "field": null,
+      "before": null,
+      "after": {
+        "free": true
       }
     },
     {
       "offer_name": "DeepSeek: DeepSeek V4 Flash 0731",
-      "change_type": "provider_count_change",
-      "summary": "DeepSeek: DeepSeek V4 Flash 0731 の提供プロバイダ数が変わりました。",
-      "field": "provider_count",
-      "before": 28,
-      "after": 31
+      "change_type": "new",
+      "summary": "DeepSeek: DeepSeek V4 Flash 0731 が新たにランキング対象になりました。",
+      "field": null,
+      "before": null,
+      "after": {
+        "free": true
+      }
     },
     {
       "offer_name": "Ling-3.0-flash",
-      "change_type": "provider_count_change",
-      "summary": "Ling-3.0-flash の提供プロバイダ数が変わりました。",
-      "field": "provider_count",
-      "before": 2,
-      "after": 3
-    },
-    {
-      "offer_name": "GPT-5.6 Sol",
-      "change_type": "rate_limit_change",
-      "summary": "GPT-5.6 Sol のレート制限・無料枠条件が変わりました。",
-      "field": "free_quota",
+      "change_type": "new",
+      "summary": "Ling-3.0-flash が新たにランキング対象になりました。",
+      "field": null,
       "before": null,
-      "after": "Usage is billed to your team at API rates. Free users (those who haven't made a payment) get $5 of credits every 30 days."
-    },
-    {
-      "offer_name": "GPT-5.6 Sol",
-      "change_type": "data_policy_change",
-      "summary": "GPT-5.6 Sol のデータ利用条件が変わりました。",
-      "field": "data_policy",
-      "before": {
-        "hash": null,
-        "text": null
-      },
       "after": {
-        "hash": "57e9df0231f10b1029349ee372afea9871d362225a342cb094ac7a0d3b463d8a",
-        "text": "AI Gateway does not use your prompts or responses for training purposes. Your data is processed solely to fulfill your requests and is not retained for model im…"
+        "free": true
       }
     },
     {
-      "offer_name": "GPT-5.6 Sol",
-      "change_type": "provider_change",
-      "summary": "GPT-5.6 Sol の提供元・エンドポイントが変わりました。",
-      "field": "endpoint_source",
-      "before": "https://vercel.com/docs/ai-gateway/models/openai",
-      "after": "https://vercel.com/docs/ai-gateway/getting-started/text"
+      "offer_name": "NVIDIA: Nemotron 3 Ultra",
+      "change_type": "new",
+      "summary": "NVIDIA: Nemotron 3 Ultra が新たにランキング対象になりました。",
+      "field": null,
+      "before": null,
+      "after": {
+        "free": true
+      }
+    },
+    {
+      "offer_name": "Xiaomi: MiMo-V2.5",
+      "change_type": "new",
+      "summary": "Xiaomi: MiMo-V2.5 が新たにランキング対象になりました。",
+      "field": null,
+      "before": null,
+      "after": {
+        "free": true
+      }
+    },
+    {
+      "offer_name": "Z.ai: GLM 5.2",
+      "change_type": "new",
+      "summary": "Z.ai: GLM 5.2 が新たにランキング対象になりました。",
+      "field": null,
+      "before": null,
+      "after": {
+        "free": true
+      }
     }
   ],
   "ranked_offers": [
     {
       "rank": 1,
+      "name": "Z.ai: GLM 5.2",
+      "model_name": "Z.ai: GLM 5.2",
+      "provider": "OpenRouter",
+      "model_vendor": "z-ai",
+      "delivery_type": "router",
+      "classification": "B_PERMANENT_FREE_TIER",
+      "start_at": null,
+      "end_at": null,
+      "end_timezone_known": false,
+      "regions": [],
+      "registration_conditions": [],
+      "card_required": null,
+      "minimum_deposit": null,
+      "kyc_required": null,
+      "auto_renewal": null,
+      "refund_policy": null,
+      "free_limits": null,
+      "rate_limits": null,
+      "context_tokens": 256000,
+      "max_output_tokens": null,
+      "tool_calling": null,
+      "structured_output": null,
+      "image_input": null,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "z-ai/glm-5.2:free",
+      "provider_count": 1,
+      "recent_activity": "GLM 5.2 is a large-scale reasoning model from Z.ai. It supports text input and output with a 1M-token context window, and is suited for long-horizon agent workflows, project-level software engineering,...",
+      "normal_price_per_million": {
+        "input": 0,
+        "output": 0
+      },
+      "effective_price_per_million": {
+        "input": 0,
+        "output": 0
+      },
+      "effective_discount_percent": null,
+      "discount_rates": null,
+      "window": null,
+      "data_retention": null,
+      "data_policy": null,
+      "data_policy_source": null,
+      "free_endpoint_status": null,
+      "operational_evidence": "router: 1 provider(s), 1d uptime 99.9%",
+      "activity": "top provider Decart, 1d uptime 99.9%",
+      "training_use": null,
+      "suspicion_score": 0,
+      "suspicion_reasons": [],
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "exclusion_reason": null,
+      "last_verified": "2026-08-22T02:49:49.369Z",
+      "endpoint_source": "https://openrouter.ai/docs/quickstart",
+      "provider_key": "openrouter",
+      "canonical_model_id": "z-ai/glm-5.2",
+      "access_kind": "FREE",
+      "price_source": "https://openrouter.ai/api/v1/models",
+      "price_verified_at": "2026-08-22T02:49:49.369Z",
+      "discount_start_at": null,
+      "discount_end_at": null,
+      "free_allowance_rank": "NORMAL",
+      "total_parameters_b": null,
+      "active_parameters_b": null,
+      "sources": [
+        "https://openrouter.ai/z-ai/glm-5.2:free",
+        "https://openrouter.ai/docs/quickstart",
+        "https://openrouter.ai/api/v1/models",
+        "https://huggingface.co/zai-org/GLM-5.2/raw/main/README.md"
+      ],
+      "benchmark": {
+        "score": 81,
+        "benchmark_name": "Terminal-Bench 2.1",
+        "version": "2.1",
+        "tier": "S"
+      },
+      "benchmarks": [
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 81,
+          "version": "2.1",
+          "source_url": "https://huggingface.co/zai-org/GLM-5.2/raw/main/README.md",
+          "verified_at": "2026-08-22T05:56:26.807Z"
+        }
+      ],
+      "benchmark_key": "terminal_bench_2_1"
+    },
+    {
+      "rank": 2,
       "name": "DeepSeek V4 Flash 0731",
       "model_name": "DeepSeek V4 Flash 0731",
       "provider": "NanoGPT",
@@ -243,7 +347,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 2,
+      "rank": 3,
       "name": "DeepSeek: DeepSeek V4 Flash 0731",
       "model_name": "DeepSeek: DeepSeek V4 Flash 0731",
       "provider": "OpenRouter",
@@ -395,7 +499,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 3,
+      "rank": 4,
       "name": "MiMo V2.5",
       "model_name": "MiMo V2.5",
       "provider": "NanoGPT",
@@ -483,7 +587,7 @@
       "benchmark_key": "terminal_bench_2_0"
     },
     {
-      "rank": 4,
+      "rank": 5,
       "name": "Xiaomi: MiMo-V2.5",
       "model_name": "Xiaomi: MiMo-V2.5",
       "provider": "OpenRouter",
@@ -571,7 +675,7 @@
       "benchmark_key": "terminal_bench_2_0"
     },
     {
-      "rank": 5,
+      "rank": 6,
       "name": "NVIDIA: Nemotron 3 Ultra",
       "model_name": "NVIDIA: Nemotron 3 Ultra",
       "provider": "OpenRouter",
@@ -659,7 +763,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 6,
+      "rank": 7,
       "name": "DeepSeek V4 Flash",
       "model_name": "DeepSeek V4 Flash",
       "provider": "NanoGPT",
@@ -771,7 +875,7 @@
       "benchmark_key": "terminal_bench_2_0"
     },
     {
-      "rank": 7,
+      "rank": 8,
       "name": "Ling 3.0 Flash",
       "model_name": "Ling 3.0 Flash",
       "provider": "NanoGPT",
@@ -931,7 +1035,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 8,
+      "rank": 9,
       "name": "Ling-3.0-flash",
       "model_name": "Ling-3.0-flash",
       "provider": "OpenRouter",
@@ -2501,11 +2605,6 @@
       "last_known_status": "verified"
     },
     {
-      "name": "Z.ai: GLM 5.2",
-      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
-      "last_known_status": "verified"
-    },
-    {
       "name": "DeepSeek-V3.1",
       "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
       "last_known_status": "verified"
@@ -3631,6 +3730,11 @@
     },
     {
       "url": "https://openrouter.ai/z-ai/glm-5.2:free",
+      "source_type": "official",
+      "accessed_at": "2026-08-22T02:49:49.369Z"
+    },
+    {
+      "url": "https://huggingface.co/zai-org/GLM-5.2/raw/main/README.md",
       "source_type": "official",
       "accessed_at": "2026-08-22T02:49:49.369Z"
     },
