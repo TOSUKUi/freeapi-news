@@ -90,8 +90,8 @@ test('0010 creates models, leads and watch_facts and backfills models from offer
   // (research task kinds), and 0012 (operational evidence + gates) are new
   // for this v9 database.
   const r10 = db.applyMigrations({ dbPath: ctx.dbPath, migrationsDir: MIGRATIONS_DIR });
-  assert.deepEqual(r10.applied, [10, 11, 12, 13]);
-  assert.equal(r10.schemaVersion, 13);
+  assert.deepEqual(r10.applied, [10, 11, 12, 13, 14]);
+  assert.equal(r10.schemaVersion, 14);
 
   const t = db.openDatabaseFile(ctx.dbPath);
   try {
@@ -181,7 +181,7 @@ test('db status reports the watch summary on a v12 database', () => {
     t.close();
   }
   const status = db.getStatus({ dbPath: ctx.dbPath, stateDir: ctx.stateDir });
-  assert.equal(status.schemaVersion, 13);
+  assert.equal(status.schemaVersion, 14);
   assert.equal(status.watch.leads_open, 1);
   assert.deepEqual(
     status.watch.leads.map((r) => ({ status: r.status, c: r.c })).sort((a, b) => a.status.localeCompare(b.status)),

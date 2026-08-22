@@ -186,6 +186,23 @@ function buildLaneManifest(options = {}) {
     output: 'artifacts/price_index.json',
   });
 
+  // Aggregated-index lane (operator direction 2026-08-22): two static,
+  // pre-aggregated sources (freellm.net models table + open-free-llm-api
+  // README base URLs) give the free-tier discovery baseline without any
+  // LLM session browsing provider pages. Reduced like discovery lanes.
+  tasks.push({
+    task_id: 'aggregated_index:freellm',
+    kind: 'aggregated_index',
+    provider_key: null,
+    provider_label: 'freellm.net aggregated free-model index',
+    base_url: null,
+    docs_url: null,
+    api_catalog_url: null,
+    assigned_model_ids: [],
+    cached_urls: [],
+    output: 'artifacts/aggregated_index.json',
+  });
+
   tasks.sort((a, b) => a.task_id.localeCompare(b.task_id));
 
   return {
@@ -833,8 +850,11 @@ function reduceLanes(runId, runDir, options = {}) {
   // Spec 0008: the model-first lanes (news_scan, vendor deep dive, model
   // fan out) emit crawl-facts shaped offer facts in models[] and take the
   // same discovery-lane treatment: addition only, known offers never mutated.
+  // The deterministic aggregated-index lane (operator direction 2026-08-22)
+  // emits the same shape from pre-aggregated sources, so it reduces
+  // identically: the free-tier discovery baseline arrives with zero LLM work.
   const discoveryTasks = tasks.filter((t) =>
-    ['news_scan', 'vendor_deep_dive', 'model_fanout'].includes(t.kind));
+    ['news_scan', 'vendor_deep_dive', 'model_fanout', 'aggregated_index'].includes(t.kind));
 
   // ── Catalog lane (AC-6, AC-5) ──────────────────────────────────
   for (const task of catalogTasks) {

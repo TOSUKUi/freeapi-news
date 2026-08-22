@@ -898,6 +898,10 @@ const PROVIDER_MONITOR_MAX_SESSIONS = 5;
 function planProviderMonitorTasks(watchlist, signals, discountSignals = {}, opts = {}) {
   const batch = Math.max(1, Math.min(6, opts.batch || Number(process.env.PROVIDER_MONITOR_BATCH) || 5));
   const monitors = (watchlist.provider_monitors || []).filter((m) => m && m.watch && Object.keys(m.watch).length > 0);
+  // Providers the aggregated-index lane verified this run with a fresh,
+  // verified free-model baseline. Their LLM sessions can run at a spot check
+  // visit budget (verify only changed signals) instead of a full sweep.
+  const indexedVerified = opts.indexed_providers instanceof Set ? opts.indexed_providers : new Set();
   const tasks = [];
   for (let i = 0; i < monitors.length; i += batch) {
     if (tasks.length >= PROVIDER_MONITOR_MAX_SESSIONS) break;
@@ -916,6 +920,13 @@ function planProviderMonitorTasks(watchlist, signals, discountSignals = {}, opts
       .map((k) => discountSignals[k])
       .flat()
       .filter(Boolean);
+    // When the deterministic index today verified every provider in this
+    // session and nothing changed (no changed watch URLs, no discount
+    // signal), the LLM session adds verification the index already did.
+    // It becomes a cheap spot check: 3 visits, not 12.
+    const allIndexed = providerKeys.every((k) => indexedVerified.has(k));
+    const nothingToCheck = changedUrls.length === 0 && discounts.length === 0;
+    const spotCheck = allIndexed && nothingToCheck;
     tasks.push({
       task_id: `provider_monitor:${tasks.length + 1}`,
       kind: 'provider_monitor',
@@ -925,6 +936,8 @@ function planProviderMonitorTasks(watchlist, signals, discountSignals = {}, opts
       watch_urls: watchUrls,
       changed_urls: changedUrls,
       discount_signals: discounts,
+      visit_budget: spotCheck ? 3 : 12,
+      spot_check: spotCheck,
     });
   }
   return tasks;

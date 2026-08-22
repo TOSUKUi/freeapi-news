@@ -36,6 +36,7 @@ const assemble = require('./assemble');
 const publication = require('./publication');
 const catalog = require('./catalog');
 const priceIndex = require('./price-index');
+const aggregatedIndex = require('./aggregated-index');
 const evidence = require('./evidence');
 const watch = require('./watch');
 const modelsLane = require('./models');
@@ -487,7 +488,8 @@ async function runCatalogInProcess(manifest, runDir, baseOpts, log) {
 
   const catalogTasks = (manifest.tasks || []).filter((t) => t.kind === 'catalog');
   const priceIndexTasks = (manifest.tasks || []).filter((t) => t.kind === 'price_index');
-  if (catalogTasks.length === 0 && priceIndexTasks.length === 0) return;
+  const aggregatedIndexTasks = (manifest.tasks || []).filter((t) => t.kind === 'aggregated_index');
+  if (catalogTasks.length === 0 && priceIndexTasks.length === 0 && aggregatedIndexTasks.length === 0) return;
   fs.mkdirSync(path.join(runDir, 'artifacts'), { recursive: true });
   for (const task of catalogTasks) {
     let artifact;
@@ -548,6 +550,37 @@ async function runCatalogInProcess(manifest, runDir, baseOpts, log) {
       log(`  ✅ price_index: ${artifact.models.length} model page(s) from ${artifact.index_model_count} indexed`);
     } else {
       log(`  ❌ price_index unavailable (${artifact.errors[0] || 'unknown'}); prior offers preserved`);
+    }
+  }
+
+  // Aggregated-index lane: freellm.net models + base-URL README, pure code
+  // (no LLM). Failures preserve prior offers like any other lane.
+  for (const task of aggregatedIndexTasks) {
+    let artifact;
+    try {
+      artifact = await aggregatedIndex.fetchAggregatedIndex({});
+    } catch (err) {
+      artifact = {
+        schema_version: 1,
+        task_id: task.task_id,
+        kind: 'aggregated_index',
+        provider_key: null,
+        status: 'failed',
+        available: false,
+        models: [],
+        base_urls: {},
+        fetches: [],
+        errors: [err.message],
+      };
+    }
+    artifact.task_id = task.task_id;
+    const outPath = db.artifactPathFor(runDir, task.task_id);
+    fs.writeFileSync(outPath, `${JSON.stringify(artifact, null, 2)}\n`);
+    if (artifact.available) {
+      const freeHits = artifact.models.filter((m) => m.is_free_signal).length;
+      log(`  ✅ aggregated_index: ${artifact.models.length} model(s) from freellm.net, ${freeHits} free-signal, ${Object.keys(artifact.base_urls).length} base URLs`);
+    } else {
+      log(`  ❌ aggregated_index unavailable (${(artifact.errors || ['unknown'])[0]}); prior offers preserved`);
     }
   }
 }
@@ -921,7 +954,27 @@ async function runPipeline(options = {}) {
       if (nimTask) researchTasks.push(nimTask);
       const discountSignals = observe.catalogDiscountSignals(
         catalogArtifacts, db.knownNormalPricesByCanonical(baseOpts));
-      researchTasks.push(...watch.planProviderMonitorTasks(watchlist, watchSignals, discountSignals));
+      // Provider coverage from the deterministic aggregated-index lane
+      // (freellm.net), read from this run's artifacts. Providers the index
+      // verified as free this run get spot-check (not full-sweep) visits.
+      const aggIndexTasks = manifest.tasks.filter((t) => t.kind === 'aggregated_index');
+      const indexedProviders = new Set();
+      for (const t of aggIndexTasks) {
+        const artPath = db.artifactPathFor(runDir, t.task_id);
+        if (!fs.existsSync(artPath)) continue;
+        try {
+          const art = JSON.parse(fs.readFileSync(artPath, 'utf8'));
+          if (!art.available || !Array.isArray(art.models)) continue;
+          for (const m of art.models) {
+            if (m && m.is_free_signal && m.verified_free && typeof m.provider_key === 'string') {
+              indexedProviders.add(m.provider_key);
+            }
+          }
+        } catch { /* artifact unreadable: treat as no coverage */ }
+      }
+      researchTasks.push(...watch.planProviderMonitorTasks(watchlist, watchSignals, discountSignals, {
+        indexed_providers: indexedProviders,
+      }));
       // Spec 0008 Phase 3: product / program monitors run only when the
       // deterministic watch found a hash change (one bundled session each).
       researchTasks.push(...watch.planProductProgramTasks(watchSignals, watchlist));
@@ -1045,19 +1098,22 @@ async function runPipeline(options = {}) {
         schemaName = 'crawl-facts.schema.json';
         transport = 'discovery';
         searchBudget = 1;
-        visitBudget = 12;
+        visitBudget = task.visit_budget || 12;
         timeoutSeconds = opts.discoveryTimeout;
         failureArtifact = factsFailureArtifact(
           task.task_id, task.provider_keys ? task.provider_keys.join(',') : null);
         const watchLines = (task.watch_urls || [])
           .map((w) => `- ${w.provider_key} ${w.channel}: ${w.url}`).join('\n');
+        const spotNote = task.spot_check
+          ? '\nThe deterministic aggregated free-model index already verified these providers as free this run; only visit a watch URL when you need to confirm a change. This is a spot check, not a sweep (at most 3 visits).'
+          : '';
         runtime = `Task: ${task.task_id}. Providers in this session: ${(task.provider_keys || []).join(', ')}.\n`
           + 'Watch URLs (deterministic watch):\n' + watchLines + '\n'
           + (task.changed_urls && task.changed_urls.length
-            ? `Changed watch URLs, investigate these first (at most 6 of the 12 visits):\n${task.changed_urls.map((u) => `- ${u}`).join('\n')}\n`
-            : 'No watch changes today: verify the current facts on the watch URLs (at most 12 visits total).\n')
+            ? `Changed watch URLs, investigate these first (at most ${visitBudget} visits total):\n${task.changed_urls.map((u) => `- ${u}`).join('\n')}\n`
+            : `No watch changes today: verify the current facts on the watch URLs (at most ${visitBudget} visits total).\n`)
           + 'Catalog discount signals (deterministic price drops vs known normal prices; a hint, verify on the page):\n'
-          + JSON.stringify(task.discount_signals || [], null, 1) + '\n'
+          + JSON.stringify(task.discount_signals || [], null, 1) + spotNote + '\n'
           + 'Report only changed or newly evidenced facts with verbatim pricing text and the fetched source URL. '
           + 'For discount claims report normal and effective amounts separately.';
       } else if (task.kind === 'product_monitor' || task.kind === 'program_monitor') {

@@ -41,6 +41,10 @@ const TASK_KINDS = [
   'provider_monitor', 'nim_verify', 'product_monitor', 'program_monitor',
   // 0013: deterministic llmpricing.dev price index + quote fetch (no LLM).
   'price_index',
+  // Aggregated-index lane (operator direction 2026-08-22): deterministic
+  // fetch of pre-aggregated free-model indexes (freellm.net models table +
+  // open-free-llm-api base URL README), reduced like discovery lanes. No LLM.
+  'aggregated_index',
 ];
 const TASK_STATUSES = ['pending', 'complete', 'partial', 'failed'];
 const TASK_RESULT_STATUSES = ['complete', 'partial', 'failed'];

@@ -204,6 +204,51 @@ describe('runWatchPhase', () => {
   });
 });
 
+describe('provider monitor planning (spec 0008 Phase 2)', () => {
+  it('bundles providers into ≤5 sessions with a full 12-visit budget by default', () => {
+    const monitors = [
+      { provider_key: 'a', watch: { m: 'https://a.com/models' } },
+      { provider_key: 'b', watch: { p: 'https://b.com/pricing' } },
+      { provider_key: 'c', watch: { m: 'https://c.com/models' } },
+      { provider_key: 'd', watch: { p: 'https://d.com/pricing' } },
+      { provider_key: 'e', watch: { m: 'https://e.com/models' } },
+      { provider_key: 'f', watch: { p: 'https://f.com/pricing' } },
+    ];
+    const wl = { ...WATCHLIST, provider_monitors: monitors };
+    const tasks = watch.planProviderMonitorTasks(wl, [], {});
+    assert.equal(tasks.length, 2);
+    assert.deepEqual(tasks[0].provider_keys.slice(0, 5).sort(), ['a', 'b', 'c', 'd', 'e']);
+    assert.equal(tasks[0].visit_budget, 12);
+    assert.equal(tasks[0].spot_check, false);
+  });
+
+  it('indexed providers with no signal become cheap spot-checks (3 visits)', () => {
+    const monitors = WATCHLIST.provider_monitors; // openrouter, groq
+    const tasks = watch.planProviderMonitorTasks(WATCHLIST, [], {}, {
+      indexed_providers: new Set(['openrouter', 'groq']),
+    });
+    assert.equal(tasks.length, 1);
+    assert.equal(tasks[0].visit_budget, 3);
+    assert.equal(tasks[0].spot_check, true);
+  });
+
+  it('a changed signal forces a full-sweep visit budget even when indexed', () => {
+    const signals = [{
+      domain: 'provider_watch',
+      entity_key: 'monitor:openrouter:new_models',
+      url: 'https://openrouter.ai/models',
+      status: 'changed',
+      new_items: ['acme/glm-5.2'],
+    }];
+    const tasks = watch.planProviderMonitorTasks(WATCHLIST, signals, {}, {
+      indexed_providers: new Set(['openrouter', 'groq']),
+    });
+    assert.equal(tasks[0].changed_urls.length, 1);
+    assert.equal(tasks[0].visit_budget, 12);
+    assert.equal(tasks[0].spot_check, false);
+  });
+});
+
 describe('vendor dispatch policy', () => {
   it('quiet day: no signals, only the tier 1 rotation runs', () => {
     const tasks = watch.planVendorTasks([], WATCHLIST, new Date('2026-08-05T00:00:00Z'));

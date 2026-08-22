@@ -232,7 +232,7 @@ test('buildLaneManifest splits catalog and known refresh lanes only (spec 0008 P
   assert.ok(!('discovery' in manifest.lanes), 'no discovery lane in the manifest');
   assert.deepEqual(
     Object.keys(byId).sort(),
-    ['catalog:openrouter', 'known:google', 'price_index:llmpricing'].sort()
+    ['aggregated_index:freellm', 'catalog:openrouter', 'known:google', 'price_index:llmpricing'].sort()
   );
 
   assert.equal(byId['catalog:openrouter'].kind, 'catalog');
@@ -249,7 +249,7 @@ test('buildLaneManifest splits catalog and known refresh lanes only (spec 0008 P
   // startRun accepts the slim rows.
   db.startRun('manifest-run', lanes.toStartRunTasks(manifest), ctx.options);
   const { tasks } = db.loadRunCandidate('manifest-run', ctx.options);
-  assert.equal(tasks.length, 3);
+  assert.equal(tasks.length, 4);
   const known = tasks.find((task) => task.task_id === 'known:google');
   assert.deepEqual(known.assigned_json, ['gemini-2.5-pro-free']);
 });
@@ -977,6 +977,7 @@ test('research lane failure never removes or changes a known offer (spec 0007 AC
     provider_key: null,
   }], ctx.options);
   writeArtifact(ctx, runDir, 'known:google', knownArtifact({ models: [knownModel('gemini-2.5-pro-free')] }));
+  writeArtifact(ctx, runDir, 'aggregated_index:freellm', aggregatedIndexArtifact());
   // No artifact for the research task: ingest marks it failed.
   lanes.ingestTaskArtifacts('run-research-fail', runDir, ctx.options);
   const reduce = lanes.reduceLanes('run-research-fail', runDir, {
@@ -984,7 +985,7 @@ test('research lane failure never removes or changes a known offer (spec 0007 AC
     now: '2026-07-31T00:00:00.000Z',
   });
 
-  assert.equal(reduce.coverage.research.assigned, 1);
+  assert.equal(reduce.coverage.research.assigned, 2);
   assert.equal(reduce.coverage.research.failed, 1, 'the failed research session is counted');
   assert.equal(reduce.canPromote, true, 'research failure does not block promotion');
   const row = offerRow(ctx, 'google', 'gemini-2.5-pro-free');
@@ -1102,6 +1103,7 @@ test('reduceLanes writes the coverage report and discovery candidates to the run
   }], ctx.options);
   writeArtifact(ctx, runDir, 'catalog:openrouter', catalogArtifact({ models: [catalogModel('acme/a:free')] }));
   writeArtifact(ctx, runDir, 'known:google', knownArtifact({ models: [knownModel('model-one')] }));
+  writeArtifact(ctx, runDir, 'aggregated_index:freellm', aggregatedIndexArtifact());
   writeArtifact(ctx, runDir, 'model_fanout:acme/new', {
     schema_version: 1,
     task_id: 'model_fanout:acme/new',
@@ -1129,12 +1131,15 @@ test('reduceLanes writes the coverage report and discovery candidates to the run
   const coverage = JSON.parse(fs.readFileSync(coverageFile, 'utf8'));
   assert.equal(coverage.can_promote, true);
   assert.deepEqual(coverage.coverage.known, { assigned: 2, verified: 2, stale: 0, removed: 0, failed: 0 });
-  assert.deepEqual(coverage.coverage.research, { assigned: 1, complete: 1, partial: 0, failed: 0 });
+  assert.deepEqual(coverage.coverage.research, { assigned: 2, complete: 2, partial: 0, failed: 0 });
   assert.deepEqual(coverage.coverage.catalog.available, ['openrouter']);
 
   const candidates = JSON.parse(fs.readFileSync(candidatesFile, 'utf8'));
-  assert.equal(candidates.candidates.length, 1);
-  assert.equal(candidates.candidates[0].exact_model_id, 'fresh');
+  assert.equal(candidates.candidates.length, 2);
+  const ids = candidates.candidates.map((c) => c.exact_model_id).sort();
+  assert.deepEqual(ids, ['fresh', 'openrouter:z-ai-glm-5-2-free']);
+  const fresh = candidates.candidates.find((c) => c.exact_model_id === 'fresh');
+  assert.equal(fresh.exact_model_id, 'fresh');
   assert.equal(reduce.run.status, 'candidate_ready');
 });
 
@@ -1456,6 +1461,45 @@ test('a failed known refresh keeps the data policy and marks stale', (t) => {
   assert.equal(row.status, 'stale');
   assert.equal(row.data_policy_hash, db.pricingHashFromText(priorPolicy));
 });
+
+// ── Aggregated-index lane (deterministic free-model index, no LLM) ──
+
+function aggregatedIndexArtifact(overrides = {}) {
+  return {
+    schema_version: 1,
+    task_id: 'aggregated_index:freellm',
+    kind: 'aggregated_index',
+    provider_key: null,
+    status: 'complete',
+    available: true,
+    crawled_at: '2026-08-22T02:00:00.000Z',
+    models: overrides.models || [{
+      model_id: 'openrouter:z-ai-glm-5-2-free',
+      provider_key: 'openrouter',
+      provider_label: 'OpenRouter',
+      model_name: 'z.ai: glm 5.2 (free)',
+      description: 'z.ai: glm 5.2 (free) is a free model available from openrouter.',
+      context_tokens: 256000,
+      is_free_signal: true,
+      free_tier_type: 'permanent',
+      verified_free: true,
+      no_card_required: true,
+      no_phone_required: true,
+      free_quota_text: 'OpenRouter permanent free tier (permanent)',
+      endpoint_source: 'https://freellm.net/models/',
+      base_url: 'https://openrouter.ai/api/v1',
+      docs_url: null,
+      source_amount_input: null,
+      source_amount_output: null,
+      source_currency: null,
+      source_unit: '',
+      evidence_url: 'https://freellm.net/models/',
+    }],
+    base_urls: overrides.base_urls || { OpenRouter: 'https://openrouter.ai/api/v1' },
+    fetches: overrides.fetches || [],
+    errors: overrides.errors || [],
+  };
+}
 
 // ── 0013 price-index lane (deterministic discount lane, no LLM) ──────
 
