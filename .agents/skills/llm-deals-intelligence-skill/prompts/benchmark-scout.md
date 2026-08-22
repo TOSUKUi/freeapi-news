@@ -13,8 +13,8 @@ Your output is a **proposal**, not a fact. A deterministic validator accepts a p
 
 For each model, inspect each allowed source in this exact order, extracting every benchmark row that the fetched page verifies, and stop after the third source (whether or not a score was found):
 
-1. Official Terminal-Bench/Harbor results.
-2. The official Hugging Face model card.
+1. Official Terminal-Bench/Harbor results (tbench.ai leaderboards 2.0 and 2.1).
+2. The official Hugging Face model card — **read the README benchmark tables carefully**. Vendor model cards frequently publish Terminal-Bench 2.1 scores (often with the harness named, e.g. "Terminal Bench 2.1 (Terminus-2)" or "Terminal Bench 2.1 (Best Reported Harness)") before or instead of the tbench.ai leaderboard. A row whose benchmark name contains "Terminal Bench" or "Terminal-Bench" and a version (2.0 / 2.1) is a valid ranking-gate find; emit it with the exact benchmark name and version from the table header.
 3. Official vendor technical documentation or model card.
 
 Do not use X, social media, community pages, GitHub repositories, third-party aggregators, or any other source. Do not continue exploring after these three sources. Extract every benchmark row present in each allowed page, not only Terminal-Bench; supplemental rows are immutable display facts, while Terminal-Bench 2.0/2.1 remains the sole ranking gate.

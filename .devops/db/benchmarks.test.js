@@ -154,13 +154,17 @@ test('bulk leaderboard parser fetches each official version once and matches que
   assert.equal(result.fetches.filter((entry) => entry.ok).length, 2);
   assert.equal(result.rows.length, 2);
   assert.equal(result.accepted.length, 2);
-  assert.deepEqual(result.notFoundModels, ['unlisted/model']);
+  // A model absent from both official leaderboards is NOT a terminal
+  // not_found: official vendor model cards publish scores the leaderboard
+  // never lists, so the model routes to the targeted scout (unresolved)
+  // instead of being recorded as not_found.
+  assert.deepEqual(result.notFoundModels, []);
+  assert.deepEqual(result.unresolved.map((entry) => entry.canonical_model_id), ['unlisted/model']);
   assert.deepEqual(result.changes.map((change) => change.canonical_model_id).sort(), [
     'acme/acme-model', 'openai/gpt-5.5',
   ]);
   assert.deepEqual(result.changes.map((change) => change.score).sort((a, b) => a - b), [61.5, 83.1]);
-  assert.deepEqual(result.searchChanges.map((change) => change.result).sort(), ['found', 'found', 'not_found']);
-  assert.equal(result.unresolved.length, 0);
+  assert.deepEqual(result.searchChanges.map((change) => change.result).sort(), ['found', 'found']);
   assert.equal(result.changes.every((change) => change.facts_json.origin === 'benchmark_bulk'), true);
 });
 
@@ -474,31 +478,36 @@ test('the queue splits into chunks of at most four models (AC-7)', (t) => {
   }
 });
 
-test('terminal not_found models are not requeued (AC-7)', (t) => {
+test('recent not_found models are not requeued, old not_found reopens after TTL (AC-7)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
   setup(ctx);
   seedOffers(ctx, [
     offerSeed({ exact_model_id: 'acme/old:free', canonical_model_id: 'acme/old', first_seen_at: '2026-01-01T00:00:00.000Z' }),
-    offerSeed({ exact_model_id: 'acme/new:free', canonical_model_id: 'acme/new', first_seen_at: '2026-07-01T00:00:00.000Z' }),
+    offerSeed({ exact_model_id: 'acme/recent:free', canonical_model_id: 'acme/recent', first_seen_at: '2026-07-01T00:00:00.000Z' }),
+    offerSeed({ exact_model_id: 'acme/expired:free', canonical_model_id: 'acme/expired', first_seen_at: '2026-07-01T00:00:00.000Z' }),
   ]);
-  // Mark acme/old as searched before with no result.
+  const now = '2026-08-22T00:00:00.000Z';
+  const daysAgo = (d) => new Date(Date.parse(now) - d * 86400000).toISOString();
+  // acme/old: not_found 100 days ago (outside TTL) -> requeued
+  // acme/recent: not_found 1 day ago (inside TTL) -> not requeued
+  // acme/expired: not_found 15 days ago (outside TTL) -> requeued
   db.startRun('search-seed', [], ctx.options);
   db.finalizeRun('search-seed', {
-    benchmarkSearches: [{
-      canonical_model_id: 'acme/old',
-      last_searched_at: '2026-06-01T00:00:00.000Z',
-      result: 'not_found',
-      metadata_hash: 'x'.repeat(64),
-    }],
+    benchmarkSearches: [
+      { canonical_model_id: 'acme/old', last_searched_at: daysAgo(100), result: 'not_found', metadata_hash: 'a'.repeat(64) },
+      { canonical_model_id: 'acme/recent', last_searched_at: daysAgo(1), result: 'not_found', metadata_hash: 'b'.repeat(64) },
+      { canonical_model_id: 'acme/expired', last_searched_at: daysAgo(15), result: 'not_found', metadata_hash: 'c'.repeat(64) },
+    ],
     runStatus: 'promoted',
   }, ctx.options);
 
-  const queue = benchmarks.buildBenchmarkQueue(ctx.options);
-  assert.deepEqual(queue.queue.map((entry) => entry.canonical_model_id), ['acme/new']);
-  assert.equal(queue.queue[0].newly_discovered, true);
-  assert.ok(!queue.queue.some((entry) => entry.canonical_model_id === 'acme/old'),
-    'a completed not_found search is terminal until explicitly forced');
+  const queue = benchmarks.buildBenchmarkQueue({ ...ctx.options, now });
+  const queued = queue.queue.map((entry) => entry.canonical_model_id).sort();
+  assert.deepEqual(queued, ['acme/expired', 'acme/old'],
+    'not_found inside the TTL window stays excluded; older not_found reopens');
+  assert.ok(!queue.queue.some((entry) => entry.canonical_model_id === 'acme/recent'),
+    'a not_found search inside the TTL window is terminal until the window passes');
 });
 
 // ── Proposal validation (AC-8, AC-9) ─────────────────────────────

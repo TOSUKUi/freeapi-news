@@ -55,6 +55,16 @@ function skillDirs(baseOpts) {
   };
 }
 
+// Reads a JSON file when present and parseable; returns null otherwise.
+function readJsonIfPresent(filePath) {
+  try {
+    const body = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(body);
+  } catch {
+    return null;
+  }
+}
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -746,6 +756,16 @@ async function runPipeline(options = {}) {
     log(`  Model: ${opts.piModel}  Concurrency: ${opts.concurrency}`);
     log('============================================');
 
+    // Wall-clock phase instrumentation. Every expensive stage stamps a line
+    // with the elapsed seconds since the run started so a slow run can be
+    // attributed to a phase without grepping file mtimes.
+    const phaseStart = Date.now();
+    const markPhase = (name, extra = '') => {
+      const elapsed = ((Date.now() - phaseStart) / 1000).toFixed(1);
+      log(`⏱ [t+${elapsed}s] ${name}${extra ? ` ${extra}` : ''}`);
+    };
+    markPhase('run started');
+
     // AC-1: copy the closed database into the ignored run directory before
     // any mutation. This copy is the normal recovery input.
     preRunBackup = db.copyDatabaseForRun(runId, baseOpts);
@@ -772,6 +792,7 @@ async function runPipeline(options = {}) {
     if (catalogTasks.length > 0) {
       log(`[3/9] catalog fetch (${catalogTasks.length} provider(s))...`);
       await runCatalog(manifest, runDir, baseOpts, log);
+      markPhase('catalog fetch done');
     } else {
       log('[3/9] catalog fetch: no catalog providers, skipped');
     }
@@ -798,6 +819,7 @@ async function runPipeline(options = {}) {
       log(`  watch: ${watchResult.summary.ok}/${watchResult.summary.channels} ok, `
         + `${watchResult.summary.changed} changed, ${watchResult.summary.first_seen} first seen, `
         + `${watchResult.summary.fetch_failed} fetch failed`);
+      markPhase('watch fetch done');
     } else {
       log('[3/9] watch fetch: no watch channels, skipped');
     }
@@ -1106,6 +1128,7 @@ async function runPipeline(options = {}) {
     // Ingest lane artifacts, then deterministic reduction.
     const ingest = lanes.ingestTaskArtifacts(runId, runDir, baseOpts);
     log(`[5/9] ingest: ${summarizeIngest(ingest)}`);
+    markPhase('lane workers done');
     // Worker candidate claims are untrusted. Fetch all candidate URLs with
     // bounded deterministic HTTP before reduction; only the audited result is
     // then written back in short SQLite transactions.
@@ -1212,7 +1235,22 @@ async function runPipeline(options = {}) {
       const covered = new Set(bulk.coveredModels);
       const remainingQueue = queue.queue.filter((entry) => !covered.has(entry.canonical_model_id));
       if (remainingQueue.length > 0) {
-        const scoutQueue = { ...queue, queue: remainingQueue, queued: remainingQueue.length };
+        // Cap the per run scout budget: each scout is one LLM session, and a
+        // large unresolved backlog (models absent from the tbench leaderboards
+        // but not yet scout checked) must not blow the wall-clock budget. The
+        // queue is already deterministically ordered (newly discovered first,
+        // then metadata changed, then oldest search); taking the head keeps
+        // the most important models first. Models beyond the cap stay in the
+        // queue and are scouted on later runs; a `not_found` reopens after
+        // NOT_FOUND_RESEARCH_TTL_DAYS, so nothing is starved forever.
+        const MAX_SCOUTS = Number(process.env.BENCHMARK_SCOUTS_PER_RUN || 6);
+        const scoutEntries = remainingQueue.slice(0, MAX_SCOUTS);
+        if (scoutEntries.length < remainingQueue.length) {
+          log(`[6/9] benchmark scouts: ${remainingQueue.length} unresolved, `
+            + `capped to ${scoutEntries.length}/run (BENCHMARK_SCOUTS_PER_RUN); `
+            + `${remainingQueue.length - scoutEntries.length} deferred to later runs`);
+        }
+        const scoutQueue = { ...queue, queue: scoutEntries, queued: scoutEntries.length };
         const scoutTasks = benchmarkScoutModelTasks(scoutQueue);
         db.addRunTasks(runId, scoutTasks.map((task) => ({
           task_id: task.task_id,
@@ -1274,20 +1312,36 @@ async function runPipeline(options = {}) {
     );
     log(`[7/9] candidate view: ${view.candidates.length} candidate(s)`);
 
-    // Classifier + editor (both read the candidate view; run together).
-    log('[8/9] classifier + editor...');
-    await runPool([
-      {
-        taskId: 'classifier',
+    // Classifier + editor (both read the candidate view; run together). The
+    // classifier is chunked: one worker per candidate slice so the 200+
+    // candidates classify in parallel instead of one long sequential session.
+    // The chunk outputs are merged into the single classifications.json the
+    // assembler reads. Chunking is deterministic (stable slice of the same
+    // candidate array) and each chunk worker still emits the full schema.
+    log('[8/9] classifier (chunked) + editor...');
+    const CLASSIFIER_CHUNK_SIZE = 60;
+    const classifierChunks = [];
+    for (let i = 0; i < view.candidates.length; i += CLASSIFIER_CHUNK_SIZE) {
+      classifierChunks.push(view.candidates.slice(i, i + CLASSIFIER_CHUNK_SIZE));
+    }
+    const reducedDir = path.join(runDir, 'reduced');
+    const classifierTasks = classifierChunks.map((chunk, index) => {
+      const chunkFile = path.join(reducedDir, `classifier-chunk-${index}.json`);
+      fs.writeFileSync(chunkFile, `${JSON.stringify({ candidates: chunk }, null, 2)}\n`);
+      return {
+        taskId: `classifier:chunk-${index}`,
         roleFile: 'classifier-agent.md',
         schemaFile: path.join(dirs.schemasDir, 'classifications.schema.json'),
-        outputFile: path.join(runDir, 'reduced', 'classifications.json'),
-        logFile: path.join(runDir, 'logs', 'classifier.log'),
-        runtime: `Candidate view: ${path.join(runDir, 'reduced', 'candidate-view.json')}. `
-          + 'Decide the FINAL classification and confidence per candidate and emit them via json_output '
-          + 'conforming to schemas/classifications.schema.json.',
+        outputFile: path.join(reducedDir, `classifications-chunk-${index}.json`),
+        logFile: path.join(runDir, 'logs', `classifier-chunk-${index}.log`),
+        runtime: `Candidate view chunk: ${chunkFile} (${chunk.length} candidates; part ${index + 1} of ${classifierChunks.length}). `
+          + 'Decide the FINAL classification and confidence for every candidate in THIS chunk and emit them via json_output '
+          + 'conforming to schemas/classifications.schema.json. Do not classify candidates outside this chunk.',
         failureArtifact: null,
-      },
+      };
+    });
+    await runPool([
+      ...classifierTasks,
       {
         taskId: 'editorial',
         roleFile: 'editor-agent.md',
@@ -1303,10 +1357,35 @@ async function runPipeline(options = {}) {
       },
     ], opts.concurrency, (spec) => runWorker(spec, opts, baseOpts));
 
+    // Merge the classifier chunk outputs into the single classifications.json
+    // the assembler consumes. Deterministic: concatenate in chunk order, keep
+    // the first classification per offer_key, drop chunk files afterwards.
+    const merged = [];
+    const seenKeys = new Set();
+    for (let i = 0; i < classifierChunks.length; i += 1) {
+      const chunkFile = path.join(reducedDir, `classifications-chunk-${i}.json`);
+      const parsed = readJsonIfPresent(chunkFile);
+      if (parsed && Array.isArray(parsed.classifications)) {
+        for (const entry of parsed.classifications) {
+          if (entry && typeof entry.offer_key === 'string' && !seenKeys.has(entry.offer_key)) {
+            seenKeys.add(entry.offer_key);
+            merged.push(entry);
+          }
+        }
+      }
+      fs.rmSync(chunkFile, { force: true });
+    }
+    fs.writeFileSync(
+      path.join(reducedDir, 'classifications.json'),
+      `${JSON.stringify({ classifications: merged }, null, 2)}\n`
+    );
+    markPhase('classifier + editor done');
+
     // Deterministic assembly of the staged report.
     const assembled = assemble.assembleReport(runId, runDir, baseOpts);
     log(`[8/9] assemble: ranked=${assembled.counts.ranked} conditional=${assembled.counts.conditional} `
       + `caution=${assembled.counts.caution} excluded=${assembled.counts.excluded}`);
+    markPhase('assemble done');
 
     // Candidate validation + HTML/OG build + promotion manifest.
     const validated = publication.validateCandidate(runId, runDir, {
@@ -1315,6 +1394,7 @@ async function runPipeline(options = {}) {
     });
     log(`[9/9] validated candidate ${validated.candidateHash.slice(0, 12)} `
       + `(og: ${validated.ogProvenance})`);
+    markPhase('validated');
 
     if (opts.dryRun) {
       // A dry run validates and leaves all candidate artifacts for inspection,
@@ -1391,6 +1471,15 @@ module.exports = {
   runCatalogInProcess,
   recoverAbandonedRuns,
   hasSafelyFinalizedPromotion,
+  // Wall-clock total for the CLI summary (set when runPipeline starts).
+  pipelineStartAt: () => module.exports.__pipelineStartAt || 0,
+};
+
+module.exports.__pipelineStartAt = 0;
+const __origRunPipeline = module.exports.runPipeline;
+module.exports.runPipeline = async function runPipelineWrapped(options = {}) {
+  module.exports.__pipelineStartAt = Date.now();
+  return __origRunPipeline(options);
 };
 
 if (require.main === module) {

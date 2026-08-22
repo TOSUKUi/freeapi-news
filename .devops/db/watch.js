@@ -510,8 +510,10 @@ function vendorRotationKeys(watchlist, now = new Date()) {
 // that CHANGED this run, plus the deterministic tier 1 rotation. first_seen is
 // not a dispatch trigger (no baseline to diff against yet). Bounded by a
 // per day cap, ordered by tier then key so the same signals pick the same
-// tasks. Returns { key, reason: 'signal' | 'rotation' | 'signal+rotation' }.
-const MAX_VENDOR_TASKS_PER_DAY = 8;
+// tasks. The cap favors signal-driven dives over the rotation: rotation is
+// picked only after signals, so a heavy signal day never queues 8 sessions.
+// Returns { key, reason: 'signal' | 'rotation' | 'signal+rotation' }.
+const MAX_VENDOR_TASKS_PER_DAY = 6;
 
 function planVendorTasks(signals, watchlist, now = new Date()) {
   const signalKeys = new Set();
@@ -882,14 +884,16 @@ async function prefilterCommunity(options = {}) {
 
 // ---------------------------------------------------------------------------
 // Provider monitor planning (§4.4): the LLM-side providers (watchlist
-// provider_monitors with watch URLs) are batched into up to 4 sessions of
+// provider_monitors with watch URLs) are batched into up to 5 sessions of
 // 4-6 providers each (PROVIDER_MONITOR_BATCH, default 5). They always run.
 // A watch signal (hash change) on one of their channels is passed so the
 // worker knows which page changed; a discount_signal from the catalog lane
-// is passed for the provider it names.
+// is passed for the provider it names. Sessions run in parallel under
+// GLOBAL_CONCURRENCY, so covering all 25 providers in 5 sessions costs the
+// same wall time as 4 and drops no provider.
 // ---------------------------------------------------------------------------
 
-const PROVIDER_MONITOR_MAX_SESSIONS = 4;
+const PROVIDER_MONITOR_MAX_SESSIONS = 5;
 
 function planProviderMonitorTasks(watchlist, signals, discountSignals = {}, opts = {}) {
   const batch = Math.max(1, Math.min(6, opts.batch || Number(process.env.PROVIDER_MONITOR_BATCH) || 5));

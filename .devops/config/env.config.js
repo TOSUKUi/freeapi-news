@@ -44,7 +44,7 @@ envDefault('PROVIDER_REGISTRY', path.join(PROJECT_ROOT, 'build/provider-registry
 // ── pi agent settings ────────────────────────────────────────────
 envDefault('PI_MODEL', 'litellm/local');
 envDefault('PI_TIMEOUT', '1800');
-envDefault('DISCOVERY_TIMEOUT', '1800');
-envDefault('GLOBAL_CONCURRENCY', '2');
+envDefault('DISCOVERY_TIMEOUT', '900');
+envDefault('GLOBAL_CONCURRENCY', '4');
 
 module.exports = {}; // no public API — side effects only

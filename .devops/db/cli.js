@@ -377,9 +377,11 @@ function main() {
           .filter((value) => value && value !== 'unknown_benchmark'),
       };
       collect.runPipeline(options).then((result) => {
+        const started = Date.now() - collect.pipelineStartAt();
         console.log(JSON.stringify({
           run_id: result.runId,
           mode: options.dryRun ? 'dry-run' : options.push ? 'full' : 'collect',
+          wall_seconds: started,
           promoted: result.promoted,
           deployed: result.deployed,
           can_promote: result.canPromote,

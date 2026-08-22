@@ -37,9 +37,8 @@ export PROVIDER_REGISTRY="${PROJECT_ROOT}/build/provider-registry.json"
 # pi model used by the local batch (pi must be installed on this machine).
 export PI_MODEL="${PI_MODEL:-litellm/deepseek-v4-flash}"
 export PI_TIMEOUT="${PI_TIMEOUT:-1800}"   # seconds per non-discovery worker
-export DISCOVERY_TIMEOUT="${DISCOVERY_TIMEOUT:-1800}"   # seconds per discovery worker
-# Parallel LLM worker count for the collector.
-export GLOBAL_CONCURRENCY="${GLOBAL_CONCURRENCY:-2}"
+export DISCOVERY_TIMEOUT="${DISCOVERY_TIMEOUT:-900}"   # seconds per discovery worker
+export GLOBAL_CONCURRENCY="${GLOBAL_CONCURRENCY:-4}"   # parallel LLM worker count for the collector
 
 echo "[env] PROJECT_ROOT=${PROJECT_ROOT}"
 echo "[env] SKILL_DIR=${SKILL_DIR}"

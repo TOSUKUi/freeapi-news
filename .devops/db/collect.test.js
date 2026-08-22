@@ -230,7 +230,7 @@ function makeWorker(mode) {
         crawled_at: new Date().toISOString(), provider_key: '_discovery',
         models: [], errors: [],
       });
-    } else if (spec.taskId === 'classifier') {
+    } else if (spec.taskId === 'classifier' || spec.taskId.startsWith('classifier:')) {
       if (mode === 'throw-classifier' || mode === 'throw') {
         throw new Error('simulated classifier failure after lane reduction');
       }

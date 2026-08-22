@@ -16,9 +16,11 @@
 //           Only current free models without an accepted benchmark fact or a
 //           completed benchmark search are searched each day. A completed
 //           search is reused even when all proposals were rejected; metadata
-//           changes reopen a prior `found` search, and explicit force flags
-//           are the re-search escape hatch for any result. Known releases at
-//           least six months old are excluded; unknown release dates remain
+//           changes reopen a prior `found` search, a `not_found` search
+//           re-opens after NOT_FOUND_RESEARCH_TTL_DAYS (official sources
+//           publish scores after release), and explicit force flags are the
+//           re-search escape hatch for any result. Known releases at least
+//           six months old are excluded; unknown release dates remain
 //           eligible. The queue remains deterministic and is split into chunks
 //           of at most four models.
 //   * AC-8  A proposal enters current benchmarks only after matching an exact
@@ -63,6 +65,15 @@ const TIER_A_SCORE = 50;
 // (AC-7). Complete official leaderboard pages are handled in bulk first.
 const QUEUE_CHUNK_SIZE = 4;
 const BENCHMARK_RESEARCH_MAX_AGE_MONTHS = 6;
+
+// A completed `not_found` benchmark search is not terminal forever. Official
+// leaderboards and vendor model cards publish new scores after a model's
+// release (e.g. Terminal-Bench 2.1 rows appear weeks after launch), so a
+// `not_found` record re-opens after this TTL and the model is searched again.
+// `found` remains terminal until metadata changes or an explicit force
+// (AC-7). The TTL is a sliding window: re-searching every 14 days keeps the
+// queue small while eventually catching newly published official scores.
+const NOT_FOUND_RESEARCH_TTL_DAYS = 14;
 
 const EXTRACTION_METHODS = ['text', 'official_image'];
 const CONFIDENCE_LEVELS = ['HIGH', 'MEDIUM', 'LOW'];
@@ -192,10 +203,12 @@ function modelMetadataHash(facts) {
 // benchmark search, and no known release date at least six months old. Unknown
 // release dates remain eligible. A force model or benchmark bypasses those
 // automatic exclusions for explicit manual re-search. A metadata change
-// reopens a prior `found` search, while `not_found` remains terminal until
-// forced. "Current free" means an offer that is verified or stale
-// (confirmed_removed offers are never searched). One entry per canonical
-// model ID. The queue is split into chunks of at most four models.
+// reopens a prior `found` search, while `not_found` re-opens after
+// NOT_FOUND_RESEARCH_TTL_DAYS so newly published official scores (leaderboard
+// rows, vendor model cards) are eventually picked up. "Current free" means an
+// offer that is verified or stale (confirmed_removed offers are never
+// searched). One entry per canonical model ID. The queue is split into chunks
+// of at most four models.
 function buildBenchmarkQueue(options = {}) {
   const now = options.now || nowIso();
   const database = db.openCollectorDb(options);
@@ -235,9 +248,20 @@ function buildBenchmarkQueue(options = {}) {
       .filter((row) => row && row.result === 'found')
       .map((row) => row.canonical_model_id)
   );
-  const hasTerminalNotFound = new Set(
+  // A `not_found` result blocks re-queueing only inside its TTL window
+  // (NOT_FOUND_RESEARCH_TTL_DAYS). Outside the window the model is searched
+  // again, because official sources publish benchmark scores after a model's
+  // release. `found` stays terminal until metadata changes or a force.
+  const hasRecentNotFound = new Set(
     searches
-      .filter((row) => row && row.result === 'not_found')
+      .filter((row) => {
+        if (!row || row.result !== 'not_found') return false;
+        if (typeof row.last_searched_at !== 'string' || !row.last_searched_at) return false;
+        const searchedAt = Date.parse(row.last_searched_at);
+        if (Number.isNaN(searchedAt)) return false;
+        const cutoff = Date.now() - NOT_FOUND_RESEARCH_TTL_DAYS * 86400000;
+        return searchedAt >= cutoff;
+      })
       .map((row) => row.canonical_model_id)
   );
   const forceIds = canonicalForceModelIds(options);
@@ -285,7 +309,7 @@ function buildBenchmarkQueue(options = {}) {
     const metadataChanged = !!search && !!search.metadata_hash && search.metadata_hash !== metadataHash;
     const foundSearch = hasCompletedFound.has(model.canonical_model_id);
     if (!forced && (hasStoppingBenchmark.has(model.canonical_model_id) ||
-      hasTerminalNotFound.has(model.canonical_model_id) ||
+      hasRecentNotFound.has(model.canonical_model_id) ||
       (foundSearch && !metadataChanged) || tooOld)) continue;
     queue.push({
       canonical_model_id: model.canonical_model_id,
@@ -493,12 +517,16 @@ async function collectBulkBenchmarkFacts(queueResult, options = {}) {
     const matchingRows = rows.filter((row) => rowMatchesQueueModel(row, entry));
     const row = chooseBulkRow(rows, entry);
     if (!row) {
-      // Both official leaderboards are exhaustive. Once both pages were
-      // fetched and parsed successfully, an exact alias absent from both is
-      // a deterministic gate miss, not a reason to launch another scout.
-      if (complete && matchingRows.length === 0) {
-        coveredModels.push(entry.canonical_model_id);
-        notFoundModels.push(entry.canonical_model_id);
+      // The two official leaderboards are exhaustive for leaderboard rows,
+      // but a model absent from both is NOT a terminal not_found: official
+      // vendor model cards (e.g. the Hugging Face README table) and vendor
+      // docs publish Terminal-Bench scores that never appear on tbench.ai
+      // (GLM-5.2 is a real case: its card lists TB 2.1 81.0 while the
+      // leaderboard has only GLM-5.1). Route the model to the targeted LLM
+      // scout, which checks the official HF card and vendor docs. Only a
+      // complete scout with no finding becomes a terminal not_found record.
+      if (complete) {
+        unresolved.push(entry);
       } else {
         unresolved.push(entry);
       }
@@ -1256,6 +1284,7 @@ module.exports = {
   TIER_A_SCORE,
   QUEUE_CHUNK_SIZE,
   BENCHMARK_RESEARCH_MAX_AGE_MONTHS,
+  NOT_FOUND_RESEARCH_TTL_DAYS,
   EXTRACTION_METHODS,
   CONFIDENCE_LEVELS,
   fold,
