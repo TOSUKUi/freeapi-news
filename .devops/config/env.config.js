@@ -45,6 +45,6 @@ envDefault('PROVIDER_REGISTRY', path.join(PROJECT_ROOT, 'build/provider-registry
 envDefault('PI_MODEL', 'litellm/local');
 envDefault('PI_TIMEOUT', '1800');
 envDefault('DISCOVERY_TIMEOUT', '900');
-envDefault('GLOBAL_CONCURRENCY', '4');
+envDefault('GLOBAL_CONCURRENCY', '6');
 
 module.exports = {}; // no public API — side effects only

@@ -774,6 +774,43 @@ test('product / program monitor artifacts are filtered by watchlist keys (AC)', 
   assert.equal(report.startup_credits[0].facts.max_credit, '$500 in credits');
 });
 
+test('chunked product / program monitor tasks merge into one reduced file', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  db.startRun('run-pp-chunked', [], ctx.options);
+  db.addRunTasks('run-pp-chunked', [
+    { task_id: 'product_monitor:1', kind: 'product_monitor', provider_key: null },
+    { task_id: 'product_monitor:2', kind: 'product_monitor', provider_key: null },
+  ], ctx.options);
+  db.recordTaskResult('run-pp-chunked', 'product_monitor:1', {
+    status: 'complete',
+    result: {
+      schema_version: 1, task_id: 'product_monitor:1', status: 'complete',
+      crawled_at: '2026-08-19T00:00:00.000Z', provider_key: null,
+      products: [{ key: 'claude_code', access_kinds: ['free_calls'], pricing_text: 'x', source_url: 'https://www.anthropic.com/pricing' }],
+      errors: [],
+    },
+  }, ctx.options);
+  db.recordTaskResult('run-pp-chunked', 'product_monitor:2', {
+    status: 'complete',
+    result: {
+      schema_version: 1, task_id: 'product_monitor:2', status: 'complete',
+      crawled_at: '2026-08-19T00:00:00.000Z', provider_key: null,
+      products: [{ key: 'claude_code', access_kinds: ['subscription'], pricing_text: 'y', source_url: 'https://www.anthropic.com/pricing' }],
+      errors: [],
+    },
+  }, ctx.options);
+
+  const runDir = runDirFor(ctx, 'run-pp-chunked');
+  const out = observe.applyProductProgramFacts('run-pp-chunked', runDir, ctx.options, { watchlist: PHASE3_WATCHLIST });
+  assert.equal(out.product_monitor.entries, 1, 'duplicate keys dedupe to one entry; chunk merge keeps the reduced file single');
+  const payload = JSON.parse(fs.readFileSync(path.join(runDir, 'reduced', 'product-updates.json'), 'utf8'));
+  assert.equal(payload.entries.length, 1);
+  assert.equal(payload.entries[0].key, 'claude_code');
+  assert.equal(payload.task_status, 'complete');
+});
+
 test('a quiet day (no product or program task) yields empty sections with the no-change marker', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));

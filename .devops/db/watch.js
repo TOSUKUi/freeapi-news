@@ -943,53 +943,69 @@ function planProductProgramTasks(signals, watchlist) {
     .filter((s) => s.domain === 'product' && s.status === 'changed');
   const programSignals = (signals || [])
     .filter((s) => s.domain === 'program' && s.status === 'changed');
-  if (productSignals.length > 0) {
-    const products = (watchlist.coding_products || []).filter((p) => p && p.key);
+  const products = (watchlist.coding_products || []).filter((p) => p && p.key);
+  const programs = (watchlist.credit_programs || []).filter((p) => p && p.key);
+
+  // Chunk the changed entries so the LLM sessions run in parallel instead of
+  // one long sequential session (a signal-heavy day can change 8+ entries).
+  // Each chunk keeps its own visit budget, so a chunk of 3 entries costs no
+  // more wall time than a single entry. Task IDs carry a :N suffix; the
+  // observe stage merges every chunk of the same kind.
+  const PRODUCT_CHUNK = 3;
+  const PROGRAM_CHUNK = 3;
+
+  const buildProductEntries = () => productSignals.map((s) => {
+    const key = (s.entity_key || '').split(':')[1] || null;
+    const product = products.find((p) => p.key === key) || {};
+    return {
+      key,
+      label: product.label || key,
+      url: s.url,
+      channel: s.channel || ((s.entity_key || '').split(':').pop() || null),
+      watchlist_urls: {
+        pricing_url: product.pricing_url || null,
+        changelog_url: product.changelog_url || null,
+      },
+      new_items: (s.new_items || []).slice(0, 10),
+    };
+  }).filter((e) => e.key);
+  const buildProgramEntries = () => programSignals.map((s) => {
+    const key = (s.entity_key || '').split(':')[1] || null;
+    const program = programs.find((p) => p.key === key) || {};
+    return {
+      key,
+      label: program.label || key,
+      url: s.url,
+      channel: s.channel || ((s.entity_key || '').split(':').pop() || null),
+      watchlist_urls: { url: program.url || null },
+      new_items: (s.new_items || []).slice(0, 10),
+    };
+  }).filter((e) => e.key);
+
+  const productEntries = buildProductEntries();
+  for (let i = 0; i < productEntries.length; i += PRODUCT_CHUNK) {
+    const chunk = productEntries.slice(i, i + PRODUCT_CHUNK);
     tasks.push({
-      task_id: 'product_monitor',
+      task_id: `product_monitor:${Math.floor(i / PRODUCT_CHUNK) + 1}`,
       kind: 'product_monitor',
       provider_key: null,
       assigned_model_ids: [],
       domain: 'product',
-      entries: productSignals.map((s) => {
-        const key = (s.entity_key || '').split(':')[1] || null;
-        const product = products.find((p) => p.key === key) || {};
-        return {
-          key,
-          label: product.label || key,
-          url: s.url,
-          channel: s.channel || ((s.entity_key || '').split(':').pop() || null),
-          watchlist_urls: {
-            pricing_url: product.pricing_url || null,
-            changelog_url: product.changelog_url || null,
-          },
-          new_items: (s.new_items || []).slice(0, 10),
-        };
-      }).filter((e) => e.key),
+      entries: chunk,
       search_budget: 0,
       visit_budget: 8,
     });
   }
-  if (programSignals.length > 0) {
-    const programs = (watchlist.credit_programs || []).filter((p) => p && p.key);
+  const programEntries = buildProgramEntries();
+  for (let i = 0; i < programEntries.length; i += PROGRAM_CHUNK) {
+    const chunk = programEntries.slice(i, i + PROGRAM_CHUNK);
     tasks.push({
-      task_id: 'program_monitor',
+      task_id: `program_monitor:${Math.floor(i / PROGRAM_CHUNK) + 1}`,
       kind: 'program_monitor',
       provider_key: null,
       assigned_model_ids: [],
       domain: 'program',
-      entries: programSignals.map((s) => {
-        const key = (s.entity_key || '').split(':')[1] || null;
-        const program = programs.find((p) => p.key === key) || {};
-        return {
-          key,
-          label: program.label || key,
-          url: s.url,
-          channel: s.channel || ((s.entity_key || '').split(':').pop() || null),
-          watchlist_urls: { url: program.url || null },
-          new_items: (s.new_items || []).slice(0, 10),
-        };
-      }).filter((e) => e.key),
+      entries: chunk,
       search_budget: 0,
       visit_budget: 8,
     });

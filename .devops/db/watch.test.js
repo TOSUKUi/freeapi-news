@@ -300,7 +300,7 @@ describe('product / program monitor planning (spec 0008 Phase 3)', () => {
     assert.deepEqual(watch.planProductProgramTasks(signals, WL), []);
   });
 
-  it('all changed product channels bundle into one product_monitor task', () => {
+  it('all changed product channels bundle into one product_monitor chunk (≤3 entries)', () => {
     const signals = [
       { entity_key: 'product:claude_code:pricing', domain: 'product', url: 'https://www.anthropic.com/pricing', status: 'changed', new_items: ['Free plan now includes 50 messages', 'x'] },
       { entity_key: 'product:codex:changelog', domain: 'product', url: 'https://github.com/openai/codex/releases', status: 'changed', new_items: ['v0.49.0'] },
@@ -309,7 +309,7 @@ describe('product / program monitor planning (spec 0008 Phase 3)', () => {
     const tasks = watch.planProductProgramTasks(signals, WL);
     assert.equal(tasks.length, 1);
     assert.equal(tasks[0].kind, 'product_monitor');
-    assert.equal(tasks[0].task_id, 'product_monitor');
+    assert.equal(tasks[0].task_id, 'product_monitor:1');
     assert.equal(tasks[0].search_budget, 0);
     assert.equal(tasks[0].visit_budget, 8);
     assert.deepEqual(tasks[0].entries.map((e) => e.key), ['claude_code', 'codex', 'claude_code']);
@@ -320,16 +320,30 @@ describe('product / program monitor planning (spec 0008 Phase 3)', () => {
     assert.deepEqual(cc.new_items, ['Free plan now includes 50 messages', 'x']);
   });
 
-  it('a changed program channel yields one program_monitor task with the watchlist entry', () => {
+  it('a changed program channel yields a program_monitor chunk with the watchlist entry', () => {
     const signals = [
       { entity_key: 'program:google_for_startups', domain: 'program', url: 'https://cloud.google.com/startup', status: 'changed', new_items: ['$300 -> $500'] },
     ];
     const tasks = watch.planProductProgramTasks(signals, WL);
     assert.equal(tasks.length, 1);
     assert.equal(tasks[0].kind, 'program_monitor');
+    assert.equal(tasks[0].task_id, 'program_monitor:1');
     assert.equal(tasks[0].entries[0].key, 'google_for_startups');
     assert.equal(tasks[0].entries[0].label, 'Google for Startups Cloud');
     assert.equal(tasks[0].entries[0].watchlist_urls.url, 'https://cloud.google.com/startup');
+  });
+
+  it('more than 3 changed entries chunk into parallel sessions of the same kind', () => {
+    const signals = ['a', 'b', 'c', 'd'].map((k, i) => ({
+      entity_key: `product:${k}:pricing`, domain: 'product',
+      url: `https://pricing.example/${k}`, status: 'changed', new_items: [`item ${i}`],
+    }));
+    const tasks = watch.planProductProgramTasks(signals, WL);
+    assert.equal(tasks.length, 2);
+    assert.equal(tasks[0].task_id, 'product_monitor:1');
+    assert.equal(tasks[1].task_id, 'product_monitor:2');
+    assert.ok(tasks.every((t) => t.kind === 'product_monitor' && t.entries.length <= 3));
+    assert.deepEqual([...tasks[0].entries, ...tasks[1].entries].map((e) => e.key), ['a', 'b', 'c', 'd']);
   });
 
   it('fetch_failed product channels are not a dispatch trigger', () => {

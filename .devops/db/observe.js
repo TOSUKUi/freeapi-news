@@ -541,14 +541,38 @@ function applyProductProgramFacts(runId, runDir, baseOpts = {}, inputs = {}) {
     },
   ];
   for (const spec of specs) {
-    const task = tasks.find((t) => t.task_id === spec.taskId);
-    const artifact = task && task.status !== 'failed' ? task.result_json : null;
-    const raw = artifact && Array.isArray(artifact[spec.listField]) ? artifact[spec.listField] : [];
+    // Product / program monitors may be chunked (`product_monitor:1`, `:2`, ...)
+    // for parallel LLM sessions. Merge every task of this kind in task-id order
+    // so a chunked run produces the same single reduced file as an unchunked one.
+    const kindTasks = tasks
+      .filter((t) => t.kind === spec.taskId)
+      .sort((a, b) => a.task_id.localeCompare(b.task_id));
+    const task = kindTasks[0] || null;
+    const raw = [];
+    const errors = [];
+    let taskStatus = null;
+    let hasWorker = false;
+    for (const t of kindTasks) {
+      const artifact = t.result_json;
+      if (!artifact) {
+        if (t.status === 'failed') errors.push(`worker failed (${t.task_id})`);
+        continue;
+      }
+      hasWorker = true;
+      if (taskStatus === null && artifact.status) taskStatus = artifact.status;
+      if (Array.isArray(artifact[spec.listField])) raw.push(...artifact[spec.listField]);
+      else if (Array.isArray(artifact.models)) raw.push(...artifact.models);
+      if (Array.isArray(artifact.errors)) errors.push(...artifact.errors);
+    }
+    if (kindTasks.length > 0 && !hasWorker) taskStatus = 'failed';
     const entries = [];
     const dropped = [];
+    const seenKeys = new Set();
     for (const item of raw) {
       if (!item || typeof item.key !== 'string' || !item.key) { dropped.push('(no key)'); continue; }
       if (!spec.knownKeys.has(item.key)) { dropped.push(item.key); continue; }
+      if (seenKeys.has(item.key)) continue; // duplicate chunk entries: first wins
+      seenKeys.add(item.key);
       entries.push({
         key: item.key,
         label: spec.labels[item.key] || item.key,
@@ -559,10 +583,10 @@ function applyProductProgramFacts(runId, runDir, baseOpts = {}, inputs = {}) {
     const payload = {
       run_id: runId,
       generated_at: stampedNow,
-      task_status: task ? (artifact ? artifact.status : 'failed') : null,
+      task_status: taskStatus || (kindTasks.length === 0 ? null : 'partial'),
       entries,
       dropped_keys: dropped,
-      errors: (artifact && Array.isArray(artifact.errors)) ? artifact.errors : (task && !artifact ? ['worker failed'] : []),
+      errors,
     };
     if (runDir) {
       const reducedDir = path.join(runDir, 'reduced');
