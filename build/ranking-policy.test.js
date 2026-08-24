@@ -44,3 +44,33 @@ test('accessKindMatches requires exact derivation', () => {
   assert.equal(policy.accessKindMatches('FREE', null, 0), false);
   assert.equal(policy.accessKindMatches('ULTRA_LOW', null, null), false);
 });
+
+// Publication policy by kind (operator 2026-08-24).
+test('publication classes: campaigns are C_LIMITED_FREE, one-time/trial never publish', () => {
+  assert.deepEqual(policy.CAMPAIGN_CLASSES, ['C_LIMITED_FREE']);
+  assert.deepEqual(policy.NON_PUBLISHABLE_CLASSES, ['D_TRIAL_CREDIT']);
+});
+
+test('nimFreeEndpointExclusion: only free/ultra-low non-first-party NIM models are excluded', () => {
+  const r = (o) => policy.nimFreeEndpointExclusion(o);
+  // First-party nvidia/* is a standing offering: never excluded by this rule.
+  assert.equal(r({ providerKey: 'nvidia', accessKind: 'FREE', modelId: 'nvidia/nemotron-3-ultra-550b-a55b' }), null);
+  // Third-party namespace on NIM: excluded in principle.
+  assert.match(r({ providerKey: 'nvidia', accessKind: 'FREE', modelId: 'meta/llama-3.1-70b-instruct' }), /\[nim\]/);
+  assert.match(r({ providerKey: 'nvidia', accessKind: 'ULTRA_LOW', modelId: 'deepseek-ai/deepseek-r1' }), /\[nim\]/);
+  // Paid NIM models are not free endpoints: out of scope for this rule.
+  assert.equal(r({ providerKey: 'nvidia', accessKind: null, modelId: 'meta/llama-3.1-70b-instruct' }), null);
+  assert.equal(r({ providerKey: 'nvidia', accessKind: 'DISCOUNTED', modelId: 'meta/llama-3.1-70b-instruct' }), null);
+  // Other providers are never affected.
+  assert.equal(r({ providerKey: 'groq', accessKind: 'FREE', modelId: 'meta/llama-3.1-70b-instruct' }), null);
+  assert.equal(r({}), null);
+});
+
+test('isNvidiaFirstPartyModelId: nvidia/ namespace only', () => {
+  assert.equal(policy.isNvidiaFirstPartyModelId('nvidia/nemotron-3-ultra-550b-a55b'), true);
+  assert.equal(policy.isNvidiaFirstPartyModelId('NVIDIA/LLaMA-3_1-Nemotron-70B-Instruct'), true);
+  assert.equal(policy.isNvidiaFirstPartyModelId('meta/llama-3.1-70b-instruct'), false);
+  assert.equal(policy.isNvidiaFirstPartyModelId('nvidia'), false, 'no slash is not a namespace');
+  assert.equal(policy.isNvidiaFirstPartyModelId(null), false);
+  assert.equal(policy.isNvidiaFirstPartyModelId(undefined), false);
+});

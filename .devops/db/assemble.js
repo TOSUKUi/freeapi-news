@@ -483,12 +483,32 @@ function priceObject(input, output, cacheRead, cacheWrite) {
 // (FREE or ULTRA_LOW) from typed effective prices, a price source and
 // confirmation date, passes the local model gate, and carries the endpoint
 // evidence the validator will re-check.
-function decideEligibility(candidate) {
+// Publication policy by kind (operator 2026-08-24), shared by the ranking
+// and campaign gates: one-time credits and trial / preview / prototype
+// access are never published anywhere; NVIDIA NIM free endpoints are
+// excluded in principle except first-party nvidia/* models. Returns a
+// deterministic exclusion reason or null.
+function typePolicyExclusion(candidate, classification) {
+  if (rankingPolicy.NON_PUBLISHABLE_CLASSES.includes(classification)) {
+    return '[type] one-time trial credits or trial / preview / prototype access is not published (publication policy 2026-08-24)';
+  }
+  return rankingPolicy.nimFreeEndpointExclusion({
+    providerKey: candidate.provider_key,
+    accessKind: candidate.access_kind,
+    modelId: candidate.exact_model_id,
+  });
+}
+
+function decideEligibility(candidate, classification = candidate.classification) {
   // Spec 0008 §4.11: DISCOUNTED frontier offers are never ranked; they are
   // evaluated for the discount_offers section instead.
   if (candidate.access_kind === 'DISCOUNTED') {
     return { eligible: false, reason: '[discounted] frontier discount offers belong to discount_offers, never ranked (spec 0008 §4.11)' };
   }
+  // Publication policy by kind (operator 2026-08-24): one-time credits and
+  // trial / preview / prototype access programs are never published.
+  const typeReason = typePolicyExclusion(candidate, classification);
+  if (typeReason) return { eligible: false, reason: typeReason };
   // Gate 3 (spec 0008 §4.7): deterministic operational evidence. NONE is a
   // hard exclusion (e.g. a $0 router model with a measured zero provider
   // set: listed but not operable); LOW means no fresh evidence this run and
@@ -598,6 +618,55 @@ function decideDiscountEligibility(candidate) {
   if (typeof candidate.total_parameters_b === 'number' && candidate.total_parameters_b > 0 &&
       candidate.total_parameters_b < 30) {
     return { eligible: false, reason: '[local-run] under 30B models stay out of discount tracking (quality gate)' };
+  }
+  return { eligible: true, reason: null };
+}
+
+// Publication policy (operator 2026-08-24): limited-time free campaigns
+// (C_LIMITED_FREE) show in the separate campaign_offers slot. The same
+// evidence gates as the main ranking apply, minus the benchmark gate: the
+// slot is explicitly time-limited, so a performance rank is out of scope
+// (new frontier models in a campaign are exactly the news this site
+// surfaces). Small local-scale models still stay out.
+function decideCampaignEligibility(candidate) {
+  const typeReason = rankingPolicy.nimFreeEndpointExclusion({
+    providerKey: candidate.provider_key,
+    accessKind: candidate.access_kind,
+    modelId: candidate.exact_model_id,
+  });
+  if (typeReason) return { eligible: false, reason: typeReason };
+  const operationalConfidence = deriveOperationalConfidence(candidate);
+  if (operationalConfidence === 'NONE') {
+    return { eligible: false, reason: '[gate3] no operational evidence: the offer is not currently operable (provider_count 0 at $0, deprecated endpoint, or unverified)' };
+  }
+  if (operationalConfidence === 'LOW') {
+    return { eligible: false, reason: '[gate3] operational confidence LOW: no fresh operational evidence this run' };
+  }
+  if (candidate.suspicion_score > rankingPolicy.SUSPICION_RANKING_MAX) {
+    return { eligible: false, reason: `[suspicion] suspicion ${candidate.suspicion_score} >= 4 never ranks (spec 0008 §4.7)` };
+  }
+  if (candidate.access_kind !== 'FREE' && candidate.access_kind !== 'ULTRA_LOW') {
+    return { eligible: false, reason: '[access] the campaign slot is for free or ultra-low offers only' };
+  }
+  const eff = candidate.effective_price_per_million || {};
+  if (!rankingPolicy.accessKindMatches(candidate.access_kind, eff.input, eff.output)) {
+    return { eligible: false, reason: `[access] effective prices ${JSON.stringify(eff)} do not match access_kind ${candidate.access_kind} (AC-4)` };
+  }
+  if (!candidate.price_source) {
+    return { eligible: false, reason: '[price-source] no fetched price source on record' };
+  }
+  if (!candidate.price_verified_at) {
+    return { eligible: false, reason: '[price-date] no price confirmation date on record' };
+  }
+  if (typeof candidate.total_parameters_b === 'number' && candidate.total_parameters_b > 0 &&
+      candidate.total_parameters_b < LOCAL_MODEL_GATE_B) {
+    return { eligible: false, reason: `[local-run] total ${candidate.total_parameters_b}B < ${LOCAL_MODEL_GATE_B}B; local-scale models are not published` };
+  }
+  if (!candidate.base_url) {
+    return { eligible: false, reason: '[endpoint] missing base_url; provider not in registry' };
+  }
+  if (!candidate.endpoint_source) {
+    return { eligible: false, reason: '[endpoint] missing endpoint_source; no fetched official doc states the base URL' };
   }
   return { eligible: true, reason: null };
 }
@@ -1134,7 +1203,12 @@ function assembleReport(runId, runDir, options = {}) {
     // (spec 0008 §4.11).
     if (candidate.access_kind === 'DISCOUNTED') continue;
 
-    const eligibility = decideEligibility(candidate);
+    // Publication policy (operator 2026-08-24): limited-time free
+    // campaigns (C_LIMITED_FREE) go to the separate campaign slot below,
+    // never the main free / ultra-low slots.
+    if (rankingPolicy.CAMPAIGN_CLASSES.includes(classification)) continue;
+
+    const eligibility = decideEligibility(candidate, classification);
 
     if (!eligibility.eligible) {
       const offer = toPublicOffer(candidate, classification, prose, null);
@@ -1195,6 +1269,32 @@ function assembleReport(runId, runDir, options = {}) {
     discountOffers.push(offer);
   }
 
+  // Publication policy (operator 2026-08-24): limited-time free campaigns
+  // (C_LIMITED_FREE) in the separate campaign_offers slot. Ineligible
+  // candidates are recorded in excluded_offers like every other gate.
+  const campaignOffers = [];
+  for (const candidate of view.candidates) {
+    if (candidate.in_caution) continue; // caution section owns stale offers
+    if (candidate.access_kind === 'DISCOUNTED') continue; // discount loop above
+    const legacyValues = legacyClassificationsByName.get(candidate.name);
+    const legacyClassification = legacyValues && legacyValues.length === 1
+      ? legacyValues[0]
+      : null;
+    const classification = classificationByKey.get(candidate.offer_key) ||
+      legacyClassification || candidate.classification;
+    if (!rankingPolicy.CAMPAIGN_CLASSES.includes(classification)) continue;
+    const eligibility = decideCampaignEligibility(candidate);
+    if (!eligibility.eligible) {
+      excluded.push({ name: candidate.name, reason: eligibility.reason, last_known_status: candidate.status });
+      continue;
+    }
+    const prose = proseByKey.get(candidate.offer_key) || null;
+    const offer = toPublicOffer(candidate, classification, prose, null);
+    offer.ranking_eligible = false;
+    visibleOfferKeys.add(candidate.offer_key);
+    campaignOffers.push(offer);
+  }
+
   // Open contradictions (spec 0008 §4.5): within-run disagreements between
   // fetch evidences of different source tiers, resolved by the lowest tier.
   let contradictions = [];
@@ -1227,7 +1327,7 @@ function assembleReport(runId, runDir, options = {}) {
   try {
     if (fs.existsSync(paths.reportPath)) {
       const priorReport = JSON.parse(fs.readFileSync(paths.reportPath, 'utf8'));
-      for (const list of [priorReport.ranked_offers, priorReport.discount_offers, priorReport.conditional_credits]) {
+      for (const list of [priorReport.ranked_offers, priorReport.discount_offers, priorReport.campaign_offers, priorReport.conditional_credits]) {
         for (const o of Array.isArray(list) ? list : []) {
           if (!o || typeof o.provider_key !== 'string') continue;
           for (const mid of [o.model_id, o.canonical_model_id]) {
@@ -1352,6 +1452,7 @@ function assembleReport(runId, runDir, options = {}) {
     changes,
     ranked_offers: rankedOffers,
     discount_offers: discountOffers,
+    campaign_offers: campaignOffers,
     product_updates: productUpdates,
     startup_credits: startupCredits,
     conditional_credits: conditional,

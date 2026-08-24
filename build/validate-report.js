@@ -67,6 +67,7 @@ async function main() {
   excludeHighSuspicion(report, fixLog);
   excludeNimDeprecated(report, fixLog);
   excludeInvalidDiscountOffers(report, fixLog);
+  excludeInvalidCampaignOffers(report, providers, fixLog);
   checkContradictions(report);
 
   // ── 4. Rewrite report.json ─────────────────────────────────────
@@ -112,7 +113,7 @@ function checkSchema(report, schema, fixLog) {
   }
   if (valid) return;
 
-  const offerPat = /^\/(ranked_offers|conditional_credits|caution_offers)\/(\d+)/;
+  const offerPat = /^\/(ranked_offers|conditional_credits|caution_offers|campaign_offers)\/(\d+)/;
   const topLevel = [];
   const offerErrs = new Map();
   for (const err of errors) {
@@ -224,9 +225,15 @@ function excludeBadEndpoints(report, providers, fixLog) {
 
 async function excludeBadCitations(report, fixLog) {
   if (process.env.SKIP_CITATION_CHECK === '1') return;
-  const offers = (report.ranked_offers || []).filter(
-    o => o.ranking_eligible === true && typeof o.endpoint_source === 'string' && /^https?:\/\//.test(o.endpoint_source)
-  );
+  // Campaign offers carry the same citation obligation as ranked offers:
+  // the endpoint_source page must document the base_url.
+  const offers = [
+    ...(report.ranked_offers || []).filter(
+      o => o.ranking_eligible === true && typeof o.endpoint_source === 'string' && /^https?:\/\//.test(o.endpoint_source)),
+    ...(report.campaign_offers || []).filter(
+      o => typeof o.endpoint_source === 'string' && /^https?:\/\//.test(o.endpoint_source)),
+  ];
+  const sectionOf = new Map((report.campaign_offers || []).map((o) => [o, 'campaign_offers']));
   if (offers.length === 0) return;
 
   const byUrl = new Map();
@@ -235,20 +242,22 @@ async function excludeBadCitations(report, fixLog) {
     byUrl.get(o.endpoint_source).push(o);
   }
 
-  const badNames = new Set();
+  const bad = new Map();
   for (const [url, group] of byUrl) {
     let html = null;
     try { html = await fetchText(url); } catch { continue; } // network fail = skip, don't exclude
     for (const o of group) {
       if (!citationSupports(html, o.base_url)) {
-        badNames.add(o.name);
-        moveToExcluded(report, 'ranked_offers', o,
+        const section = sectionOf.get(o) || 'ranked_offers';
+        bad.set(o, section);
+        moveToExcluded(report, section, o,
           `[citation] ${url} does not document base_url "${o.base_url}"`, fixLog);
       }
     }
   }
-  if (badNames.size > 0) {
-    report.ranked_offers = report.ranked_offers.filter(o => !badNames.has(o.name));
+  if (bad.size > 0) {
+    report.ranked_offers = (report.ranked_offers || []).filter(o => !bad.has(o));
+    report.campaign_offers = (report.campaign_offers || []).filter(o => !bad.has(o));
   }
 }
 
@@ -444,6 +453,100 @@ function excludeInvalidDiscountOffers(report, fixLog) {
     }
   }
   report.discount_offers = remaining;
+}
+
+// ── Campaign section integrity (publication policy 2026-08-24) ───────
+// campaign_offers is C_LIMITED_FREE-only (limited-time free campaigns in a
+// separate slot). Every entry needs the same endpoint / price / Gate 3 /
+// suspicion evidence as a ranked offer, minus the Terminal-Bench gate
+// (the slot is explicitly time-limited). NIM free endpoints are excluded
+// in principle except first-party nvidia/* models. Violations are moved to
+// excluded rather than published.
+function excludeInvalidCampaignOffers(report, providers, fixLog) {
+  if (!Array.isArray(report.campaign_offers)) return;
+  const remaining = [];
+  for (const o of report.campaign_offers) {
+    const label = o.name || '?';
+    if (o.classification !== 'C_LIMITED_FREE') {
+      moveToExcluded(report, 'campaign_offers', o,
+        `[type] campaign_offers entries must be C_LIMITED_FREE (publication policy 2026-08-24)`, fixLog);
+      continue;
+    }
+    const nimReason = rankingPolicy.nimFreeEndpointExclusion({
+      providerKey: o.provider_key,
+      accessKind: o.access_kind,
+      modelId: o.model_id,
+    });
+    if (nimReason) {
+      moveToExcluded(report, 'campaign_offers', o, nimReason, fixLog);
+      continue;
+    }
+    if (o.free_endpoint_status === 'deprecated') {
+      moveToExcluded(report, 'campaign_offers', o,
+        '[nim] free endpoint deprecated on the individual model page (spec 0008 §4.7)', fixLog);
+      continue;
+    }
+    if (!o.base_url || typeof o.base_url !== 'string') {
+      moveToExcluded(report, 'campaign_offers', o, '[endpoint] missing base_url', fixLog);
+      continue;
+    }
+    if (!o.endpoint_source || typeof o.endpoint_source !== 'string' || !/^https?:\/\//.test(o.endpoint_source)) {
+      moveToExcluded(report, 'campaign_offers', o, '[endpoint] missing endpoint_source', fixLog);
+      continue;
+    }
+    const hit = matchProvider(o, providers);
+    if (!hit) {
+      moveToExcluded(report, 'campaign_offers', o,
+        `[endpoint] provider "${o.provider}" not in registry — add it from official docs first`, fixLog);
+      continue;
+    }
+    if (!hit.byUrl) {
+      moveToExcluded(report, 'campaign_offers', o,
+        `[endpoint] base_url "${o.base_url}" contradicts official ${hit.entry.label} endpoint (${hit.entry.base_url}). Re-fetch ${hit.entry.docs_url}`, fixLog);
+      continue;
+    }
+    if (o.access_kind !== 'FREE' && o.access_kind !== 'ULTRA_LOW') {
+      moveToExcluded(report, 'campaign_offers', o,
+        `[access-kind] access_kind ${JSON.stringify(o.access_kind)} is not FREE or ULTRA_LOW`, fixLog);
+      continue;
+    }
+    const eff = o.effective_price_per_million;
+    if (!eff || typeof eff !== 'object' ||
+        !rankingPolicy.accessKindMatches(o.access_kind, eff.input, eff.output)) {
+      moveToExcluded(report, 'campaign_offers', o,
+        `[access-prices] effective prices ${JSON.stringify(eff)} do not match access_kind ${JSON.stringify(o.access_kind)} (AC-4)`, fixLog);
+      continue;
+    }
+    if (typeof o.total_parameters_b === 'number' && o.total_parameters_b > 0 &&
+        o.total_parameters_b < 30) {
+      moveToExcluded(report, 'campaign_offers', o,
+        `[size] ${o.total_parameters_b}B total is local-run territory; the campaign slot has no S/A exemption`, fixLog);
+      continue;
+    }
+    const conf = o.operational_confidence;
+    if (conf === 'NONE') {
+      moveToExcluded(report, 'campaign_offers', o,
+        '[gate3] no operational evidence: the offer is not currently operable (spec 0008 §4.7)', fixLog);
+      continue;
+    }
+    if (conf === 'LOW') {
+      moveToExcluded(report, 'campaign_offers', o,
+        '[gate3] operational confidence LOW: no fresh operational evidence this run (spec 0008 §4.7)', fixLog);
+      continue;
+    }
+    if (conf !== 'HIGH' && conf !== 'MEDIUM') {
+      moveToExcluded(report, 'campaign_offers', o,
+        `[gate3] operational_confidence ${JSON.stringify(conf)} is missing or invalid (spec 0008 §4.7)`, fixLog);
+      continue;
+    }
+    if (typeof o.suspicion_score === 'number' && o.suspicion_score > rankingPolicy.SUSPICION_RANKING_MAX) {
+      moveToExcluded(report, 'campaign_offers', o,
+        `[suspicion] suspicion ${o.suspicion_score} >= 4 never ranks (spec 0008 §4.7)`, fixLog);
+      continue;
+    }
+    remaining.push(o);
+  }
+  report.campaign_offers = remaining;
 }
 
 // ── Contradictions integrity (spec 0008 §4.5) ────────────────────

@@ -30,6 +30,44 @@ const FRONTIER_MIN_SCORE = 80;
 const SUSPICION_RANKING_MAX = 3;
 const SUSPICION_UNREGISTERED_FLOOR = 2;
 
+// ---------------------------------------------------------------------------
+// Publication policy by offer kind (operator decision 2026-08-24).
+// The main free slots (完全無料 / 超激安) are for standing access only:
+//   * free tiers that renew (per day / per month)        -> published
+//   * permanently offered free models, clear rate limits  -> published
+//   * free operation via ads etc.                         -> published
+// Everything else is routed deterministically by classification:
+//   * C_LIMITED_FREE  -> campaign_offers (separate slot, never the main slots)
+//   * D_TRIAL_CREDIT  -> never published (one-time credits, trial / preview /
+//                        prototype access programs)
+//   * NVIDIA NIM free endpoints are never published in principle, except
+//     NVIDIA first-party models (nvidia/ namespace), which are standing
+//     offerings.
+// ---------------------------------------------------------------------------
+
+// Classifications that always go to the separate campaign slot.
+const CAMPAIGN_CLASSES = ['C_LIMITED_FREE'];
+// Classifications that are never published anywhere (excluded with a reason).
+const NON_PUBLISHABLE_CLASSES = ['D_TRIAL_CREDIT'];
+
+// A NIM model id in the first-party nvidia/ namespace (nemotron, llama
+// nemotron, etc.) is a standing NVIDIA offering; every other namespace on
+// integrate.api.nvidia.com is a hosted third-party free endpoint.
+function isNvidiaFirstPartyModelId(modelId) {
+  return typeof modelId === 'string' && /^nvidia\//i.test(modelId);
+}
+
+// NIM free-endpoint publication rule (operator 2026-08-24): a free or
+// ultra-low offer on provider 'nvidia' whose model id is NOT in the
+// first-party nvidia/ namespace is excluded in principle. Returns a
+// deterministic exclusion reason, or null when the offer may be published.
+function nimFreeEndpointExclusion({ providerKey, accessKind, modelId } = {}) {
+  if (providerKey !== 'nvidia') return null;
+  if (accessKind !== 'FREE' && accessKind !== 'ULTRA_LOW') return null;
+  if (isNvidiaFirstPartyModelId(modelId)) return null;
+  return '[nim] NIM free endpoints are excluded in principle; only standing NVIDIA first-party (nvidia/*) models are published';
+}
+
 // Catalog and publication stages must share the same access thresholds.
 function isPriceEligible(input, output) {
   return deriveAccessKind(input, output) !== null;
@@ -202,4 +240,9 @@ module.exports = {
   discountRates,
   qualifiesFrontierBenchmark,
   deriveOperationalConfidence,
+  // publication policy by kind (operator 2026-08-24)
+  CAMPAIGN_CLASSES,
+  NON_PUBLISHABLE_CLASSES,
+  isNvidiaFirstPartyModelId,
+  nimFreeEndpointExclusion,
 };

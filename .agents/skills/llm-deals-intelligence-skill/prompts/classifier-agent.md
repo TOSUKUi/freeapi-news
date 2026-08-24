@@ -31,10 +31,10 @@ One entry per candidate, matched by the candidate's `offer_key` verbatim. `offer
 
 ## Classification rules
 
-- `A_TRUE_FREE` — a genuinely free API endpoint, no payment, no recurring quota reset trick.
+- `A_TRUE_FREE` — a genuinely free API endpoint, no payment, no recurring quota reset trick. Ad-supported free endpoints count here (free operation via ads).
 - `B_PERMANENT_FREE_TIER` — a standing free tier that renews (per month / per day). Recurring free quota goes here, NOT in `D_TRIAL_CREDIT`.
-- `C_LIMITED_FREE` — free but with a hard cap that does not renew generously.
-- `D_TRIAL_CREDIT` — one-time trial credits or a time-boxed trial that expires.
+- `C_LIMITED_FREE` — a limited-time free campaign with an explicit window or end date (e.g. "free until …", a Hugging Face inference free period, a launch-week free offer). These are published in a separate campaign slot, never in the standing free slots. A standing free tier with a hard but permanent cap is NOT a campaign — it stays `B_PERMANENT_FREE_TIER`.
+- `D_TRIAL_CREDIT` — one-time credits that do not renew ("$X free credit" at signup), and access programs that are explicitly trial, preview, or prototype (experimental endpoints). These are never published.
 - `E_DISCOUNT` — paid, but discounted / off-peak pricing.
 - `F_CONDITIONAL` — access requires training-data, data-sharing, or similar data contribution consent. Make this explicit. This includes catalog entries explicitly marked as a Contributor or Data Used for Training variant, even when the variant is represented as a cheaper paid API model.
 - `G_FREE_LIKE` — free access only inside a consumer app / web chat / playground while the API itself is paid. This is NOT a free API.

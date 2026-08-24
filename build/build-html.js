@@ -1203,12 +1203,16 @@ function generateHTML(report) {
   const ultraSlot = ranked.filter((o) => o.access_kind !== 'FREE');
   for (const o of conditional) (o.access_kind === 'ULTRA_LOW' ? ultraSlot : freeSlot).push(o);
   for (const o of caution) (o.access_kind === 'ULTRA_LOW' ? ultraSlot : freeSlot).push(o);
+  // Publication policy (operator 2026-08-24): limited-time free campaigns
+  // render in a separate slot, only when non-empty.
+  const campaigns = Array.isArray(report.campaign_offers) ? report.campaign_offers : [];
   const offersSection = `<section id="offers" class="report-section" aria-labelledby="offers-h">
       <h2 id="offers-h" class="font-display text-2xl sm:text-3xl font-bold mb-1">今日のオファー</h2>
-      <p class="text-sm text-muted-foreground mb-6">完全無料 / 超激安 / フロンティア割引 の 3 枠。枠内は <strong class="text-foreground">ティア</strong> → 同じ Terminal Bench 版のスコア → 価格確認日 → 名前の順。条件付き・注意のオファーはカードに条件・注意を併記します。</p>
+      <p class="text-sm text-muted-foreground mb-6">完全無料 / 超激安 / フロンティア割引 の 3 枠。枠内は <strong class="text-foreground">ティア</strong> → 同じ Terminal Bench 版のスコア → 価格確認日 → 名前の順。条件付き・注意のオファーはカードに条件・注意を併記します。期間限定のキャンペーンは別枠に表示します。</p>
       ${offerSlot('slot-free', '完全無料', freeSlot, generatedAt, tz)}
       ${offerSlot('slot-ultra', '超激安', ultraSlot, generatedAt, tz)}
       ${discountSlot(discount, tz)}
+      ${campaigns.length ? offerSlot('slot-campaign', '期間限定キャンペーン', campaigns, generatedAt, tz) : ''}
     </section>`;
 
   return `<!DOCTYPE html>

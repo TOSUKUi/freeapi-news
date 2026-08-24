@@ -117,6 +117,32 @@ test('a discount end date renders when present', () => {
   assert.ok(html.includes('割引期限'));
 });
 
+// Publication policy (operator 2026-08-24): limited-time campaigns render in
+// a separate slot, only when non-empty.
+test('campaign offers render in a separate 期間限定キャンペーン slot', () => {
+  const campaignOffer = cardOffer({
+    name: 'Campaign Model',
+    model_id: 'acme/campaign:free',
+    canonical_model_id: 'acme/campaign',
+    classification: 'C_LIMITED_FREE',
+    ranking_eligible: false,
+    end_at: '2026-09-15T00:00:00.000Z',
+  });
+  const r = report(cardOffer({}));
+  r.campaign_offers = [campaignOffer];
+  const html = generateHTML(r);
+  assert.ok(html.includes('期間限定キャンペーン'), 'slot title renders');
+  assert.ok(html.includes('Campaign Model'), 'campaign card renders');
+  // The campaign must not leak into the standing free slot.
+  const freeSlot = html.slice(html.indexOf('slot-free'), html.indexOf('slot-ultra'));
+  assert.ok(!freeSlot.includes('Campaign Model'), 'campaign stays out of the free slot');
+});
+
+test('the campaign slot stays hidden when there are no campaigns', () => {
+  const html = generateHTML(report(cardOffer({})));
+  assert.ok(!html.includes('期間限定キャンペーン'), 'no campaign slot when empty');
+});
+
 test('selectRankedOffers admits only eligible offers with FREE or ULTRA_LOW', () => {
   const reportWithMixed = report(cardOffer());
   reportWithMixed.ranked_offers.push(cardOffer({

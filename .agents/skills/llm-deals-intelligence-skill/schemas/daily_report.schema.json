@@ -46,6 +46,13 @@
         "$ref": "#/$defs/offer"
       }
     },
+    "campaign_offers": {
+      "$comment": "Publication policy (operator 2026-08-24): limited-time free campaigns (C_LIMITED_FREE) in a separate slot, never the main free / ultra-low slots.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/offer"
+      }
+    },
     "caution_offers": {
       "type": "array",
       "items": {

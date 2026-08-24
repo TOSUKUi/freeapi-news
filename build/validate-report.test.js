@@ -141,6 +141,81 @@ test('a paid ULTRA_LOW offer cannot retain a free classification', () => {
   assert.equal(validated.ranked_offers[0].classification, 'E_DISCOUNT');
 });
 
+// Publication policy (operator 2026-08-24): campaign slot integrity.
+function campaignOffer(overrides = {}) {
+  return {
+    name: 'Campaign Model',
+    model_name: 'Campaign Model',
+    provider: 'OpenRouter',
+    provider_key: 'openrouter',
+    canonical_model_id: 'acme/campaign',
+    access_kind: 'FREE',
+    delivery_type: 'router',
+    classification: 'C_LIMITED_FREE',
+    suspicion_score: 0,
+    information_confidence: 'HIGH',
+    operational_confidence: 'HIGH',
+    ranking_eligible: false,
+    last_verified: '2026-07-31T00:00:00.000Z',
+    base_url: 'https://openrouter.ai/api/v1',
+    model_id: 'acme/campaign:free',
+    endpoint_source: 'https://openrouter.ai/docs/quickstart',
+    price_source: 'https://openrouter.ai/api/v1/models',
+    price_verified_at: '2026-07-31T00:00:00.000Z',
+    effective_price_per_million: { input: 0, output: 0 },
+    ...overrides,
+  };
+}
+
+test('a valid C_LIMITED_FREE campaign offer survives validation without a benchmark', () => {
+  const report = reportWithOffers([]);
+  report.campaign_offers = [campaignOffer()];
+  const { result, output } = runValidator(report);
+  const validated = JSON.parse(output);
+  assert.equal(result.status, 0);
+  assert.equal(validated.campaign_offers.length, 1);
+  assert.equal(validated.campaign_offers[0].model_id, 'acme/campaign:free');
+});
+
+test('a non-campaign classification in campaign_offers is excluded', () => {
+  const report = reportWithOffers([]);
+  report.campaign_offers = [campaignOffer({ classification: 'B_PERMANENT_FREE_TIER' })];
+  const { result, output } = runValidator(report);
+  const validated = JSON.parse(output);
+  assert.equal(result.status, 0);
+  assert.equal(validated.campaign_offers.length, 0);
+  assert.match(validated.excluded_offers[0].reason, /\[type\]/);
+});
+
+test('a NIM third-party free endpoint in campaign_offers is excluded in principle', () => {
+  const report = reportWithOffers([]);
+  report.campaign_offers = [campaignOffer({
+    name: 'Llama 3.1 70B (NIM)',
+    provider: 'NVIDIA NIM',
+    provider_key: 'nvidia',
+    canonical_model_id: 'meta/llama-3.1-70b-instruct',
+    base_url: 'https://integrate.api.nvidia.com/v1',
+    model_id: 'meta/llama-3.1-70b-instruct',
+    endpoint_source: 'https://build.nvidia.com/meta/llama-3.1-70b-instruct',
+    price_source: 'https://integrate.api.nvidia.com/v1/models',
+  })];
+  const { result, output } = runValidator(report);
+  const validated = JSON.parse(output);
+  assert.equal(result.status, 0);
+  assert.equal(validated.campaign_offers.length, 0);
+  assert.match(validated.excluded_offers[0].reason, /\[nim\]/);
+});
+
+test('a campaign offer without endpoint_source is excluded', () => {
+  const report = reportWithOffers([]);
+  report.campaign_offers = [campaignOffer({ endpoint_source: null })];
+  const { result, output } = runValidator(report);
+  const validated = JSON.parse(output);
+  assert.equal(result.status, 0);
+  assert.equal(validated.campaign_offers.length, 0);
+  assert.match(validated.excluded_offers[0].reason, /\[endpoint\]/);
+});
+
 test('ordinary offer-level schema errors retain auto-exclude behavior', () => {
   const report = reportWithOffers([{
     delivery_type: 'official',

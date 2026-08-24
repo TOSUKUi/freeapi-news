@@ -544,6 +544,123 @@ test('F_CONDITIONAL offers go to conditional_credits, not the ranking (AGENTS.md
   assert.equal(report.conditional_credits[0].classification, 'F_CONDITIONAL');
 });
 
+// ── Publication policy by kind (operator 2026-08-24) ─────────────
+
+test('D_TRIAL_CREDIT offers are never published, even with a passing benchmark', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [
+      offerSeed({ exact_model_id: 'acme/trial:free', canonical_model_id: 'acme/trial',
+        facts_json: { model_name: 'Trial', free_quota_text: 'one-time $10 free credit', endpoint_source: 'https://openrouter.ai/docs/quickstart' } }),
+    ],
+    benchmarks: [benchRow('acme/trial', 70)],
+  });
+  const runDir = runDirFor(ctx, 'run-trial');
+  fs.mkdirSync(path.join(runDir, 'reduced'), { recursive: true });
+  fs.writeFileSync(path.join(runDir, 'reduced', 'classifications.json'), JSON.stringify({
+    classifications: [{ offer_key: 'openrouter/acme/trial:free', classification: 'D_TRIAL_CREDIT', information_confidence: 'HIGH' }],
+  }));
+  const { report } = assemble.assembleReport('run-trial', runDir, ctx.options);
+  assert.equal(report.ranked_offers.length, 0);
+  assert.equal(report.campaign_offers.length, 0);
+  assert.equal(report.excluded_offers.length, 1);
+  assert.match(report.excluded_offers[0].reason, /\[type\]/);
+});
+
+test('NIM third-party free endpoints are excluded in principle; first-party nvidia/* ranks', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  // Dedicated registry: the shared fixture has no nvidia entry.
+  fs.writeFileSync(path.join(ctx.root, 'build', 'provider-registry.json'), JSON.stringify({
+    version: 1,
+    providers: [
+      {
+        key: 'nvidia',
+        label: 'NVIDIA NIM',
+        match: ['nvidia'],
+        base_url: 'https://integrate.api.nvidia.com/v1',
+        base_url_pattern: '^https:\\/\\/integrate\\.api\\.nvidia\\.com\\/v1/?$',
+        docs_url: 'https://docs.nvidia.com/nim',
+        delivery_type: 'official',
+      },
+    ],
+  }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [
+      offerSeed({ provider_key: 'nvidia', exact_model_id: 'meta/llama-3.1-70b-instruct',
+        canonical_model_id: 'meta/llama-3.1-70b-instruct',
+        facts_json: { model_name: 'Llama 3.1 70B (NIM)', free_quota_text: 'NIM free endpoint', endpoint_source: 'https://build.nvidia.com/meta/llama-3.1-70b-instruct' } }),
+      offerSeed({ provider_key: 'nvidia', exact_model_id: 'nvidia/nemotron-3-ultra-550b-a55b',
+        canonical_model_id: 'nvidia/nemotron-3-ultra-550b-a55b',
+        facts_json: { model_name: 'Nemotron 3 Ultra (NIM)', free_quota_text: 'NIM free endpoint', endpoint_source: 'https://build.nvidia.com/nvidia/nemotron-3-ultra-550b-a55b' } }),
+    ],
+    benchmarks: [
+      benchRow('meta/llama-3.1-70b-instruct', 70),
+      benchRow('nvidia/nemotron-3-ultra-550b-a55b', 80),
+    ],
+  });
+  // Gate 3 evidence is observer-owned, never written by the offer upsert.
+  db.setOfferOperationalEvidence('nvidia', 'meta/llama-3.1-70b-instruct', { free_endpoint_status: 'available' }, ctx.options);
+  db.setOfferOperationalEvidence('nvidia', 'nvidia/nemotron-3-ultra-550b-a55b', { free_endpoint_status: 'available', api_calls_30d: 1000 }, ctx.options);
+  const runDir = runDirFor(ctx, 'run-nim');
+  const { report } = assemble.assembleReport('run-nim', runDir, ctx.options);
+  const rankedNames = report.ranked_offers.map((o) => o.model_id).sort();
+  assert.deepEqual(rankedNames, ['nvidia/nemotron-3-ultra-550b-a55b'], 'only the first-party NIM model ranks');
+  const nimExcluded = report.excluded_offers.find((e) => /Llama/.test(e.name));
+  assert.ok(nimExcluded, 'third-party NIM free endpoint is excluded');
+  assert.match(nimExcluded.reason, /\[nim\]/);
+});
+
+test('C_LIMITED_FREE campaigns go to campaign_offers without a benchmark gate', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [
+      offerSeed({ exact_model_id: 'acme/campaign:free', canonical_model_id: 'acme/campaign',
+        facts_json: { model_name: 'Campaign', free_quota_text: 'free until 2026-09-15', endpoint_source: 'https://openrouter.ai/docs/quickstart', end_at: '2026-09-15T00:00:00Z' } }),
+    ],
+    benchmarks: [], // no Terminal Bench: the campaign slot is exempt
+  });
+  const runDir = runDirFor(ctx, 'run-campaign');
+  fs.mkdirSync(path.join(runDir, 'reduced'), { recursive: true });
+  fs.writeFileSync(path.join(runDir, 'reduced', 'classifications.json'), JSON.stringify({
+    classifications: [{ offer_key: 'openrouter/acme/campaign:free', classification: 'C_LIMITED_FREE', information_confidence: 'HIGH' }],
+  }));
+  const { report } = assemble.assembleReport('run-campaign', runDir, ctx.options);
+  assert.equal(report.ranked_offers.length, 0, 'campaigns never enter the main slots');
+  assert.equal(report.campaign_offers.length, 1);
+  const c = report.campaign_offers[0];
+  assert.equal(c.classification, 'C_LIMITED_FREE');
+  assert.equal(c.ranking_eligible, false);
+  assert.equal(c.end_at, '2026-09-15T00:00:00Z');
+});
+
+test('a C_LIMITED_FREE campaign without endpoint evidence is excluded, not published', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seed(ctx, {
+    offers: [
+      offerSeed({ exact_model_id: 'acme/nocite:free', canonical_model_id: 'acme/nocite',
+        facts_json: { model_name: 'NoCite', free_quota_text: 'free this week' } }),
+    ],
+    benchmarks: [],
+  });
+  const runDir = runDirFor(ctx, 'run-nocite');
+  fs.mkdirSync(path.join(runDir, 'reduced'), { recursive: true });
+  fs.writeFileSync(path.join(runDir, 'reduced', 'classifications.json'), JSON.stringify({
+    classifications: [{ offer_key: 'openrouter/acme/nocite:free', classification: 'C_LIMITED_FREE', information_confidence: 'LOW' }],
+  }));
+  const { report } = assemble.assembleReport('run-nocite', runDir, ctx.options);
+  assert.equal(report.campaign_offers.length, 0);
+  assert.equal(report.excluded_offers.length, 1);
+  assert.match(report.excluded_offers[0].reason, /\[endpoint\]/);
+});
+
 test('a stale offer at run four moves to caution with prior facts (AC-3)', (t) => {
   const ctx = tmpProject();
   t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
