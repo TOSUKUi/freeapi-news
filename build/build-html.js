@@ -646,6 +646,24 @@ function discountCard(o, tz) {
         ${o.model_id ? `<div class="id-row"><span class="id-key">Model ID</span><code class="id-val">${esc(o.model_id)}</code></div>` : ''}
         ${o.base_url ? `<div class="id-row"><span class="id-key">Base URL</span><code class="id-val">${esc(o.base_url)}</code></div>` : ''}
       </div>
+      ${(() => {
+        // Discount cards carry their evidence links: the exact model page
+        // (registry template) or the official docs, plus the price source
+        // that backs the normal/effective prices shown above.
+        const cap = getCapability(o);
+        const modelPage = cap && cap.model_page_template && o.model_id
+          ? cap.model_page_template.replace('{model_id}', o.model_id)
+          : null;
+        const official = modelPage || o.endpoint_source || (o.sources && o.sources[0]) || null;
+        const officialLabel = modelPage ? 'モデルページ' : '公式サイト';
+        const links = [];
+        if (official) links.push(`<a class="btn btn-primary" href="${esc(official)}" target="_blank" rel="noopener noreferrer">${officialLabel} <span aria-hidden="true">↗</span></a>`);
+        // The price source is a separate link only when it differs from the
+        // primary link above (gateways can point model page and pricing at
+        // the same llmpricing.dev page).
+        if (o.price_source && o.price_source !== official) links.push(`<a class="btn" href="${esc(o.price_source)}" target="_blank" rel="noopener noreferrer">価格ソース <span aria-hidden="true">↗</span></a>`);
+        return links.length ? `<div class="offer-links">${links.join('')}</div>` : '';
+      })()}
       ${connectionAccordion(o)}
     </article>`;
 }
