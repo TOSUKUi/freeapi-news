@@ -38,7 +38,7 @@ export PROVIDER_REGISTRY="${PROJECT_ROOT}/build/provider-registry.json"
 export PI_MODEL="${PI_MODEL:-litellm/deepseek-v4-flash}"
 export PI_TIMEOUT="${PI_TIMEOUT:-1800}"   # seconds per non-discovery worker
 export DISCOVERY_TIMEOUT="${DISCOVERY_TIMEOUT:-900}"   # seconds per discovery worker
-export GLOBAL_CONCURRENCY="${GLOBAL_CONCURRENCY:-6}"   # parallel LLM worker count for the collector
+export GLOBAL_CONCURRENCY="${GLOBAL_CONCURRENCY:-3}"   # parallel LLM worker count for the collector (operator 2026-08-25: 3 max)
 
 echo "[env] PROJECT_ROOT=${PROJECT_ROOT}"
 echo "[env] SKILL_DIR=${SKILL_DIR}"

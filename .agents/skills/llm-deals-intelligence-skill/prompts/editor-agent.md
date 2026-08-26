@@ -6,7 +6,7 @@ The deterministic assembler (`assemble.js`) already owns every fact: offer and m
 
 ## Input (read only, no fetch, no web search)
 
-- `state/crawl/<run_id>/reduced/candidate-view.json` — `candidates[]`, each with the deterministic facts: `offer_key`, `name`, `provider`, `tier`, `benchmark`, `free_limits`, `free_allowance_rank`, `delivery_type`, `status`, `consecutive_failures`, `last_verified`, `sources`.
+- `state/crawl/<run_id>/reduced/editorial-view.json` (or `candidate-view.json` when the filtered view is absent) — `candidates[]`, each with the deterministic facts: `offer_key`, `name`, `provider`, `tier`, `benchmark`, `free_limits`, `free_allowance_rank`, `delivery_type`, `status`, `consecutive_failures`, `last_verified`, `sources`. The view is pre-filtered to display-relevant candidates (ranked-eligible, discounted, caution, or trial/campaign/conditional-signaled); write prose only for offers that will appear in the report.
 - `state/crawl/<run_id>/reduced/lane-coverage.json` — known and research coverage, the promotion gate, and caution list.
 - `state/crawl/<run_id>/reduced/discovery-candidates.json` — new models found this run.
 

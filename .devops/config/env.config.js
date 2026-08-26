@@ -42,9 +42,12 @@ envDefault('SKILL_SCHEMA_FILE', path.join(
 envDefault('PROVIDER_REGISTRY', path.join(PROJECT_ROOT, 'build/provider-registry.json'));
 
 // ── pi agent settings ────────────────────────────────────────────
+// GLOBAL_CONCURRENCY caps concurrent LLM workers. Kept at 3 (operator
+// 2026-08-25): 6 concurrent browser sessions contended for local CPU /
+// memory and made every session slower without cutting wall time.
 envDefault('PI_MODEL', 'litellm/local');
 envDefault('PI_TIMEOUT', '1800');
 envDefault('DISCOVERY_TIMEOUT', '900');
-envDefault('GLOBAL_CONCURRENCY', '6');
+envDefault('GLOBAL_CONCURRENCY', '3');
 
 module.exports = {}; // no public API — side effects only

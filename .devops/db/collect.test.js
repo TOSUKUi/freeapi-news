@@ -799,6 +799,58 @@ it('reports one deterministic benchmark result incrementally in completion order
   });
 });
 
+describe('displayRelevantCandidate pre-filter (operator 2026-08-25)', () => {
+  const base = () => ({
+    offer_key: 'openrouter/acme/a:free',
+    access_kind: 'FREE',
+    tier: null,
+    benchmark: null,
+    in_caution: false,
+    free_limits: null,
+    description: null,
+    registration_conditions: null,
+  });
+
+  it('keeps benchmark-qualified, discounted, and caution candidates', () => {
+    const qualified = base();
+    qualified.tier = 'A';
+    qualified.benchmark = { score: 57 };
+    assert.equal(collect.displayRelevantCandidate(qualified), true);
+
+    const discounted = base();
+    discounted.access_kind = 'DISCOUNTED';
+    assert.equal(collect.displayRelevantCandidate(discounted), true);
+
+    const caution = base();
+    caution.in_caution = true;
+    assert.equal(collect.displayRelevantCandidate(caution), true);
+  });
+
+  it('keeps candidates with trial, campaign, or conditional signals', () => {
+    const trial = base();
+    trial.free_limits = 'one-time $10 free credit';
+    assert.equal(collect.displayRelevantCandidate(trial), true);
+
+    const campaign = base();
+    campaign.free_limits = 'free until 2026-09-15';
+    assert.equal(collect.displayRelevantCandidate(campaign), true);
+
+    const conditional = base();
+    conditional.registration_conditions = 'data sharing opt-in required';
+    assert.equal(collect.displayRelevantCandidate(conditional), true);
+  });
+
+  it('drops plain paid / benchmark-pending candidates (provisional classification suffices)', () => {
+    const plain = base();
+    plain.free_limits = 'input $0.14 / output $0.28 per 1M';
+    assert.equal(collect.displayRelevantCandidate(plain), false);
+
+    const preview = base();
+    preview.description = 'a preview endpoint for testing';
+    assert.equal(collect.displayRelevantCandidate(preview), true, 'preview is a trial-class signal');
+  });
+});
+
 describe('runPiWorker transport (spec 0008 research sessions)', () => {
   let ctx;
 
@@ -901,5 +953,39 @@ describe('runPiWorker transport (spec 0008 research sessions)', () => {
     assert.equal(collect.discoverySearchTimeRange({ DISCOVERY_WINDOW_DAYS: '30' }), 'month');
     assert.equal(collect.discoverySearchTimeRange({ DISCOVERY_WINDOW_DAYS: '400' }), 'year');
     assert.equal(collect.discoverySearchTimeRange({ DISCOVERY_WINDOW_DAYS: 'not-a-number' }), 'week');
+  });
+
+  it('halves the discovery visit budget and timeout on retry (operator 2026-08-25)', async () => {
+    const calls = [];
+    const spawnImpl = (cmd, args, opts) => {
+      calls.push({ args });
+      const outArgIndex = args.indexOf('--json-output');
+      const attempt = calls.length;
+      if (attempt === 1) {
+        // First attempt: pi exits 1 without writing usable JSON -> retried.
+        fs.rmSync(args[outArgIndex + 1], { force: true });
+        const { EventEmitter } = require('node:events');
+        const child = new EventEmitter();
+        setImmediate(() => child.emit('close', 1, null));
+        return child;
+      }
+      fs.writeFileSync(args[outArgIndex + 1], `${JSON.stringify({ schema_version: 1, status: 'complete', models: [] })}\n`);
+      const { EventEmitter } = require('node:events');
+      const child = new EventEmitter();
+      setImmediate(() => child.emit('close', 0, null));
+      return child;
+    };
+    const spec = specFor('provider-monitor', {
+      transport: 'discovery', visitBudget: 12, searchBudget: 2,
+    });
+    await collect.runPiWorker(spec, {
+      piModel: 'test-model', piTimeout: 600, spawnImpl,
+    }, ctx.options);
+    assert.equal(calls.length, 2, 'retried once');
+    const first = lastPrompt(calls[0].args);
+    const second = lastPrompt(calls[1].args);
+    assert.match(first, /At most 12 page visits total/);
+    assert.match(second, /At most 6 page visits total/, 'retry halves the visit budget');
+    assert.match(second, /at most 2 Bash searches/);
   });
 });

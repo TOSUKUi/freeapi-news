@@ -254,6 +254,29 @@ test('buildLaneManifest splits catalog and known refresh lanes only (spec 0008 P
   assert.deepEqual(known.assigned_json, ['gemini-2.5-pro-free']);
 });
 
+test('known_refresh rotates deterministically for more than 2 non-catalog providers (operator 2026-08-25)', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  seedOffers(ctx, [
+    offerSeed({ provider_key: 'aa', exact_model_id: 'm1', canonical_model_id: 'm1' }),
+    offerSeed({ provider_key: 'bb', exact_model_id: 'm2', canonical_model_id: 'm2' }),
+    offerSeed({ provider_key: 'cc', exact_model_id: 'm3', canonical_model_id: 'm3' }),
+  ]);
+  // runId parity selects one parity class; the other class appears on the
+  // next run id. For 3 providers the split is 2 + 1 (4 providers would be
+  // 2 + 2). The union must cover all providers across the two run ids.
+  const m1 = lanes.buildLaneManifest({ ...ctx.options, runId: 'run-odd' });
+  const keys1 = m1.tasks.filter((task) => task.kind === 'known_refresh').map((task) => task.provider_key).sort();
+  const m2 = lanes.buildLaneManifest({ ...ctx.options, runId: 'run-even' });
+  const keys2 = m2.tasks.filter((task) => task.kind === 'known_refresh').map((task) => task.provider_key).sort();
+  assert.ok(keys1.length >= 1 && keys1.length <= 2, 'odd run id plans a subset of providers');
+  assert.ok(keys2.length >= 1 && keys2.length <= 2, 'even run id plans a subset of providers');
+  assert.notDeepEqual(keys1, keys2, 'different run ids rotate to a different half');
+  const union = [...new Set([...keys1, ...keys2])].sort();
+  assert.deepEqual(union, ['aa', 'bb', 'cc'], 'both run ids together cover every provider');
+});
+
 
 test('the legacy discovery goal crawlers are retired (spec 0008 Phase 5)', () => {
   assert.equal(lanes.buildDiscoveryTasks, undefined, 'buildDiscoveryTasks is removed');

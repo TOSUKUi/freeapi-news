@@ -512,8 +512,10 @@ function vendorRotationKeys(watchlist, now = new Date()) {
 // per day cap, ordered by tier then key so the same signals pick the same
 // tasks. The cap favors signal-driven dives over the rotation: rotation is
 // picked only after signals, so a heavy signal day never queues 8 sessions.
+// Cap 2 (operator 2026-08-25): each dive is a ~10 min browser session; the
+// rotation stretches across days automatically when signals consume the cap.
 // Returns { key, reason: 'signal' | 'rotation' | 'signal+rotation' }.
-const MAX_VENDOR_TASKS_PER_DAY = 6;
+const MAX_VENDOR_TASKS_PER_DAY = 2;
 
 function planVendorTasks(signals, watchlist, now = new Date()) {
   const signalKeys = new Set();
@@ -893,10 +895,10 @@ async function prefilterCommunity(options = {}) {
 // same wall time as 4 and drops no provider.
 // ---------------------------------------------------------------------------
 
-const PROVIDER_MONITOR_MAX_SESSIONS = 5;
+const PROVIDER_MONITOR_MAX_SESSIONS = 2;
 
 function planProviderMonitorTasks(watchlist, signals, discountSignals = {}, opts = {}) {
-  const batch = Math.max(1, Math.min(6, opts.batch || Number(process.env.PROVIDER_MONITOR_BATCH) || 5));
+  const batch = Math.max(1, Math.min(25, opts.batch || Number(process.env.PROVIDER_MONITOR_BATCH) || 13));
   const monitors = (watchlist.provider_monitors || []).filter((m) => m && m.watch && Object.keys(m.watch).length > 0);
   // Providers the aggregated-index lane verified this run with a fresh,
   // verified free-model baseline. Their LLM sessions can run at a spot check
@@ -964,8 +966,8 @@ function planProductProgramTasks(signals, watchlist) {
   // Each chunk keeps its own visit budget, so a chunk of 3 entries costs no
   // more wall time than a single entry. Task IDs carry a :N suffix; the
   // observe stage merges every chunk of the same kind.
-  const PRODUCT_CHUNK = 3;
-  const PROGRAM_CHUNK = 3;
+  const PRODUCT_CHUNK = 8;
+  const PROGRAM_CHUNK = 8;
 
   const buildProductEntries = () => productSignals.map((s) => {
     const key = (s.entity_key || '').split(':')[1] || null;

@@ -205,7 +205,7 @@ describe('runWatchPhase', () => {
 });
 
 describe('provider monitor planning (spec 0008 Phase 2)', () => {
-  it('bundles providers into ≤5 sessions with a full 12-visit budget by default', () => {
+  it('bundles providers into a single session with a full 12-visit budget by default', () => {
     const monitors = [
       { provider_key: 'a', watch: { m: 'https://a.com/models' } },
       { provider_key: 'b', watch: { p: 'https://b.com/pricing' } },
@@ -216,8 +216,8 @@ describe('provider monitor planning (spec 0008 Phase 2)', () => {
     ];
     const wl = { ...WATCHLIST, provider_monitors: monitors };
     const tasks = watch.planProviderMonitorTasks(wl, [], {});
-    assert.equal(tasks.length, 2);
-    assert.deepEqual(tasks[0].provider_keys.slice(0, 5).sort(), ['a', 'b', 'c', 'd', 'e']);
+    assert.equal(tasks.length, 1);
+    assert.deepEqual(tasks[0].provider_keys.slice(0, 6).sort(), ['a', 'b', 'c', 'd', 'e', 'f']);
     assert.equal(tasks[0].visit_budget, 12);
     assert.equal(tasks[0].spot_check, false);
   });
@@ -378,8 +378,8 @@ describe('product / program monitor planning (spec 0008 Phase 3)', () => {
     assert.equal(tasks[0].entries[0].watchlist_urls.url, 'https://cloud.google.com/startup');
   });
 
-  it('more than 3 changed entries chunk into parallel sessions of the same kind', () => {
-    const signals = ['a', 'b', 'c', 'd'].map((k, i) => ({
+  it('more than 8 changed entries chunk into parallel sessions of the same kind', () => {
+    const signals = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'].map((k, i) => ({
       entity_key: `product:${k}:pricing`, domain: 'product',
       url: `https://pricing.example/${k}`, status: 'changed', new_items: [`item ${i}`],
     }));
@@ -387,8 +387,8 @@ describe('product / program monitor planning (spec 0008 Phase 3)', () => {
     assert.equal(tasks.length, 2);
     assert.equal(tasks[0].task_id, 'product_monitor:1');
     assert.equal(tasks[1].task_id, 'product_monitor:2');
-    assert.ok(tasks.every((t) => t.kind === 'product_monitor' && t.entries.length <= 3));
-    assert.deepEqual([...tasks[0].entries, ...tasks[1].entries].map((e) => e.key), ['a', 'b', 'c', 'd']);
+    assert.ok(tasks.every((t) => t.kind === 'product_monitor' && t.entries.length <= 8));
+    assert.deepEqual([...tasks[0].entries, ...tasks[1].entries].map((e) => e.key), ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']);
   });
 
   it('fetch_failed product channels are not a dispatch trigger', () => {

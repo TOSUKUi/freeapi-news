@@ -156,12 +156,12 @@ function isDiscoveryTransport(spec) {
   return spec.transport === 'discovery';
 }
 
-function discoveryTransportText(spec) {
+function discoveryTransportText(spec, visitBudgetOverride) {
   if (!isDiscoveryTransport(spec)) return '';
   const session = `disc-${db.sanitizeTaskId(spec.taskId)}`;
   const sessionRule = `Every browser call must pass session: "${session}" so parallel workers stay isolated.`;
   const searchBudget = spec.searchBudget ?? 4;
-  const visitBudget = spec.visitBudget ?? 8;
+  const visitBudget = visitBudgetOverride ?? spec.visitBudget ?? 8;
   return '\n\n## Discovery transport (web search + browser)\nThis is a research task with a bounded transport. Work in this order:\n'
     + `1. Search: run at most ${searchBudget} Bash searches phrased for your goal: \`web-search-plus --provider auto --query "<your query>" --time-range ${spec.searchTimeRange || 'week'} --max-results 5 --compact\`. `
     + 'If the CLI fails or returns nothing usable, fall back to browser search-engine queries (browser action=search, engine=bing, query=<your query>; Google often serves a captcha to this host, so do not use google) and keep at most 5 results per search.\n'
@@ -187,8 +187,6 @@ function runPiWorker(spec, options, baseOpts) {
       + 'Do not call a hosted web_search tool. Example: `web-search-plus --provider auto --query "..." '
       + '--time-range week --max-results 5 --compact`.\n'
     : '';
-  const discoveryTransport = discoveryTransportText(spec);
-  const fullPrompt = `${role}\n\n---\n\n## This run\n\n${spec.runtime}\n${satelliteSearch}${discoveryTransport}`;
 
   fs.mkdirSync(path.dirname(spec.outputFile), { recursive: true });
 
@@ -196,7 +194,24 @@ function runPiWorker(spec, options, baseOpts) {
   // benchmark, and editorial workers keep the minimal bash/read/json_output
   // surface so their sessions stay small and cheap.
   const isDiscovery = isDiscoveryTransport(spec);
-  const args = [
+  const retryCount = Math.max(0, Number(spec.retryCount ?? options.workerRetries ?? 1));
+  const spawnWorker = options.spawnImpl || spawn;
+  // On retry, halve the discovery budget: a session that already burned its
+  // full budget without a conforming output is unlikely to finish on a second
+  // full pass — it should re-verify only the highest-value facts (operator
+  // 2026-08-25: the retry tax was ~9 sessions × up to 30 min per run).
+  const baseTimeout = (spec.timeoutSeconds ?? options.piTimeout);
+  const attemptTimeout = (attempt) => {
+    if (attempt <= 1 || !isDiscovery) return baseTimeout;
+    return Math.max(120, Math.round(baseTimeout / 2));
+  };
+  const attemptVisitBudget = (attempt) => {
+    if (attempt <= 1 || !isDiscovery) return undefined;
+    return Math.max(1, Math.ceil((spec.visitBudget ?? 8) / 2));
+  };
+  // Rebuild the prompt + args per attempt: the discovery transport text
+  // carries the (halved) visit budget, so a retry gets a smaller prompt too.
+  const buildArgs = (attempt) => [
     '--skill', dirs.skillDir,
     '--model', options.piModel,
     '--approve',
@@ -207,15 +222,9 @@ function runPiWorker(spec, options, baseOpts) {
     '--no-context-files',
     '--thinking', 'low',
     '--tools', isDiscovery ? 'bash,read,json_output,browser' : 'bash,read,json_output',
+    ...(process.env.WSP_SATELLITE_URL ? ['--exclude-tools', 'web_search'] : []),
+    '-p', `${role}\n\n---\n\n## This run\n\n${spec.runtime}\n${satelliteSearch}${discoveryTransportText(spec, attemptVisitBudget(attempt))}`,
   ];
-  // The hosted web_search connector does not inherit the local satellite
-  // configuration. Disable it when satellite mode is configured so the model
-  // uses the CLI route described above instead.
-  if (process.env.WSP_SATELLITE_URL) args.push('--exclude-tools', 'web_search');
-  args.push('-p', fullPrompt);
-
-  const retryCount = Math.max(0, Number(spec.retryCount ?? options.workerRetries ?? 1));
-  const spawnWorker = options.spawnImpl || spawn;
 
   function outputIsUsable() {
     if (!fs.existsSync(spec.outputFile)) return false;
@@ -264,11 +273,11 @@ function runPiWorker(spec, options, baseOpts) {
       };
       let child;
       try {
-        child = spawnWorker('pi', args, {
+        child = spawnWorker('pi', buildArgs(attempt), {
           stdio: ['ignore', logStream, logStream],
           // Discovery gets its own budget because it is intentionally more
           // exploratory than the known-offer, benchmark, and editorial workers.
-          timeout: (spec.timeoutSeconds ?? options.piTimeout) * 1000,
+          timeout: attemptTimeout(attempt) * 1000,
         });
       } catch (error) {
         finish(null, null, error);
@@ -662,13 +671,32 @@ function recoverAbandonedRuns(baseOpts, log = () => {}) {
 // Pipeline
 // ---------------------------------------------------------------------------
 
+// Display-relevant pre-filter (operator 2026-08-25): the classifier and
+// editor only need candidates that can actually reach the report — those
+// with a ranking benchmark, a frontier discount, caution status, or an
+// explicit trial / campaign / conditional signal in their facts. The
+// remaining ~180 candidates are excluded by deterministic gates no matter
+// what the classifier says, so classifying them is pure LLM spend (was 4
+// chunk sessions + a huge editor read per run). Dropped candidates keep
+// their provisional classification.
+function displayRelevantCandidate(x) {
+  const bench = x.benchmark || {};
+  const hasBench = x.tier !== undefined && x.tier !== null
+    && typeof bench.score === 'number' && bench.score >= 50;
+  if (hasBench || x.access_kind === 'DISCOUNTED' || x.in_caution) return true;
+  const text = [x.free_limits, x.description, x.registration_conditions]
+    .filter((s) => typeof s === 'string')
+    .join(' ').toLowerCase();
+  return /trial|one[- ]?time|launch credit|free credit|data sharing|data used for training|opt[- ]?in|preview|prototype|campaign|limited[- ]?(time|period)|\u671f\u9593\u9650\u5b9a|free until/.test(text);
+}
+
 async function runPipeline(options = {}) {
   const opts = {
     dryRun: false,
     push: false,
     skipCitation: false,
     visionCapable: false,
-    concurrency: Number(process.env.GLOBAL_CONCURRENCY || 2),
+    concurrency: Number(process.env.GLOBAL_CONCURRENCY || 3),
     piModel: process.env.PI_MODEL || 'litellm/deepseek-v4-flash',
     piTimeout: Number(process.env.PI_TIMEOUT || 1800),
     // Spec 0006: discovery workers now drive a real browser, so the per-chunk
@@ -1299,7 +1327,7 @@ async function runPipeline(options = {}) {
         // the most important models first. Models beyond the cap stay in the
         // queue and are scouted on later runs; a `not_found` reopens after
         // NOT_FOUND_RESEARCH_TTL_DAYS, so nothing is starved forever.
-        const MAX_SCOUTS = Number(process.env.BENCHMARK_SCOUTS_PER_RUN || 6);
+        const MAX_SCOUTS = Number(process.env.BENCHMARK_SCOUTS_PER_RUN || 3);
         const scoutEntries = remainingQueue.slice(0, MAX_SCOUTS);
         if (scoutEntries.length < remainingQueue.length) {
           log(`[6/9] benchmark scouts: ${remainingQueue.length} unresolved, `
@@ -1368,17 +1396,27 @@ async function runPipeline(options = {}) {
     );
     log(`[7/9] candidate view: ${view.candidates.length} candidate(s)`);
 
+    // Display-relevant pre-filter (operator 2026-08-25): see
+    // displayRelevantCandidate above. Dropped candidates keep their
+    // provisional classification.
+    const relevant = view.candidates.filter(displayRelevantCandidate);
+    fs.writeFileSync(
+      path.join(runDir, 'reduced', 'editorial-view.json'),
+      `${JSON.stringify({ ...view, candidates: relevant }, null, 2)}\n`
+    );
+    log(`[7/9] display-relevant candidates: ${relevant.length}/${view.candidates.length} (classifier + editor input)`);
+
     // Classifier + editor (both read the candidate view; run together). The
-    // classifier is chunked: one worker per candidate slice so the 200+
-    // candidates classify in parallel instead of one long sequential session.
+    // classifier is chunked: one worker per candidate slice so the candidates
+    // classify in parallel instead of one long sequential session.
     // The chunk outputs are merged into the single classifications.json the
     // assembler reads. Chunking is deterministic (stable slice of the same
     // candidate array) and each chunk worker still emits the full schema.
     log('[8/9] classifier (chunked) + editor...');
     const CLASSIFIER_CHUNK_SIZE = 60;
     const classifierChunks = [];
-    for (let i = 0; i < view.candidates.length; i += CLASSIFIER_CHUNK_SIZE) {
-      classifierChunks.push(view.candidates.slice(i, i + CLASSIFIER_CHUNK_SIZE));
+    for (let i = 0; i < relevant.length; i += CLASSIFIER_CHUNK_SIZE) {
+      classifierChunks.push(relevant.slice(i, i + CLASSIFIER_CHUNK_SIZE));
     }
     const reducedDir = path.join(runDir, 'reduced');
     const classifierTasks = classifierChunks.map((chunk, index) => {
@@ -1404,7 +1442,7 @@ async function runPipeline(options = {}) {
         schemaFile: path.join(dirs.schemasDir, 'editorial.schema.json'),
         outputFile: path.join(runDir, 'candidate', 'editorial.json'),
         logFile: path.join(runDir, 'logs', 'editorial.log'),
-        runtime: `Candidate view: ${path.join(runDir, 'reduced', 'candidate-view.json')} (the final observed offer state; read it, do not modify it). `
+        runtime: `Candidate view: ${path.join(runDir, 'reduced', 'editorial-view.json')} (the final observed offer state, filtered to display-relevant candidates only; read it, do not modify it). `
           + `Changes preview: ${path.join(runDir, 'reduced', 'changes-preview.json')} (structured before / after values for this run's change records; write change_prose from these values only). `
           + `Coverage: ${path.join(runDir, 'reduced', 'lane-coverage.json')}. `
           + `Discovery: ${path.join(runDir, 'reduced', 'discovery-candidates.json')}. `
@@ -1527,6 +1565,7 @@ module.exports = {
   runCatalogInProcess,
   recoverAbandonedRuns,
   hasSafelyFinalizedPromotion,
+  displayRelevantCandidate,
   // Wall-clock total for the CLI summary (set when runPipeline starts).
   pipelineStartAt: () => module.exports.__pipelineStartAt || 0,
 };

@@ -148,8 +148,23 @@ function buildLaneManifest(options = {}) {
     });
   }
 
+  // known_refresh rotation (operator 2026-08-25): non-catalog providers
+  // refresh on a deterministic multi-day cycle instead of every day, so a
+  // 4-provider set costs 2 sessions/day (1 per parity class) instead of 4.
+  // Freshness stays safe: a provider is re-verified at least every 2 days,
+  // well under the 4-failure caution threshold. Small provider sets
+  // (<= 2) are never rotated: there is no session-count problem to solve.
+  // The parity comes from the run id (deterministic state), not the wall
+  // clock, so the same run id always plans the same half of providers.
+  const knownProviders = [...knownByProvider.keys()].filter((key) => !catalogKeys.has(key)).sort();
+  const paritySeed = String(options.runId || 'initial');
+  const dayParity = [...paritySeed].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % 2;
+  const rotate = knownProviders.length > 2;
+  const knownRotation = new Set(knownProviders.filter((_, index) => !rotate || index % 2 === dayParity));
+
   for (const [providerKey, list] of knownByProvider) {
     if (catalogKeys.has(providerKey)) continue;
+    if (!knownRotation.has(providerKey)) continue;
     const reg = regByKey[providerKey] || {};
     tasks.push({
       task_id: `known:${providerKey}`,

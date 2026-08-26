@@ -1644,6 +1644,10 @@ function listContradictions({ openOnly = false, limit = 200 } = {}, options = {}
 // check list: their historical state is free / ultra-low by definition of
 // how nvidia offers enter this table (the catalog lane admits only free or
 // ultra-low prices).
+// NIM verify candidates: verified (or stale-below-caution) nvidia offers
+// plus free models from the NIM catalog. A deep-stale offer (already in
+// caution, 4+ failures) is excluded: it cannot be published, so a daily
+// browser session re-checking a 404 page is pure waste (operator 2026-08-25).
 function listNimCandidateOffers(options = {}) {
   const database = openCollectorDb(options);
   try {
@@ -1651,6 +1655,7 @@ function listNimCandidateOffers(options = {}) {
       "SELECT provider_key, exact_model_id, canonical_model_id, status, "
       + 'effective_input_price_usd, effective_output_price_usd, price_source_url '
       + "FROM offers WHERE provider_key = 'nvidia' AND status != 'confirmed_removed' "
+      + "AND (status = 'verified' OR consecutive_failures < 4) "
       + 'ORDER BY exact_model_id'
     ).all();
   } finally {
