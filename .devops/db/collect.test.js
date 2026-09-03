@@ -989,3 +989,63 @@ describe('runPiWorker transport (spec 0008 research sessions)', () => {
     assert.match(second, /at most 2 Bash searches/);
   });
 });
+
+describe('deterministic aggregated-index lane wiring', () => {
+  let ctx;
+  beforeEach(() => { ctx = tmpProject(); db.applyMigrations(ctx.options); });
+  afterEach(() => { fs.rmSync(ctx.root, { recursive: true, force: true }); });
+
+  // The lane used to throw inside collect.js ("fetchHtml is not a function"),
+  // which the fail-safe logged as merely "unavailable" and the previous report
+  // survived. Assert the wiring produces a real artifact, not just no crash.
+  it('writes an available aggregated_index artifact through runCatalogInProcess', async () => {
+    const runDir = path.join(ctx.stateDir, 'crawl', 'agg-wiring');
+    const manifest = {
+      tasks: [{
+        task_id: 'aggregated_index:freellm',
+        kind: 'aggregated_index',
+        provider_key: null,
+      }],
+    };
+    const htmlFor = (url) => (
+      /freellm\.net/.test(url)
+        ? '<tr class="model-row" data-name="glm 5.2 (free)" data-provider="OpenRouter" data-provider-slug="openrouter" data-free="1" data-tier-type="permanent" data-verified="1" data-nocard="1" data-nophone="1" data-context="256000"></tr>'
+        : '<!-- BEGIN_QUICK_REF -->\n| Provider | Base URL | Get API Key |\n| OpenRouter | `https://openrouter.ai/api/v1` | <a>key</a> |\n<!-- END_QUICK_REF -->\n'
+    );
+    await collect.runCatalogInProcess(manifest, runDir, {
+      ...ctx.options,
+      aggregatedIndexFetchHtml: async (url) => htmlFor(String(url)),
+    }, silent());
+
+    const artifact = JSON.parse(
+      fs.readFileSync(db.artifactPathFor(runDir, 'aggregated_index:freellm'), 'utf8')
+    );
+    assert.equal(artifact.status, 'complete', `lane failed: ${JSON.stringify(artifact.errors)}`);
+    assert.equal(artifact.available, true);
+    assert.equal(artifact.models.length, 1);
+    assert.equal(artifact.models[0].provider_key, 'openrouter');
+    assert.equal(artifact.base_urls.OpenRouter, 'https://openrouter.ai/api/v1');
+  });
+
+  it('stays fail safe when an aggregated source is unreachable', async () => {
+    const runDir = path.join(ctx.stateDir, 'crawl', 'agg-down');
+    const manifest = {
+      tasks: [{
+        task_id: 'aggregated_index:freellm',
+        kind: 'aggregated_index',
+        provider_key: null,
+      }],
+    };
+    await collect.runCatalogInProcess(manifest, runDir, {
+      ...ctx.options,
+      aggregatedIndexFetchHtml: async () => { throw new Error('network down'); },
+    }, silent());
+
+    const artifact = JSON.parse(
+      fs.readFileSync(db.artifactPathFor(runDir, 'aggregated_index:freellm'), 'utf8')
+    );
+    assert.equal(artifact.available, false);
+    assert.deepEqual(artifact.models, []);
+    assert.ok(artifact.errors.length >= 1);
+  });
+});

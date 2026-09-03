@@ -183,3 +183,56 @@ test('fetchAggregatedIndex marks unavailable when the models source fails', asyn
   assert.strictEqual(art.models.length, 0);
   assert.ok(art.errors.length >= 2);
 });
+// The collect orchestrator passes an options object, like every other
+// deterministic lane. A `{}` argument used to land in the fetchHtml parameter
+// and throw "fetchHtml is not a function", so the lane failed every run while
+// the fail-safe hid it. The fetcher shape is therefore part of the contract.
+const FIXTURE_README = [
+  '<!-- BEGIN_QUICK_REF -->',
+  '| Provider | Base URL | Get API Key |',
+  '| OpenRouter | `https://openrouter.ai/api/v1` | <a>key</a> |',
+  '<!-- END_QUICK_REF -->',
+].join('\n');
+
+const FIXTURE_MODELS = makeModelsHtml([
+  {
+    'name': 'z.ai: glm 5.2 (free)', 'provider': 'OpenRouter',
+    'provider-slug': 'openrouter', 'modality': 'text',
+    'free': '1', 'nocard': '1', 'nophone': '1',
+    'verified': '1', 'tier-type': 'permanent',
+    'context': '256000', 'score': '57', 'released': '0',
+    'description': 'z.ai: glm 5.2 (free) is a free model', 'bestfor': 'chat',
+    'tag': 'unmapped',
+  },
+]);
+
+test('fetchAggregatedIndex takes an options object, matching the other lanes', async () => {
+  const art = await fetchAggregatedIndex({
+    fetchHtml: async (url) => (url === FREELLM_MODELS_URL ? FIXTURE_MODELS : FIXTURE_README),
+  });
+  assert.strictEqual(art.status, 'complete');
+  assert.strictEqual(art.available, true);
+  assert.strictEqual(art.models.length, 1);
+  assert.strictEqual(art.base_urls.OpenRouter, 'https://openrouter.ai/api/v1');
+});
+
+test('an empty options object falls back to the real fetcher, not to a throw', async () => {
+  const originalFetch = globalThis.fetch;
+  const urls = [];
+  globalThis.fetch = async (url) => {
+    urls.push(String(url));
+    const body = String(url) === FREELLM_MODELS_URL ? FIXTURE_MODELS : FIXTURE_README;
+    return { ok: true, text: async () => body };
+  };
+  try {
+    // Exactly the call shape collect.js uses.
+    const art = await fetchAggregatedIndex({});
+    assert.equal(urls.length, 2, 'both sources were fetched');
+    assert.strictEqual(art.status, 'complete');
+    assert.strictEqual(art.available, true);
+    assert.strictEqual(art.errors.length, 0);
+    assert.strictEqual(art.models.length, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

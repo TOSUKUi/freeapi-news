@@ -141,7 +141,19 @@ function parseBaseUrlTable(readme) {
 
 // Fetches both sources (with a shared timeout) and returns the artifact the
 // reducer ingests. `fetchHtml` is injectable for tests.
-async function fetchAggregatedIndex(fetchHtml = defaultFetchHtml) {
+//
+// The fetcher is resolved defensively: every other deterministic lane in
+// collect.js passes an options object, and this lane used to declare a
+// function parameter while its caller passed `{}` — so `fetchHtml(url)` threw
+// "fetchHtml is not a function" and the lane failed silently (fail-safe kept
+// the prior report alive) for every run since it was introduced. Accept the
+// options shape, the bare-function shape used by the tests, and fall back to
+// the real fetcher for anything else, so a signature drift can never again
+// turn a lane into a permanent no-op.
+async function fetchAggregatedIndex(options = {}) {
+  const fetchHtml = typeof options === 'function'
+    ? options
+    : (options && typeof options.fetchHtml === 'function' ? options.fetchHtml : defaultFetchHtml);
   const sources = [
     { key: 'freellm_models', url: FREELLM_MODELS_URL, label: 'freellm.net models' },
     { key: 'freellm_base_urls', url: FREELLM_BASE_URLS_URL, label: 'open-free-llm-api README' },

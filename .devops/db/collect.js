@@ -22,8 +22,9 @@
 // published generation live.
 //
 // Testability: every module call receives `baseOpts` (projectRoot/stateDir),
-// and the pi workers and the catalog fetch are injectable, so the whole
-// pipeline runs against an isolated fixture project with no network and no pi.
+// and the pi workers and the catalog fetch are injectable (`runWorker`,
+// `runCatalog`, `aggregatedIndexFetchHtml`), so the whole pipeline runs
+// against an isolated fixture project with no network and no pi.
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -567,7 +568,9 @@ async function runCatalogInProcess(manifest, runDir, baseOpts, log) {
   for (const task of aggregatedIndexTasks) {
     let artifact;
     try {
-      artifact = await aggregatedIndex.fetchAggregatedIndex({});
+      artifact = await aggregatedIndex.fetchAggregatedIndex({
+        fetchHtml: baseOpts.aggregatedIndexFetchHtml,
+      });
     } catch (err) {
       artifact = {
         schema_version: 1,
