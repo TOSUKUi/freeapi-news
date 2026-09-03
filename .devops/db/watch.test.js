@@ -150,6 +150,18 @@ describe('buildWatchPlan', () => {
     assert.ok(ids.includes('watch:vendor:acme:blog'));
     assert.ok(!ids.some((id) => id === 'watch:vendor:acme:changelog'));
   });
+
+  it('keeps the slash in github repo urls (owner%2Fname 404s on the API)', () => {
+    const wl = {
+      ...WATCHLIST,
+      community: [{ kind: 'github', repos: ['anthropics/claude-code'], orgs: ['OpenRouterTeam'] }],
+    };
+    const plan = watch.buildWatchPlan(wl);
+    const repo = plan.find((t) => t.entity_key === 'community:github:repo:anthropics/claude-code');
+    const org = plan.find((t) => t.entity_key === 'community:github:org:OpenRouterTeam');
+    assert.equal(repo.url, 'https://api.github.com/repos/anthropics/claude-code/releases?per_page=10');
+    assert.equal(org.url, 'https://api.github.com/orgs/OpenRouterTeam/repos?sort=pushed&per_page=10');
+  });
 });
 
 describe('runWatchPhase', () => {
@@ -201,6 +213,51 @@ describe('runWatchPhase', () => {
     assert.equal(result.summary.ok, 0);
     assert.equal(result.summary.fetch_failed, plan.length);
     for (const s of result.signals) assert.equal(s.status, 'fetch_failed');
+  });
+
+  it('http error responses are fetch failures too, not quiet healthy channels', async () => {
+    // 2026-09-03: docs.anthropic.com/models and every reddit feed return 403/404
+    // with an HTML error body. Hashing that body used to make a dead channel look
+    // "unchanged" forever, so the watch lane reported 158/158 ok while silently
+    // seeing nothing.
+    const { runDir } = startWatchRun('run1');
+    await watch.runWatchPhase({
+      runId: 'run1', runDir, baseOpts: options, watchlist: WATCHLIST,
+      fetchImpl: makeFetch(allBodies()).fetchImpl,
+    });
+
+    const { runDir: dir2 } = startWatchRun('run2');
+    const blocked = allBodies({
+      'https://z.ai/changelog': { status: 404, body: '<html>Documentation | Claude</html>' },
+      'https://www.reddit.com/r/LocalLLaMA/new.json?limit=50': { status: 403, body: 'blocked by network security' },
+    });
+    const result = await watch.runWatchPhase({
+      runId: 'run2', runDir: dir2, baseOpts: options, watchlist: WATCHLIST, fetchImpl: makeFetch(blocked).fetchImpl,
+    });
+
+    const byEntity = new Map(result.signals.map((s) => [s.entity_key, s]));
+    assert.equal(byEntity.get('vendor:zai:changelog').status, 'fetch_failed');
+    assert.equal(byEntity.get('vendor:zai:changelog').http_status, 404);
+    assert.equal(byEntity.get('community:reddit:LocalLLaMA').status, 'fetch_failed');
+    assert.equal(byEntity.get('vendor:openai:blog').status, 'unchanged', 'healthy channels are unaffected');
+    assert.equal(result.summary.fetch_failed, 2);
+    assert.deepEqual(result.summary.failing.map((f) => f.entity_key).sort(),
+      ['community:reddit:LocalLLaMA', 'vendor:zai:changelog']);
+    assert.equal(result.summary.failed, 2);
+    // the error page is never recorded as channel content
+    const facts = db.latestWatchFacts(options);
+    const zai = facts.find((f) => f.entity_key === 'vendor:zai:changelog');
+    assert.equal(zai.run_id, 'run1', 'the last good body stays current');
+    assert.ok(!JSON.stringify(zai.facts_json).includes('Claude'));
+
+    // and once the channel recovers, the diff is against the last good body
+    const { runDir: dir3 } = startWatchRun('run3');
+    const recovered = await watch.runWatchPhase({
+      runId: 'run3', runDir: dir3, baseOpts: options, watchlist: WATCHLIST,
+      fetchImpl: makeFetch(allBodies({ 'https://z.ai/changelog': 'zai changelog v2' })).fetchImpl,
+    });
+    const third = new Map(recovered.signals.map((s) => [s.entity_key, s]));
+    assert.equal(third.get('vendor:zai:changelog').status, 'changed');
   });
 });
 

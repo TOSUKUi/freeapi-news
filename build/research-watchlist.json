@@ -47,7 +47,7 @@
         "x": "https://x.com/AnthropicAI",
         "changelog": "https://docs.anthropic.com/en/release-notes",
         "pricing": "https://www.anthropic.com/pricing",
-        "model_catalog": "https://docs.anthropic.com/en/api/models-overview",
+        "model_catalog": "https://docs.claude.com/en/api/models/list",
         "hf_org": null,
         "github_orgs": [
           "anthropics"
@@ -544,7 +544,7 @@
         "anthropics/claude-code"
       ],
       "orgs": [
-        "openrouter",
+        "OpenRouterTeam",
         "deepseek-ai"
       ]
     }

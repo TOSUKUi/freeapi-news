@@ -883,6 +883,17 @@ async function runPipeline(options = {}) {
       log(`  watch: ${watchResult.summary.ok}/${watchResult.summary.channels} ok, `
         + `${watchResult.summary.changed} changed, ${watchResult.summary.first_seen} first seen, `
         + `${watchResult.summary.fetch_failed} fetch failed`);
+      const failingChannels = watchResult.summary.failing || [];
+      if (failingChannels.length > 0) {
+        // A channel that is permanently gone also logs "0 changed" every day, so
+        // name the failing ones here — this is the only place a dead source is
+        // distinguishable from a quiet day.
+        const shown = failingChannels.slice(0, 8)
+          .map((f) => `${f.entity_key}(http ${f.http_status ?? 'n/a'})`).join(', ');
+        const more = failingChannels.length > 8
+          ? `, +${failingChannels.length - 8} more` : '';
+        log(`  WARNING: ${failingChannels.length} watch channel(s) erroring: ${shown}${more}`);
+      }
       markPhase('watch fetch done');
     } else {
       log('[3/9] watch fetch: no watch channels, skipped');

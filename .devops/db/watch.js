@@ -42,6 +42,13 @@ function watchlistPathFor(baseOpts = {}) {
   return path.join(projectRoot, 'build', 'research-watchlist.json');
 }
 
+// Encode a GitHub `owner/name` path without escaping the separator: encoding the
+// whole string turns `owner/name` into `owner%2Fname`, which the REST API answers
+// with 404 (silent until 2026-09-03 audit: every community repo channel was dead).
+function githubPath(value) {
+  return String(value).split('/').map((part) => encodeURIComponent(part)).join('/');
+}
+
 // Builds the deterministic watch task plan from the watchlist. Every channel
 // becomes one task; the task id is stable so artifact names and watch_facts
 // entity keys stay comparable across runs.
@@ -82,7 +89,7 @@ function buildWatchPlan(watchlist) {
             domain: 'vendor_channel',
             entity_key: `vendor:${vendor.key}:github:${name}`,
             channel: 'github_orgs',
-            url: `https://api.github.com/orgs/${encodeURIComponent(name)}/repos?sort=pushed&per_page=10`,
+            url: `https://api.github.com/orgs/${githubPath(name)}/repos?sort=pushed&per_page=10`,
             watchlist_ref: `vendors.${vendor.key}.channels.github_orgs`,
           });
         }
@@ -130,7 +137,7 @@ function buildWatchPlan(watchlist) {
           domain: 'community',
           entity_key: `community:github:repo:${repo}`,
           channel: 'github',
-          url: `https://api.github.com/repos/${encodeURIComponent(repo)}/releases?per_page=10`,
+          url: `https://api.github.com/repos/${githubPath(repo)}/releases?per_page=10`,
           watchlist_ref: 'community.github',
         });
       }
@@ -140,7 +147,7 @@ function buildWatchPlan(watchlist) {
           domain: 'community',
           entity_key: `community:github:org:${org}`,
           channel: 'github',
-          url: `https://api.github.com/orgs/${encodeURIComponent(org)}/repos?sort=pushed&per_page=10`,
+          url: `https://api.github.com/orgs/${githubPath(org)}/repos?sort=pushed&per_page=10`,
           watchlist_ref: 'community.github',
         });
       }
@@ -336,14 +343,20 @@ async function fetchWatchTask(task, options = {}) {
   };
   try {
     const { ok, status, body } = await fetchWithRetry(task.url, options.fetchImpl);
-    if (!ok && status < 200) {
+    // Any non-2xx response is a fetch failure, not content: a 403 bot-block page
+    // or a 404 "not found" page has text too, and hashing that text made a dead
+    // channel look "unchanged forever" (2026-09-03 incident: docs.anthropic.com
+    // /models had moved to /docs and stayed a permanent 404). Recording no fact
+    // keeps the last good row current, so the channel diffs against the last
+    // real body when it recovers.
+    if (!ok) {
       return { ...base, status: 'failed', http_status: status, content_hash: null,
         errors: [`http ${status}`] };
     }
     const content = normalizeContent(body);
     return {
       ...base,
-      status: ok ? 'complete' : 'partial',
+      status: 'complete',
       http_status: status,
       content_type: content.content_type,
       content_hash: content.content_hash,
@@ -441,6 +454,11 @@ async function runWatchPhase(options = {}) {
     changed: signals.filter((s) => s.status === 'changed').length,
     first_seen: signals.filter((s) => s.status === 'first_seen').length,
     fetch_failed: signals.filter((s) => s.status === 'fetch_failed').length,
+    // Which channels are down, with the HTTP status. Surfaced as run warnings so
+    // a channel that dies is visible in the envelope instead of silently
+    // reporting zero changes forever.
+    failing: signals.filter((s) => s.status === 'fetch_failed')
+      .map((s) => ({ entity_key: s.entity_key, url: s.url, http_status: s.http_status })),
   };
   fs.writeFileSync(path.join(reducedDir, 'watch-signals.json'),
     `${JSON.stringify({ ...summary, signals }, null, 2)}\n`);
