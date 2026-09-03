@@ -377,11 +377,14 @@ function main() {
           .filter((value) => value && value !== 'unknown_benchmark'),
       };
       collect.runPipeline(options).then((result) => {
-        const started = Date.now() - collect.pipelineStartAt();
+        // pipelineStartAt() is a millisecond timestamp, so the elapsed value has
+        // to be divided down: logging raw ms as "wall_seconds" overstated every
+        // run's duration by 1000x (e.g. 1221842 for a 1222s run).
+        const wallSeconds = Math.round((Date.now() - collect.pipelineStartAt()) / 1000);
         console.log(JSON.stringify({
           run_id: result.runId,
           mode: options.dryRun ? 'dry-run' : options.push ? 'full' : 'collect',
-          wall_seconds: started,
+          wall_seconds: wallSeconds,
           promoted: result.promoted,
           deployed: result.deployed,
           can_promote: result.canPromote,
