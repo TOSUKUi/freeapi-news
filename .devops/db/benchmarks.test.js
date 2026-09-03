@@ -168,6 +168,162 @@ test('bulk leaderboard parser fetches each official version once and matches que
   assert.equal(result.changes.every((change) => change.facts_json.origin === 'benchmark_bulk'), true);
 });
 
+// The official pages render their tables client-side, so the lane reads the
+// same structured row set the page loads. A stubbed structured read shows the
+// whole path, including the row filters and the citation URL.
+const BULK_JSON_21 = JSON.stringify({
+  leaderboard: { name: 'main', title: 'Terminal-Bench 2.1', package: 'terminal-bench/terminal-bench-2-1' },
+  entries: [],
+  rows: [
+    {
+      entry_id: 'e1',
+      entry_hash: 'h1',
+      rank: 1,
+      status: 'display',
+      metadata: {
+        model_display: { label: 'GPT-5.5', url: 'https://example.test/gpt-5.5' },
+        agent_display: { label: 'Terminus 3', url: null },
+        reasoning_effort: 'xhigh',
+        display_date: '2026-07-09',
+        model_org: 'OpenAI',
+        agent_org: 'Terminal-Bench',
+      },
+      metrics: { display_accuracy: '83.8% ± 1.9%', accuracy: 83.82 },
+    },
+    {
+      entry_id: 'e2',
+      rank: 2,
+      status: 'hidden_duplicate',
+      metadata: { model_display: { label: 'GPT-5.5' } },
+      metrics: { accuracy: 80 },
+    },
+    { entry_id: 'e3', rank: 3, status: 'display', metadata: { model_display: { label: 'NoScore' } }, metrics: {} },
+  ],
+});
+
+const BULK_JSON_20 = JSON.stringify({
+  leaderboard: { name: '2-0', title: 'Terminal-Bench 2.0', package: 'terminal-bench/terminal-bench-2' },
+  rows: [
+    {
+      entry_id: 'e4',
+      rank: 2,
+      status: 'display',
+      metadata: {
+        model_display: 'ACME Model',
+        agent_display: 'Codex',
+        display_date: '2026-07-13',
+        model_org: 'ACME',
+        agent_org: 'OpenAI',
+      },
+      metrics: { display_accuracy: '61.5% ± 2.9', accuracy: 61.54 },
+    },
+  ],
+});
+
+test('benchmark bulk lane reads the structured leaderboard the page itself loads', async () => {
+  const ctx = tmpProject();
+  try {
+    setup(ctx);
+    seedOffers(ctx, [
+      offerSeed({ canonical_model_id: 'openai/gpt-5.5', exact_model_id: 'openai/gpt-5.5', facts_json: { model_name: 'GPT-5.5' } }),
+      offerSeed({ canonical_model_id: 'acme/acme-model', exact_model_id: 'acme/acme-model', facts_json: { model_name: 'ACME Model' } }),
+    ], 'seed-bulk-offers');
+    const queue = benchmarks.buildBenchmarkQueue(ctx.options);
+    const result = await benchmarks.collectBulkBenchmarkFacts(queue, {
+      ...ctx.options,
+      fetchImpl: async (url, init = {}) => {
+        if (String(init.method || '') === 'POST') {
+          const requested = JSON.parse(init.body).name;
+          return { status: 200, url, body: requested === 'main' ? BULK_JSON_21 : BULK_JSON_20 };
+        }
+        return { status: 500, url, headers: { get: () => null }, body: '' };
+      },
+    });
+    assert.equal(result.fetches.length, 2);
+    assert.deepEqual([...new Set(result.fetches.map((entry) => entry.mode))], ['structured_read']);
+    assert.equal(result.fetches.find((entry) => entry.url.endsWith('/2.1')).status, 200);
+    // hidden duplicates and score-less rows never become candidate facts
+    assert.equal(result.rows.length, 2);
+    assert.deepEqual(
+      result.rows.map((row) => `${row.model_name}/${row.effort || '-'}`).sort(),
+      ['ACME Model/-', 'GPT-5.5/xhigh']
+    );
+    assert.equal(result.accepted.length, 2);
+    assert.equal(result.changes.length, 2);
+    const gpt = result.changes.find((change) => change.canonical_model_id === 'openai/gpt-5.5');
+    assert.equal(gpt.score, 83.8);
+    // the citation stays the human-readable leaderboard page, not the data endpoint
+    assert.equal(gpt.source_url, 'https://www.tbench.ai/leaderboard/terminal-bench/2.1');
+    assert.equal(
+      gpt.source_hash,
+      result.fetches.find((f) => f.url.endsWith('/2.1')).body_hash,
+      'the accepted row is bound to the hash of the body it was read from'
+    );
+    assert.equal(
+      gpt.facts_json.leaderboard_row.row_text.includes('83.8%'),
+      true,
+      'the rendered evidence body must contain the row it claims'
+    );
+    assert.equal(gpt.facts_json.leaderboard_row.model_url, 'https://example.test/gpt-5.5');
+    assert.deepEqual(result.searchChanges.map((change) => change.result).sort(), ['found', 'found']);
+  } finally { fs.rmSync(ctx.root, { recursive: true, force: true }); }
+});
+
+test('bulk lane falls back to the served HTML table when the structured read fails', async () => {
+  const ctx = tmpProject();
+  try {
+    setup(ctx);
+    seedOffers(ctx, [
+      offerSeed({ canonical_model_id: 'openai/gpt-5.5', exact_model_id: 'openai/gpt-5.5', facts_json: { model_name: 'GPT-5.5' } }),
+      offerSeed({ canonical_model_id: 'acme/acme-model', exact_model_id: 'acme/acme-model', facts_json: { model_name: 'ACME Model' } }),
+    ], 'seed-bulk-offers');
+    const queue = benchmarks.buildBenchmarkQueue(ctx.options);
+    const result = await benchmarks.collectBulkBenchmarkFacts(queue, {
+      ...ctx.options,
+      fetchImpl: async (url, init = {}) => {
+        if (String(init.method || '') === 'POST') return { status: 500, url, body: '' };
+        return { status: 200, url, headers: { get: () => null }, body: url.endsWith('/2.1') ? BULK_FIXTURE_21 : BULK_FIXTURE_20 };
+      },
+    });
+    assert.equal(result.fetches.length, 2);
+    assert.deepEqual([...new Set(result.fetches.map((entry) => entry.mode))], ['page_fallback']);
+    assert.equal(result.fetches.every((entry) => /HTTP 500/.test(entry.api_error)), true);
+    assert.equal(result.accepted.length, 2);
+    assert.deepEqual(result.changes.map((change) => change.score).sort((a, b) => a - b), [61.5, 83.1]);
+  } finally { fs.rmSync(ctx.root, { recursive: true, force: true }); }
+});
+
+test('bulk lane refuses a structured payload that is not the requested leaderboard', async () => {
+  const ctx = tmpProject();
+  try {
+    setup(ctx);
+    seedOffers(ctx, [
+      offerSeed({ canonical_model_id: 'openai/gpt-5.5', exact_model_id: 'openai/gpt-5.5', facts_json: { model_name: 'GPT-5.5' } }),
+    ], 'seed-bulk-offers');
+    const queue = benchmarks.buildBenchmarkQueue(ctx.options);
+    const result = await benchmarks.collectBulkBenchmarkFacts(queue, {
+      ...ctx.options,
+      fetchImpl: async (url, init = {}) => {
+        if (String(init.method || '') === 'POST') {
+          return { status: 200, url, body: JSON.stringify({ leaderboard: { name: 'something-else' }, rows: [] }) };
+        }
+        return { status: 200, url, headers: { get: () => null }, body: url.endsWith('/2.1') ? BULK_FIXTURE_21 : '<html><tbody></tbody></html>' };
+      },
+    });
+    const twoOne = result.fetches.find((entry) => entry.url.endsWith('/2.1'));
+    assert.equal(twoOne.mode, 'page_fallback');
+    assert.match(twoOne.api_error, /expected "main"/);
+    assert.equal(result.accepted.length, 1, 'the page fallback still supplies the 2.1 row');
+  } finally { fs.rmSync(ctx.root, { recursive: true, force: true }); }
+});
+
+test('bulk score parsing never rounds a sub-50 score up to a publishable 50', () => {
+  assert.equal(benchmarks.bulkRowScore({ display_accuracy: '83.8% ± 1.9%', accuracy: 83.82 }), 83.8);
+  assert.equal(benchmarks.bulkRowScore({ accuracy: 49.96 }), 49.9);
+  assert.equal(benchmarks.bulkRowScore({}), null);
+  assert.equal(benchmarks.bulkRowScore(null), null);
+});
+
 // Starts a run whose manifest mirrors the benchmark queue chunks, so scout
 // artifacts carry real assigned model ids.
 function startScoutRun(ctx, runId) {

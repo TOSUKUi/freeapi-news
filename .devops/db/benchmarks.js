@@ -85,18 +85,31 @@ const UNKNOWN_VERSION_VALUES = new Set([
 // page once is both faster and safer than asking one LLM worker per model to
 // rediscover the same rows. Unmatched aliases remain in the targeted scout
 // queue for exceptional cases.
+//
+// Since the 2026-08 tbench.ai redesign the served HTML contains only skeleton
+// rows (the table is rendered client-side), so the lane reads the same official
+// row set through the read endpoint the page itself calls, and keeps the
+// human-readable page as the citation an offer carries. The served HTML table
+// stays as a fallback. `url` is what an offer cites; `api_*` is where rows come
+// from.
 const BULK_LEADERBOARD_SOURCES = Object.freeze([
   {
     benchmark_key: 'terminal_bench_2_1',
     display_name: 'Terminal-Bench 2.1',
     version: '2.1',
     url: 'https://www.tbench.ai/leaderboard/terminal-bench/2.1',
+    api_url: 'https://ofhuhcpkvzjlejydnvyd.supabase.co/functions/v1/leaderboard-read',
+    api_package: 'terminal-bench/terminal-bench-2-1',
+    api_leaderboard: 'main',
   },
   {
     benchmark_key: 'terminal_bench_2_0',
     display_name: 'Terminal-Bench 2.0',
     version: '2.0',
     url: 'https://www.tbench.ai/leaderboard/terminal-bench/2.0',
+    api_url: 'https://ofhuhcpkvzjlejydnvyd.supabase.co/functions/v1/leaderboard-read',
+    api_package: 'terminal-bench/terminal-bench-2',
+    api_leaderboard: '2-0',
   },
 ]);
 
@@ -385,6 +398,157 @@ function htmlLinks(value) {
     .map((match) => decodeHtml(match[1]));
 }
 
+// Leaderboard row metadata arrives in two shapes: the 2.1 leaderboard nests
+// {label,url} objects, the 2.0 leaderboard uses plain strings. Read either.
+function bulkLabel(value) {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  if (value && typeof value === 'object' && typeof value.label === 'string' && value.label.trim()) {
+    return value.label.trim();
+  }
+  return null;
+}
+
+// Score from one structured row: prefer the figure the leaderboard itself
+// displays, otherwise the raw accuracy. Never rounded up — a model at 49.96
+// must not become a publishable 50.
+function bulkRowScore(metrics) {
+  if (!metrics || typeof metrics !== 'object') return null;
+  const displayed = typeof metrics.display_accuracy === 'string'
+    ? metrics.display_accuracy.match(/(-?\d+(?:\.\d+)?)/)?.[1] : null;
+  const value = displayed !== undefined && displayed !== null ? Number(displayed) : Number(metrics.accuracy);
+  if (!Number.isFinite(value)) return null;
+  return Math.floor(value * 10) / 10;
+}
+
+// Structured rows for one official leaderboard, in the same shape the HTML table
+// parser produced: the model label alone, effort as its own field. The alias
+// matchers below depend on that — a model published under several efforts is one
+// canonical model — and rows arrive in rank order, so the first match for an
+// offer is its best-scoring entry.
+function parseBulkLeaderboardJson(payload, source) {
+  if (!payload || typeof payload !== 'object' || !Array.isArray(payload.rows)) return null;
+  const rows = [];
+  for (const entry of payload.rows) {
+    if (!entry || typeof entry !== 'object') continue;
+    if (typeof entry.status === 'string' && entry.status !== 'display') continue;
+    const meta = (entry.metadata && typeof entry.metadata === 'object') ? entry.metadata : {};
+    const label = bulkLabel(meta.model_display);
+    const score = bulkRowScore(entry.metrics);
+    const rank = Number.parseInt(entry.rank, 10);
+    if (!label || score === null || !Number.isInteger(rank)) continue;
+    const effort = typeof meta.reasoning_effort === 'string' && meta.reasoning_effort.trim() ? meta.reasoning_effort.trim() : null;
+    const row = {
+      rank,
+      agent: bulkLabel(meta.agent_display),
+      model_name: label,
+      model_url: (meta.model_display && typeof meta.model_display === 'object' && typeof meta.model_display.url === 'string')
+        ? meta.model_display.url : null,
+      effort,
+      score,
+      date: bulkLabel(meta.display_date) || bulkLabel(meta.date),
+      agent_org: bulkLabel(meta.agent_org),
+      model_org: bulkLabel(meta.model_org),
+      benchmark_key: source.benchmark_key,
+      display_name: source.display_name,
+      version: source.version,
+      source_url: source.url,
+    };
+    row.row_text = [row.rank, row.model_name, row.agent, row.effort, `${row.score}%`, row.date,
+      row.model_org, row.agent_org, row.model_url].filter((v) => v !== null && v !== undefined).join(' | ');
+    rows.push(row);
+  }
+  return rows;
+}
+
+// Text rendering of the structured rows. It is both the evidence body — the
+// evidence audit requires the model, the benchmark version and the score to be
+// present in the fetched body — and the hashed artifact, so the row text above
+// literally appears inside it. The title line carries the benchmark family and
+// the version, which is what bodyConfirmsBenchmark checks.
+function renderBulkLeaderboardBody(source, payload, rows) {
+  const title = (payload.leaderboard && typeof payload.leaderboard.title === 'string' && payload.leaderboard.title.trim())
+    ? payload.leaderboard.title.trim() : source.display_name;
+  return `${[
+    `${title} official leaderboard (${source.url})`,
+    'RANK | MODEL | AGENT | EFFORT | SCORE | DATE | MODEL ORG | AGENT ORG | MODEL URL',
+    ...rows.map((row) => row.row_text),
+  ].join('\n')}\n`;
+}
+
+// One leaderboard: the structured read endpoint first, the served HTML table as
+// fallback. Returns the rows plus the body and hash the evidence audit uses.
+async function fetchBulkLeaderboard(source, options = {}) {
+  const { fetchEvidence } = require('./evidence');
+  const { createHash } = require('node:crypto');
+  const timeoutMs = Math.max(1, Math.min(60000, Number(options.timeoutMs) || 15000));
+  const maxBodyBytes = Math.max(1024, Number(options.maxBodyBytes) || 3 * 1024 * 1024);
+  let apiError = null;
+  try {
+    const fetchImpl = options.fetchImpl || globalThis.fetch;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let response;
+    try {
+      response = await fetchImpl(source.api_url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({ package: source.api_package, name: source.api_leaderboard }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+    const status = Number(response && response.status);
+    const text = typeof response?.text === 'function' ? await response.text()
+      : (typeof response?.body === 'string' ? response.body : '');
+    if (!(status >= 200 && status <= 299)) {
+      apiError = `structured read returned HTTP ${Number.isFinite(status) ? status : 'unknown'}`;
+    } else if (Buffer.byteLength(text, 'utf8') > maxBodyBytes) {
+      apiError = `structured read body exceeded ${maxBodyBytes} bytes`;
+    } else {
+      const payload = JSON.parse(text);
+      const announced = (payload && payload.leaderboard && typeof payload.leaderboard.name === 'string')
+        ? payload.leaderboard.name : null;
+      if (announced && announced !== source.api_leaderboard) {
+        apiError = `structured read returned leaderboard ${JSON.stringify(announced)}, expected ${JSON.stringify(source.api_leaderboard)}`;
+      } else {
+        const rows = parseBulkLeaderboardJson(payload, source);
+        if (!rows) apiError = 'structured read is not a leaderboard row list';
+        else if (rows.length === 0) apiError = 'structured read contained no usable rows';
+        else {
+          const body = renderBulkLeaderboardBody(source, payload, rows);
+          return {
+            ok: true, mode: 'structured_read', final_url: source.url, status, body,
+            body_hash: createHash('sha256').update(body).digest('hex'), rows,
+          };
+        }
+      }
+    }
+  } catch (err) {
+    apiError = `structured read failed: ${(err && err.message) || String(err)}`;
+  }
+
+  const page = await fetchEvidence(source.url, {
+    fetchImpl: options.fetchImpl,
+    timeoutMs,
+    attempts: options.attempts || 1,
+    maxRedirects: 3,
+    maxBodyBytes,
+  });
+  if (!page.ok) {
+    return {
+      ok: false, mode: 'page_fallback', final_url: page.final_url, status: page.status,
+      body: '', body_hash: null, rows: [],
+      error: `${apiError}; page fallback: ${page.error || 'leaderboard fetch failed'}`,
+    };
+  }
+  return {
+    ok: true, mode: 'page_fallback', final_url: page.final_url, status: page.status,
+    body: page.body, body_hash: page.body_hash, rows: parseLeaderboardRows(page.body, source),
+    api_error: apiError,
+  };
+}
+
 function parseLeaderboardRows(body, source) {
   const tbody = String(body || '').match(/<tbody\b[^>]*>([\s\S]*?)<\/tbody>/i)?.[1] || String(body || '');
   const rawRows = [...tbody.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map((match) => match[1]);
@@ -473,18 +637,11 @@ function chooseBulkRow(rows, entry) {
 // directly accept only unambiguous rows for queued models. The source body is
 // still passed through the same evidence validator used by scout proposals.
 async function collectBulkBenchmarkFacts(queueResult, options = {}) {
-  const { fetchEvidence } = require('./evidence');
   const sourceBodies = new Map();
   const sourceHashes = new Map();
   const fetches = [];
-  const responses = await Promise.all(BULK_LEADERBOARD_SOURCES.map((source) =>
-    fetchEvidence(source.url, {
-      fetchImpl: options.fetchImpl,
-      timeoutMs: options.timeoutMs || 15000,
-      attempts: options.attempts || 1,
-      maxRedirects: 3,
-      maxBodyBytes: options.maxBodyBytes || 3 * 1024 * 1024,
-    }).then((result) => ({ source, result }))
+  const responses = await Promise.all(BULK_LEADERBOARD_SOURCES.map(
+    (source) => fetchBulkLeaderboard(source, options).then((result) => ({ source, result }))
   ));
   const rows = [];
   const errors = [];
@@ -492,9 +649,11 @@ async function collectBulkBenchmarkFacts(queueResult, options = {}) {
     fetches.push({
       url: source.url,
       ok: result.ok,
+      mode: result.mode,
       final_url: result.final_url,
       status: result.status,
       body_hash: result.body_hash,
+      api_error: result.api_error || null,
       error: result.error || null,
     });
     if (!result.ok) {
@@ -503,7 +662,7 @@ async function collectBulkBenchmarkFacts(queueResult, options = {}) {
     }
     sourceBodies.set(source.url, result.body);
     sourceHashes.set(source.url, result.body_hash);
-    rows.push(...parseLeaderboardRows(result.body, source));
+    rows.push(...result.rows);
   }
 
   const existing = loadCurrentBenchmarks(options).byModel;
@@ -1297,6 +1456,10 @@ module.exports = {
   buildBenchmarkQueue,
   BULK_LEADERBOARD_SOURCES,
   parseLeaderboardRows,
+  parseBulkLeaderboardJson,
+  renderBulkLeaderboardBody,
+  fetchBulkLeaderboard,
+  bulkRowScore,
   collectBulkBenchmarkFacts,
   writeBenchmarkQueue,
   validateProposalShape,
