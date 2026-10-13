@@ -124,8 +124,8 @@ function selectCandidates(models = [], recheckModelIds = new Set(), { limit = MA
     const ra = a && a.usage && Number.isInteger(a.usage.rank) ? a.usage.rank : Number.MAX_SAFE_INTEGER;
     const rb = b && b.usage && Number.isInteger(b.usage.rank) ? b.usage.rank : Number.MAX_SAFE_INTEGER;
     if (ra !== rb) return ra - rb;
-    const ba = typeof a && a.blendedMin === 'number' ? a.blendedMin : Number.MAX_SAFE_NUMBER;
-    const bb = typeof b && b.blendedMin === 'number' ? b.blendedMin : Number.MAX_SAFE_NUMBER;
+    const ba = a && typeof a.blendedMin === 'number' ? a.blendedMin : Number.MAX_SAFE_NUMBER;
+    const bb = b && typeof b.blendedMin === 'number' ? b.blendedMin : Number.MAX_SAFE_NUMBER;
     return ba - bb;
   };
   const discounted = models

@@ -1680,3 +1680,38 @@ test('price index lane keeps a verified discount when the model page is absent f
   });
   assert.equal(offerRow(ctx, 'vercel', 'openai/gpt-5.6-sol').status, 'verified');
 });
+
+// 2026-10-13 regression. The index publishes models it holds no official (lab)
+// price for with `reference: null`. The reduce guard read `.input` off that null
+// (`typeof null === 'object'` is truthy), so the throw propagated out of the
+// reduce and the whole daily run died before the candidate was built - 36
+// consecutive days of a frozen published report.
+test('price index lane survives models whose official reference is unknown', (t) => {
+  const ctx = tmpProject();
+  t.after(() => fs.rmSync(ctx.root, { recursive: true, force: true }));
+  setup(ctx);
+  db.upsertModel('openai/gpt-5.6-sol', { name: 'GPT-5.6 Sol', frontier: true }, ctx.options);
+  db.upsertModel('deepseek/deepseek-v4-pro', { name: 'DeepSeek V4 Pro', frontier: true }, ctx.options);
+  const artifact = priceIndexArtifact();
+  artifact.index_model_count = 2;
+  // A cheap quote against no official baseline: unprovable, so it must be
+  // skipped, not treated as a discount and not crash the lane.
+  artifact.models.push({
+    model_id: 'deepseek/deepseek-v4-pro',
+    name: 'DeepSeek V4 Pro',
+    lab: 'deepseek',
+    url: 'https://llmpricing.dev/m/deepseek%2Fdeepseek-v4-pro/',
+    release_date: '2026-09-01',
+    usage_rank: 2,
+    reference: null,
+    cheapest: { provider: 'vercel', input: 1.2, output: 4, official: false },
+    quotes: [
+      { provider: 'vercel', modelId: 'deepseek/deepseek-v4-pro', input: 1.2, output: 4, official: false, context: 200000 },
+    ],
+  });
+  runCycle(ctx, 'run-pi-nullref', { 'price_index:llmpricing': artifact });
+  // The unpriceable model never becomes an offer...
+  assert.equal(offerRow(ctx, 'vercel', 'deepseek/deepseek-v4-pro'), null);
+  // ...and the models the index does price still flow through.
+  assert.equal(offerRow(ctx, 'vercel', 'openai/gpt-5.6-sol').status, 'verified');
+});

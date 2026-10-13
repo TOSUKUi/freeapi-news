@@ -1264,8 +1264,13 @@ function reduceLanes(runId, runDir, options = {}) {
         if (!model || typeof model.model_id !== 'string') continue;
         coverage.price_index.models += 1;
         const ref = model.reference;
-        const refIn = typeof ref && typeof ref.input === 'number' ? ref.input : null;
-        const refOut = typeof ref && typeof ref.output === 'number' ? ref.output : null;
+        // A model the index has no official (lab) price for carries reference:
+        // null. That is not a discount candidate - and the guard has to test the
+        // value, not `typeof`, because `typeof null === 'object'` is truthy:
+        // reading `.input` off it threw and killed the whole daily run before
+        // the reduce phase, which left the published report frozen for 36 days.
+        const refIn = ref && typeof ref.input === 'number' ? ref.input : null;
+        const refOut = ref && typeof ref.output === 'number' ? ref.output : null;
         if (refIn === null && refOut === null) continue; // no official baseline
         if (!priceIndexQualifies(model.model_id)) continue;
         const seenProviders = new Map();
