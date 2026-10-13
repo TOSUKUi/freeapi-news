@@ -43,18 +43,27 @@ function fixturePath(name) {
 // freellm.net models table
 // ---------------------------------------------------------------------------
 
-// Parses the <tr class="model-row" data-...> rows. Attribute values are
-// HTML-entity decoded; missing integer fields become null, missing strings
-// become null. Rows that lack data-name are ignored.
+// Parses the model rows (`<tr class="model-row ..." data-...>`). Attribute values
+// are HTML-entity decoded; missing integer fields become null, missing strings
+// become null. Rows that lack data-name or data-provider are ignored.
+//
+// The row's class list has drifted once already - the live page now emits
+// `class="model-row clickable-row"` with a leading data-href - so match the
+// token inside the class attribute rather than a literal prefix. Matching the
+// prefix exactly made the parser return 0 rows from a page carrying 294, and the
+// lane reported `complete` with nothing inside for weeks.
 function parseFreeLlmModels(html) {
   const rows = [];
-  const re = /<tr class="model-row"([^>]*)>/g;
+  const re = /<tr\b([^>]*)>/gi;
   let match;
   while ((match = re.exec(html)) !== null) {
+    const tag = match[1];
+    const cls = /\bclass="([^"]*)"/i.exec(tag);
+    if (!cls || !cls[1].split(/[\s]+/).includes('model-row')) continue;
     const attrs = {};
     const attrRe = /(data-[a-z0-9-]+)="([^"]*)"/g;
     let am;
-    while ((am = attrRe.exec(match[1])) !== null) {
+    while ((am = attrRe.exec(tag)) !== null) {
       attrs[am[1]] = decodeEntities(am[2]);
     }
     const name = attrs['data-name'];
@@ -179,6 +188,12 @@ async function fetchAggregatedIndex(options = {}) {
   if (bodies.freellm_base_urls) {
     try {
       baseUrls = parseBaseUrlTable(bodies.freellm_base_urls);
+      // Same rule as the models table: markers present but no rows means the
+      // table format changed, which is an error, not a quiet day.
+      if (Object.keys(baseUrls).length === 0) {
+        errors.push('freellm_base_urls parse: 0 base URLs parsed'
+          + (bodies.freellm_base_urls.includes('BEGIN_QUICK_REF') ? ' (markers present)' : ' (markers missing)'));
+      }
     } catch (err) {
       errors.push(`freellm_base_urls parse: ${err.message}`);
     }
@@ -188,6 +203,14 @@ async function fetchAggregatedIndex(options = {}) {
   if (bodies.freellm_models) {
     try {
       const rows = parseFreeLlmModels(bodies.freellm_models);
+      // The hub always carries rows, so zero is either an empty page or a markup
+      // change. Both have to be errors: this lane used to write `complete` with
+      // 0 models while the page listed 294 free rows, and nothing downstream
+      // could tell a dead parser from a quiet day.
+      if (rows.length === 0) {
+        const markers = (bodies.freellm_models.match(/model-row/g) || []).length;
+        errors.push(`freellm_models parse: 0 rows parsed (${markers} model-row markers on the page)`);
+      }
       for (const r of rows) {
         // Project the hub row onto the crawl-facts models[] shape so the
         // discovery lane reduces it identically to news_scan / vendor dives.
@@ -237,7 +260,10 @@ async function fetchAggregatedIndex(options = {}) {
     kind: 'aggregated_index',
     provider_key: null,
     crawled_at: new Date().toISOString(),
-    status: available ? 'complete' : 'failed',
+    // A source that was fetched but yielded nothing parseable is not `complete`:
+    // the lane logged ✅ with 0 models for weeks because status only tracked the
+    // HTTP fetch.
+    status: available ? (errors.length > 0 ? 'partial' : 'complete') : 'failed',
     available,
     source_urls: {
       freellm_models: FREELLM_MODELS_URL,

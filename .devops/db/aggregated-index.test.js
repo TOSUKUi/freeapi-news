@@ -236,3 +236,44 @@ test('an empty options object falls back to the real fetcher, not to a throw', a
     globalThis.fetch = originalFetch;
   }
 });
+
+// 2026-10-13. The live rows are `<tr class="model-row clickable-row" data-href=…
+// … data-astro-cid-…>`: the class list grew a second token and the attribute
+// order changed. The old parser matched the literal prefix `<tr class="model-row"`
+// and returned nothing, so the lane wrote status `complete` with 0 models while
+// the page carried 294 free-flagged rows.
+test('parseFreeLlmModels matches the class token, not a literal class prefix', () => {
+  const liveRow = '<tr class="model-row clickable-row" data-href="/models/nvidia-nim/z-ai-glm-5-3"'
+    + ' style="cursor:pointer" data-name="z-ai/glm-5.3" data-provider="NVIDIA NIM"'
+    + ' data-provider-slug="nvidia-nim" data-modality="text,reasoning" data-free="1"'
+    + ' data-nocard="1" data-description="flagship glm model" data-bestfor="chat"'
+    + ' data-verified="1" data-nophone="0" data-tag="unmapped" data-score="95"'
+    + ' data-context="1048576" data-released="1787011200000" data-tier-type="permanent"'
+    + ' data-astro-cid-npjum5in><td>z-ai/glm-5.3</td></tr>';
+  const rows = parseFreeLlmModels(liveRow);
+  assert.strictEqual(rows.length, 1);
+  assert.strictEqual(rows[0].name, 'z-ai/glm-5.3');
+  assert.strictEqual(rows[0].provider_slug, 'nvidia-nim');
+  assert.strictEqual(rows[0].free, true);
+  assert.strictEqual(rows[0].context_tokens, 1048576);
+  // A row whose class merely starts with the token is not a model row.
+  assert.strictEqual(parseFreeLlmModels('<tr class="model-row-x"><td>x</td></tr>').length, 0);
+  // ...and an unrelated table row is still skipped.
+  assert.strictEqual(parseFreeLlmModels('<tr class="other"><td>x</td></tr>').length, 0);
+});
+
+test('a models page that yields no rows is reported as an error, not as success', async () => {
+  const redesign = '<html><table><tbody>'
+    // A redesign that dropped the data-* contract: the rows are still there,
+    // the parser still finds nothing.
+    + '<tr class="model-row clickable-row"><td>z-ai/glm-5.3</td><td>OpenRouter</td></tr>'
+    + '<tr class="model-row clickable-row"><td>deepseek/deepseek-v4-pro</td><td>NVIDIA NIM</td></tr>'
+    + '</tbody></table></html>';
+  const art = await fetchAggregatedIndex({
+    fetchHtml: async (url) => (url === FREELLM_MODELS_URL ? redesign : FIXTURE_README),
+  });
+  assert.strictEqual(art.models.length, 0);
+  assert.ok(art.errors.some((e) => e.includes('freellm_models parse') && e.includes('2 model-row markers')),
+    `expected a parse error naming the row count, got ${JSON.stringify(art.errors)}`);
+  assert.notStrictEqual(art.status, 'complete', 'a lane that saw nothing cannot claim complete');
+});

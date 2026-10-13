@@ -590,7 +590,11 @@ async function runCatalogInProcess(manifest, runDir, baseOpts, log) {
     fs.writeFileSync(outPath, `${JSON.stringify(artifact, null, 2)}\n`);
     if (artifact.available) {
       const freeHits = artifact.models.filter((m) => m.is_free_signal).length;
-      log(`  ✅ aggregated_index: ${artifact.models.length} model(s) from freellm.net, ${freeHits} free-signal, ${Object.keys(artifact.base_urls).length} base URLs`);
+      // A fetched-but-unparseable source used to log ✅ with 0 models, which is
+      // how a dead parser passed for weeks.
+      const flag = artifact.errors.length > 0 || artifact.models.length === 0 ? '⚠️ ' : '✅';
+      log(`  ${flag} aggregated_index: ${artifact.models.length} model(s) from freellm.net, ${freeHits} free-signal, ${Object.keys(artifact.base_urls).length} base URLs`
+        + (artifact.errors.length > 0 ? ` — errors: ${artifact.errors.join('; ')}` : ''));
     } else {
       log(`  ❌ aggregated_index unavailable (${(artifact.errors || ['unknown'])[0]}); prior offers preserved`);
     }
