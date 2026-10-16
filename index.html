@@ -17,7 +17,7 @@
   <meta property="og:title" content="無料LLM API速報">
   <meta property="og:description" content="検証済みの無料・割引LLM APIを、性能と鮮度で毎日ランキング。pi / Claude Code / OpenCode / Codex 向けの接続例も掲載。">
   <meta property="og:url" content="https://freeapi-news.tosukui.xyz/">
-  <meta property="og:image" content="https://freeapi-news.tosukui.xyz/og-image.png?v=20261015">
+  <meta property="og:image" content="https://freeapi-news.tosukui.xyz/og-image.png?v=20261016">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="無料LLM API速報 — 検証済み無料APIを性能×鮮度でランキング（毎日11:00 JST更新）">
@@ -25,7 +25,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="無料LLM API速報">
   <meta name="twitter:description" content="検証済みの無料・割引LLM APIを、性能と鮮度で毎日ランキング。pi / Claude Code / OpenCode / Codex 向けの接続例も掲載。">
-  <meta name="twitter:image" content="https://freeapi-news.tosukui.xyz/og-image.png?v=20261015">
+  <meta name="twitter:image" content="https://freeapi-news.tosukui.xyz/og-image.png?v=20261016">
   <meta name="twitter:image:alt" content="無料LLM API速報 — 検証済み無料APIを性能×鮮度でランキング（毎日11:00 JST更新）">
   <script>
     // Apply the theme before first paint (spec 0002 AC-1): read the stored
@@ -551,7 +551,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
 
     <div class="mb-5 text-sm text-muted-foreground flex items-center gap-2">
       <span>最終更新</span>
-      <time datetime="2026-10-15T02:14:03.743Z" class="font-medium text-foreground">2026年10月15日</time>
+      <time datetime="2026-10-16T02:40:14.264Z" class="font-medium text-foreground">2026年10月16日</time>
       <span aria-hidden="true">·</span>
       <span>Asia/Tokyo</span>
     </div>
@@ -577,7 +577,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
 
     <section id="summary" class="report-section" aria-labelledby="summary-h">
       <h2 id="summary-h" class="font-display text-2xl sm:text-3xl font-bold mb-3">本日のサマリー</h2>
-      <p class="text-sm leading-relaxed">無料・激安 LLM API の日次ランキング。今回ランクイン 19 件（S 10、A 9、B 0）、無料 5 件、激安 14 件、注意 1 件、対象外 218 件。</p>
+      <p class="text-sm leading-relaxed">無料・激安 LLM API の日次ランキング。今回ランクイン 19 件（S 10、A 9、B 0）、無料 5 件、激安 14 件、注意 1 件、対象外 225 件。</p>
     </section>
 
     
@@ -618,7 +618,7 @@ details.acc[open] .chev { transform: rotate(180deg); }
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">同 Laguna S 2.1 の :free ルート。コーディングエージェント向けのモデルを無料で試せるので、コーディング用途の第一候補に。</div>
+      <div class="stat-sub">同モデルの :free ルート。$0 でコーディングエージェント性能を試せるが、コンテキストは有料版 (1M) より短い 262K 相当。</div>
     </div>
         </div>
 
@@ -626,8 +626,8 @@ details.acc[open] .chev { transform: rotate(180deg); }
           <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">262,144 tokens</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">poolside/laguna-s-2.1:free</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ OpenRouter :free variant priced at zero, a standing rate-limited free endpoint.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Standing $0 :free route verified today; recurring free access with undocumented rate quota.</span></div>
         </div>
 
         <details class="bench-details">
@@ -741,7 +741,7 @@ codex --profile openrouter</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">OpenRouter の :free で Thinking Machines Inkling Small が使える。276B 中 12B アクティブのオープンウェイト・マルチモーダル MoE を無料で試せる。</div>
+      <div class="stat-sub">Thinking Machines Lab のオープンウェイト multimodal MoE「Inkl香 Small」(276B / アクティブ 12B) が :free で $0。1M コンテキストで、効率重視版を無料で試せる。</div>
     </div>
         </div>
 
@@ -749,8 +749,8 @@ codex --profile openrouter</code></pre>
           <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">1,048,576 tokens</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">thinkingmachines/inkling-small:free</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ OpenRouter :free variant priced at zero for a very new Thinking Machines model; liveness of the free route uncertain.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Zero-priced standing :free route for an open-weight model, verified in today&#39;s catalog; only the daily quota remains undocumented.</span></div>
         </div>
 
         <details class="bench-details">
@@ -864,7 +864,7 @@ codex --profile openrouter</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">上位モデル Inkling 本体も :free で開放。975B 中 41B アクティブの大型 MoE を無料で触れ、汎用推論・コーディング・エージェントの検証に好適。</div>
+      <div class="stat-sub">Thinking Machines の大型フラッグシップ「Inkling」(975B / アクティブ 41B) が :free で $0。推論・コード・エージェント向けの汎用上位モデルを 1M コンテキストで無料で試せる、今期の目玉。</div>
     </div>
         </div>
 
@@ -872,8 +872,8 @@ codex --profile openrouter</code></pre>
           <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">1,048,576 tokens</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">thinkingmachines/inkling:free</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ OpenRouter :free variant priced at zero for a very new Thinking Machines model; liveness of the free route uncertain.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Zero-priced standing :free route verified today, with recurring free access but no captured quota text.</span></div>
         </div>
 
         <details class="bench-details">
@@ -987,7 +987,7 @@ codex --profile openrouter</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">Google Gemini API の標準無料枠で入出力ともに無料で使える Pro モデル。コーディングと複雑な推論に強く、長文コンテキストも扱える。</div>
+      <div class="stat-sub">Gemini API の無料枠 (unpaid quota) で入出力ともに $0 のまま使える推論モデル。Standard と Priority スケジュールが無料対象。1M コンテキストで複雑なコード・STEM 推論に強い。</div>
     </div>
         </div>
 
@@ -997,10 +997,11 @@ codex --profile openrouter</code></pre>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://generativelanguage.googleapis.com/v1beta</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">gemini-2.5-pro</code></div>
           <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月1日</span></div>
-          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">Standard Free Tier ... Input price Free of charge ... Output price (including thinking tokens) Free of charge</span></div>
-          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">Used to improve our products Yes (Free Tier), No (Paid Tier)</span></div>
-          <div class="id-row"><span class="id-key">データポリシー</span><span class="id-val-plain"><a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer">When you use Unpaid Services, including, for example, Google AI Studio and the unpaid quota on Gemini API, Google uses the content you submit to the Services and any generated responses to provide, improve, and develop Google products and services and machine learning technologies, including Google&#39;s enterprise features, products, and services, consistent with our Privacy Policy. To help with quality and improve our products, human reviewers may read, annotate, and process your API input and output. ↗</a></span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ Official pricing page lists a recurring Standard Free Tier with free input/output (data used to improve products on the free tier).</span></div>
+          <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">Standard | Free Tier: Input price: Free of charge | Output price (including thinking tokens): Free of charge | Context caching price: Not available | Grounding with Google Search: Not available | Grounding with Google Maps: Not available | Used to improve our products: Yes. Batch | Free Tier: Input price: Not available | Output price (including thinking tokens): Not available. Flex | Free Tier: Input price: Not available | Output price (including thinking tokens): Not available. Priority | Free Tier: Input price: Free of charge | Output price (including thinking tokens): Free of charge.</span></div>
+          <div class="id-row"><span class="id-key">データ利用</span><span class="id-val-plain train-no">When you use Unpaid Services, including, for example, Google AI Studio and the unpaid quota on Gemini API, Google uses the content you submit to the Services and any generated responses to provide, improve, and develop Google products and services and machine learning technologies, including Google&#39;s enterprise features, products, and services, consistent with our Privacy Policy.</span></div>
+          <div class="id-row"><span class="id-key">データポリシー</span><span class="id-val-plain"><a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer">When you use Unpaid Services, including, for example, Google AI Studio and the unpaid quota on Gemini API, Google uses the content you submit to the Services and any generated responses to provide, improve, and develop Google products and services and machine learning technologies, including Google&#39;s enterprise features, products, and services, consistent with our Privacy Policy. To help with quality and improve our products, human reviewers may read, annotate, and process your API input and output. Google takes steps to protect your privacy as part of this process. This includes disconnecting this data from your Google Account, API key, and Cloud project before reviewers see or annotate it. Do not submit sensitive, confidential, or personal information to the Unpaid Services. ↗</a></span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Official pricing page lists a standing Standard/Priority free tier at no charge (recurring quota), though the free tier sends content to product improvement and 2.5 access is now gated to previously active users.</span></div>
+          <div class="id-row"><span class="id-key">条件</span><span class="id-val-plain">Note: To ensure reliable performance for everyone, we are limiting access to the 2.5 models to users who have actively used them in the past. These models are not deprecated and will continue to be served until further notice through the API. For any new projects, use our latest models: 3.5 Flash-Lite or 3.8 Flash. This helps us maintain sufficient capacity for both ongoing legacy workflows and new applications.</span></div>
         </div>
 
         <details class="bench-details">
@@ -1117,7 +1118,7 @@ codex --profile google</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">OpenRouter の :free で Nemotron 3 Ultra が使える。550B 中 55B アクティブのオープン推論モデルを無料で触れるありがたい枠。</div>
+      <div class="stat-sub">Nemotron 3 Ultra を OpenRouter の :free ルートで $0 で利用可。550B MoE の推論・オーケストレーションモデルを 1M コンテキストで試せる。NVIDIA 公式 NIM 側の検証が通らない今は、こちらが現実的な入口。</div>
     </div>
         </div>
 
@@ -1125,8 +1126,8 @@ codex --profile google</code></pre>
           <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">1,000,000 tokens</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">nvidia/nemotron-3-ultra-550b-a55b:free</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ OpenRouter :free variant priced at zero, a standing rate-limited free endpoint.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ OpenRouter exposes a $0 :free route for this NVIDIA model (unlike NVIDIA&#39;s own trial terms), verified in today&#39;s catalog, though per-day limits were not captured.</span></div>
         </div>
 
         <details class="bench-details">
@@ -1221,7 +1222,7 @@ codex --profile openrouter</code></pre>
           <span class="badge badge-d">D. 試用クレジット</span>
           <span class="badge badge-a" title="実効入力・出力価格が 0ドル / 百万トークン">無料</span>
           <span class="tier tier-a" title="性能ティア"><span class="tier-letter">A</span></span>
-          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>57日前 確認</span>
+          <span class="freshness fresh"><svg class="fresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>58日前 確認</span>
         </div>
         <h3 id="offer-5" class="offer-name">Nemotron 3 Ultra</h3>
         <p class="offer-meta">by <strong>NVIDIA NIM</strong> ・ Nemotron-3-Ultra-550B-A55B</p>
@@ -1240,7 +1241,7 @@ codex --profile openrouter</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-low">LOW</span></div>
-      <div class="stat-sub">NVIDIA NIM のフロンティア級 MoE、Nemotron 3 Ultra。API  trials 枠で無料試せるが、稼働検証がかなり古い。</div>
+      <div class="stat-sub">NVIDIA NIM の 550B MoE フロンティアモデル (アクティブ 55B)。トライアル規約の下で無料利用できた枠だが、本次走の検証では長期間応答が確認できていない。</div>
     </div>
         </div>
 
@@ -1251,9 +1252,9 @@ codex --profile openrouter</code></pre>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">nvidia/nemotron-3-ultra-550b-a55b</code></div>
           <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年8月1日</span></div>
           <div class="id-row"><span class="id-key">リミット</span><span class="id-val-plain">The trial service is governed by the NVIDIA API Trial Terms of Service.</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Access is governed by the NVIDIA API Trial Terms of Service, i.e. a trial/credit access program rather than a standing free tier.</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ The only free-term text is that the service is governed by the NVIDIA API Trial Terms of Service, i.e. non-renewing trial access, and the record is stale since August.</span></div>
           <div class="id-row"><span class="id-key">条件</span><span class="id-val-plain">Create and verify your account to unlock full access to NVIDIA NIM APIs.</span></div>
-          <div class="id-row"><span class="id-key">注意</span><span class="id-val-plain train-yes">22 consecutive failed verifications; moved to caution (AC-3)</span></div>
+          <div class="id-row"><span class="id-key">注意</span><span class="id-val-plain train-yes">23 consecutive failed verifications; moved to caution (AC-3)</span></div>
         </div>
 
         <details class="bench-details">
@@ -1378,7 +1379,7 @@ codex --profile nvidia</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-med">MEDIUM</span></div>
-      <div class="stat-sub">OpenRouter の batch ルートで DeepSeek V4.1 Flash を超低コストで。Causal Encoder-Decoder 採用の疎 MoE で、オフライン大量処理向き。</div>
+      <div class="stat-sub">DeepSeek V4.1 Flash を Batch 経由で。入力 $0.112 / 出力 $0.336 (per 1M)、1M コンテキストで、バッチ処向けの MoE コーディングモデル。</div>
     </div>
         </div>
 
@@ -1386,8 +1387,8 @@ codex --profile nvidia</code></pre>
           <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">1,048,576 tokens</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">deepseek/deepseek-v4.1-flash:batch</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ Paid :batch endpoint carrying discounted batch pricing off the standard rate.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">1/5 ・ Batch variant carrying discounted (below passthrough) per-token pricing on a paid router endpoint, so it is a discount offer.</span></div>
         </div>
 
         <details class="bench-details">
@@ -1501,7 +1502,7 @@ codex --profile openrouter</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">再ポストトレーニング済みの DeepSeek V4 Flash 0731 を NanoGPT で。コーディング・推論・エージェント向けに強化されたウルトラローコストの従量課金。</div>
+      <div class="stat-sub">再ポストトレイン版の 0731 チェックポイント。コード・推論・エージェント向けに強化され、価格はむしろ下がって入力 $0.05 / 出力 $0.16。1M コンテキスト。</div>
     </div>
         </div>
 
@@ -1510,8 +1511,8 @@ codex --profile openrouter</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">deepseek/deepseek-v4-flash-0731</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid router endpoint at ultra-low price with no free tier or discount.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Ultra-low but non-zero catalog pricing with no free limits or terms recorded; free-looking only via NanoGPT&#39;s app, not the metered API.</span></div>
         </div>
 
         <details class="bench-details">
@@ -1630,7 +1631,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">0731 の推論デフォルト有効版を NanoGPT 経由で。1M コンテキストでエージェント処理を安く回したい向き。</div>
+      <div class="stat-sub">0731 の思考モード既定オン版。入力 $0.05 / 出力 $0.16 の据え置きで reasoning をフルに使える。</div>
     </div>
         </div>
 
@@ -1639,8 +1640,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">deepseek/deepseek-v4-flash-0731:thinking</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid router endpoint at ultra-low price with no free tier or discount.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Paid reasoning variant on a router with no documented free allowance; the only free element is the provider&#39;s playground-style access.</span></div>
         </div>
 
         <details class="bench-details">
@@ -1759,7 +1760,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">NanoGPT 経由の Poolside Laguna S 2.1。オープンウェイトのエージェント・コーディングモデルで、長期間のソフトウェアエンジニアリングとツール利用に最適。</div>
+      <div class="stat-sub">Poolside のオープンウェイト・コーディングエージェントモデル (118B / アクティブ 8B)。1M コンテキストで長時間のソフトウェア作業向け、NanoGPT 経由で入出力 $0.10/$0.20。</div>
     </div>
         </div>
 
@@ -1768,8 +1769,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">poolside/laguna-s-2.1</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid router endpoint at ultra-low price with no free tier or discount.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Paid router SKU ($0.10/$0.20) with no free limits recorded; OpenRouter/poolside carry the actual free SKU, this one does not.</span></div>
         </div>
 
         <details class="bench-details">
@@ -1888,7 +1889,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">NanoGPT 経由の Xiaomi MiMo V2.5。フルモダルの理解モデルで、ツール呼び出し・構造化出力・Web検索に対応し、最大 1M コンテキスト。</div>
+      <div class="stat-sub">小米 (Xiaomi) のフルモーダル理解モデル。ツールコール・構造化出力・Web 検索対応で 1M コンテキスト、NanoGPT 経由で入出力 $0.14/$0.28。</div>
     </div>
         </div>
 
@@ -1897,8 +1898,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">xiaomi/mimo-v2.5</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid router endpoint with non-zero price and no free allowance.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Paid catalog route at $0.14/$0.28 with no free allowance or data policy captured; free usage would be app-side only.</span></div>
         </div>
 
         <details class="bench-details">
@@ -2017,7 +2018,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">OpenRouter 経由の Poolside Laguna S 2.1 従量課金ルート。118B 中 8B アクティブのコーディングエージェントモデルで、Terminal-Bench でも高水準。</div>
+      <div class="stat-sub">Poolside Laguna S 2.1 の OpenRouter 通常ルート。Terminal-Bench 高得点のコーディングエージェントモデルを入力 $0.09 / 出力 $0.18 で。</div>
     </div>
         </div>
 
@@ -2025,8 +2026,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">1,048,576 tokens</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">poolside/laguna-s-2.1</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid (non-:free) router endpoint with non-zero price and no free allowance.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Paid SKU at $0.09/$0.18 whose model does have a separate :free route; this metered endpoint is not free.</span></div>
         </div>
 
         <details class="bench-details">
@@ -2140,7 +2141,7 @@ codex --profile openrouter</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">NanoGPT 経由の Ornith 1.5 35B A3B。オープンウェイトの MoE でエージェント・コーディング・画像理解向け。この変種は thinking OFF で直接応答が速い。</div>
+      <div class="stat-sub">オープンウェイトの MoE コーディングモデル (35B / アクティブ 3B)。NanoGPT 経由で入力 $0.10 / 出力 $0.40、思考オフの高速ダイレクト応答版。</div>
     </div>
         </div>
 
@@ -2149,8 +2150,8 @@ codex --profile openrouter</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">ornith-ai/ornith-1.5-35b-a3b</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid router endpoint with non-zero price and no free allowance.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Paid route at $0.10/$0.40 with no free quota or terms captured, so free access is only nominal via the vendor&#39;s chat surface.</span></div>
         </div>
 
         <details class="bench-details">
@@ -2269,7 +2270,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">Ornith 1.5 35B の thinking デフォルト有効変種を NanoGPT 経由で。推論を効かせたエージェント・コーディング向き。</div>
+      <div class="stat-sub">Ornith 1.5 35B の思考オン版。エージェント型コーディングや画像理解を reasoning 付きで、価格は入力 $0.10 / 出力 $0.40。</div>
     </div>
         </div>
 
@@ -2278,8 +2279,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">ornith-ai/ornith-1.5-35b-a3b:thinking</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid router endpoint with non-zero price and no free allowance.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Same paid thinking variant on NanoGPT with non-zero pricing and no documented free allowance, hence not a free API.</span></div>
         </div>
 
         <details class="bench-details">
@@ -2398,7 +2399,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">OpenRouter 経由の Xiaomi MiMo-V2.5。ネイティブ全モダルのモデルで、半分の推論コストで Pro 級のエージェント性能を狙う超低コスト帯。</div>
+      <div class="stat-sub">小米 MiMo-V2.5 の OpenRouter 通常ルート。ネイティブ全モダルで Pro 級のエージェント性能を低コストを狙うモデル。入力 $0.14 / 出力 $0.28、5 プロバイダ構成。</div>
     </div>
         </div>
 
@@ -2406,8 +2407,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">1,050,000 tokens</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">xiaomi/mimo-v2.5</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid (non-:free) router endpoint with non-zero price and no free allowance.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Metered passthrough at $0.14/$0.28 with no free allowance or :free variant recorded, so the endpoint is paid despite the ultra-low price.</span></div>
         </div>
 
         <details class="bench-details">
@@ -2521,7 +2522,7 @@ codex --profile openrouter</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">NanoGPT 経由の DeepSeek V4 Flash。1M トークン・MoE で高速推論向け、コーディングやエージェント用途に向く。従量課金だが超低コスト帯。</div>
+      <div class="stat-sub">NanoGPT 経由の DeepSeek V4 Flash。1M コンテキストで入力 $0.14 / 出力 $0.28 (per 1M) とほぼ無料レベルの激安。高スループットな推論・エージェント用途の定番候補。</div>
     </div>
         </div>
 
@@ -2530,8 +2531,8 @@ codex --profile openrouter</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">deepseek/deepseek-v4-flash</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid NanoGPT router endpoint with non-zero price and no free tier or discount.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Router catalog entry priced at $0.14/$0.28 per M with no free quota, rate limit, or data policy captured, so the API is paid and only the vendor&#39;s consumer front end is free-ish.</span></div>
         </div>
 
         <details class="bench-details">
@@ -2650,7 +2651,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">DeepSeek V4 Flash の初期 0423 チェックポイントを NanoGPT で使えるルート。ツール呼び出しと構造化出力に対応。</div>
+      <div class="stat-sub">DeepSeek V4 Flash の初期チェックポイント 0423。1M コンテキスト、ツールコール・構造化出力対応で、挙動を固定したい既存ワークロード向け。価格は入力 $0.14 / 出力 $0.28。</div>
     </div>
         </div>
 
@@ -2659,8 +2660,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">deepseek/deepseek-v4-flash-0423</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid router endpoint with non-zero price and no free allowance.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Paid router SKU (non-zero input/output pricing) with zero documented free allowance; any free use is confined to NanoGPT&#39;s chat surface, not the API.</span></div>
         </div>
 
         <details class="bench-details">
@@ -2779,7 +2780,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">0423 チェックポイントの推論(Thinking)有効ルート。NanoGPT 経由で 1M コンテキスト・ツール呼び出しを使える。</div>
+      <div class="stat-sub">0423 チェックポイントの reasoning オン版。同一価格 (入力 $0.14 / 出力 $0.28) で思考モードを既定で使いたい時に。</div>
     </div>
         </div>
 
@@ -2788,8 +2789,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">deepseek/deepseek-v4-flash-0423:thinking</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid router endpoint with non-zero price and no free allowance.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Thinking variant of a paid NanoGPT route priced above zero with no free quota text captured, so it is not a free API.</span></div>
         </div>
 
         <details class="bench-details">
@@ -2908,7 +2909,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">OpenRouter 経由の inclusionAI Ling 3.0 Flash。124B MoE・アクティブ約 5.1B で、トークン効率と本番規模のエージェント推論を狙った超低コスト帯。</div>
+      <div class="stat-sub">inclusionAI Ling 3.0 Flash の OpenRouter 版。入力 $0.021 / 出力 $0.063 と NanoGPT 版よりさらに安く、トークン効率の良い 124B MoE をエージェント量産用に使える。</div>
     </div>
         </div>
 
@@ -2916,8 +2917,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Context</span><span class="id-val-plain">262,144 tokens</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://openrouter.ai/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">inclusionai/ling-3.0-flash</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid (non-:free) router endpoint at ultra-low price with no free allowance.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Cheap but metered passthrough pricing ($0.021/$0.063) with no free tier, no quota text and no :free twin, so nothing here is a free API.</span></div>
         </div>
 
         <details class="bench-details">
@@ -3031,7 +3032,7 @@ codex --profile openrouter</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">NanoGPT 経由の inclusionAI Ling 3.0 Flash。124B MoE・アクティブ 5B 級でトークン効率とエージェント推論重視の低価格ルート。</div>
+      <div class="stat-sub">inclusionAI の 124B MoE (アクティブ約 5B)。トークン効率重視でエージェント推論向け、NanoGPT 経由で入力 $0.075 / 出力 $0.22。</div>
     </div>
         </div>
 
@@ -3040,8 +3041,8 @@ codex --profile openrouter</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain train-no">対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">inclusionai/ling-3.0-flash</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid router endpoint at ultra-low price with no free tier or discount.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Paid router catalog entry ($0.075/$0.22) with no free quota, no rate limits and no data policy recorded; not a free API.</span></div>
         </div>
 
         <details class="bench-details">
@@ -3160,7 +3161,7 @@ codex --profile nanogpt</code></pre>
           <div class="stat">
       <div class="stat-label">運用信頼度</div>
       <div class="stat-value"><span class="conf conf-high">HIGH</span></div>
-      <div class="stat-sub">NanoGPT 経由の Step 3.5 Flash 2603。高頻度エージェントとコーディング向けにトークン効率と推論速度を改善した低価格ルート。</div>
+      <div class="stat-sub">StepFun の高頻度エージェント・コーディング向けフラッシュモデル。NanoGPT 経由で入力 $0.10 / 出力 $0.30、256K コンテキスト。</div>
     </div>
         </div>
 
@@ -3169,8 +3170,8 @@ codex --profile nanogpt</code></pre>
           <div class="id-row"><span class="id-key">Tool calling</span><span class="id-val-plain">非対応</span></div>
           <div class="id-row"><span class="id-key">Base URL</span><code class="id-val">https://nano-gpt.com/api/v1</code></div>
           <div class="id-row"><span class="id-key">Model ID</span><code class="id-val">stepfun-ai/step-3.5-flash-2603</code></div>
-          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月15日</span></div>
-          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">2/5 ・ Paid router endpoint whose listing warns prompts/responses may be logged and used for training, i.e. a data-contribution condition.</span></div>
+          <div class="id-row"><span class="id-key">価格確認日</span><span class="id-val-plain">2026年10月16日</span></div>
+          <div class="id-row"><span class="id-key">怪し度</span><span class="id-val-plain train-yes">3/5 ・ Catalog note states the route runs via StepFun which may log and train on prompts, i.e. data-contribution is the price of this cheap route, and it is metered paid besides.</span></div>
         </div>
 
         <details class="bench-details">
@@ -3458,7 +3459,7 @@ codex --profile minimax</code></pre>
     <section id="product-updates" class="report-section" aria-labelledby="product-updates-h">
       <div class="flex items-end justify-between gap-4 mb-1">
         <h2 id="product-updates-h" class="font-display text-2xl sm:text-3xl font-bold">Coding Agent / 製品内無料</h2>
-        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">9 件</span>
+        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">10 件</span>
       </div>
       <ul class="update-list"><li class="update-card" aria-labelledby="product-updates-0">
       <div class="update-head">
@@ -3518,21 +3519,31 @@ codex --profile minimax</code></pre>
       
       
       
-      <p class="model-src"><a href="https://github.blog/changelog/label/copilot/" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+      <p class="model-src"><a href="https://github.com/features/copilot/plans" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
     </li>
     <li class="update-card" aria-labelledby="product-updates-6">
       <div class="update-head">
-        <h3 id="product-updates-6" class="update-name">Kilo Code</h3>
+        <h3 id="product-updates-6" class="update-name">JetBrains AI</h3>
         
       </div>
       
       
       
-      <p class="model-src"><a href="https://github.com/Kilo-Org/kilocode/releases" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+      <p class="model-src"><a href="https://www.jetbrains.com/store/ai/" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
     </li>
     <li class="update-card" aria-labelledby="product-updates-7">
       <div class="update-head">
-        <h3 id="product-updates-7" class="update-name">OpenCode</h3>
+        <h3 id="product-updates-7" class="update-name">Kilo Code</h3>
+        
+      </div>
+      
+      
+      
+      <p class="model-src"><a href="https://kilo.ai/pricing" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li>
+    <li class="update-card" aria-labelledby="product-updates-8">
+      <div class="update-head">
+        <h3 id="product-updates-8" class="update-name">OpenCode</h3>
         
       </div>
       
@@ -3540,25 +3551,35 @@ codex --profile minimax</code></pre>
       
       <p class="model-src"><a href="https://opencode.ai/changelog" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
     </li>
-    <li class="update-card" aria-labelledby="product-updates-8">
+    <li class="update-card" aria-labelledby="product-updates-9">
       <div class="update-head">
-        <h3 id="product-updates-8" class="update-name">Windsurf</h3>
+        <h3 id="product-updates-9" class="update-name">Roo Code</h3>
         
       </div>
       
       
       
-      <p class="model-src"><a href="https://devin.ai/pricing" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+      <p class="model-src"><a href="https://github.com/RooCodeInc/Roo-Code/releases" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
     </li></ul>
     </section>
     <section id="startup-credits" class="report-section" aria-labelledby="startup-credits-h">
       <div class="flex items-end justify-between gap-4 mb-1">
         <h2 id="startup-credits-h" class="font-display text-2xl sm:text-3xl font-bold">Startup Credits</h2>
-        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">2 件</span>
+        <span class="font-display text-sm text-muted-foreground whitespace-nowrap">3 件</span>
       </div>
       <ul class="update-list"><li class="update-card" aria-labelledby="startup-credits-0">
       <div class="update-head">
-        <h3 id="startup-credits-0" class="update-name">Microsoft for Startups</h3>
+        <h3 id="startup-credits-0" class="update-name">Google for Startups Cloud</h3>
+        
+      </div>
+      
+      
+      
+      <p class="model-src"><a href="https://cloud.google.com/startup" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
+    </li>
+    <li class="update-card" aria-labelledby="startup-credits-1">
+      <div class="update-head">
+        <h3 id="startup-credits-1" class="update-name">Microsoft for Startups</h3>
         
       </div>
       
@@ -3566,9 +3587,9 @@ codex --profile minimax</code></pre>
       
       <p class="model-src"><a href="https://www.microsoft.com/en-us/startups" target="_blank" rel="noopener noreferrer">ウォッチ元 ↗</a></p>
     </li>
-    <li class="update-card" aria-labelledby="startup-credits-1">
+    <li class="update-card" aria-labelledby="startup-credits-2">
       <div class="update-head">
-        <h3 id="startup-credits-1" class="update-name">NVIDIA Inception</h3>
+        <h3 id="startup-credits-2" class="update-name">NVIDIA Inception</h3>
         
       </div>
       
