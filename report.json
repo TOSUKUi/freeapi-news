@@ -1,21 +1,29 @@
 {
-  "generated_at": "2026-11-01T02:34:06.259Z",
+  "generated_at": "2026-11-02T02:32:02.513Z",
   "timezone": "Asia/Tokyo",
-  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 27 件（S 17、A 10、B 0）、無料 4 件、激安 23 件、注意 1 件、対象外 227 件。",
+  "summary": "無料・激安 LLM API の日次ランキング。今回ランクイン 25 件（S 15、A 10、B 0）、無料 4 件、激安 21 件、注意 1 件、対象外 227 件。",
   "new_models": [],
   "changes": [
+    {
+      "offer_name": "MiniMax-M3",
+      "change_type": "provider_change",
+      "summary": "MiniMax-M3 の提供元・エンドポイントが変わりました。",
+      "field": "endpoint_source",
+      "before": "https://platform.minimax.io/docs/guides/text-generation",
+      "after": "https://platform.minimax.io/docs/guides/quickstart-preparation"
+    },
     {
       "offer_name": "DeepSeek V4 Flash 0731",
       "change_type": "discount_rate_change",
       "summary": "DeepSeek V4 Flash 0731 の割引率が変更になりました。",
       "field": "effective_price_per_million",
       "before": {
-        "input": 0.05,
-        "output": 0.16
-      },
-      "after": {
         "input": 0.04444,
         "output": 0.13332
+      },
+      "after": {
+        "input": 0.05,
+        "output": 0.16
       },
       "discount_before": 0,
       "discount_after": 0
@@ -26,60 +34,12 @@
       "summary": "DeepSeek V4 Flash 0731 (Thinking) の割引率が変更になりました。",
       "field": "effective_price_per_million",
       "before": {
-        "input": 0.05,
-        "output": 0.16
-      },
-      "after": {
         "input": 0.04444,
         "output": 0.13332
       },
-      "discount_before": 0,
-      "discount_after": 0
-    },
-    {
-      "offer_name": "Poolside: Laguna S 2.1",
-      "change_type": "ended",
-      "summary": "Poolside: Laguna S 2.1 の無料提供が終了しました。",
-      "field": "liveness",
-      "before": "verified",
-      "after": "confirmed_removed"
-    },
-    {
-      "offer_name": "Poolside: Laguna S 2.1",
-      "change_type": "ended",
-      "summary": "Poolside: Laguna S 2.1 の無料提供が終了しました。",
-      "field": "liveness",
-      "before": "verified",
-      "after": "confirmed_removed"
-    },
-    {
-      "offer_name": "DeepSeek V4.1 Flash",
-      "change_type": "discount_rate_change",
-      "summary": "DeepSeek V4.1 Flash の割引率が変更になりました。",
-      "field": "effective_price_per_million",
-      "before": {
-        "input": 0.022,
-        "output": 0.192
-      },
       "after": {
-        "input": 0.044700000000000004,
-        "output": 0.17880000000000001
-      },
-      "discount_before": 0,
-      "discount_after": 0
-    },
-    {
-      "offer_name": "DeepSeek V4.1 Flash Thinking",
-      "change_type": "discount_rate_change",
-      "summary": "DeepSeek V4.1 Flash Thinking の割引率が変更になりました。",
-      "field": "effective_price_per_million",
-      "before": {
-        "input": 0.022,
-        "output": 0.192
-      },
-      "after": {
-        "input": 0.044700000000000004,
-        "output": 0.17880000000000001
+        "input": 0.05,
+        "output": 0.16
       },
       "discount_before": 0,
       "discount_after": 0
@@ -88,402 +48,6 @@
   "ranked_offers": [
     {
       "rank": 1,
-      "name": "DeepSeek V4.1 Flash",
-      "model_name": "DeepSeek V4.1 Flash",
-      "provider": "NanoGPT",
-      "model_vendor": "deepseek",
-      "delivery_type": "router",
-      "classification": "G_FREE_LIKE",
-      "start_at": null,
-      "end_at": null,
-      "end_timezone_known": false,
-      "regions": [],
-      "registration_conditions": [],
-      "card_required": null,
-      "minimum_deposit": null,
-      "kyc_required": null,
-      "auto_renewal": null,
-      "refund_policy": null,
-      "free_limits": null,
-      "rate_limits": null,
-      "context_tokens": 1000000,
-      "max_output_tokens": 384000,
-      "tool_calling": true,
-      "structured_output": true,
-      "image_input": true,
-      "base_url": "https://nano-gpt.com/api/v1",
-      "model_id": "deepseek/deepseek-v4.1-flash",
-      "provider_count": null,
-      "recent_activity": "画像入力にも対応した V4.1 Flash。入力 $0.045 / 出力 $0.18 前後の超低単価で、コーディング系ベンチで最上位クラスの公式レポートがある注目株。",
-      "normal_price_per_million": {
-        "input": 0.044700000000000004,
-        "output": 0.17880000000000001
-      },
-      "effective_price_per_million": {
-        "input": 0.044700000000000004,
-        "output": 0.17880000000000001
-      },
-      "effective_discount_percent": null,
-      "discount_rates": null,
-      "window": null,
-      "data_retention": null,
-      "data_policy": null,
-      "data_policy_source": null,
-      "free_endpoint_status": null,
-      "operational_evidence": "official docs / pricing fetch verified this run",
-      "activity": null,
-      "training_use": null,
-      "suspicion_score": 3,
-      "suspicion_reasons": [
-        "Paid route at non-zero rates; the 'rate-limited beta' label concerns model maturity, not free access, so no free API is evidenced."
-      ],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
-      "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
-      "provider_key": "nanogpt",
-      "canonical_model_id": "deepseek/deepseek-v4.1-flash",
-      "access_kind": "ULTRA_LOW",
-      "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
-      "discount_start_at": null,
-      "discount_end_at": null,
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "sources": [
-        "https://nano-gpt.com/models/text/deepseek/deepseek-v4.1-flash",
-        "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
-        "https://nano-gpt.com/api/v1/models?detailed=true",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash"
-      ],
-      "benchmark": {
-        "score": 90.6,
-        "benchmark_name": "Terminal-Bench 2.1",
-        "version": "2.1",
-        "tier": "S"
-      },
-      "benchmarks": [
-        {
-          "name": "Agent's Last Exam",
-          "score": 31.8,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-          "verified_at": "2026-10-17T02:28:54.238Z"
-        },
-        {
-          "name": "AutomationBench",
-          "score": 54.8,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-          "verified_at": "2026-10-17T02:28:54.230Z"
-        },
-        {
-          "name": "CyberGym",
-          "score": 88.1,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-          "verified_at": "2026-10-17T02:28:54.196Z"
-        },
-        {
-          "name": "DeepSWE v1.1",
-          "score": 74.2,
-          "version": "1.1",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-          "verified_at": "2026-10-17T02:28:54.167Z"
-        },
-        {
-          "name": "GPQA Diamond",
-          "score": 90.9,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-          "verified_at": "2026-10-17T02:28:54.180Z"
-        },
-        {
-          "name": "MathArena Apex",
-          "score": 65.6,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-          "verified_at": "2026-10-17T02:28:54.188Z"
-        },
-        {
-          "name": "NL2Repo-Bench",
-          "score": 64,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-          "verified_at": "2026-10-17T02:28:54.214Z"
-        },
-        {
-          "name": "ProgramBench",
-          "score": 20.3,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-          "verified_at": "2026-10-17T02:28:54.222Z"
-        },
-        {
-          "name": "SEC-Bench Pro",
-          "score": 62.8,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-          "verified_at": "2026-10-17T02:28:54.203Z"
-        },
-        {
-          "name": "Terminal-Bench 2.1",
-          "score": 90.6,
-          "version": "2.1",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-          "verified_at": "2026-10-17T02:28:54.140Z"
-        },
-        {
-          "name": "Terminal-Bench 3.0",
-          "score": 30,
-          "version": "3.0",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-          "verified_at": "2026-10-17T02:28:54.148Z"
-        },
-        {
-          "name": "Terminal-Bench 4.0",
-          "score": 31.2,
-          "version": "4.0",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
-          "verified_at": "2026-10-17T02:28:54.157Z"
-        }
-      ],
-      "benchmark_key": "terminal_bench_2_1"
-    },
-    {
-      "rank": 2,
-      "name": "DeepSeek V4.1 Flash Thinking",
-      "model_name": "DeepSeek V4.1 Flash Thinking",
-      "provider": "NanoGPT",
-      "model_vendor": "deepseek",
-      "delivery_type": "router",
-      "classification": "G_FREE_LIKE",
-      "start_at": null,
-      "end_at": null,
-      "end_timezone_known": false,
-      "regions": [],
-      "registration_conditions": [],
-      "card_required": null,
-      "minimum_deposit": null,
-      "kyc_required": null,
-      "auto_renewal": null,
-      "refund_policy": null,
-      "free_limits": null,
-      "rate_limits": null,
-      "context_tokens": 1000000,
-      "max_output_tokens": 384000,
-      "tool_calling": true,
-      "structured_output": true,
-      "image_input": true,
-      "base_url": "https://nano-gpt.com/api/v1",
-      "model_id": "deepseek/deepseek-v4.1-flash:thinking",
-      "provider_count": null,
-      "recent_activity": "V4.1 Flash の思考モード版。推論をデフォルトで使うエージェント処理向けで、価格は無印と同等の超低単価。",
-      "normal_price_per_million": {
-        "input": 0.044700000000000004,
-        "output": 0.17880000000000001
-      },
-      "effective_price_per_million": {
-        "input": 0.044700000000000004,
-        "output": 0.17880000000000001
-      },
-      "effective_discount_percent": null,
-      "discount_rates": null,
-      "window": null,
-      "data_retention": null,
-      "data_policy": null,
-      "data_policy_source": null,
-      "free_endpoint_status": null,
-      "operational_evidence": "official docs / pricing fetch verified this run",
-      "activity": null,
-      "training_use": null,
-      "suspicion_score": 3,
-      "suspicion_reasons": [
-        "Same paid, explicitly beta/test-only route with no documented free allowance."
-      ],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
-      "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
-      "provider_key": "nanogpt",
-      "canonical_model_id": "deepseek/deepseek-v4.1-flash:thinking",
-      "access_kind": "ULTRA_LOW",
-      "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
-      "discount_start_at": null,
-      "discount_end_at": null,
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "sources": [
-        "https://nano-gpt.com/models/text/deepseek/deepseek-v4.1-flash:thinking",
-        "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
-        "https://nano-gpt.com/api/v1/models?detailed=true",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md"
-      ],
-      "benchmark": {
-        "score": 90.6,
-        "benchmark_name": "Terminal-Bench 2.1",
-        "version": "2.1",
-        "tier": "S"
-      },
-      "benchmarks": [
-        {
-          "name": "Agent's Last Exam",
-          "score": 31.8,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.370Z"
-        },
-        {
-          "name": "AutomationBench",
-          "score": 54.8,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.370Z"
-        },
-        {
-          "name": "BabyVision w/ tools",
-          "score": 89.6,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.371Z"
-        },
-        {
-          "name": "Chartography w/ tools",
-          "score": 78.9,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.370Z"
-        },
-        {
-          "name": "CyberGym",
-          "score": 88.1,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.370Z"
-        },
-        {
-          "name": "DeepSWE",
-          "score": 74.2,
-          "version": "v1.1",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.369Z"
-        },
-        {
-          "name": "ExploitGym",
-          "score": 15.3,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.370Z"
-        },
-        {
-          "name": "GPQA Diamond",
-          "score": 90.9,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.369Z"
-        },
-        {
-          "name": "HLE w/ tools",
-          "score": 63.9,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.370Z"
-        },
-        {
-          "name": "MathArena Apex",
-          "score": 65.6,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.369Z"
-        },
-        {
-          "name": "NL2Repo-Bench",
-          "score": 64,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.369Z"
-        },
-        {
-          "name": "ProgramBench",
-          "score": 20.3,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.369Z"
-        },
-        {
-          "name": "SEC-Bench Pro",
-          "score": 62.8,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.370Z"
-        },
-        {
-          "name": "Terminal-Bench 2.1",
-          "score": 90.6,
-          "version": "2.1",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.368Z"
-        },
-        {
-          "name": "Terminal-Bench 3.0",
-          "score": 30,
-          "version": "3.0",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.368Z"
-        },
-        {
-          "name": "Terminal-Bench 4.0",
-          "score": 31.2,
-          "version": "4.0",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.369Z"
-        },
-        {
-          "name": "ZeroBench-main w/ tools (Pass@5)",
-          "score": 49,
-          "version": "",
-          "source_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
-          "verified_at": "2026-10-22T02:34:50.371Z"
-        }
-      ],
-      "benchmark_key": "terminal_bench_2_1"
-    },
-    {
-      "rank": 3,
       "name": "DeepSeek: DeepSeek V4.1 Flash (batch)",
       "model_name": "DeepSeek: DeepSeek V4.1 Flash (batch)",
       "provider": "OpenRouter",
@@ -510,7 +74,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "deepseek/deepseek-v4.1-flash:batch",
       "provider_count": 2,
-      "recent_activity": "新アーキテクチャ(CED)で作り直された V4.1 Flash をバッチ価格で。入力 $0.05 / 出力 $0.15 前後と正規ルートよりさらに安い。",
+      "recent_activity": "DeepSeek初のCEDアーキテクチャ採用モデルV4.1 Flashのバッチ価格ルート。入力$0.05/出力$0.15 per 1Mで、大量推論なら実質無料に近づきます。",
       "normal_price_per_million": {
         "input": 0.049999999999999996,
         "output": 0.15
@@ -529,21 +93,21 @@
       "operational_evidence": "router: 2 provider(s)",
       "activity": "top provider Sail Research",
       "training_use": null,
-      "suspicion_score": 2,
+      "suspicion_score": 1,
       "suspicion_reasons": [
-        "Batch endpoint at roughly half standard pricing, so discounted paid access rather than any free offer."
+        "Batch variant priced below interactive rates ($0.05/$0.15); discounted paid processing, not a free offer."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "MEDIUM",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "deepseek/deepseek-v4.1-flash:batch",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -597,7 +161,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 4,
+      "rank": 2,
       "name": "DeepSeek V4 Flash 0731",
       "model_name": "DeepSeek V4 Flash 0731",
       "provider": "NanoGPT",
@@ -624,14 +188,14 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "deepseek/deepseek-v4-flash-0731",
       "provider_count": null,
-      "recent_activity": "再ポストトレイン版の 0731。入力 $0.04444 / 出力 $0.13332(1Mトークンあたり)と同一系列の中で一段安く、コーディング系ベンチで高得点の報告。今回の価格改定検出の対象ひとつ。",
+      "recent_activity": "再学習版のDeepSeek V4 Flash 0731。NanoGPTでは入力$0.05/出力$0.16 per 1Mと一族最安クラスに値下がりしており、コーディング・エージェント用の汎用路線としてコスパが高い。",
       "normal_price_per_million": {
-        "input": 0.04444,
-        "output": 0.13332
+        "input": 0.05,
+        "output": 0.16
       },
       "effective_price_per_million": {
-        "input": 0.04444,
-        "output": 0.13332
+        "input": 0.05,
+        "output": 0.16
       },
       "effective_discount_percent": null,
       "discount_rates": null,
@@ -643,21 +207,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Ultra-low but non-zero verified pricing and no free-quota wording, so no free API access is substantiated."
+        "Paid router endpoint (ULTRA_LOW pricing, no free limits); playground-only free access is assumed but unverified."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "deepseek/deepseek-v4-flash-0731",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -751,7 +315,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 5,
+      "rank": 3,
       "name": "DeepSeek V4 Flash 0731 (Thinking)",
       "model_name": "DeepSeek V4 Flash 0731 (Thinking)",
       "provider": "NanoGPT",
@@ -778,14 +342,14 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "deepseek/deepseek-v4-flash-0731:thinking",
       "provider_count": null,
-      "recent_activity": "0731版の推論デフォルトON版。同じ超低単価(入力 $0.04444 / 出力 $0.13332)で思考を効かせたい時に。こちらも価格改定の検出あり。",
+      "recent_activity": "0731のreasoning既定オン版。入力$0.05/出力$0.16 per 1Mで、思考チェーンを常に使いたいときに。",
       "normal_price_per_million": {
-        "input": 0.04444,
-        "output": 0.13332
+        "input": 0.05,
+        "output": 0.16
       },
       "effective_price_per_million": {
-        "input": 0.04444,
-        "output": 0.13332
+        "input": 0.05,
+        "output": 0.16
       },
       "effective_discount_percent": null,
       "discount_rates": null,
@@ -797,21 +361,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Paid thinking variant; the record contains no free-tier or campaign language to support a free classification."
+        "Paid thinking variant with no recorded free quota; free use at most via the router's web chat."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "deepseek/deepseek-v4-flash-0731:thinking",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -889,7 +453,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 6,
+      "rank": 4,
       "name": "DeepSeek: DeepSeek V4 Flash 0731",
       "model_name": "DeepSeek: DeepSeek V4 Flash 0731",
       "provider": "OpenRouter",
@@ -916,7 +480,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "deepseek/deepseek-v4-flash-0731",
       "provider_count": 26,
-      "recent_activity": "OpenRouter 経由の DeepSeek V4 Flash 0731。13Bアクティブ/284Bの稀疏 MoE で、入力 $0.119 / 出力 $0.238 と低価格。NanoGPT とはまた違う供給元として冗長化に使える。",
+      "recent_activity": "OpenRouterで26プロバイダ競争中のDeepSeek V4 Flash 0731(総284B/アクティブ13B)。最安帯で入力$0.119/出力$0.238 per 1M、1Mコンテキストと汎用性が高い。",
       "normal_price_per_million": {
         "input": 0.119,
         "output": 0.238
@@ -935,21 +499,21 @@
       "operational_evidence": "router: 26 provider(s), 1d uptime 100%",
       "activity": "top provider Wafer, 1d uptime 100%",
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Paid OpenRouter route at non-zero rates with no free allowance captured; the free variant is a separate model ID."
+        "Paid OpenRouter listing with no :free suffix and no free limits; free chat use on OpenRouter's site is playground-only."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "deepseek/deepseek-v4-flash-0731",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -1043,97 +607,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 7,
-      "name": "MiMo V2.5",
-      "model_name": "MiMo V2.5",
-      "provider": "NanoGPT",
-      "model_vendor": "xiaomi",
-      "delivery_type": "router",
-      "classification": "G_FREE_LIKE",
-      "start_at": null,
-      "end_at": null,
-      "end_timezone_known": false,
-      "regions": [],
-      "registration_conditions": [],
-      "card_required": null,
-      "minimum_deposit": null,
-      "kyc_required": null,
-      "auto_renewal": null,
-      "refund_policy": null,
-      "free_limits": null,
-      "rate_limits": null,
-      "context_tokens": 1048576,
-      "max_output_tokens": 131072,
-      "tool_calling": true,
-      "structured_output": true,
-      "image_input": true,
-      "base_url": "https://nano-gpt.com/api/v1",
-      "model_id": "xiaomi/mimo-v2.5",
-      "provider_count": null,
-      "recent_activity": "Xiaomi の全モダリティ対応エージェントモデル。ツール呼び出し・構造化出力・Web検索まで備え、1Mコンテキストで入出力 $0.14/$0.28。",
-      "normal_price_per_million": {
-        "input": 0.13999999999999999,
-        "output": 0.27999999999999997
-      },
-      "effective_price_per_million": {
-        "input": 0.13999999999999999,
-        "output": 0.27999999999999997
-      },
-      "effective_discount_percent": null,
-      "discount_rates": null,
-      "window": null,
-      "data_retention": null,
-      "data_policy": null,
-      "data_policy_source": null,
-      "free_endpoint_status": null,
-      "operational_evidence": "official docs / pricing fetch verified this run",
-      "activity": null,
-      "training_use": null,
-      "suspicion_score": 3,
-      "suspicion_reasons": [
-        "Verified paid pricing on this router with no free-allowance text attached."
-      ],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
-      "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
-      "provider_key": "nanogpt",
-      "canonical_model_id": "xiaomi/mimo-v2.5",
-      "access_kind": "ULTRA_LOW",
-      "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
-      "discount_start_at": null,
-      "discount_end_at": null,
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "sources": [
-        "https://nano-gpt.com/models/text/xiaomi/mimo-v2.5",
-        "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
-        "https://nano-gpt.com/api/v1/models?detailed=true",
-        "https://huggingface.co/XiaomiMiMo/MiMo-V2.5"
-      ],
-      "benchmark": {
-        "score": 65.8,
-        "benchmark_name": "Terminal-Bench 2.0",
-        "version": "2.0",
-        "tier": "S"
-      },
-      "benchmarks": [
-        {
-          "name": "Terminal-Bench 2.0",
-          "score": 65.8,
-          "version": "2.0",
-          "source_url": "https://huggingface.co/XiaomiMiMo/MiMo-V2.5",
-          "verified_at": "2026-08-01T23:05:55.997Z"
-        }
-      ],
-      "benchmark_key": "terminal_bench_2_0"
-    },
-    {
-      "rank": 8,
+      "rank": 5,
       "name": "Nex AGI: Nex-N2.5-Pro",
       "model_name": "Nex AGI: Nex-N2.5-Pro",
       "provider": "OpenRouter",
@@ -1160,7 +634,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "nex-agi/nex-n2.5-pro",
       "provider_count": 1,
-      "recent_activity": "Nex-N2.5-Pro の OpenRouter ルート。上位版だが入出力 $0.075/$0.25 とまだ安い範囲で、長いタスク遂行を狙う時に。",
+      "recent_activity": "Nex-N2.5の上位版。目標から検証済み成果までを作るエージェント設計で、価格は入力$0.075/出力$0.25 per 1M。",
       "normal_price_per_million": {
         "input": 0.075,
         "output": 0.25
@@ -1179,21 +653,21 @@
       "operational_evidence": "router: 1 provider(s), 1d uptime 100%",
       "activity": "top provider Nex AGI, 1d uptime 100%",
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Paid listing at $0.075/$0.25; no free tier language attached."
+        "Paid listing with no free endpoint documented; not a free API."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "nex-agi/nex-n2.5-pro",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -1335,7 +809,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 9,
+      "rank": 6,
       "name": "Nex N2.5 Pro",
       "model_name": "Nex N2.5 Pro",
       "provider": "NanoGPT",
@@ -1362,7 +836,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "nex-agi/nex-n2.5-pro",
       "provider_count": null,
-      "recent_activity": "Nex N2.5 の上位 Pro 版。コーディング・ツール利用・長期間のワークフロー向けで、入出力 $0.075/$0.25 の低価格帯。",
+      "recent_activity": "同シリーズの上位版。コーディング・ツール使用・長時間タスク向けで、NanoGPTでは入力$0.075/出力$0.25 per 1M。",
       "normal_price_per_million": {
         "input": 0.075,
         "output": 0.25
@@ -1381,21 +855,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Paid route with verified non-zero pricing and no documented free tier or campaign."
+        "Paid router route with no free quota documented; playground free access unverified."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "nex-agi/nex-n2.5-pro",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -1537,7 +1011,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 10,
+      "rank": 7,
       "name": "inclusionAI: Ling 3.1 Flash",
       "model_name": "inclusionAI: Ling 3.1 Flash",
       "provider": "OpenRouter",
@@ -1564,7 +1038,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "inclusionai/ling-3.1-flash",
       "provider_count": 2,
-      "recent_activity": "Ling 3.1 Flash(560B/アクティブ25B)の OpenRouter ルート。思考切替可能なハイブリッド推論で入出力 $0.075/$0.22 前後。",
+      "recent_activity": "inclusionAIのハイブリッド推論MoE(総560B/アクティブ25B)。OpenRouterではコンテキスト1Mで、入力$0.075/出力$0.225 per 1M。",
       "normal_price_per_million": {
         "input": 0.075,
         "output": 0.22499999999999998
@@ -1583,21 +1057,21 @@
       "operational_evidence": "router: 2 provider(s), 1d uptime 100%",
       "activity": "top provider DeepInfra, 1d uptime 100%",
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Paid route at $0.075/$0.225 with no free quota or campaign text."
+        "Paid listing with no documented free endpoint; playground access unverified."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "inclusionai/ling-3.1-flash",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -1667,7 +1141,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 11,
+      "rank": 8,
       "name": "Ling 3.1 Flash",
       "model_name": "Ling 3.1 Flash",
       "provider": "NanoGPT",
@@ -1694,7 +1168,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "inclusionai/ling-3.1-flash",
       "provider_count": null,
-      "recent_activity": "Ling の 560B/アクティブ25B へスケールした新版。思考を切り替えられるハイブリッド推論で、コーディング・ツール利用・長コンテキストのエージェント向け。価格は 3.0 と同じ枠内。",
+      "recent_activity": "inclusionAIのハイブリッド推論モデルLing 3.1 Flash(総560B/アクティブ25B)。コーディング・ツール使用・長文エージェント向けで、価格は入力$0.075/出力$0.22 per 1M。",
       "normal_price_per_million": {
         "input": 0.075,
         "output": 0.22
@@ -1713,21 +1187,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Verified non-zero pricing and no documented free or campaign access."
+        "Paid router endpoint with no free quota documented; free access claim rests only on the provider's web playground."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "inclusionai/ling-3.1-flash",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -1797,201 +1271,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 12,
-      "name": "Nex AGI: Nex-N2.5-Mini",
-      "model_name": "Nex AGI: Nex-N2.5-Mini",
-      "provider": "OpenRouter",
-      "model_vendor": "nex-agi",
-      "delivery_type": "router",
-      "classification": "G_FREE_LIKE",
-      "start_at": null,
-      "end_at": null,
-      "end_timezone_known": false,
-      "regions": [],
-      "registration_conditions": [],
-      "card_required": null,
-      "minimum_deposit": null,
-      "kyc_required": null,
-      "auto_renewal": null,
-      "refund_policy": null,
-      "free_limits": null,
-      "rate_limits": null,
-      "context_tokens": 262144,
-      "max_output_tokens": null,
-      "tool_calling": null,
-      "structured_output": null,
-      "image_input": null,
-      "base_url": "https://openrouter.ai/api/v1",
-      "model_id": "nex-agi/nex-n2.5-mini",
-      "provider_count": 1,
-      "recent_activity": "Nex-N2.5-Mini を OpenRouter で。入力 $0.025 / 出力 $0.1 前後の超低コストで、視覚フィードバックを伴うエージェント型コーディング用途向けの報告。",
-      "normal_price_per_million": {
-        "input": 0.024999999999999998,
-        "output": 0.09999999999999999
-      },
-      "effective_price_per_million": {
-        "input": 0.024999999999999998,
-        "output": 0.09999999999999999
-      },
-      "effective_discount_percent": null,
-      "discount_rates": null,
-      "window": null,
-      "data_retention": null,
-      "data_policy": null,
-      "data_policy_source": null,
-      "free_endpoint_status": null,
-      "operational_evidence": "router: 1 provider(s), 1d uptime 98.3%",
-      "activity": "top provider Nex AGI, 1d uptime 98.3%",
-      "training_use": null,
-      "suspicion_score": 3,
-      "suspicion_reasons": [
-        "Paid listing with verified non-zero prices and no free allowance captured."
-      ],
-      "information_confidence": "HIGH",
-      "operational_confidence": "HIGH",
-      "ranking_eligible": true,
-      "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
-      "endpoint_source": "https://openrouter.ai/docs/quickstart",
-      "provider_key": "openrouter",
-      "canonical_model_id": "nex-agi/nex-n2.5-mini",
-      "access_kind": "ULTRA_LOW",
-      "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
-      "discount_start_at": null,
-      "discount_end_at": null,
-      "free_allowance_rank": "NORMAL",
-      "total_parameters_b": null,
-      "active_parameters_b": null,
-      "sources": [
-        "https://openrouter.ai/nex-agi/nex-n2.5-mini",
-        "https://openrouter.ai/docs/quickstart",
-        "https://openrouter.ai/api/v1/models",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md"
-      ],
-      "benchmark": {
-        "score": 73.4,
-        "benchmark_name": "Terminal-Bench 2.1",
-        "version": "2.1",
-        "tier": "S"
-      },
-      "benchmarks": [
-        {
-          "name": "AutomationBench",
-          "score": 32.3,
-          "version": "v1.0.6",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.537Z"
-        },
-        {
-          "name": "BrowseComp",
-          "score": 83.4,
-          "version": "",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.538Z"
-        },
-        {
-          "name": "DeepSWE",
-          "score": 36.1,
-          "version": "v1.1",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.536Z"
-        },
-        {
-          "name": "Job Bench",
-          "score": 28.5,
-          "version": "",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.538Z"
-        },
-        {
-          "name": "OSWorld-2",
-          "score": 30.5,
-          "version": "2",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.539Z"
-        },
-        {
-          "name": "OSWorld-G",
-          "score": 82.9,
-          "version": "",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.540Z"
-        },
-        {
-          "name": "OSWorld-Verified",
-          "score": 71.2,
-          "version": "",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.538Z"
-        },
-        {
-          "name": "SWE-Bench Pro",
-          "score": 43.8,
-          "version": "",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.536Z"
-        },
-        {
-          "name": "SWE-MM",
-          "score": 25.5,
-          "version": "",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.541Z"
-        },
-        {
-          "name": "Terminal-Bench 2.1",
-          "score": 73.4,
-          "version": "2.1",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.536Z"
-        },
-        {
-          "name": "Toolathlon Verified",
-          "score": 54.6,
-          "version": "",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.537Z"
-        },
-        {
-          "name": "Vision2Web",
-          "score": 52.9,
-          "version": "",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.540Z"
-        },
-        {
-          "name": "WebArena-Verified",
-          "score": 63.4,
-          "version": "",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.540Z"
-        },
-        {
-          "name": "WebTest",
-          "score": 48.6,
-          "version": "",
-          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
-          "verified_at": "2026-10-31T02:45:10.539Z"
-        }
-      ],
-      "benchmark_key": "terminal_bench_2_1"
-    },
-    {
-      "rank": 13,
+      "rank": 9,
       "name": "Nex N2.5 Mini",
       "model_name": "Nex N2.5 Mini",
       "provider": "NanoGPT",
@@ -2018,7 +1298,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "nex-agi/nex-n2.5-mini",
       "provider_count": null,
-      "recent_activity": "Nex AGI のオープンソース・マルチモーダル・エージェントモデルの小型版。262Kコンテキスト・画像入力に対応し、入力 $0.025 / 出力 $0.1 と手出ししやすい価格。",
+      "recent_activity": "Nex AGIのオープンソース・マルチモーダルエージェントモデルの軽量版。画像入力・構造化出力対応で入力$0.025/出力$0.10 per 1Mと安く、高頻度呼び出し向き。",
       "normal_price_per_million": {
         "input": 0.025,
         "output": 0.1
@@ -2037,21 +1317,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Open-weight model but this delivery is a paid route at non-zero rates with no free allowance text."
+        "Paid ultra-low router route with no free limits recorded; free access at most playground-only and unverified."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "nex-agi/nex-n2.5-mini",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -2185,7 +1465,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 14,
+      "rank": 10,
       "name": "Laguna S 2.1",
       "model_name": "Laguna S 2.1",
       "provider": "NanoGPT",
@@ -2212,7 +1492,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "poolside/laguna-s-2.1",
       "provider_count": null,
-      "recent_activity": "Poolside のオープンウェイト・コーディングモデル(118B/アクティブ8B)。1Mコンテキストで長時間のソフトウェアエンジニアリングとツール利用を狙った枠、入出力 $0.1/$0.2。",
+      "recent_activity": "Poolsideのオープンウェイト・エージェントコーディングモデル(総118B/アクティブ8B)。長時間のソフトウェアエンジニアリング向けで、入力$0.10/出力$0.20 per 1M、コンテキスト1M。",
       "normal_price_per_million": {
         "input": 0.1,
         "output": 0.2
@@ -2231,21 +1511,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Paid route at $0.10/$0.20 per 1M with no free allowance recorded."
+        "Paid router route with no free quota recorded; playground-only free access unverified."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "poolside/laguna-s-2.1",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -2315,7 +1595,97 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 15,
+      "rank": 11,
+      "name": "MiMo V2.5",
+      "model_name": "MiMo V2.5",
+      "provider": "NanoGPT",
+      "model_vendor": "xiaomi",
+      "delivery_type": "router",
+      "classification": "G_FREE_LIKE",
+      "start_at": null,
+      "end_at": null,
+      "end_timezone_known": false,
+      "regions": [],
+      "registration_conditions": [],
+      "card_required": null,
+      "minimum_deposit": null,
+      "kyc_required": null,
+      "auto_renewal": null,
+      "refund_policy": null,
+      "free_limits": null,
+      "rate_limits": null,
+      "context_tokens": 1048576,
+      "max_output_tokens": 131072,
+      "tool_calling": true,
+      "structured_output": true,
+      "image_input": true,
+      "base_url": "https://nano-gpt.com/api/v1",
+      "model_id": "xiaomi/mimo-v2.5",
+      "provider_count": null,
+      "recent_activity": "Xiaomiのフルモーダル理解モデルMiMo V2.5。ツール呼び出し・構造化出力・Web検索対応で、NanoGPT経由は入力$0.14/出力$0.28 per 1M、コンテキスト1M。",
+      "normal_price_per_million": {
+        "input": 0.13999999999999999,
+        "output": 0.27999999999999997
+      },
+      "effective_price_per_million": {
+        "input": 0.13999999999999999,
+        "output": 0.27999999999999997
+      },
+      "effective_discount_percent": null,
+      "discount_rates": null,
+      "window": null,
+      "data_retention": null,
+      "data_policy": null,
+      "data_policy_source": null,
+      "free_endpoint_status": null,
+      "operational_evidence": "official docs / pricing fetch verified this run",
+      "activity": null,
+      "training_use": null,
+      "suspicion_score": 2,
+      "suspicion_reasons": [
+        "Paid router route with no free limits; free access only conceivable via playgrounds and unverified."
+      ],
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "exclusion_reason": null,
+      "last_verified": "2026-11-02T02:25:55.537Z",
+      "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
+      "provider_key": "nanogpt",
+      "canonical_model_id": "xiaomi/mimo-v2.5",
+      "access_kind": "ULTRA_LOW",
+      "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
+      "discount_start_at": null,
+      "discount_end_at": null,
+      "free_allowance_rank": "NORMAL",
+      "total_parameters_b": null,
+      "active_parameters_b": null,
+      "sources": [
+        "https://nano-gpt.com/models/text/xiaomi/mimo-v2.5",
+        "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
+        "https://nano-gpt.com/api/v1/models?detailed=true",
+        "https://huggingface.co/XiaomiMiMo/MiMo-V2.5"
+      ],
+      "benchmark": {
+        "score": 65.8,
+        "benchmark_name": "Terminal-Bench 2.0",
+        "version": "2.0",
+        "tier": "S"
+      },
+      "benchmarks": [
+        {
+          "name": "Terminal-Bench 2.0",
+          "score": 65.8,
+          "version": "2.0",
+          "source_url": "https://huggingface.co/XiaomiMiMo/MiMo-V2.5",
+          "verified_at": "2026-08-01T23:05:55.997Z"
+        }
+      ],
+      "benchmark_key": "terminal_bench_2_0"
+    },
+    {
+      "rank": 12,
       "name": "MiMo-V2.5",
       "model_name": "MiMo-V2.5",
       "provider": "Vercel AI Gateway",
@@ -2345,7 +1715,7 @@
       "base_url": "https://ai-gateway.vercel.sh/v1",
       "model_id": "xiaomi/mimo-v2.5",
       "provider_count": null,
-      "recent_activity": "Vercel AI Gateway で MiMo-V2.5 を割引後 入力 $0.119 / 出力 $0.238(定価 $0.14/$0.28)で利用。全モダリティ対応で、月 $5 の無料クレジットも併用できる。",
+      "recent_activity": "Vercel AI Gateway経由のMiMo-V2.5。テキスト・画像・動画・音声のネイティブ全モーダルモデルで、ディスカウント適用後の実効価格は入力$0.119/出力$0.238 per 1M。月$5の無料クレジットで試せる。",
       "normal_price_per_million": {
         "input": 0.14,
         "output": 0.28
@@ -2366,19 +1736,19 @@
       "training_use": "\"no_training\": \"none\" (GET /v1/models, fetched 2026-10-30)",
       "suspicion_score": 1,
       "suspicion_reasons": [
-        "Renewing $5 every 30 days for unpaid Vercel accounts with an explicit availableToFreeTier flag and a no-training policy, i.e. a standing free tier."
+        "Verbatim $5 credits every 30 days for free users plus an availableToFreeTier catalog flag; recurring monthly credit is a permanent free tier."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://vercel.com/docs/ai-gateway/sdks-and-apis/openai-chat-completions",
       "provider_key": "vercel",
       "canonical_model_id": "xiaomi/mimo-v2.5",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://llmpricing.dev/m/xiaomi/mimo-v2.5/",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "AMPLE",
@@ -2407,7 +1777,201 @@
       "benchmark_key": "terminal_bench_2_0"
     },
     {
-      "rank": 16,
+      "rank": 13,
+      "name": "Nex AGI: Nex-N2.5-Mini",
+      "model_name": "Nex AGI: Nex-N2.5-Mini",
+      "provider": "OpenRouter",
+      "model_vendor": "nex-agi",
+      "delivery_type": "router",
+      "classification": "G_FREE_LIKE",
+      "start_at": null,
+      "end_at": null,
+      "end_timezone_known": false,
+      "regions": [],
+      "registration_conditions": [],
+      "card_required": null,
+      "minimum_deposit": null,
+      "kyc_required": null,
+      "auto_renewal": null,
+      "refund_policy": null,
+      "free_limits": null,
+      "rate_limits": null,
+      "context_tokens": 262144,
+      "max_output_tokens": null,
+      "tool_calling": null,
+      "structured_output": null,
+      "image_input": null,
+      "base_url": "https://openrouter.ai/api/v1",
+      "model_id": "nex-agi/nex-n2.5-mini",
+      "provider_count": 1,
+      "recent_activity": "視覚フィードバックループ内のエージェントコーディングを売りにするNex-N2.5の軽量版。入力$0.025/出力$0.10 per 1Mで、長時間エージェントの実験用に安い。",
+      "normal_price_per_million": {
+        "input": 0.024999999999999998,
+        "output": 0.09999999999999999
+      },
+      "effective_price_per_million": {
+        "input": 0.024999999999999998,
+        "output": 0.09999999999999999
+      },
+      "effective_discount_percent": null,
+      "discount_rates": null,
+      "window": null,
+      "data_retention": null,
+      "data_policy": null,
+      "data_policy_source": null,
+      "free_endpoint_status": null,
+      "operational_evidence": "router: 1 provider(s), 1d uptime 98.3%",
+      "activity": "top provider Nex AGI, 1d uptime 98.3%",
+      "training_use": null,
+      "suspicion_score": 2,
+      "suspicion_reasons": [
+        "Paid OpenRouter route with no free variant or quota recorded; playground-only free use assumed and unverified."
+      ],
+      "information_confidence": "HIGH",
+      "operational_confidence": "HIGH",
+      "ranking_eligible": true,
+      "exclusion_reason": null,
+      "last_verified": "2026-11-02T02:25:55.537Z",
+      "endpoint_source": "https://openrouter.ai/docs/quickstart",
+      "provider_key": "openrouter",
+      "canonical_model_id": "nex-agi/nex-n2.5-mini",
+      "access_kind": "ULTRA_LOW",
+      "price_source": "https://openrouter.ai/api/v1/models",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
+      "discount_start_at": null,
+      "discount_end_at": null,
+      "free_allowance_rank": "NORMAL",
+      "total_parameters_b": null,
+      "active_parameters_b": null,
+      "sources": [
+        "https://openrouter.ai/nex-agi/nex-n2.5-mini",
+        "https://openrouter.ai/docs/quickstart",
+        "https://openrouter.ai/api/v1/models",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+        "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md"
+      ],
+      "benchmark": {
+        "score": 73.4,
+        "benchmark_name": "Terminal-Bench 2.1",
+        "version": "2.1",
+        "tier": "S"
+      },
+      "benchmarks": [
+        {
+          "name": "AutomationBench",
+          "score": 32.3,
+          "version": "v1.0.6",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.537Z"
+        },
+        {
+          "name": "BrowseComp",
+          "score": 83.4,
+          "version": "",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.538Z"
+        },
+        {
+          "name": "DeepSWE",
+          "score": 36.1,
+          "version": "v1.1",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.536Z"
+        },
+        {
+          "name": "Job Bench",
+          "score": 28.5,
+          "version": "",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.538Z"
+        },
+        {
+          "name": "OSWorld-2",
+          "score": 30.5,
+          "version": "2",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.539Z"
+        },
+        {
+          "name": "OSWorld-G",
+          "score": 82.9,
+          "version": "",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.540Z"
+        },
+        {
+          "name": "OSWorld-Verified",
+          "score": 71.2,
+          "version": "",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.538Z"
+        },
+        {
+          "name": "SWE-Bench Pro",
+          "score": 43.8,
+          "version": "",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.536Z"
+        },
+        {
+          "name": "SWE-MM",
+          "score": 25.5,
+          "version": "",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.541Z"
+        },
+        {
+          "name": "Terminal-Bench 2.1",
+          "score": 73.4,
+          "version": "2.1",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.536Z"
+        },
+        {
+          "name": "Toolathlon Verified",
+          "score": 54.6,
+          "version": "",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.537Z"
+        },
+        {
+          "name": "Vision2Web",
+          "score": 52.9,
+          "version": "",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.540Z"
+        },
+        {
+          "name": "WebArena-Verified",
+          "score": 63.4,
+          "version": "",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.540Z"
+        },
+        {
+          "name": "WebTest",
+          "score": 48.6,
+          "version": "",
+          "source_url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
+          "verified_at": "2026-10-31T02:45:10.539Z"
+        }
+      ],
+      "benchmark_key": "terminal_bench_2_1"
+    },
+    {
+      "rank": 14,
       "name": "Ornith 1.5 35B",
       "model_name": "Ornith 1.5 35B",
       "provider": "NanoGPT",
@@ -2434,7 +1998,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "ornith-ai/ornith-1.5-35b-a3b",
       "provider_count": null,
-      "recent_activity": "オープンウェイトの MoE コーディングモデル(35B/アクティブ3B)。思考オフの即答ルートで、入出力 $0.1/$0.4。画像理解や長コンテキストにも対応。",
+      "recent_activity": "オープンウェイトのMoEコーディングモデルOrnith 1.5 35B(A3B)の非思考版。エージェントのツール使用や画像理解まで covers、価格は入力$0.10/出力$0.40 per 1M。",
       "normal_price_per_million": {
         "input": 0.1,
         "output": 0.4
@@ -2453,21 +2017,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Open weights do not make the hosted API free; the record shows paid pricing and no free quota."
+        "Paid router endpoint with no free allowance in the record; only consumer-app free use is conceivable and unverified."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "ornith-ai/ornith-1.5-35b-a3b",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -2593,7 +2157,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 17,
+      "rank": 15,
       "name": "Ornith 1.5 35B Thinking",
       "model_name": "Ornith 1.5 35B Thinking",
       "provider": "NanoGPT",
@@ -2620,7 +2184,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "ornith-ai/ornith-1.5-35b-a3b:thinking",
       "provider_count": null,
-      "recent_activity": "同じ Ornith 1.5 の思考デフォルトON版。エージェント系で推論を挟みたい時に同じ価格で切り替えられる。",
+      "recent_activity": "Ornith 1.5 35Bの思考モード版。reasoningを効かせたエージェント処理向けで価格は同じく入力$0.10/出力$0.40 per 1M。",
       "normal_price_per_million": {
         "input": 0.1,
         "output": 0.4
@@ -2639,21 +2203,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Same paid thinking variant with no free-access wording."
+        "Paid thinking variant with no documented free quota; free use at most via the router's web app."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "ornith-ai/ornith-1.5-35b-a3b:thinking",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -2787,7 +2351,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 18,
+      "rank": 16,
       "name": "Thinking Machines: Inkling Small",
       "model_name": "Thinking Machines: Inkling Small",
       "provider": "OpenRouter",
@@ -2814,7 +2378,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "thinkingmachines/inkling-small:free",
       "provider_count": 1,
-      "recent_activity": "Inkling 小型版(アクティブ12B/276B)の :free ルート。1Mコンテキストのマルチモーダルを無料で触れる効率的な方。",
+      "recent_activity": "Thinking Machines LabのオープンウェイトMultimodal MoEの軽量版(総276B/アクティブ12B)が無料ルートで利用可。テキスト・画像・音声入力対応で1Mコンテキスト。",
       "normal_price_per_million": {
         "input": 0,
         "output": 0
@@ -2833,21 +2397,21 @@
       "operational_evidence": "router: 1 provider(s), 1d uptime 97.4%",
       "activity": "top provider Thinking Machines, 1d uptime 97.4%",
       "training_use": null,
-      "suspicion_score": 2,
+      "suspicion_score": 1,
       "suspicion_reasons": [
-        "Catalog-verified zero-priced standing :free endpoint without a campaign window, though limits are unstated and free routes may be pulled."
+        "Standing :free variant at $0/$0 on OpenRouter with recurring rate limits; quota specifics not captured."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "thinkingmachines/inkling-small",
       "access_kind": "FREE",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -3021,7 +2585,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 19,
+      "rank": 17,
       "name": "Thinking Machines: Inkling",
       "model_name": "Thinking Machines: Inkling",
       "provider": "OpenRouter",
@@ -3048,7 +2612,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "thinkingmachines/inkling:free",
       "provider_count": 1,
-      "recent_activity": "Thinking Machines Lab のオープンウェイト主力(アクティブ41B/975B)が :free で無料で使える。汎用推論・コーディング・エージェント向けの大型マルチモーダル。",
+      "recent_activity": "Thinking Machinesの主力オープンウェイトモデルInkling(総975B/アクティブ41B)の無料ルート。テキスト・画像・音声のマルチモーダルで1Mコンテキスト、$0で試せる大型モデルとして希少価値が高い。",
       "normal_price_per_million": {
         "input": 0,
         "output": 0
@@ -3067,21 +2631,21 @@
       "operational_evidence": "router: 1 provider(s), 1d uptime 97.6%",
       "activity": "top provider Thinking Machines, 1d uptime 97.6%",
       "training_use": null,
-      "suspicion_score": 2,
+      "suspicion_score": 1,
       "suspicion_reasons": [
-        "Zero-priced :free API route for a frontier-class open-weight model, but quota and duration are undocumented."
+        "Standing :free variant at $0/$0 on OpenRouter; recurring free tier with undocumented daily caps."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "thinkingmachines/inkling",
       "access_kind": "FREE",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -3287,7 +2851,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 20,
+      "rank": 18,
       "name": "NVIDIA: Nemotron 3.5 Super VL",
       "model_name": "NVIDIA: Nemotron 3.5 Super VL",
       "provider": "OpenRouter",
@@ -3314,7 +2878,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "nvidia/nemotron-3.5-super-vl:free",
       "provider_count": 1,
-      "recent_activity": "テキスト・画像・ドキュメント・GUI スクショ・動画まで読む 120B/アクティブ12B のマルチモーダル MoE が :free で無料。スクショ系エージェントの実験にうってつけ。",
+      "recent_activity": "NVIDIAのオープン・マルチモーダルMoE(総120B/アクティブ12B)の無料ルート。テキスト+画像入力で1Mコンテキスト、$0で視覚エージェントの試作ができる。",
       "normal_price_per_million": {
         "input": 0,
         "output": 0
@@ -3333,21 +2897,21 @@
       "operational_evidence": "router: 1 provider(s), 1d uptime 99.9%",
       "activity": "top provider Nvidia, 1d uptime 99.9%",
       "training_use": null,
-      "suspicion_score": 2,
+      "suspicion_score": 1,
       "suspicion_reasons": [
-        "Recently listed zero-priced :free route with no stated end date, but no published quota, so liveness is less certain."
+        "Standing :free variant at $0/$0 on OpenRouter; recurring free quota with undocumented limits."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "nvidia/nemotron-3.5-super-vl",
       "access_kind": "FREE",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -3665,7 +3229,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 22,
+      "rank": 20,
       "name": "NVIDIA: Nemotron 3 Ultra",
       "model_name": "NVIDIA: Nemotron 3 Ultra",
       "provider": "OpenRouter",
@@ -3692,7 +3256,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
       "provider_count": 1,
-      "recent_activity": "NVIDIA の 550B MoE フロンティアモデルを OpenRouter の :free で無料利用。NIM 直のトライアルが不安定な今、同じモデルへたどり着く現実的な入口。",
+      "recent_activity": "NVIDIAのオープンフロンティアモデルNemotron 3 Ultra(550B MoE)がOpenRouterの無料ルートで$0。1MコンテキストでTerminal-Bench 2.1スコア56.4と性能も本物なので、今回候補の中では見どころの一つ。",
       "normal_price_per_million": {
         "input": 0,
         "output": 0
@@ -3711,21 +3275,21 @@
       "operational_evidence": "router: 1 provider(s), 1d uptime 100%",
       "activity": "top provider Nvidia, 1d uptime 100%",
       "training_use": null,
-      "suspicion_score": 2,
+      "suspicion_score": 1,
       "suspicion_reasons": [
-        "Verified $0/$0 standing :free API route, but quota/capacity terms are undocumented and NVIDIA free NIM routes are capacity-dependent."
+        "Standing :free variant at $0/$0 on OpenRouter with recurring daily rate limits; large-model free endpoints can be capacity-flaky."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "nvidia/nemotron-3-ultra-550b-a55b",
       "access_kind": "FREE",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -3755,7 +3319,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 23,
+      "rank": 21,
       "name": "DeepSeek V4 Flash",
       "model_name": "DeepSeek V4 Flash",
       "provider": "NanoGPT",
@@ -3782,7 +3346,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "deepseek/deepseek-v4-flash",
       "provider_count": null,
-      "recent_activity": "NanoGPT 経由の DeepSeek V4 Flash。1Mコンテキストで入力 $0.14 / 出力 $0.28(1Mトークンあたり)の超低単価。高速・高スループットのコーディングやエージェント処理に向く。",
+      "recent_activity": "NanoGPT経由のDeepSeek V4 Flash。1MコンテキストのMoEで、入力$0.14/出力$0.28 per 1Mの超低価格。無料でこそないが、エージェントの大量呼び出しに耐える価格帯。",
       "normal_price_per_million": {
         "input": 0.13999999999999999,
         "output": 0.27999999999999997
@@ -3801,21 +3365,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "No free allowance text anywhere and the live catalog reports non-zero paid pricing, so the API itself is paid (free only, if at all, inside the vendor's consumer surface)."
+        "Paid ultra-low router API with no verbatim free quota; any free access is playground-only on the NanoGPT site, which the record does not document."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "deepseek/deepseek-v4-flash",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -3869,7 +3433,7 @@
       "benchmark_key": "terminal_bench_2_0"
     },
     {
-      "rank": 24,
+      "rank": 22,
       "name": "DeepSeek V4 Flash 0423",
       "model_name": "DeepSeek V4 Flash 0423",
       "provider": "NanoGPT",
@@ -3896,7 +3460,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "deepseek/deepseek-v4-flash-0423",
       "provider_count": null,
-      "recent_activity": "DeepSeek V4 Flash の初始チェックポイント(0423版)を同じ超低単価で固定利用できる。バージョンを固定したい回帰テストや再現性重視の運用に。",
+      "recent_activity": "NanoGPTが提供するDeepSeek V4 Flashの初期チェックポイント0423。ツール呼び出し・構造化出力・任意のreasoningに対応し、入出力$0.14/$0.28 per 1M。",
       "normal_price_per_million": {
         "input": 0.13999999999999999,
         "output": 0.27999999999999997
@@ -3915,21 +3479,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Verified non-zero paid pricing with zero documented free quota means this is not a free API."
+        "Paid router checkpoint with no free limits recorded; free access at most exists in the provider's web playground, unverified."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "deepseek/deepseek-v4-flash-0423",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -3959,7 +3523,7 @@
       "benchmark_key": "terminal_bench_2_0"
     },
     {
-      "rank": 25,
+      "rank": 23,
       "name": "DeepSeek V4 Flash 0423 (Thinking)",
       "model_name": "DeepSeek V4 Flash 0423 (Thinking)",
       "provider": "NanoGPT",
@@ -3986,7 +3550,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "deepseek/deepseek-v4-flash-0423:thinking",
       "provider_count": null,
-      "recent_activity": "0423チェックポイントの思考モード版。推論をデフォルトで効かせてコーディング・エージェント用途に使う構成で、価格是无料版と同一の超低単価。",
+      "recent_activity": "0423チェックポイントのreasoningオン設定ルート。仕様・価格は同じで入力$0.14/出力$0.28 per 1M、思考を既定で使いたい向け。",
       "normal_price_per_million": {
         "input": 0.13999999999999999,
         "output": 0.27999999999999997
@@ -4005,21 +3569,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Paid reasoning variant at non-zero per-million rates with no recorded free allowance."
+        "Paid thinking variant with no documented free quota; only possible free use is the provider's consumer playground."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "deepseek/deepseek-v4-flash-0423:thinking",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -4097,7 +3661,7 @@
       "benchmark_key": "terminal_bench_2_0"
     },
     {
-      "rank": 26,
+      "rank": 24,
       "name": "inclusionAI: Ling 3.0 Flash",
       "model_name": "inclusionAI: Ling 3.0 Flash",
       "provider": "OpenRouter",
@@ -4124,7 +3688,7 @@
       "base_url": "https://openrouter.ai/api/v1",
       "model_id": "inclusionai/ling-3.0-flash",
       "provider_count": 2,
-      "recent_activity": "Ling 3.0 Flash を OpenRouter で。入力 $0.021 / 出力 $0.063 と同モデルの中で最も安い部類の表示で、トークン効率狙いのエージェント量大処理に向く。",
+      "recent_activity": "OpenRouter経由のLing-3.0-flash。2プロバイダ競争で入力$0.021/出力$0.063 per 1Mと、MoE効率を活かした最安帯のコスパ路線。",
       "normal_price_per_million": {
         "input": 0.020999999999999998,
         "output": 0.063
@@ -4143,21 +3707,21 @@
       "operational_evidence": "router: 2 provider(s), 1d uptime 100%",
       "activity": "top provider Novita, 1d uptime 100%",
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Verified non-zero paid pricing and no free-allowance evidence in the record."
+        "Paid listing with no :free variant or free limits in the record; any free access is playground-only."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://openrouter.ai/docs/quickstart",
       "provider_key": "openrouter",
       "canonical_model_id": "inclusionai/ling-3.0-flash",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://openrouter.ai/api/v1/models",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -4259,7 +3823,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 27,
+      "rank": 25,
       "name": "Ling 3.0 Flash",
       "model_name": "Ling 3.0 Flash",
       "provider": "NanoGPT",
@@ -4286,7 +3850,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "inclusionai/ling-3.0-flash",
       "provider_count": null,
-      "recent_activity": "inclusionAI の 124B MoE(アクティブ約5.1B)。トークン効率を重視したエージェント推論向けで、入出力 $0.075/$0.22 の低価格。",
+      "recent_activity": "inclusionAIのLing-3.0-flash(124B MoE、アクティブ約5.1B)。トークン効率重視で、NanoGPT経由なら入力$0.075/出力$0.22 per 1M。",
       "normal_price_per_million": {
         "input": 0.075,
         "output": 0.22
@@ -4305,21 +3869,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Paid ultra-low route with no free-allowance evidence in the record."
+        "Paid router endpoint with no free quota documented; any free access would be playground-only and is unverified."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "inclusionai/ling-3.0-flash",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -4421,7 +3985,7 @@
       "benchmark_key": "terminal_bench_2_1"
     },
     {
-      "rank": 28,
+      "rank": 26,
       "name": "Step 3.5 Flash 2603",
       "model_name": "Step 3.5 Flash 2603",
       "provider": "NanoGPT",
@@ -4448,7 +4012,7 @@
       "base_url": "https://nano-gpt.com/api/v1",
       "model_id": "stepfun-ai/step-3.5-flash-2603",
       "provider_count": null,
-      "recent_activity": "StepFun の高頻度エージェント・コーディング向けフラッシュ版。トークン効率と推論速度を改善した方向で、入出力 $0.1/$0.3。",
+      "recent_activity": "StepFunの高頻度エージェント・コーディング向け高速モデル。トークン効率を改善した最新版で、NanoGPTでは入力$0.10/出力$0.30 per 1M。",
       "normal_price_per_million": {
         "input": 0.1,
         "output": 0.3
@@ -4467,21 +4031,21 @@
       "operational_evidence": "official docs / pricing fetch verified this run",
       "activity": null,
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 2,
       "suspicion_reasons": [
-        "Paid route with a prompt-logging/training warning in the description but no free quota; not a free API."
+        "Paid route with an explicit note that StepFun may log and train on prompts; no free quota, and any free use is playground-only and unverified."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": true,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
+      "last_verified": "2026-11-02T02:25:55.537Z",
       "endpoint_source": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "provider_key": "nanogpt",
       "canonical_model_id": "stepfun-ai/step-3.5-flash-2603",
       "access_kind": "ULTRA_LOW",
       "price_source": "https://nano-gpt.com/api/v1/models?detailed=true",
-      "price_verified_at": "2026-11-01T02:29:05.049Z",
+      "price_verified_at": "2026-11-02T02:25:55.537Z",
       "discount_start_at": null,
       "discount_end_at": null,
       "free_allowance_rank": "NORMAL",
@@ -4646,8 +4210,8 @@
       "regions": [],
       "registration_conditions": [
         "Before using the MiniMax API, you need to complete account registration and obtain an API Key.",
-        "Pay-as-you-go ：Visit API Keys > Create new secret key to get your API Key",
-        "For pay-as-you-go, access Billing/Balance to top up if needed."
+        "Pay-as-you-go：Visit API Keys > Create new secret key to get your API Key",
+        "For pay-as-you-go, access Billing/Balance to top up if needed. For M Plan, buy a subscription or Credits, or use resources assigned by your Team."
       ],
       "card_required": null,
       "minimum_deposit": null,
@@ -4664,7 +4228,7 @@
       "base_url": "https://api.minimax.io/v1",
       "model_id": "MiniMax-M3",
       "provider_count": null,
-      "recent_activity": "「Permanent 50% off」バッジ付きで、標準入力が1Mトークン $0.30、出力 $1.20(≤512k 入力時)に半額恒久化されたフロンティア級マルチモーダル。1Mコンテキスト・最大524K出力でコーディング用途に太い。",
+      "recent_activity": "MiniMax公式のフロンティア級マルチモーダルコーディングモデル(1Mコンテキスト)。通常は入力$0.30/出力$1.20 per 1Mだが、現在ディスカウント適用で実効$0。登録してAPIキーを発行すればそのまま試せる。",
       "normal_price_per_million": {
         "input": 0.3,
         "output": 1.2
@@ -4688,14 +4252,14 @@
       "training_use": "As between you and us, and to the extent permitted by applicable laws, you retain your ownership rights in Client input and generated content. We may use the input and generated content to provide, maintain, develop, and improve our Services, comply with applicable law, enforce our terms and policies, and keep our Services safe.",
       "suspicion_score": 1,
       "suspicion_reasons": [
-        "Verbatim official pricing shows 'Permanent 50% off' on a pay-as-you-go API with no free allowance, i.e. discounted paid access rather than free."
+        "Pay-as-you-go paid API with a verbatim 'Permanent 50% off' badge and no free tier in the record; this is a discount, not free access (record's effective price 0/0 is contradictory)."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "HIGH",
       "ranking_eligible": false,
       "exclusion_reason": null,
-      "last_verified": "2026-11-01T02:29:05.049Z",
-      "endpoint_source": "https://platform.minimax.io/docs/guides/text-generation",
+      "last_verified": "2026-11-02T02:25:55.537Z",
+      "endpoint_source": "https://platform.minimax.io/docs/guides/quickstart-preparation",
       "provider_key": "minimax",
       "canonical_model_id": "MiniMax-M3",
       "access_kind": "DISCOUNTED",
@@ -4707,7 +4271,7 @@
       "total_parameters_b": 428,
       "active_parameters_b": null,
       "sources": [
-        "https://platform.minimax.io/docs/guides/text-generation"
+        "https://platform.minimax.io/docs/guides/quickstart-preparation"
       ],
       "benchmark": null,
       "benchmarks": [],
@@ -4744,7 +4308,7 @@
       "base_url": "https://ai-gateway.vercel.sh/v1",
       "model_id": "minimax/minimax-m3.1-flash",
       "provider_count": null,
-      "recent_activity": "Vercel AI Gateway で MiniMax-M3.1-Flash を無料対象として利用。未課金の無料ユーザーには1Mリクエストから始まる $5 クレジットが30日ごとに付く。",
+      "recent_activity": "Vercel AI Gateway経由のMiniMax-M3.1-Flash。無料ユーザーに30日ごとに$5クレジットが付与され、このモデルは無料枠対象で実効$0での利用が可能。通常価格は入力$0.15/出力$0.60 per 1M。",
       "normal_price_per_million": {
         "input": 0.15,
         "output": 0.6
@@ -4766,9 +4330,9 @@
       "operational_evidence": null,
       "activity": null,
       "training_use": "\"no_training\": \"some\" (GET /v1/models, fetched 2026-10-30)",
-      "suspicion_score": 2,
+      "suspicion_score": 1,
       "suspicion_reasons": [
-        "Vercel AI Gateway grants $5 of credits every 30 days to non-paying accounts on free-tier-eligible models, i.e. a renewing free allowance (not a one-time trial, not a data-consent condition), though the model-level flag is indirect and the record is stale."
+        "Verbatim free-tier terms: $5 of credits every 30 days for unpaid users on a free-tier-eligible model; recurring renewal makes this a permanent free tier, not a one-time trial credit."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "MEDIUM",
@@ -4934,11 +4498,11 @@
         "access_kinds": [
           "free_calls"
         ],
-        "free_calls": "Updated default OpenRouter models during onboarding to `deepseek/deepseek-r1:free` for the free tier and `anthropic/claude-sonnet-4` for paid tiers.",
+        "free_calls": "Currently free on OpenRouter.",
         "credit_multiplier": null,
         "off_peak": null,
         "model_lock": null,
-        "promo_text": "Added support for the openrouter/openrouter/quasar-alpha model. Currently free on OpenRouter."
+        "promo_text": null
       }
     },
     {
@@ -4948,18 +4512,16 @@
       "facts": {
         "key": "claude_code",
         "source_url": "https://claude.com/pricing",
-        "pricing_text": "Free — Try Claude — $0 — Free for everyone — Limited usage every 5 hours and every week* | Pro — $18 — Per month with annual subscription discount ($220 billed up front). $22 if billed monthly. — Everything in Free, plus: More usage than Free, every 5 hours and every week*; Claude Code | Max — $110 — Per month — Everything in Pro, plus: 5x Pro usage every 5 hours and every week*; Fable included, up to half your weekly limit; $100 a month in API credits to build on the Claude Platform | Ultra — $220 — Per month — Everything in Max, plus: No 5-hour limit; 10x Pro usage every week*; $200 a month in API credits, up from $100 on Max. Claude Code row: Free No / Pro Yes / Max Yes / Ultra Yes. Price and plans are subject to change at Anthropic's discretion. Prices include 10% JCT",
+        "pricing_text": "Free Try Claude $0 Free for everyone Limited usage every 5 hours and every week* | Pro Claude Code included For everyday work $18 Per month with annual subscription discount ($220 billed up front). $22 if billed monthly. | Max Claude Code included $110 Per month Everything in Pro, plus: 5x Pro usage every 5 hours and every week* Fable included, up to half your weekly limit New $100 a month in API credits to build on the Claude Platform† | Ultra Claude Code included $220 Per month Everything in Max, plus: No 5-hour limit‡ 10x Pro usage every week* $200 a month in API credits, up from $100 on Max† | Claude Code: Free No / Pro Yes / Max Yes / Ultra Yes | Fable: Free No / Pro Usage credits / Max 50% of weekly limits* / Ultra 50% of weekly limits*",
         "access_kinds": [
           "subscription",
-          "free_calls",
-          "credit_multiplier",
-          "model_lock"
+          "free_calls"
         ],
-        "free_calls": "Free — $0 — Free for everyone — Limited usage every 5 hours and every week*; Claude Code: No",
-        "credit_multiplier": "Limit every 5 hours — Free: Limited, Pro: 1x, Max: 5x, Ultra: No 5-hour limit. Limit every week — Free: Limited, Pro: 1x, Max: 5x, Ultra: 10x",
+        "free_calls": "Limited usage every 5 hours and every week*",
+        "credit_multiplier": null,
         "off_peak": null,
-        "model_lock": "Opus — Free: No, Pro: Yes, Max: Yes, Ultra: Yes. Fable — Free: No, Pro: Usage credits, Max: 50% of weekly limits, Ultra: 50% of weekly limits",
-        "promo_text": "Fable, paid with usage credits New; $100 a month in API credits to build on the Claude Platform New; $200 a month in API credits, up from $100 on Max New"
+        "model_lock": null,
+        "promo_text": null
       }
     },
     {
@@ -4969,37 +4531,16 @@
       "facts": {
         "key": "cline",
         "source_url": "https://github.com/cline/cline/releases",
-        "pricing_text": "The Cline free list adds Reflection Beam, Nemotron 3.5 Lightning and Laguna S 2.1 and drops Mimo V2.6 Flash and Muse Spark 1.3 Contributor. ClinePass now defaults to Kimi K3.1 Pro and adds MiniMax M3.1 Flash and DeepSeek V4.1 Flash 1017.",
+        "pricing_text": "Refreshed the model catalog. Adds the CommandCode, Reflection, Liquid Inference and Munito AI providers and drops CrofAI, iFlow and Llama. The Cline free list adds Reflection Beam, Nemotron 3.5 Lightning and Laguna S 2.1 and drops Mimo V2.6 Flash and Muse Spark 1.3 Contributor. ClinePass now defaults to Kimi K3.1 Pro and adds MiniMax M3.1 Flash and DeepSeek V4.1 Flash 1017.",
         "access_kinds": [
           "free_calls",
-          "subscription",
-          "model_lock"
+          "subscription"
         ],
-        "free_calls": "The Cline free list adds Reflection Beam, Nemotron 3.5 Lightning and Laguna S 2.1 and drops Mimo V2.6 Flash and Muse Spark 1.3 Contributor.",
+        "free_calls": "Gemini API keys (the gemini provider) no longer send native Google Search. Free-tier keys failed every turn with a 429 quota error on Gemini 3+, and on Gemini 2.x every Cline tool was dropped.",
         "credit_multiplier": null,
         "off_peak": null,
-        "model_lock": "New Cloud chats start on your local Cline or ClinePass model. If Cloud doesn't offer that model, ClinePass subscribers get a ClinePass model and everyone else gets Claude Sonnet 5.5",
-        "promo_text": "Gemini API keys (the gemini provider) no longer send native Google Search. Free-tier keys failed every turn with a 429 quota error on Gemini 3+, and on Gemini 2.x every Cline tool was dropped."
-      }
-    },
-    {
-      "key": "codex",
-      "label": "Codex",
-      "source_url": "https://developers.openai.com/api/docs/pricing",
-      "facts": {
-        "key": "codex",
-        "source_url": "https://developers.openai.com/api/docs/pricing",
-        "pricing_text": "Prices per 1M tokens. Codex gpt-5.3-codex Input $1.75 Output $14.00 Cached input $0.175",
-        "access_kinds": [
-          "external_api",
-          "free_calls",
-          "model_lock"
-        ],
-        "free_calls": "File search Storage $0.10 / GB per day (1 GB free); ChatKit file and image upload storage $0.10 / GB-day after 1 GB free per account per month; Web search preview (non-reasoning models) $25.00 / 1k calls + Search content tokens are free.",
-        "credit_multiplier": null,
-        "off_peak": null,
-        "model_lock": "Access is limited to approved internal research through the trusted-access program. All eligible organizations will continue to get access to the latest GPT-Rosalind models as they're released.",
-        "promo_text": "Regional processing (data residency) endpoints are charged a 10% uplift for models released on or after March 5, 2026. Starting Nov 1, 2026, FedRAMP endpoints are also charged a 10% uplift. Priority processing was renamed Fast mode on July 30, 2026. GPT-5.6 Sol’s promotional pricing is available at least through November 21, 2026. / GPT-6 Astra for Law promotional pricing is available at least through December 31, 2026."
+        "model_lock": "New Cloud chats start on your local Cline or ClinePass model. If Cloud doesn't offer that model, ClinePass subscribers get a ClinePass model and everyone else gets Claude Sonnet 5.5.",
+        "promo_text": null
       }
     },
     {
@@ -5009,12 +4550,12 @@
       "facts": {
         "key": "continue",
         "source_url": "https://github.com/continuedev/continue/releases",
-        "pricing_text": "Stable release of the Continue VS Code extension (final release): removes the CLI-install banner and Generate Rule feature, switches onboarding and the new-config template to explicit model definitions (no Hub slugs), and updates the deprecation banner export link.",
+        "pricing_text": "v2.1.0-vscode Pre-release / chore: vscode 2.1.0 — no pricing or free-access statement appears on the releases page",
         "access_kinds": [],
         "free_calls": null,
         "credit_multiplier": null,
         "off_peak": null,
-        "model_lock": "feat: add ClawRouter as a provider for cost-optimized model routing",
+        "model_lock": null,
         "promo_text": null
       }
     },
@@ -5025,51 +4566,52 @@
       "facts": {
         "key": "kilo_code",
         "source_url": "https://github.com/Kilo-Org/kilocode/releases",
-        "pricing_text": "Cloud discovery now pages through every workspace for a repository, reports the canonical status vocabulary instead of showing healthy workspaces as unknown, and shows the hourly compute price in the workspace header.",
+        "pricing_text": "v7.8.25 (pre-release) Pre-release — CLI Patch Changes #15274 57d4c30 Thanks @Uddoo! - Preserve the existing package-manager user-agent when reading npm configuration. (no pricing or free-access statement appears on the releases page)",
         "access_kinds": [],
         "free_calls": null,
         "credit_multiplier": null,
         "off_peak": null,
-        "model_lock": "Hosted operations now exchange the stored user credential for a short-lived Cloud Agent control token before any Worker call, so the original credential is never sent to the Worker. Hosted attachments stop working once their session or workspace is deleted.",
+        "model_lock": null,
         "promo_text": null
       }
     },
     {
-      "key": "opencode",
-      "label": "OpenCode",
-      "source_url": "https://opencode.ai/changelog",
+      "key": "roo_code",
+      "label": "Roo Code",
+      "source_url": "https://roomote.dev/",
       "facts": {
-        "key": "opencode",
-        "source_url": "https://opencode.ai/changelog",
-        "pricing_text": "When your free messages run out, Desktop and the TUI now show the reset time, restore your submitted prompt, and offer direct upgrade or model-switching actions instead of a generic error.",
+        "key": "roo_code",
+        "source_url": "https://roomote.dev/",
+        "pricing_text": "Self-hosted pricing Up to 10 users Free No license needed 11–50 users $249/mo All features included 51–100 users $499/mo All features included 100+ users Talk to us All features included",
         "access_kinds": [
-          "free_calls"
+          "free_calls",
+          "subscription"
         ],
-        "free_calls": "Set OPENCODE_DISABLE_FREE_MODELS=1 or true to remove zero-cost models from OpenCode and OpenCode Go catalogs, defaults, and fallbacks.",
+        "free_calls": "Free for up to 10 users. You pay your infrastructure and inference providers directly.",
         "credit_multiplier": null,
         "off_peak": null,
         "model_lock": null,
-        "promo_text": "You can now select Step 5 Preview Free from OpenCode’s free model lineup for a limited time."
+        "promo_text": "Free, flexible and fully-featured (wherever you deploy)"
       }
     },
     {
       "key": "windsurf",
       "label": "Windsurf",
-      "source_url": "https://devin.ai/pricing",
+      "source_url": "https://docs.devin.ai/desktop/changelog",
       "facts": {
         "key": "windsurf",
-        "source_url": "https://devin.ai/pricing",
-        "pricing_text": "INDIVIDUAL PLANS Free $0 — \"Light quota to code with agents\", \"Limited model availability\", \"Unlimited inline edits\", \"Unlimited Tab completions\". Pro POPULAR $20 per month — \"Everything in Free, plus:\", \"Increased quotas, including access to frontier models from OpenAI, Claude, Gemini, and SpaceXAI, plus leading open source models\", \"Full model availability\", \"Free use of SWE-2\", \"Access to cloud agents (Devin Cloud)\", \"Purchase extra usage at API pricing\". Max NEW $200 per month — \"Everything in Pro, plus:\", \"Significantly higher quotas\". TEAM PLANS Teams $80 /month for team plan + $40/mo per full dev seat — \"Everything in Pro, plus:\", \"Up to 200 users\", \"Share and collaborate\", \"Centralized billing\", \"Admin dashboard with analytics\", \"Priority support\". Enterprise Let's talk. FAQ: \"Each paid plan comes with a usage allowance that refreshes automatically on a daily and weekly basis. For the majority of users, this quota will be enough to fully cover all agent usage. Cost per message varies based on the model used, the task size and complexity, and the reasoning required.\" / \"Most users will never hit their limits. If you do go beyond your included usage on a paid plan, you can purchase extra usage which is consumed at API pricing.\" / \"What is included in the Free plan? The Free plan includes a light quota to code with agents, limited model availability, unlimited inline edits, and unlimited Tab completions.\" Compare table: \"Free SWE-2 Slow\"; \"Concurrent sessions limit … Up to 10 Up to 10 Unlimited Unlimited\". Changelog (https://windsurf.com/changelog, now docs.devin.ai/desktop/changelog): v2.2.17 (May 6, 2026) \"All Windsurf IDE users now have access to Devin Review and Quick Review with your existing subscription.\", \"Devin Review is available for all self-serve users. Enterprise users can only use Devin Review with a Cognition platform agreement.\"; v2.1.29 (April 29, 2026) \"All Windsurf users can use this new CLI agent with your existing subscription.\"; v3.7.16 \"Teams plan members no longer see quota warning banners they cannot act on.\"; v3.8.20 \"Enterprise: Added a link to request more usage when hitting ACU limits.\"; v3.0.28 \"Simplified model picker pricing view for select enterprise customers\"; v3.0.12 (June 2, 2026) \"Windsurf is now Devin Desktop.\"",
+        "source_url": "https://docs.devin.ai/desktop/changelog",
+        "pricing_text": "You can now sign in to Devin with ChatGPT and use your eligible ChatGPT Plus or Pro plan for GPT model usage in Devin Desktop | Choose a GPT model and those requests are billed to your ChatGPT plan; for the best value, use Fusion with GPT-6 Astra as the lead and SWE-2 as the sidekick | Devin cloud agent available directly inside Windsurf, included with every self-serve plan | Availability: Now available to all self-serve users on Pro, Max, and Teams plans | The model picker now shows token pricing information directly, so you can see the exact rate extra usage is billed at | Token pricing display - Per-model input, output, and cache read token rates visible in the picker",
         "access_kinds": [
           "subscription",
           "free_calls",
-          "model_lock"
+          "credit_multiplier"
         ],
-        "free_calls": "The Free plan includes a light quota to code with agents, limited model availability, unlimited inline edits, and unlimited Tab completions.",
-        "credit_multiplier": null,
+        "free_calls": " All battle groups are free for the first week for paid users",
+        "credit_multiplier": "No thinking: 10x credits / With thinking: 12x credits",
         "off_peak": null,
-        "model_lock": "Limited model availability",
-        "promo_text": null
+        "model_lock": null,
+        "promo_text": "limited-time promotional pricing for self-serve users until Feb 16"
       }
     }
   ],
@@ -5077,17 +4619,17 @@
     {
       "key": "microsoft_for_startups",
       "label": "Microsoft for Startups",
-      "source_url": "https://www.microsoft.com/startups",
+      "source_url": "https://www.microsoft.com/ja-jp/startups",
       "facts": {
         "key": "microsoft_for_startups",
-        "source_url": "https://www.microsoft.com/startups",
         "max_credit": "最大 15 万米国ドル分のクレジット",
+        "source_url": "https://www.microsoft.com/ja-jp/startups",
+        "terms_text": null,
         "currency": "米国ドル",
-        "eligibility": "Microsoft for Startupsは、 AI サービス、エキスパートのガイダンス、必要不可欠なテクノロジへのアクセスを提供することで、創設者が一般的なスタートアップ企業の課題を克服するのを支援するプログラムです。このプログラムは、ソリューションの構築、スケーリング、販売を支援する無料の Azure クレジット、AI ツール、リソースなどの特典を提供します。 / 投資家紹介コードをお持ちの場合や Azure を使用して構築を開始したい場合は、こちらからサインアップしてください",
+        "eligibility": "投資家紹介コードをお持ちの場合や Azure を使用して構築を開始したい場合は、こちらからサインアップしてください",
+        "usable_services": "無料の Azure クレジット、AI ツール、リソースなどの特典 / GitHub、Azure Kubernetes Service (AKS)、AI 全体で Azure クレジットを使用するための実用的なガイド",
         "deadline": null,
-        "usable_services": "無料の Azure クレジット: スタートアップ企業は、Azure プラットフォーム上でソリューションを迅速かつ効率的に構築するのに役立つ Azure クレジットを受け取ります。 / AI ツールへのアクセス: スタートアップ企業は、業界をリードする AI サービスとツールを活用して、革新的でインテリジェントなアプリケーションを作成できます。 / 技術リソース: スタートアップ企業は、より良い製品の構築、より迅速なスケーリング、販売の増加を支援するさまざまなリソースにアクセスできます。これには、レプリケーションやモダナイゼーションの体験を支援するドキュメント、ガイド、サポートが含まれます。 / (見出し) GitHub、Azure Kubernetes Service (AKS)、AI 全体で Azure クレジットを使用するための実用的なガイド",
-        "prepaid_conditions": "クラス最高のツールとプラットフォームに無料でアクセスして、Microsoft とのパートナーシップを最大限に活用しましょう。",
-        "terms_text": null
+        "prepaid_conditions": null
       }
     }
   ],
@@ -5123,7 +4665,7 @@
       "base_url": "https://integrate.api.nvidia.com/v1",
       "model_id": "nvidia/nemotron-3-ultra-550b-a55b",
       "provider_count": null,
-      "recent_activity": "NVIDIA NIM 直の 550B MoE フロンティアモデル。トライアル枠は無料だが、API Trial Terms 配下でアカウント作成・検証が必須。",
+      "recent_activity": "NVIDIA NIM公式のNemotron 3 Ultra(550B MoE、アクティブ55B)。トライアル枠では実質$0で、通常価格は入力$0.50/出力$2.20 per 1M。Terminal-Bench 2.1で56.4を刻む推論・エージェント強いモデル。",
       "normal_price_per_million": {
         "input": 0.5,
         "output": 2.2
@@ -5142,14 +4684,14 @@
       "operational_evidence": "404 Error — Even AI can't find this page!",
       "activity": "404 Error — Even AI can't find this page!",
       "training_use": null,
-      "suspicion_score": 3,
+      "suspicion_score": 1,
       "suspicion_reasons": [
-        "Access is explicitly a trial service under the NVIDIA API Trial Terms with account verification required and no documented recurring quota, and the record is stale."
+        "Free access is governed by the NVIDIA API Trial Terms of Service, i.e. an explicitly trial-governed program rather than a standing free tier."
       ],
       "information_confidence": "HIGH",
       "operational_confidence": "LOW",
       "ranking_eligible": false,
-      "exclusion_reason": "[stale] 39 consecutive failed verifications; moved to caution (AC-3)",
+      "exclusion_reason": "[stale] 40 consecutive failed verifications; moved to caution (AC-3)",
       "last_verified": "2026-08-19T02:22:55.294Z",
       "endpoint_source": "https://docs.api.nvidia.com/nim/reference/llm-apis",
       "provider_key": "nvidia",
@@ -5268,6 +4810,16 @@
     {
       "name": "DeepSeek V4 Flash (Thinking)",
       "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
+      "last_known_status": "verified"
+    },
+    {
+      "name": "DeepSeek V4.1 Flash",
+      "reason": "[type] one-time trial credits or trial / preview / prototype access is not published (publication policy 2026-08-24)",
+      "last_known_status": "verified"
+    },
+    {
+      "name": "DeepSeek V4.1 Flash Thinking",
+      "reason": "[type] one-time trial credits or trial / preview / prototype access is not published (publication policy 2026-08-24)",
       "last_known_status": "verified"
     },
     {
@@ -5627,7 +5179,7 @@
     },
     {
       "name": "PPLX Decider v1.2",
-      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
+      "reason": "[benchmark-gate] only verified Terminal Bench 2.0/2.1 at or above 50 admits; other benchmarks and lower scores do not substitute (AC-5, AC-6)",
       "last_known_status": "verified"
     },
     {
@@ -6102,7 +5654,7 @@
     },
     {
       "name": "OpenAI: GPT-6 Luna (batch)",
-      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
+      "reason": "[benchmark-gate] only verified Terminal Bench 2.0/2.1 at or above 50 admits; other benchmarks and lower scores do not substitute (AC-5, AC-6)",
       "last_known_status": "verified"
     },
     {
@@ -6152,11 +5704,6 @@
     },
     {
       "name": "Qwen: Qwen3 32B",
-      "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
-      "last_known_status": "verified"
-    },
-    {
-      "name": "Qwen: Qwen3 Coder 30B A3B Instruct",
       "reason": "[benchmark-pending] no verified accepted Terminal Bench at or above 50 on record; not ranked (AC-5)",
       "last_known_status": "verified"
     },
@@ -6256,11 +5803,6 @@
       "last_known_status": "verified"
     },
     {
-      "name": "DeepSeek: DeepSeek Flash Latest",
-      "reason": "[gate3] no operational evidence: the offer is not currently operable (provider_count 0 at $0, deprecated endpoint, or unverified)",
-      "last_known_status": "verified"
-    },
-    {
       "name": "Z.ai: GLM Flash Latest",
       "reason": "[gate3] no operational evidence: the offer is not currently operable (provider_count 0 at $0, deprecated endpoint, or unverified)",
       "last_known_status": "verified"
@@ -6282,7 +5824,7 @@
     },
     {
       "name": "MiniMax-M3.1-Flash",
-      "reason": "[suspicion] suspicion 4 >= 4 never ranks (spec 0008 §4.7)",
+      "reason": "[benchmark-gate] only verified Terminal Bench 2.0/2.1 at or above 50 admits; other benchmarks and lower scores do not substitute (AC-5, AC-6)",
       "last_known_status": "verified"
     },
     {
@@ -6326,7 +5868,7 @@
     {
       "url": "https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/index.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://ai.google.dev/gemini-api/docs/models/gemini-2.5-pro",
@@ -6349,889 +5891,894 @@
       "accessed_at": "2026-10-31T02:34:59.141Z"
     },
     {
-      "url": "https://platform.minimax.io/docs/guides/text-generation",
+      "url": "https://platform.minimax.io/docs/guides/quickstart-preparation",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/Gemma-4-26B-A4B-MeroMero",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://docs.nano-gpt.com/api-reference/endpoint/chat-completion",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/api/v1/models?detailed=true",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/Gemma-4-26B-A4B-MeroMero:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/Gryphe/MythoMax-L2-13b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/Meta-Llama-3-1-8B-Instruct-FP8",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/TEE/nemotron-3.5-lightning",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/TheDrummer/Cydonia-24B-v2",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/TheDrummer/Cydonia-24B-v4.3",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/TheDrummer/Magidonia-24B-v4.3",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/agnes-3.0-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/amazon/nova-lite-v1",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/auto-model",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/bytedance/doubao-seed-character",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/cloudflare/clef-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/Cloudflare/clef-flash/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/cloudflare/clef-omni",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/Cloudflare/clef-omni/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/deepseek/deepseek-v4-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/deepseek/deepseek-v4-flash-0423",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/deepseek-ai/deepseek-v4-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/deepseek/deepseek-v4-flash-0423:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/deepseek/deepseek-v4-flash-0731",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/deepseek/deepseek-v4-flash-0731:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/deepseek/deepseek-v4-flash:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/deepseek/deepseek-v4.1-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/deepseek/deepseek-v4.1-flash:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/eu-jev/eu-jeff-1.0.0",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/eu-jev/eu-jeff-latest",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemini-2.5-flash-lite",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemini-2.5-flash-lite-preview-09-2025",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemini-2.5-flash-lite-preview-09-2025-thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemma-4-12b-it",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemma-4-12b-it-semancer",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemma-4-12b-it-starry-ocean",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemma-4-12b-it-station-keeper",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemma-4-26b-a4b-it-chimerax",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemma-4-26b-a4b-it-chimeraxheretic",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemma-4-26b-a4b-it-darksoul",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemma-4-26b-a4b-it-luminous",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemma-4-26b-a4b-it-moonlight",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemma-4-26b-a4b-it-musica",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemma-4-26b-a4b-it-opusdistill",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/gemma-4-26b-a4b-it-shadowsiren",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/google/diffusiongemma",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/google/diffusiongemma-26B-A4B-it/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/google/gemma-4-26b-a4b-it",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://ai.google.dev/gemma/docs/core/model_card_4",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/google/gemma-4-26b-a4b-it-cybersecurity",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/google/gemma-4-26b-a4b-it:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/google/gemma-4-31b-it",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/google/gemma-4-31b-it:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/google/gemma4-31b-splituntied",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/ibm-granite/granite-4.2-8b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/ibm-granite/granite-4.2-8b/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/inception/mercury-2.5-preview",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/inception/mercury-3",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/inclusionai/ling-3.0-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://x.com/AntLingAGI/status/2080351022028095681",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/inclusionai/ling-3.0-flash-vl",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/inclusionAI/Ling-3.0-flash-VL/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/inclusionai/ling-3.0-flash:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/inclusionai/ling-3.1-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/inclusionAI/Ling-3.1-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/inference-net/schematron-v2-small",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/inference-net/schematron-v2-turbo",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/jaredpalmer/kev-4b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/jaredpalmer/kev-4b/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/jaredpalmer/kev-9b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/jaredpalmer/kev-9b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/lightonai/LightOnOCR-2-1B",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/blog/lightonai/lightonocr-2",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/liquid/d1",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/LiquidAI/d1-3B/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/liquid/lfm-2.5-2.6b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/llmtech/decider-0.8b-fp8",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/llmtech/decider-2b-fp8",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/llmtech/decider-4b-nvfp4",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/meganova-ai/manta-flash-1.0",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/meganova-ai/manta-mini-1.0",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/meta-llama/llama-3.1-8b-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/meta-llama/llama-3.2-3b-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/meta-llama/llama-3.3-70b-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/meta/muse-spark-1.2-contributor",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/meta/muse-spark-1.3-contributor",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/mistralai/devstral-small-2505",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/mistralai/ministral-14b-2512",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/mistralai/ministral-14b-instruct-2512",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/mistralai/ministral-3b-2512",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/mistralai/ministral-8b-2512",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/mistralai/mistral-nemo-instruct-2407",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/mistralai/mistral-small-24b-instruct-2501",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/mistralai/mistral-small-3.1-24b-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/mistralai/mistral-small-3.2-24b-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/nano-gpt-help",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/nanogpt/coding-router:low",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/nanogpt/coding-router:medium",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/nex-agi/nex-n2.5-mini",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/nex-agi/Nex-N2.5-mini/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/nex-agi/nex-n2.5-pro",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/nex-agi/nex-n2.5-pro",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/nvidia/Llama-3.3-Nemotron-Super-49B-v1",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/nvidia/nemotron-3-super-120b-a12b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://artificialanalysis.ai/models/nvidia-nemotron-3-super-120b-a12b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/nvidia/nemotron-3-super-120b-a12b:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/nvidia/nemotron-3.5-content-safety",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/nvidia/nemotron-3.5-content-safety",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/nvidia/nemotron-3.5-lightning",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/nvidia/nemotron-3.5-lightning:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/openai/gpt-4.1-nano",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/openai/gpt-5-nano",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/openai/gpt-6-luna-decisions",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/openai/gpt-oss-120b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://evals.report/models/openai-gpt-oss-120b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://www.tbench.ai/leaderboard/terminal-bench/2.0",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/openai/gpt-oss-20b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/openai/gpt-oss-safeguard-20b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/ornith-ai/ornith-1.5-35b-a3b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/ornith-ai/ornith-1.5-35b-a3b/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/ornith-ai/ornith-1.5-35b-a3b:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/ornith-ai/Ornith-1.5-35B-A3B/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/pamanseau/OpenReasoning-Nemotron-32B",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/perplexity/pplx-decider-v1.2",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
+    },
+    {
+      "url": "https://huggingface.co/perplexity-ai/pplx-decider-v1.2/raw/main/README.md",
+      "source_type": "official",
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/phi-4-multimodal-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/poolside/laguna-s-2.1",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/poolside/Laguna-S-2.1/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/poolside/laguna-s-2.1:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/prism-ml/ternary-bonsai-2-9b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/qwen/qwen-turbo",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/qwen/qwen3-14b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/qwen/qwen3-235b-a22b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/qwen/qwen3-235b-a22b-instruct-2507",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/qwen/qwen3-30b-a3b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/qwen/qwen3-32b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/qwen/qwen3-coder-30b-a3b-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/qwen/qwen3.5-9b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/Qwen/Qwen3.5-9B/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://tbench.ai/leaderboard/terminal-bench/2.0",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/qwen/qwen3.5-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/qwen/qwen3.5-flash:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/qwen/qwen3.7-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/qwen/qwen3.7-flash:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/reka/reka-edge-2603",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/reka/reka-flash-3",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/sarvam-105b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/stepfun-ai/step-3.5-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/stepfun-ai/step-3.5-flash-2603",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/stepfun-ai/Step-3.5-Flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/subq/subq-snap-1.1",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/subq/subq-snap-preview",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/surogate/rune-26b-a4b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/synth-2.5-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/synth-2.5-pro",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/tencent/hy3",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/typesafe/jev-1.13",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/typesafe/jev-1.14",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/typesafe/jev-latest",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/upstage/solar-mini4",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/upstage/solar-mini4:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/upstage/solar-pro4",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/upstage/solar-pro4:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/vllm-sr/decision-medium",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/vllm-sr/decision-small",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/xiaomi/mimo-v2.5",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/XiaomiMiMo/MiMo-V2.5",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/xiaomi/mimo-v2.5:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/xiaomi/mimo-v2.6-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/z-ai/glm-4.7-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/z-ai/glm-4.7-flash:thinking",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://nano-gpt.com/models/text/z-ai/glm-5.3-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://docs.api.nvidia.com/nim/reference/llm-apis",
@@ -7246,552 +6793,547 @@
     {
       "url": "https://openrouter.ai/amazon/nova-lite-v1",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/docs/quickstart",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/api/v1/models",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/amazon/nova-micro-v1",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/anthropic/claude-haiku-5.5:batch",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://www.anthropic.com/claude-haiku-5-5",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/bytedance-seed/seed-1.6-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/bytedance-seed/seed-2.0-mini",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://help.apiyi.com/en/seed-2-0-pro-lite-mini-model-comparison-en.html",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/bytedance/ui-tars-1.5-7b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/cohere/command-r7b-12-2024",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/cohere/north-mini-code:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/deepseek/deepseek-v4-flash-0731",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/deepseek/deepseek-v4.1-flash:batch",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/dots-studio/dots-3-note-preview:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/google/gemini-2.5-flash-lite",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/google/gemma-3-12b-it",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/google/gemma-3-27b-it",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/google/gemma-3-4b-it",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/google/gemma-4-26b-a4b-it",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/google/gemma-4-26b-a4b-it:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/google/gemma-4-31b-it",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/google/gemma-4-31b-it:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/google/lyria-3-clip-preview",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/google/lyria-3-pro-preview",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/gryphe/mythomax-l2-13b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/ibm-granite/granite-4.2-8b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/inception/mercury-2.5",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/inception/mercury-3",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/inclusionai/ling-3.0-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/inclusionai/ling-3.0-flash-vl",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/inclusionai/ling-3.1-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/inference-net/schematron-v2-small",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/inference-net/schematron-v2-turbo",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/liquid/lfm-2.5-2.6b:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/meta-llama/llama-3.1-8b-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/meta-llama/llama-3.2-1b-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/meta-llama/llama-3.2-3b-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/meta-llama/llama-3.3-70b-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/meta-llama/llama-4-scout",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/meta-llama/llama-guard-4-12b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/meta/muse-spark-1.2-contributor",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/meta/muse-spark-1.3-contributor",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/microsoft/phi-4",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/mistralai/ministral-14b-2512",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/mistralai/ministral-3b-2512",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/mistralai/ministral-8b-2512",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/mistralai/mistral-nemo",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/mistralai/mistral-small-24b-instruct-2501",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/mistralai/mistral-small-3.2-24b-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/mistralai/voxtral-small-24b-2507",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/nex-agi/nex-n2.5-mini",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/nex-agi/nex-n2.5-pro",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/nvidia/nemotron-3-nano-30b-a3b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/nvidia/nemotron-3.5-content-safety",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/nvidia/nemotron-3.5-content-safety:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/nvidia/nemotron-3.5-lightning",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/nvidia/nemotron-3.5-lightning:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/nvidia/nemotron-3.5-super-vl:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/openai/gpt-4.1-nano",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/openai/gpt-4.1-nano:batch",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/openai/gpt-4o-mini:batch",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/openai/gpt-5-nano",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/openai/gpt-5-nano:batch",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/openai/gpt-6-luna-pro:batch",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/openai/gpt-6-luna:batch",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
+    },
+    {
+      "url": "https://www.tbench.ai/",
+      "source_type": "official",
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/openai/gpt-oss-120b:batch",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/openai/gpt-oss-20b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/openai/gpt-oss-20b:batch",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/openai/gpt-oss-safeguard-20b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/openrouter/free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/prism-ml/ternary-bonsai-2-9b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/qwen/qwen-2.5-7b-instruct",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/qwen/qwen3-14b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/qwen/qwen3-30b-a3b-instruct-2507",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/qwen/qwen3-32b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
-    },
-    {
-      "url": "https://openrouter.ai/qwen/qwen3-coder-30b-a3b-instruct",
-      "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/qwen/qwen3.5-9b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/qwen/qwen3.5-flash-02-23",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/qwen/qwen3.7-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/recursive/flint-v1.0:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/rekaai/reka-edge",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/RekaAI/reka-edge-2603/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/rekaai/reka-flash-3",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/sao10k/l3-lunaris-8b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/scaledown/extract",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/scaledown/summarize",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/stepfun/step-3.5-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/tencent/hy-mt2-1.8b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/tencent/hy-mt2-30b-a3b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/tencent/hy-mt2-7b",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://arxiv.org/html/2605.22064",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/thinkingmachines/inkling-small:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/thinkingmachines/inkling-small/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/thinkingmachines/inkling:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/thinkingmachines/Inkling",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/upstage/solar-mini4",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/xiaomi/mimo-v2.6-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/xingchen-agi/xing4.0-29b-a4b:free",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/z-ai/glm-4.7-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/z-ai/glm-5.3-flash",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/z-ai/glm-5.3-flash:batch",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
-    },
-    {
-      "url": "https://openrouter.ai/~deepseek/deepseek-flash-latest",
-      "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://openrouter.ai/~z-ai/glm-flash-latest",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://docs.sambanova.ai/docs/en/get-started/api-keys-urls",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://api.sambanova.ai/v1/models",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash/raw/main/README.md",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://llmpricing.dev/m/minimax/minimax-m3.1-flash/",
@@ -7816,17 +7358,17 @@
     {
       "url": "https://llmpricing.dev/m/thinkingmachines/inkling/",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://llmpricing.dev/m/xiaomi/mimo-v2.5/",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     },
     {
       "url": "https://llmpricing.dev/m/xiaomi/mimo-v2.5-pro/",
       "source_type": "official",
-      "accessed_at": "2026-11-01T02:29:05.049Z"
+      "accessed_at": "2026-11-02T02:25:55.537Z"
     }
   ]
 }
